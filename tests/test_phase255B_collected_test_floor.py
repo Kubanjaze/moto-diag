@@ -354,8 +354,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: tests/test_phase388_dispatcher.py (57),
 #: tests/test_phase388_fence_boundary.py (39),
 #: tests/test_phase388_service_contract.py (23). Measured: 11212.
+#: Then +13, by a diff of collected ids against 33d2b24 (+13 -0): the
+#: token checks after the operator's doubled paste, 5 in
+#: test_phase388_dispatcher.py and 8 in test_phase388_service_contract.py.
+#: Measured: 11225.
 #:
-COLLECTED_TEST_FLOOR = 11212
+COLLECTED_TEST_FLOOR = 11225
 
 
 def _collected_count() -> int:

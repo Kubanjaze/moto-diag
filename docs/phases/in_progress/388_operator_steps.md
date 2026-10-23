@@ -28,8 +28,15 @@ will not show as you paste: that is on purpose. **Never paste the token
 into a chat, a message or a document.**
 
 ```
-claude setup-token && read -rsp "Paste the token here (it will not show), then press Enter: " T && echo && mkdir -p ~/.config/motodiag && printf 'CLAUDE_CODE_OAUTH_TOKEN=%s\n' "$T" > ~/.config/motodiag/anthropic.env && chmod 600 ~/.config/motodiag/anthropic.env; unset T; if [ "$(grep -c '^CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat' ~/.config/motodiag/anthropic.env 2>/dev/null)" = 1 ] && [ "$(stat -c %a ~/.config/motodiag/anthropic.env)" = 600 ]; then echo "ALL GOOD"; else echo "SOMETHING IS OFF"; fi
+claude setup-token && read -rsp "Paste the token here (it will not show), then press Enter: " T && echo && mkdir -p ~/.config/motodiag && printf 'CLAUDE_CODE_OAUTH_TOKEN=%s\n' "$T" > ~/.config/motodiag/anthropic.env && chmod 600 ~/.config/motodiag/anthropic.env; unset T; F=~/.config/motodiag/anthropic.env; if [ "$(grep -c '' "$F" 2>/dev/null)" = 1 ] && [ "$(grep -cE '^CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat[A-Za-z0-9_-]+$' "$F")" = 1 ] && [ "$(grep -o 'sk-ant-oat' "$F" | wc -l)" = 1 ] && [ "$(stat -c %a "$F")" = 600 ]; then echo "ALL GOOD"; else echo "SOMETHING IS OFF"; fi
 ```
+
+The check passes only when the file is one line holding exactly one token,
+made only of letters, digits, `-` and `_`, with nothing after it, and only
+you can read the file. (Its first version checked only how the line
+started, and passed a file holding the token five times with a stray
+control character, 2026-10-22.) If it says SOMETHING IS OFF, run the block
+again: the paste may have been doubled.
 
 **Then:** tell me it printed ALL GOOD. I run the rest of the checks
 myself: one tiny test message to confirm the token is billed to your

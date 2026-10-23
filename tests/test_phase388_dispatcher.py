@@ -308,6 +308,15 @@ class TestTheToken:
         with pytest.raises(D.Refused, match=why):
             D.load_token(p, environ={})
 
+    @pytest.mark.parametrize("value", [TOKEN * 5, TOKEN + "\x1b", f"'{TOKEN}'", f"{TOKEN} extra",
+                                       "\x1b[200~" + TOKEN],
+                             ids=["five-copies", "stray-escape", "quoted", "trailing-text",
+                                  "bracketed-paste"])
+    def test_anything_but_one_token_on_the_line_is_refused(self, tmp_path, value):
+        p = self.write(tmp_path, f"CLAUDE_CODE_OAUTH_TOKEN={value}\n")
+        with pytest.raises(D.Refused):
+            D.load_token(p, environ={})
+
     def test_an_api_key_in_the_environment_is_refused(self, tmp_path):
         p = self.write(tmp_path, f"CLAUDE_CODE_OAUTH_TOKEN={TOKEN}\n")
         with pytest.raises(D.Refused, match="ANTHROPIC_API_KEY"):

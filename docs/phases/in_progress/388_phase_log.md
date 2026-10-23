@@ -142,3 +142,57 @@ fence, one dispatcher cycle on a planted `plan:needs-review` issue, one
 sweep comment, then the operator's service install, restart and the
 restart test. The row stays 🚧 (R3: a phase with documents in progress is
 🚧, never ⏸️; 386's log).
+
+### Bug fix #1 — 2026-10-22 — step 1's check passed a token written five times
+
+**Issue.** The operator ran step 1 and reported, verbatim: "ALL GOOD.
+Note: the first attempt wrote the token several times plus a stray escape
+character into anthropic.env (480 chars, 5 copies), and step 1's check
+passed it anyway because it only checks the line's start. I rewrote the
+file; it now has exactly one token, 108 chars, mode 600. Please tighten
+step 1's check to require exactly one token and nothing else on the line,
+and log this."
+
+**Root cause.** The check in `388_operator_steps.md` was `grep -c
+'^CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat'` plus the mode: it judged how the
+line started and nothing after. It was copied from 386's procedure in the
+deploy changelog, which has the same prefix check. The dispatcher's
+`load_token` had the same gap: `startswith("sk-ant-oat")`, so it would have
+accepted the operator's first file and sent a 480-character token to the
+API. A doubled paste is plausible from the terminal (a bracketed paste
+writes `ESC[200~` around what is pasted); not measured here.
+
+**Fix.**
+- Step 1's check now passes only a file of one line, matching
+  `^CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat[A-Za-z0-9_-]+$`, with `sk-ant-oat`
+  occurring once (the character class alone accepts five copies run
+  together), mode 600. The step says to run the block again on SOMETHING IS
+  OFF.
+- `load_token` refuses, exit 4, anything but one token of that shape on
+  its line, with the reason "a doubled paste or a stray character fails
+  here". Quotes around the value, which it used to strip, are now refused.
+
+**Files.** `388_operator_steps.md`, `.claude/skills/fleet/dispatcher.py`,
+`tests/test_phase388_dispatcher.py` (5), `tests/test_phase388_service_contract.py`
+(8: the step's own block is extracted from the document and run against
+planted files), `388_mutate.py` (D23, S6).
+
+**Verified.**
+- The old check on a planted file shaped like the operator's (five copies
+  of a 108-character token, then `ESC`): "ALL GOOD (wrongly)". The new
+  check on the same file: SOMETHING IS OFF, and on five other bad shapes
+  (one escape, two copies, trailing text, two lines, the API-key class) and
+  a file others can read.
+- The operator's rewritten file, read without printing it (`stat`, `grep
+  -c`, `awk` of the value's length): mode 600, 133 bytes, one line, one
+  `sk-ant-oat`, no byte outside printable ASCII, a 108-character value; the
+  new `load_token` accepts it.
+- Mutations: D23 (the full match removed) and S6 (the step back to the
+  prefix check) red; the whole set **43/43 red** (`388_mutate.out`).
+- `COLLECTED_TEST_FLOOR` 11212 → 11225, +13 −0 against `33d2b24`.
+
+Not changed: 386's procedure in `.claude/skills/deploy/CHANGELOG.md`
+keeps its prefix check. It is a dated record of what that phase wrote; the
+handoff names it for whoever next uses it.
+
+**Commit.** The commit that carries this entry.

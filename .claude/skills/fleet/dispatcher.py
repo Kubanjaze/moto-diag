@@ -95,6 +95,9 @@ _USAGE = re.compile(r"^Current (?P<what>session|week \((?P<model>[^)]+)\)): (?P<
                     r" · resets (?P<reset>.+?) \((?P<tz>[^)]+)\)\s*$", re.M)
 _RESET = re.compile(r"(?:(?P<mon>[A-Z][a-z]{2}) (?P<day>\d{1,2}), )?(?P<h>\d{1,2})"
                     r"(?::(?P<min>\d{2}))?(?P<ap>am|pm)")
+#: One OAuth token and nothing else (2026-10-22: a first write held the
+#: token five times and a stray escape character, and passed a prefix check).
+_TOKEN = re.compile(r"sk-ant-oat[A-Za-z0-9_-]+")
 MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 WEEK_ALL = "week (all models)"
 
@@ -196,9 +199,12 @@ def load_token(path: pathlib.Path = TOKEN_FILE, environ: dict | None = None) -> 
              if ln.strip() and not ln.lstrip().startswith("#")]
     if len(lines) != 1 or not lines[0].startswith("CLAUDE_CODE_OAUTH_TOKEN="):
         raise Refused(f"{path} must hold exactly one line, CLAUDE_CODE_OAUTH_TOKEN=…")
-    token = lines[0].split("=", 1)[1].strip().strip("'\"")
+    token = lines[0].split("=", 1)[1]
     if not token.startswith("sk-ant-oat"):
         raise Refused(f"the token in {path} is not of the OAuth class (sk-ant-oat…)")
+    if not _TOKEN.fullmatch(token) or token.count("sk-ant-oat") != 1:
+        raise Refused(f"{path} must hold exactly one token and nothing else on its line: "
+                      "a doubled paste or a stray character fails here")
     return token
 
 

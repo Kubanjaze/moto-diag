@@ -28,6 +28,7 @@ UN = "ops/desktop/motodiag-fleet.service"
 XM = "ops/desktop/motodiag-fleet-boot.xml"
 IN = "ops/desktop/install_fleet_unit.sh"
 BC = "ops/desktop/fleet_boot_check.py"
+OS = "docs/phases/in_progress/388_operator_steps.md"
 
 
 def pytest(*args: str) -> list[str]:
@@ -111,6 +112,11 @@ MUTATIONS = [
      "            if branch is None:\n                self.comment(n, \"stopped\"",
      "            if False:\n                self.comment(n, \"stopped\"")], T_DI),
     ("D22 the paused run pruned", [(DI, "if str(p) not in keep_also:", "if True:")], T_DI),
+    ("D23 a doubled or dirty token accepted", [(DI,
+     'if not _TOKEN.fullmatch(token) or token.count("sk-ant-oat") != 1:', "if False:")], T_DI),
+    ("S6 step 1's check back to the line's start only", [(OS,
+     """F=~/.config/motodiag/anthropic.env; if [ "$(grep -c '' "$F" 2>/dev/null)" = 1 ] && [ "$(grep -cE '^CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat[A-Za-z0-9_-]+$' "$F")" = 1 ] && [ "$(grep -o 'sk-ant-oat' "$F" | wc -l)" = 1 ] && [ "$(stat -c %a "$F")" = 600 ]; then""",
+     """F=~/.config/motodiag/anthropic.env; if [ "$(grep -c '^CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat' "$F" 2>/dev/null)" = 1 ] && [ "$(stat -c %a "$F")" = 600 ]; then""")], T_SV),
     ("S1 the unit runs as root", [(UN, "User=lilcu", "User=root")], T_SV),
     ("S2 the unit retries a refusal", [(UN, "RestartPreventExitStatus=4\n", "")], T_SV),
     ("S3 the task does not hold the VM", [(XM,

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import pathlib
+import subprocess
 import xml.etree.ElementTree as ET
 
 import pytest
@@ -95,6 +96,46 @@ class TestTheInstallScript:
                      "systemctl is-enabled motodiag-fleet.service", "set -eu"):
             assert line in text
         assert "systemctl start" not in text and "restart" not in text
+
+
+class TestTheTokenStepsCheck:
+    """Step 1 of the operator's steps: its check must pass one token and only
+    that. Its first version checked the line's start and passed a file holding
+    the token five times with a stray escape character (2026-10-22)."""
+
+    STEPS = ROOT / "docs" / "phases" / "in_progress" / "388_operator_steps.md"
+    TOKEN = "sk-ant-oat01-" + "Ab9_-" * 19          # 108 characters, the measured length
+
+    def check(self, tmp_path, content: str, mode: int = 0o600) -> str:
+        steps = self.STEPS if self.STEPS.is_file() else \
+            ROOT / "docs" / "phases" / "completed" / "388_operator_steps.md"
+        block = next(ln for ln in steps.read_text().splitlines() if ln.startswith("claude setup-token"))
+        check = block.split("unset T; ", 1)[1]
+        f = tmp_path / "anthropic.env"
+        f.write_text(content)
+        f.chmod(mode)
+        check = check.replace("F=~/.config/motodiag/anthropic.env", f"F={f}", 1)
+        assert f"F={f}" in check
+        return subprocess.run(["bash", "-c", check], capture_output=True, text=True).stdout.strip()
+
+    def test_one_token_passes(self, tmp_path):
+        assert len(self.TOKEN) == 108
+        assert self.check(tmp_path, f"CLAUDE_CODE_OAUTH_TOKEN={self.TOKEN}\n") == "ALL GOOD"
+
+    @pytest.mark.parametrize("content", [
+        "CLAUDE_CODE_OAUTH_TOKEN=" + "sk-ant-oat01-" * 0 + ("sk-ant-oat01-" + "Ab9_-" * 19) * 5 + "\x1b\n",
+        "CLAUDE_CODE_OAUTH_TOKEN=" + "sk-ant-oat01-" + "Ab9_-" * 19 + "\x1b\n",
+        "CLAUDE_CODE_OAUTH_TOKEN=" + ("sk-ant-oat01-" + "Ab9_-" * 19) * 2 + "\n",
+        "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-" + "Ab9_-" * 19 + " extra\n",
+        "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-" + "Ab9_-" * 19 + "\nCLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-x\n",
+        "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-api03-" + "Ab9_-" * 19 + "\n",
+    ], ids=["five-copies-and-escape", "stray-escape", "two-copies", "trailing-text", "two-lines",
+            "api-key-class"])
+    def test_anything_else_fails(self, tmp_path, content):
+        assert self.check(tmp_path, content) == "SOMETHING IS OFF"
+
+    def test_readable_by_others_fails(self, tmp_path):
+        assert self.check(tmp_path, f"CLAUDE_CODE_OAUTH_TOKEN={self.TOKEN}\n", 0o644) == "SOMETHING IS OFF"
 
 
 class TestTheRestartCheck:
