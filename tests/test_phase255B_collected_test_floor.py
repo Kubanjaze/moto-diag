@@ -358,8 +358,11 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: token checks after the operator's doubled paste, 5 in
 #: test_phase388_dispatcher.py and 8 in test_phase388_service_contract.py.
 #: Measured: 11225.
+#: Then +1, by a diff of collected ids against 7b6b766 (+1 -0): step 3
+#: registers the Windows task without schtasks /Create /XML, in
+#: test_phase388_service_contract.py. Measured: 11226.
 #:
-COLLECTED_TEST_FLOOR = 11225
+COLLECTED_TEST_FLOOR = 11226
 
 
 def _collected_count() -> int:

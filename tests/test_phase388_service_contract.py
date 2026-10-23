@@ -138,6 +138,24 @@ class TestTheTokenStepsCheck:
         assert self.check(tmp_path, f"CLAUDE_CODE_OAUTH_TOKEN={self.TOKEN}\n", 0o644) == "SOMETHING IS OFF"
 
 
+class TestTheTaskRegistration:
+    """Step 3 registers the task without `schtasks /Create /XML`, which
+    refuses a UTF-8 task file ("(1,40): unable to switch the encoding",
+    the operator, of Phase 382's task)."""
+
+    def test_step_3_strips_the_declaration_and_registers_with_powershell(self):
+        steps = (ROOT / "docs" / "phases" / "in_progress" / "388_operator_steps.md")
+        if not steps.is_file():
+            steps = ROOT / "docs" / "phases" / "completed" / "388_operator_steps.md"
+        block = next(ln for ln in steps.read_text().splitlines() if "motodiag-fleet-boot.xml" in ln
+                     and ln.startswith("$xml"))
+        assert 'Register-ScheduledTask -TaskPath "\\motodiag\\" -TaskName "fleet-boot"' in block
+        assert "-replace '^<\\?xml[^>]*\\?>\\s*',''" in block
+        assert not any("schtasks /Create" in ln and not ln.startswith("(")
+                       and "`" not in ln for ln in steps.read_text().splitlines())
+        assert (OPS / "motodiag-fleet-boot.xml").read_text().startswith('<?xml version="1.0" encoding="UTF-8"?>')
+
+
 class TestTheRestartCheck:
     """`fleet_boot_check.py`, the operator's reboot proof: up before sign-in."""
 

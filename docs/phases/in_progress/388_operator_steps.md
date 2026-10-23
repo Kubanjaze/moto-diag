@@ -76,8 +76,13 @@ startup task needs an administrator.
 **Where:** the desktop, the administrator PowerShell.
 
 ```
-Copy-Item "\\wsl.localhost\Ubuntu-26.04\home\lilcu\motodiag\fleet\code\ops\desktop\motodiag-fleet-boot.xml" "$env:TEMP\motodiag-fleet-boot.xml"; schtasks /Create /TN "motodiag\fleet-boot" /XML "$env:TEMP\motodiag-fleet-boot.xml"; schtasks /Run /TN "motodiag\fleet-boot" | Out-Null; Start-Sleep 5; $s = (schtasks /Query /TN "motodiag\fleet-boot" /FO LIST | Select-String "Status:" | Out-String).Trim(); if ($s -match "Running") { "ALL GOOD" } else { "SOMETHING IS OFF: $s" }
+$xml = "\\wsl.localhost\Ubuntu-26.04\home\lilcu\motodiag\fleet\code\ops\desktop\motodiag-fleet-boot.xml"; Register-ScheduledTask -TaskPath "\motodiag\" -TaskName "fleet-boot" -Xml ((Get-Content $xml -Raw) -replace '^<\?xml[^>]*\?>\s*','') | Out-Null; Start-ScheduledTask -TaskPath "\motodiag\" -TaskName "fleet-boot"; Start-Sleep 5; $s = (Get-ScheduledTask -TaskPath "\motodiag\" -TaskName "fleet-boot").State; if ("$s" -eq "Running") { "ALL GOOD" } else { "SOMETHING IS OFF: the task is $s" }
 ```
+
+(It registers the task with `Register-ScheduledTask` and drops the file's
+first line, the `<?xml … encoding="UTF-8"?>` declaration: `schtasks
+/Create /XML` refuses a UTF-8 task file with "unable to switch the
+encoding", as it did for the live server's task.)
 
 ---
 

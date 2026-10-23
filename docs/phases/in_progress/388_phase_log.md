@@ -371,3 +371,59 @@ run called a model (no issue waiting for review; the day's digest done).
 
 #9 is still open with `plan:approved` though 387 closed; the comment says
 so truthfully. Closing it is the operator's.
+
+### Bug fix #2 — 2026-10-22 — step 3 registered the task with a command that refuses its file
+
+**Issue.** Before running step 3, the operator, verbatim: "Before step 3:
+in 382, schtasks /Create /XML failed on a UTF-8 task XML with "(1,40):
+unable to switch the encoding", and motodiag-fleet-boot.xml also declares
+encoding="UTF-8". Please change step 3 to register with
+Register-ScheduledTask -TaskPath "\motodiag\" -TaskName "fleet-boot" -Xml
+((Get-Content <xml> -Raw) -replace '^<\?xml[^>]*\?>\s*',''), as we did for
+wsl-boot, and log it."
+
+**Root cause.** Step 3 copied the registration from
+`motodiag-wsl-boot.xml`'s own comment ("Registered with schtasks /Create
+/TN "motodiag\wsl-boot" /XML <this file>, elevated"), which is not how
+that task was actually registered. 382's records do not mention the
+failure or the workaround (`grep -rn "Register-ScheduledTask\|unable to
+switch"` over 382's phase documents, its handoff and `ops/`: nothing); the
+operator's account is the source. A record that says one thing and a
+command that did another is F9's family (assumption against reality).
+
+**Fix.** Step 3 now reads the file from the dispatcher's clone over
+`\\wsl.localhost`, strips the `<?xml … ?>` line with the operator's
+`-replace`, registers with `Register-ScheduledTask -TaskPath "\motodiag\"
+-TaskName "fleet-boot" -Xml …`, starts it with `Start-ScheduledTask`, and
+prints ALL GOOD when `Get-ScheduledTask`'s `State` is `Running`. The step
+says why, in plain words. `motodiag-fleet-boot.xml`'s comment names the
+same command. `motodiag-wsl-boot.xml` is unchanged: its comment is 382's
+record and outside this phase; the handoff names it.
+
+**Files.** `388_operator_steps.md`, `ops/desktop/motodiag-fleet-boot.xml`
+(comment only), `tests/test_phase388_service_contract.py` (1).
+
+**Verified.**
+- The task file is ASCII only (`LC_ALL=C grep -c '[^ -~]'` → 0), so
+  Windows PowerShell 5.1's default reading of `Get-Content -Raw` cannot
+  change it; it still parses (`xml.etree`).
+- Through interop, `powershell.exe` 5.1.26100.9711 on this desktop, on a
+  copy of the file under `C:\Users\Public` (removed after): the `-replace`
+  leaves text starting `<!-- P`; `[xml]` of it gives URI
+  `\motodiag\fleet-boot` and arguments `-d Ubuntu-26.04 --exec /bin/sleep
+  infinity`. Nothing was registered: registration is the operator's
+  (administrator).
+- The new test holds step 3 to `Register-ScheduledTask` with the strip and
+  to no `schtasks /Create` in any command line; with `schtasks /Create …
+  /XML` planted back into step 3 it went red, then the file was restored.
+  Its first draft refused any `/XML` in the document and failed on the
+  step's own explanation; it now reads command lines only.
+- `COLLECTED_TEST_FLOOR` 11225 → 11226, +1 −0 against `7b6b766`.
+
+**Commit.** The commit that carries this entry.
+
+Two bug fixes in this build, both in the operator's paste blocks and both
+caught by the operator: the next would be the third, the stop to look for
+a shared cause. Already visible: each block was written from a record
+(386's procedure, 382's comment) and not checked against how it actually
+ran.

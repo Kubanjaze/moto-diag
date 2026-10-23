@@ -3,8 +3,11 @@
      motodiag-wsl-boot.xml (Phase 382), under its own name, so the fleet
      dispatcher's unit runs whether or not the API's task exists. At startup,
      whether or not anyone signs in, start Ubuntu and hold it up; systemd
-     inside starts motodiag-fleet.service. Registered with
-     schtasks /Create /TN "motodiag\fleet-boot" /XML <this file>, elevated. -->
+     inside starts motodiag-fleet.service. Registered elevated with
+     Register-ScheduledTask -TaskPath "\motodiag\" -TaskName "fleet-boot"
+     -Xml ((Get-Content <this file> -Raw) -replace '^<\?xml[^>]*\?>\s*',''):
+     schtasks /Create /XML refuses this UTF-8 file, "(1,40): unable to
+     switch the encoding" (the operator, of the same failure in Phase 382). -->
 <Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <RegistrationInfo>
     <Description>moto-diag (Phase 388): keep Ubuntu-26.04 running from boot so the fleet dispatcher is always on.</Description>
