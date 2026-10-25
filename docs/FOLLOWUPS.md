@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F218** (this file). The
+At the time of writing the highest assigned is **F219** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3928,3 +3928,33 @@ removed from its environment; the sign-in never enters the fence. Read
 live that morning: session 1%, week 15%, Fable 21%.
 `tests/test_phase388_dispatcher.py::TestTheOpusCeiling::test_the_usage_is_read_outside_the_fence_on_the_operators_sign_in`
 holds it.
+
+### F219
+
+**A stage killed by a restart is lost, and its issue stalls with no stage due**
+
+Found 2026-10-25, after Phase 389 merged, watching the trial (issue #14).
+WSL restarted at 15:34 (the operator's report; `uptime -s` 15:34:11; the
+service came back by itself, `ActiveEnterTimestamp` 15:34:14). The
+dispatcher was in the Engineer's fix round, 25 minutes into its model-free
+check of the fix (`dispatcher.log`: "15:09:28 issue 14: the model-free
+run on d05534ff1f42", then nothing until the restart). The stage left no
+result: nothing pushed (GitHub's branch still `bdecabd`), no comment, the
+label still `build:open`. The fix exists only in the run's clone
+(`runs/20261025_150624_engineer_389A/clone`, `d05534f`, its
+`engineer.json` written). And no stage is due: the Engineer's own
+"started round=1" marker (15:06) is newer than the Red Team's back
+(15:01), so the fix round never reruns, and only the 24-hour sweep would
+say so.
+
+What it affects: 388 and 389 made a stage resumable after a usage limit
+(`state.json` `paused`), not after the process dies. Any restart, power
+cut or crash mid-stage loses the stage silently; the longest stage, the
+Engineer's with its model-free run (over an hour), is the likeliest to be
+caught.
+
+To close: the dispatcher records the stage it is running in `state.json`
+before it starts (the same record a pause writes), clears it when the
+stage ends, and on start, a record still there is resumed: the same run
+directory, `--resume` for a session that was cut, the model-free run
+rerun. A test kills a stage half way and restarts the dispatcher.
