@@ -71,12 +71,13 @@ def box(tmp_path_factory):
     subprocess.run(["git", "-C", str(ROOT), "branch", "-D", BRANCH], capture_output=True)
 
 
-def fenced(box, *argv, net="model", env=None, wsdocs=WORKSPACE_DOCS, clone=None):
+def fenced(box, *argv, net="model", env=None, wsdocs=WORKSPACE_DOCS, clone=None, extra=(),
+           **kw):
+    base = {k: v for k, v in os.environ.items() if k != "CLAUDE_CODE_OAUTH_TOKEN"}
     return subprocess.run(
         [str(FENCE), "--clone", str(clone or box["clone"]), "--run", str(box["run"]),
-         "--workspace-docs", str(wsdocs), "--net", net, "--", *argv],
-        capture_output=True, text=True, timeout=120,
-        env={**os.environ, **(env or {})})
+         "--workspace-docs", str(wsdocs), "--net", net, *extra, "--", *argv],
+        capture_output=True, text=True, timeout=120, env={**base, **(env or {})}, **kw)
 
 
 def branch_exists(name: str) -> bool:
@@ -226,17 +227,91 @@ class TestTheNetwork:
 
 
 class TestTheEnvironment:
-    def test_only_the_token_crosses(self, box):
-        r = fenced(box, "/usr/bin/env", env={"CLAUDE_CODE_OAUTH_TOKEN": "sk-ant-oat-test",
-                                             "ANTHROPIC_API_KEY": "sk-ant-api-test",
+    def test_nothing_of_the_callers_environment_crosses(self, box):
+        """388 let the token cross here; since 389 it goes on a pipe (below)."""
+        r = fenced(box, "/usr/bin/env", env={"ANTHROPIC_API_KEY": "sk-ant-api-test",
                                              "PLANTED_388_VAR": "x"})
         names = {ln.split("=", 1)[0] for ln in r.stdout.splitlines()}
-        assert "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat-test" in r.stdout
-        assert "ANTHROPIC_API_KEY" not in names and "PLANTED_388_VAR" not in names
+        assert r.returncode == 0, r.stderr
+        assert {"ANTHROPIC_API_KEY", "PLANTED_388_VAR", "CLAUDE_CODE_OAUTH_TOKEN"}.isdisjoint(names)
         assert "HOME=/fleet/run/home" in r.stdout and "CLAUDE_CONFIG_DIR=/fleet/run/claude" in r.stdout
 
     def test_the_token_is_never_on_a_command_line(self):
-        assert "--setenv CLAUDE_CODE_OAUTH_TOKEN" not in FENCE.read_text()
+        assert "--setenv CLAUDE_CODE_OAUTH_TOKEN " not in FENCE.read_text()
+
+
+#: A fake token in the real token's shape; the probe greps for it with a
+#: bracket in the pattern, so its own command line cannot match (389 S0-4).
+FAKE_TOKEN = "sk-ant-oat01-FAKETOKEN389-" + "Ab9_-" * 6
+PROBE = """
+import os, subprocess
+fd = int(os.environ["CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR"])
+token = os.read(fd, 4096).decode()
+# a child, as claude's Bash tool would be, looking everywhere it can
+scan = subprocess.run(["/bin/sh", "-c",
+    "grep -lE 'FAKE[T]OKEN389' /proc/[0-9]*/environ /proc/[0-9]*/cmdline 2>/dev/null | wc -l;"
+    "for f in /proc/[0-9]*/fd/*; do timeout 1 head -c 4096 $f 2>/dev/null; done"
+    " | grep -cE 'FAKE[T]OKEN389'"], capture_output=True, text=True).stdout.split()
+print("read", token)
+print("found", *scan)
+"""
+
+
+class TestTheTokenPipe:
+    """Phase 389 (S0-4): the token reaches claude on fd 3 and is nowhere a
+    command inside the fence can read it."""
+
+    def piped(self, box, *argv, net="model", token=FAKE_TOKEN, extra=("--token-fd",)):
+        r_fd, w_fd = os.pipe()
+        os.write(w_fd, token.encode())
+        os.close(w_fd)
+        try:
+            # fd 3 kept: subprocess closes descriptors after preexec_fn runs
+            return fenced(box, *argv, net=net, extra=extra, pass_fds=(3,),
+                          preexec_fn=lambda: os.dup2(r_fd, 3))
+        finally:
+            os.close(r_fd)
+
+    @pytest.mark.parametrize("net", ["model", "none"])
+    def test_the_token_arrives_on_fd_3_and_nowhere_else(self, box, net):
+        r = self.piped(box, "/usr/bin/python3", "-c", PROBE, net=net)
+        assert r.returncode == 0, r.stderr
+        assert f"read {FAKE_TOKEN}" in r.stdout
+        assert "found 0 0" in r.stdout, r.stdout
+
+    def test_the_old_environment_variable_is_refused(self, box):
+        r = fenced(box, "true", env={"CLAUDE_CODE_OAUTH_TOKEN": FAKE_TOKEN})
+        assert r.returncode == 2 and "fd 3" in r.stderr, r.stderr
+
+    def test_token_fd_with_no_fd_3_is_refused(self, box):
+        r = fenced(box, "true", extra=("--token-fd",))
+        assert r.returncode == 2 and "file descriptor 3 is not open" in r.stderr, r.stderr
+
+    def test_without_token_fd_no_descriptor_variable_is_set(self, box):
+        r = fenced(box, "/usr/bin/env", net="none")
+        assert "CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR" not in r.stdout
+
+
+class TestTheVenvAndTheMobileRepository:
+    """Phase 389 (S0-5): bound read-only where the scripts look for them."""
+
+    def test_both_are_there_and_read_only(self, box, tmp_path):
+        venv, mobile = tmp_path / "venv", tmp_path / "mobile"
+        for d in (venv, mobile):
+            d.mkdir()
+            (d / "PLANTED_389_CONTROL").write_text("there\n")
+        r = fenced(box, "/bin/sh", "-c",
+                   "cat .venv/PLANTED_389_CONTROL ../moto-diag-mobile/PLANTED_389_CONTROL;"
+                   " touch .venv/x 2>&1; touch ../moto-diag-mobile/x 2>&1; true",
+                   net="none", extra=("--venv", str(venv), "--mobile", str(mobile)))
+        assert r.stdout.count("there") == 2, r.stdout + r.stderr
+        assert r.stdout.count("Read-only file system") == 2, r.stdout
+        assert not (venv / "x").exists() and not (mobile / "x").exists()
+
+    @pytest.mark.parametrize("flag", ["--venv", "--mobile"])
+    def test_a_missing_directory_is_refused(self, box, tmp_path, flag):
+        r = fenced(box, "true", extra=(flag, str(tmp_path / "absent")))
+        assert r.returncode == 2 and "directory" in r.stderr, r.stderr
 
 
 class TestControlsSucceed:

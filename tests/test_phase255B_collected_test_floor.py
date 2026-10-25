@@ -365,7 +365,16 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: check with the Mac's stat and wc, in test_phase388_service_contract.py.
 #: Measured: 11227.
 #:
-COLLECTED_TEST_FLOOR = 11227
+#: Phase 389 (2026-10-25): 11227 -> 11370, by a diff of collected ids
+#: against 18af1fa: +146 -3. New files: tests/test_phase389_fleet_git.py
+#: (53), test_phase389_engineer.py (26), test_phase389_scout.py (17),
+#: test_phase389_red_team.py (15), test_phase389_captain.py (12),
+#: test_phase389_dispatcher.py (11); test_phase388_fence_boundary.py +9 -1
+#: (the token pipe, the venv and mobile binds; the environment test
+#: rewritten, since nothing crosses now); test_phase388_dispatcher.py +3 -2
+#: (Fable gated by its own week, the closed-phase skip). Measured: 11370.
+#:
+COLLECTED_TEST_FLOOR = 11370
 
 
 def _collected_count() -> int:

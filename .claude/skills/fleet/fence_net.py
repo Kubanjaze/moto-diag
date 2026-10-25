@@ -20,6 +20,7 @@ where nothing of the operator's home is mounted.
 """
 from __future__ import annotations
 
+import os
 import socket
 import subprocess
 import sys
@@ -114,7 +115,9 @@ def inside(port: int, sock_path: str, cmd: list[str]) -> int:
     listener.bind(("127.0.0.1", port))
     listener.listen(32)
     threading.Thread(target=bridge, args=(listener, sock_path), daemon=True).start()
-    return subprocess.run(cmd).returncode
+    # The token's pipe (Phase 389): handed on to claude, which reads it once.
+    fd = os.environ.get("CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR")
+    return subprocess.run(cmd, pass_fds=(int(fd),) if fd else ()).returncode
 
 
 def main(argv: list[str]) -> int:
