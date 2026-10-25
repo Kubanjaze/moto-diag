@@ -1,0 +1,7 @@
+The fleet's first trial mission, planted by the Phase 389 build session under the operator's login (389's pre-approval (b): "a planted trial mission may use my login until the identity exists"). Branch: `phase-389A-385s-roadmap-row`.
+
+The mission: Phase 385, "the push token's own write", has a committed prompt (`docs/prompts/385_the_push_tokens_own_write.txt`) and no ROADMAP row. Add row 385 to `docs/ROADMAP.md`, after 384's, status 🔲 (not started, since 385 itself has not begun), naming its prompt and the finding it closes, F212. Docs only: nothing under `src/`, no migration, nothing on live.
+
+Run by the dispatcher from Step 0 to the Captain's merge recommendation; the operator merges by hand.
+
+<!-- fleet-trial -->
