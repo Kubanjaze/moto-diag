@@ -118,6 +118,12 @@ class TestTheRecommendation:
             {"decision": "merge", "lines": ["It ships x.", "All green.", "Merge."]}))
         assert v["decision"] == "merge"
 
+    def test_the_measured_dry_run_passes_the_schema(self, clone):
+        import json
+        reply = json.loads((SKILL / "fixtures" / "dry_runs" / "recommend_hold.json").read_text())
+        v, _ = captain.recommend("389A", "s", clone=clone, run=Replies(reply))
+        assert v["decision"] == "hold" and len(v["lines"]) == 3
+
     @pytest.mark.parametrize("reply,why", [
         ({"decision": "maybe", "lines": ["a", "b", "c"]}, "no decision"),
         ({"decision": "hold", "lines": ["a", "b"]}, "three single lines"),

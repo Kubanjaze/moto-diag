@@ -127,6 +127,11 @@ class TestTheResult:
                                                 "regression_line": LINE}))
         assert r["outcome"] == "pr-ready"
 
+    def test_the_measured_dry_run_result(self, tmp_path):
+        """What a real fenced session wrote, read as a stop (fixtures/dry_runs)."""
+        shutil.copy(SKILL / "fixtures" / "dry_runs" / "engineer_result.json", tmp_path / E.RESULT)
+        assert E.read_result(tmp_path)["kind"] == "fork"
+
     def test_a_stop(self, tmp_path):
         r = E.read_result(self.write(tmp_path, {"outcome": "stop", "kind": "fork",
                                                 "question": "Which of two plans?"}))

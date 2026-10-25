@@ -380,8 +380,11 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: operator's two answers, tests/test_phase389_fence_regression.py (20) and
 #: the usage read on the operator's sign-in in test_phase388_dispatcher.py
 #: (1). Measured: 11395.
+#: Then +6, by a diff of collected ids against 390d8e4 (+6 -0): bug fixes
+#: #1 (1, scout), #2 (2, red team), #3 (1, the stage clone's master), and
+#: the two measured dry runs (engineer 1, captain 1). Measured: 11401.
 #:
-COLLECTED_TEST_FLOOR = 11395
+COLLECTED_TEST_FLOOR = 11401
 
 
 def _collected_count() -> int:

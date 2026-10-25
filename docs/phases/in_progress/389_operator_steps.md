@@ -43,14 +43,21 @@ repository with write access (using your own login), accepts that
 invitation as the new account, and checks the result.
 
 ```
-read -rp "The fleet account's username: " U && read -rsp "Paste the token here (it will not show), then press Enter: " T && echo && mkdir -p ~/.config/motodiag && printf 'FLEET_GITHUB_USER=%s\nFLEET_GITHUB_TOKEN=%s\n' "$U" "$T" > ~/.config/motodiag/fleet-github.env && chmod 600 ~/.config/motodiag/fleet-github.env && gh api -X PUT "repos/Kubanjaze/moto-diag/collaborators/$U" -f permission=push > /dev/null; I=$(GH_TOKEN="$T" gh api user/repository_invitations --jq '.[] | select(.repository.full_name=="Kubanjaze/moto-diag") | .id' | head -1); [ -n "$I" ] && GH_TOKEN="$T" gh api -X PATCH "user/repository_invitations/$I" > /dev/null; L=$(GH_TOKEN="$T" gh api user --jq .login 2>/dev/null); P=$(GH_TOKEN="$T" gh api repos/Kubanjaze/moto-diag --jq '"\(.permissions.push) \(.permissions.admin)"' 2>/dev/null); S=$(GH_TOKEN="$T" gh api -i user 2>/dev/null | tr -d '\r' | sed -n 's/^[Xx]-[Oo][Aa]uth-[Ss]copes: //p'); unset T; F=~/.config/motodiag/fleet-github.env; if [ "$L" = "$U" ] && [ "$L" != "Kubanjaze" ] && [ "$P" = "true false" ] && [ "$S" = "public_repo" ] && [ "$(stat -c %a "$F")" = 600 ] && [ "$(grep -c '' "$F")" = 2 ]; then echo "ALL GOOD"; else echo "SOMETHING IS OFF (account: ${L:-none}, write and admin: ${P:-none}, scopes: ${S:-none})"; fi
+read -rp "The fleet account's username: " U && read -rsp "Paste the token here (it will not show), then press Enter: " T && echo && mkdir -p ~/.config/motodiag && printf 'FLEET_GITHUB_USER=%s\nFLEET_GITHUB_TOKEN=%s\n' "$U" "$T" > ~/.config/motodiag/fleet-github.env && chmod 600 ~/.config/motodiag/fleet-github.env && gh api -X PUT "repos/Kubanjaze/moto-diag/collaborators/$U" -f permission=push > /dev/null; I=$(GH_TOKEN="$T" gh api user/repository_invitations --jq '.[] | select(.repository.full_name=="Kubanjaze/moto-diag") | .id' 2>/dev/null | head -1); [ -n "$I" ] && GH_TOKEN="$T" gh api -X PATCH "user/repository_invitations/$I" > /dev/null 2>&1; L=$(GH_TOKEN="$T" gh api user --jq .login 2>/dev/null); P=$(GH_TOKEN="$T" gh api repos/Kubanjaze/moto-diag --jq '"\(.permissions.push) \(.permissions.maintain) \(.permissions.admin)"' 2>/dev/null); S=$(GH_TOKEN="$T" gh api -i user 2>/dev/null | tr -d '\r' | sed -n 's/^[Xx]-[Oo][Aa]uth-[Ss]copes: //p'); unset T; F=~/.config/motodiag/fleet-github.env; if [ "$L" = "$U" ] && [ "$L" != "Kubanjaze" ] && [ "$P" = "true false false" ] && [ "$S" = "public_repo" ] && [ "$(stat -c %a "$F")" = 600 ] && [ "$(grep -c '' "$F")" = 2 ]; then echo "ALL GOOD"; elif [ "$L" = "$U" ] && [ "$P" != "true false false" ]; then echo "SOMETHING IS OFF: the invitation is not accepted yet. In the private window, signed in as $U, open https://github.com/Kubanjaze/moto-diag/invitations, press Accept, then paste this block again (it is safe to repeat)."; else echo "SOMETHING IS OFF (account: ${L:-none}, write maintain admin: ${P:-none}, scopes: ${S:-none})"; fi
 ```
 
 It passes only when the token belongs to the account you named (and not
-to yours), that account can write to the repository and is not an
-administrator, the token's only scope is `public_repo`, and only you can
-read the saved file. If it says SOMETHING IS OFF, the words in brackets
-say which part.
+to yours), that account has **Write** on the repository and is neither a
+maintainer nor an administrator, the token's only scope is
+`public_repo`, and only you can read the saved file. If GitHub does not
+let the token accept the invitation by itself, the block says so and
+tells you where to press Accept; pasting it again after that is safe.
+Otherwise the words in brackets say which part is off.
+
+**Why Write, and only Write:** the fleet pushes its own `phase-…`
+branches and opens pull requests, which need Write; it also comments and
+sets labels, which Write includes. Write cannot change the repository's
+settings, its collaborators or its rules, and merging stays yours.
 
 **Then:** tell me it printed ALL GOOD. From then on the fleet pushes and
 opens pull requests as that account; I check it myself with one push of

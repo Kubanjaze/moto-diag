@@ -534,3 +534,42 @@ model output.
 and nothing it says is wrong; it repeats the phase. Logged here and on the
 open list; fixed with the next change to `scout.py`, not as a bug fix on
 its own.
+
+### 2026-10-25 — The XO approves the trial's plan; the dry runs before the Engineer
+
+After bug fix #3 and the service's restart on it (11:06:22, `NRestarts=3`):
+`needs-admiral` off and `plan:needs-review` removed and added on #14
+(11:06:29), so the XO re-ran on the plan as it stood (the Captain's second
+revision, `f13d170`), not on a new revision. 11:14:56: "**Executive
+Officer, phase 389A: approve**" ("xo: claude-fable-5-1 … 32 turns, 203 s,
+$1.77"). Its reasoning still says a `--branch` clone lacks `master`: its
+own review clone was made before the fix reached the service's next run.
+
+The trial was held again at 11:15:11 (`needs-admiral`, with a comment),
+before the Engineer's first cycle: the rule-5 stop's rule, no rank live on
+a new check before one run against a real artefact. **The dry runs**, in
+the real fence, on the trial's branch, in a scratch state directory on the
+real disk:
+- **The Engineer's harness**: a fenced Haiku session given the Engineer's
+  own flags (`bypassPermissions`, `--disallowedTools WebFetch,WebSearch`)
+  through `FencedRunner.session`'s real Popen, token pipe and 5-second
+  watch loop, told to write a stop and change nothing: served Haiku, 2
+  turns, no error; `read_result` read the stop; one transcript found, no
+  guard blocks; the clone untouched. The stage clone had `master` at
+  `6adffc5` (bug fix #3). `engineer.verify` on that real clone with a
+  pretend `pr-ready` named the real gaps: A1, A2, A3, A5. The push gate
+  passed a trivial engineer commit on the phase branch and refused
+  `master` (G1).
+- **The Captain's recommendation**: Fable on the trial's approved plan
+  before any build: "hold", three single lines ("Nothing has been checked
+  yet: this is a dry run on the approved plan…"), 3 turns, 18 s, $0.63.
+Both outputs are measured fixtures now (`fixtures/dry_runs/`), each read
+by a test. The floor 11395 → 11401 (+6: the three bug fixes' four tests
+and the two dry runs').
+
+`389_operator_steps.md`, step 1, tightened for the operator's request
+"the exact repo permission it needs and nothing more": the block now also
+checks the account is not a maintainer (`push maintain admin` must read
+`true false false`), says why Write and only Write, and, if GitHub does
+not let the token accept the invitation, says where to press Accept and
+that pasting the block again is safe.
