@@ -219,3 +219,42 @@ comment; the planted branch is removed at close-out. Pushing it needed a
 whole-tree record for its commit in this checkout, so the branch was
 fetched here, checked out, `wholetree.sh` run on a clean tree (record for
 `da2ba074bd46`), pushed, and 389's branch checked out again.
+
+### 2026-10-25 — The operator's two answers, and what each became
+
+Asked together, with two plans each (rule 1: a rule's definition, and a
+login put to a new use). The operator's picks, verbatim:
+
+- On a regression run inside the fence: **"Sandbox counts
+  (Recommended)"**. The option as asked: "Those 14 tests skip inside the
+  sandbox with a reason naming it, and the machine-shaped skips are
+  accepted only for runs made in the sandbox. The Mac keeps today's strict
+  list. The builder and the fleet's own re-run then produce the official
+  result, and the trial runs end to end tonight."
+- On how the gates read the usage: **"Use my sign-in to read
+  (Recommended)"**. As asked: "The dispatcher reads the usage page with
+  your own Claude sign-in, outside the sandbox, as a status check only: no
+  model call, no cost, and the same subscription the fleet uses. Your
+  sign-in never enters the sandbox."
+
+What each became (`d3e4388`):
+- **`closeout_check.FENCE_EXPECTED_SKIPS`**, twelve (file, reason) pairs,
+  accepted only on a line carrying `FENCE_MARK` ("(run inside the fleet's
+  fence)"), which `format_regression` adds when `in_fleet_fence()`: the
+  clone at `/fleet/moto-diag` and `/fleet/run` present, which no machine
+  of the operator's has. `EXPECTED_SKIPS`, the Mac's list, is unchanged,
+  and 383's equality test still holds it. `test_phase389_fence_regression.py`
+  holds the new list to equality, each reason to its file, and that the
+  mark rescues neither an unpinned skip nor a failure. The pairs are the
+  measured skips of run 2 (S0-5) plus the five tests given a reason:
+  204's installed-ffmpeg test, 257's Subconscious control and stop-alert
+  compile (2), 209's wheel build (one fixed reason in the fence, since its
+  old reason carried the tail of pip's output and changed from run to
+  run), and 388's fence module, which skips inside a fence. Each new skip
+  fires only inside (`in_fleet_fence`); on this bare desktop those tests
+  still fail as before (F216, unchanged).
+- **`Fleet.usage`** runs `claude -p "/usage"` on the host, as the
+  operator's user, with the fleet's token variables and any API key
+  removed from its environment, cwd the dispatcher's state directory: the
+  limits, read on the operator's sign-in. A test holds that it does not go
+  through the fence and carries no token.

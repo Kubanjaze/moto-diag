@@ -99,17 +99,19 @@ def test_the_mark_does_not_rescue_a_failure():
     assert C.regression_line(C.format_regression(log, "abc1234", 600, CMD, 1, fence=True)) is None
 
 
-def test_this_checkout_is_not_the_fence():
-    """The control for the skips: they fire only at /fleet/moto-diag."""
-    assert not C.in_fleet_fence()
-    assert not C.in_fleet_fence(ROOT)
+def test_any_other_root_is_not_the_fence(tmp_path):
+    """The control for the skips: they fire only at /fleet/moto-diag, which
+    this test may itself be running in (the fleet's own regression)."""
+    assert not C.in_fleet_fence(tmp_path)
+    assert C.in_fleet_fence(ROOT) == (ROOT.resolve() == C.FENCE_ROOT
+                                      and pathlib.Path("/fleet/run").is_dir())
 
 
-def test_the_command_line_marks_only_inside_the_fence(tmp_path):
+def test_the_command_line_marks_exactly_when_inside_the_fence(tmp_path):
     import subprocess
     log = tmp_path / "run.log"
     log.write_text(FENCED_LOG)
     r = subprocess.run([sys.executable, "-B", str(ROOT / ".claude/skills/closeout/closeout_check.py"),
                         "--format-regression", str(log), "abc1234", "600", CMD, "0"],
                        capture_output=True, text=True)
-    assert r.returncode == 0 and C.FENCE_MARK not in r.stdout
+    assert r.returncode == 0 and (C.FENCE_MARK in r.stdout) == C.in_fleet_fence()
