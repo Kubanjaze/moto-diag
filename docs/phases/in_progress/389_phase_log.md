@@ -168,3 +168,54 @@ that read and never write code"; it no longer does. **CLAUDE.md's
 procedure-folders row for `fleet` still says "read-only ranks, no
 pushes"**: CLAUDE.md is the operator's, so it is left as it is and the
 handoff names it.
+
+### 2026-10-25 — The fenced usage read never worked: F218
+
+Checking the new code's real path before the service ran it,
+`FencedRunner.usage()` through the real `fence.sh` (venv, mobile, token on
+fd 3) returned nothing. What `/usage` printed inside the fence: "Total
+cost: $0.0000 … Usage: 0 input, 0 output, 0 cache read, 0 cache write", a
+session cost summary, not the limits. The same with the token in the
+environment (388's way), so not the pipe; `claude auth status` reports
+`authMethod: oauth_token` both ways. Outside the fence, on the operator's
+own login, both installed versions (2.1.309, 2.1.310) print the limits.
+The endpoint Claude Code reads them from, `api/oauth/usage`, answers the
+fleet's token with HTTP 403 (read from the dispatcher's side, printing
+only the response's shape; the token never printed): a setup-token is for
+inference only. 388's S0-4 measured `/usage` before the fleet's token
+existed, so on the operator's login; the fenced read was never seen to
+work, and 388 wired no Opus stage and gated no Fable call, so nothing
+showed it. Filed as **F218** (`next_f_number.sh`: F217 here, F181 in
+mobile, next F218).
+
+What it does to this phase: the gates fail closed, as built, so 389's
+Captain, Engineer and Red Team cannot start, and on 389's code neither can
+387's XO (Fable). **The service stays on 388's code** until the operator
+decides how the usage is read: switching now would stop the XO that works
+today. That is the third rule-1 matter (a login put to a new use), asked
+with the regression question.
+
+### 2026-10-25 — Proof: a planted bad v1.0, sent back by the XO
+
+Planted under the operator's login (pre-approval (b)): branch
+`phase-389A-planted-bad-plan` (`da2ba07`), master plus row 389A 🚧, a
+step-0 report and a v1.0 with every section but the rule-1 stops;
+`plan_check.py 389A --repo <that clone>`: P1–P7 pass, "P8 FAIL no section
+listing the rule-1 stops the plan anticipates". Issue #11, `mission` and
+`plan:needs-review`, no trial marker. The live service (388's code, 387's
+XO, unchanged by 389) at 01:45:28: "issue 11: the Executive Officer on
+phase 389A", then the comment, verbatim:
+
+> **Executive Officer, phase 389A: back-to-captain** (label `plan:needs-review`)
+>
+> The written checklist failed.
+>
+> - P8 FAIL no section listing the rule-1 stops the plan anticipates
+>
+> No model call: the written checklist failed.
+
+**A planted bad v1.0 sent back by the XO: shown.** Issue #11 closed with a
+comment; the planted branch is removed at close-out. Pushing it needed a
+whole-tree record for its commit in this checkout, so the branch was
+fetched here, checked out, `wholetree.sh` run on a clean tree (record for
+`da2ba074bd46`), pushed, and 389's branch checked out again.

@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F217** (this file). The
+At the time of writing the highest assigned is **F218** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3880,3 +3880,34 @@ hibernate off on mains power: `powercfg /change standby-timeout-ac 0`,
 `hibernate-timeout-ac 0`, no administrator needed), and the dispatcher
 writes every day since `last_digest`, not only yesterday, with a test
 for a two-day gap.
+
+### F218
+
+**The fleet's own token cannot read the usage, so the dispatcher's 70% gates can never pass**
+
+Found in Phase 389 (2026-10-25), checking the new code's real path before
+the service ran it. The dispatcher reads the 5-hour and weekly figures by
+`claude -p "/usage"` inside the fence, on the fleet's setup-token (388's
+design, `388_step0.md` S0-4). Inside the fence that prints a session cost
+summary ("Total cost: $0.0000 … Usage: 0 input, 0 output"), not the limits,
+with the token in the environment (388's way) and on a pipe (389's) alike;
+`claude auth status` reports `authMethod: oauth_token` both ways. The
+endpoint Claude Code reads the limits from, `api/oauth/usage` (named in
+the binary: `strings … | grep -oE 'api/oauth/[a-z_/]+'`), answers the
+fleet's token with HTTP 403: a setup-token is for inference only. Outside
+the fence, on the operator's own login, `/usage` prints the limits
+(measured with both installed versions, 2.1.309 and 2.1.310). 388's S0-4
+measured it there, before the fleet's token existed (its S0-1: "No
+setup-token here"), so the fenced read was never seen to work.
+
+What it affects: 388's Opus gate and 389's Fable gate read "could not be
+read" and refuse every new stage, as they are built to (fail closed). 388
+wired no Opus stage and did not gate Fable, so the live service's XO and
+digest still run; 389's Captain, Engineer and Red Team cannot start, and
+on 389's code neither can the XO (Fable). A paused stage's reset time also
+falls back to one hour.
+
+To close: the operator's call, since it puts a login to a new use: the
+dispatcher reads `/usage` outside the fence on the operator's own login
+(no model call, 0 turns, no cost; the pool is the same subscription), or
+another way to read the figures, or a different gate.
