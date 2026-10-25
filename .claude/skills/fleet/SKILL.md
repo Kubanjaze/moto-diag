@@ -263,6 +263,17 @@ operator's login only for an issue carrying `<!-- fleet-trial -->`; any
 other issue gets `needs-hands`. Comments and labels go out in the fleet's
 name once the file exists, else the operator's, as in 387 and 388.
 
+**No rank goes live on a new check until it has run once against a real
+artefact in the real place** (Phase 389's rule-5 stop). The build's three
+bug fixes were each a check of a model's work tested only against
+stand-ins written from the same picture as the code: a bare phase number
+P3 reads as a count, C6 held on a back's table, a stage clone with no
+`master`. All three failed in the first minutes of the first live run. So:
+a fenced dry run of the rank on a real branch first, its output kept as a
+fixture; every live failure's real artefact kept as a fixture too; and
+where a check and a brief could disagree, the brief states the check's
+rule in its own words.
+
 **Commits** made for a rank carry `MotoDiag fleet (<rank>)`,
 `fleet@motodiag.invalid` until the account exists, and a `Co-Authored-By:`
 line naming the model.

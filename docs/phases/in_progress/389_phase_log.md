@@ -399,3 +399,138 @@ test with an open row: red. With the fix, 17/17 in the file
 Two bug fixes in this build, both found by the live proofs in their first
 minutes, each in a check of a model's text that was stricter than what it
 guards: the next would be the third, the stop to find a shared cause.
+
+### 2026-10-25 — Proof: a planted bug, caught by the Red Team
+
+After bug fix #2 and the service's restart on it (10:00:00, `NRestarts=2`)
+and `review:open` re-applied on #13 (removed and added): at 10:07:51 "issue
+13: the Red Team on phase 389A, round 1", at 10:08:28 "issue 13: back,
+round 1". Its first finding on PR #12, verbatim to the colon: "[citation]
+Row 385 closes F213: the API's own write of `device_tokens.last_seen_at`,
+which `SERVER_WRITES` does not name (v1.1 Results; phase log "Added row
+385, which closes F213"; ROADMAP row 385 "closes F213"): The wrong finding
+number. F213 in docs/FOLLOWUPS.md (line 3708–3710) is "B2 reads only phase
+documents…"". Its table killed the four F213 rows with quotes and line
+numbers (`docs/FOLLOWUPS.md p. 3710` for F213's headline, `p. 3679` for
+F212's), and two factual ones the plant did not intend: v1.1 left a box
+open, and the close-out was not done (A1, A2, A5, A7). "red-team:
+claude-opus-5-5 … 11 turns, 31 s, $0.13 at list price". The table passed
+C1–C5 and C7; its open rows are why C6 is a clear's check (bug fix #2).
+
+Next cycle, 10:21:58: "issue 13: needs-hands (engineer): the fleet has no
+GitHub account of its own yet, and this issue is not a planted trial …":
+the fix round, which would push, stopped before any model call, as built.
+**A planted bug caught by the Red Team: shown.** PR #12 closed unmerged and
+issue #13 closed, each with a comment.
+
+### 2026-10-25 — The trial: the Science Officer and the Captain
+
+After bug fix #1, the restart and `mission` re-applied on #14: at 10:07:43
+"pushed phase-389A-385s-roadmap-row at ffe1691a3e6b as operator (scout)",
+author `MotoDiag fleet (scout) <fleet@motodiag.invalid>`, `Co-Authored-By:
+Claude Haiku 5.5`. Its report, `389A_step0.md`: classification extension,
+a twelve-term census each beside its command, and a judgement that names a
+conflict for the operator: the mission asks for 🔲, while 385's own prompt
+says to add its row as 🚧 before Step 0. One cosmetic flaw, left on the
+open list: the report's title repeats the phase ("Phase 389A — Step 0:
+Phase 389A: 385's ROADMAP row"), because `render` uses the issue's whole
+title. Fixing it would be a third bug fix in this build.
+
+At 10:21:52 "pushed phase-389A-385s-roadmap-row at 4eee8abc28e1 as operator
+(captain)": the Captain's v1.0, `plan_check` P1–P8 passed before the
+commit; label `plan:needs-review`.
+
+### 2026-10-25 — The XO's two rounds on the trial's plan
+
+10:31:26, round 1, back-to-captain after a model call (`plan_check` had
+passed; "xo: claude-fable-5-1 … 40 turns, 260 s, $2.43"): four items. The
+Captain's revision (10:40:35) answered them. 10:50:21, round 2, one item:
+"Section 1's finish line and the Tests section run `git diff --stat master
+-- docs/ROADMAP.md` … but `master` does not resolve in the stage clone.
+`dispatcher.py` line 376 makes that clone with `git clone --branch
+<branch> <mirror>`, which creates one local head and remote-tracking refs
+only". The Captain's second revision ran at 10:55:31 (pushed `f13d170`)
+before the operator's message below arrived; the issue was then held with
+`needs-admiral` at 11:01:19, before the next cycle, so the XO's third look
+did not run on the unfixed fleet.
+
+The operator, verbatim: "(1) The XO's round-2 reason is a fleet defect,
+not a plan defect: a stage clone has no master, so a plan that names master
+can never pass. Fix it on the fleet side (the checker or the clone), count
+it as bug fix #3, and do the rule-5 stop: all three fixes are a check
+stricter than what it guards, so find the shared cause before any fourth.
+Then re-run the XO on 389A's current plan; don't make the Captain revise
+for a defect that isn't its own. (2) Give me the paste block for the
+fleet's GitHub machine user now, with the exact repo permission it needs
+and nothing more, ending ALL GOOD or SOMETHING IS OFF. I'll do it this
+morning. (3) Whether the scout's duplicated title counts as a bug or a nit
+is your call; log it either way."
+
+### Bug fix #3 — 2026-10-25 — a stage clone had no master
+
+**Issue.** The XO's round-2 item on 389A, above: a plan's `git diff master`
+could not run in the clone the fleet reviews and builds it in.
+
+**Root cause.** `Fleet.clone` (388's) makes each stage clone with `git
+clone --branch <phase branch> <mirror>`, which has the phase branch as its
+only local head; `master` resolves only as `origin/master`. Every checkout
+a plan is written for, the operator's, the Mac's, the desktop's, has a
+local `master`. So a plan correct for the repository was unrunnable in the
+fleet's copy of it: a defect of the fleet, as the operator says, and the
+Captain was asked to revise around it once.
+
+**Fix.** The clone, not the checker (the XO was right about the clone it
+was given): `Fleet.clone` adds a local `master` tracking `origin/master`
+whenever the stage branch is not `master`.
+
+**Files.** `.claude/skills/fleet/dispatcher.py`;
+`tests/test_phase389_dispatcher.py` (1 new test).
+
+**Verified.** The new test: a stage clone of a phase branch has `master` at
+GitHub's, `git diff --stat master` runs, and the clone is still on the
+phase branch. Against the old `dispatcher.py` (only it stashed): red. 80/80
+across 389's and 388's dispatcher tests.
+
+**Commit.** The commit that carries this entry.
+
+### 2026-10-25 — The rule-5 stop: the three fixes' shared cause
+
+The three, side by side:
+1. The Science Officer's report was held to P3 (no count without its
+   query), and P3 reads a bare phase number as a count; the brief never
+   said so.
+2. The Red Team's table was held to C6 (no open defect) on a back, where
+   open defects are what it found.
+3. The XO and the Captain were held to a plan that runs in a stage clone,
+   which lacked what every checkout has.
+
+**The shared cause.** Each is a check of a model's work, written and
+tested against stand-ins I wrote from my own picture of that work, and
+never run against a real artefact in the real place before going live. The
+stand-ins agreed with the code because they came from the same
+assumption: `assess_good.json` wrote no phase number; the back test's
+table had no open row; the dispatcher tests clone a repository whose
+plans never say `master`. The one rank dry-run against a real artefact
+before live, the Captain's in Step 0, is the one that did not fail. All
+three failures came in the first minutes of the first live run, from real
+model output.
+
+**What changes, so a fourth is not a patch:**
+- Every live failure's real artefact becomes a measured fixture beside the
+  hand-written ones (done for #1: `assess_bare_phase_number.json`; #2's
+  table shape is now the back test's; #3's case is the new clone test).
+- **No rank goes live on a new check until it has run once against a real
+  artefact in the real place** (a fenced dry run, as the Captain's), with
+  its output kept as a fixture. The Engineer and the Captain's
+  recommendation have not yet run live; before the trial reaches them, each
+  is dry-run against the trial's own branch (the Engineer's brief and
+  `engineer.verify` on a real clone; the recommendation's schema on the
+  trial's PR text). Written into `SKILL.md` as the fleet's rule.
+- Where a check and the brief can disagree, the brief carries the check's
+  rule in its own words (as #1's now does).
+
+**The duplicated title** in the trial's Step 0 report ("Phase 389A — Step
+0: Phase 389A: 385's ROADMAP row"): **a nit, not a bug.** No check read it
+and nothing it says is wrong; it repeats the phase. Logged here and on the
+open list; fixed with the next change to `scout.py`, not as a bug fix on
+its own.

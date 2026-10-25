@@ -598,6 +598,12 @@ class Fleet:
                      str(run / "clone"))
         if r.returncode != 0:
             raise Stop(f"the stage clone of {branch} failed: {r.stderr.strip()[:200]}")
+        # A local master, as every checkout a plan is written for has one: a
+        # `--branch` clone has only that one head, so a plan's `git diff
+        # master` could never run in it (Phase 389, bug fix #3: the XO's
+        # round-2 item on 389A).
+        if branch != "master":
+            self.git("-C", str(run / "clone"), "branch", "-q", "--track", "master", "origin/master")
         return run / "clone"
 
     def prune_runs(self, keep_also: set[str]) -> None:

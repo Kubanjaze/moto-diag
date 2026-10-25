@@ -228,6 +228,19 @@ def test_mission_to_merge_needs_review(world):
                                for _, kw in host.fenced), "a fenced call without the token pipe"
 
 
+def test_a_stage_clone_has_a_local_master_at_githubs(world):
+    """Phase 389, bug fix #3: the XO sent 389A's plan back because its
+    `git diff master` could not run in a stage clone, which had only the
+    phase branch. The fleet's defect, not the plan's."""
+    fleet, host, clock, origin, *_ = world
+    git("branch", f"phase-{PHASE}-x", "master", cwd=origin)
+    fleet.update_mirror()
+    clone = fleet.clone(fleet.new_run("t"), f"phase-{PHASE}-x")
+    assert git("rev-parse", "master", cwd=clone).stdout == git("rev-parse", "master", cwd=origin).stdout
+    assert git("diff", "--stat", "master", cwd=clone).returncode == 0
+    assert git("branch", "--show-current", cwd=clone).stdout.strip() == f"phase-{PHASE}-x"
+
+
 def test_master_is_never_pushed(world):
     fleet, host, clock, origin, *_ = world
     before = git("rev-parse", "master", cwd=origin).stdout
