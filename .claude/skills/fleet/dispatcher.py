@@ -1613,6 +1613,9 @@ class Fleet:
                              f"**Fleet dispatcher: the {rank}'s stage started {at.isoformat()} "
                              f"was cut off and left nothing to resume from; label unchanged.** "
                              f"To run it again, apply `{again}` again.")
+        (self.out if dry_run else self.log)(
+            f"the search on start: {len(said)} stage(s) acted on" if said
+            else "the search on start: nothing to resume")
         return said
 
     def cycle(self) -> None:

@@ -391,8 +391,10 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: test_phase390_resume_contract.py (39), test_phase390_kill.py (1);
 #: test_phase388_dispatcher.py's count unchanged (one test reworded).
 #: Measured: 11499.
+#: Then +1 against 67735e2: the search on start says one line when it has
+#: nothing to resume (test_phase390_search.py). Measured: 11500.
 #:
-COLLECTED_TEST_FLOOR = 11499
+COLLECTED_TEST_FLOOR = 11500
 
 
 def _collected_count() -> int:

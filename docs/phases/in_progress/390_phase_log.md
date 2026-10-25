@@ -194,3 +194,25 @@ its labels yourself."
   after.
 - Before each run above, `dispatcher.log`'s last line read: 16:29:02
   "issue 14: checks failed", no fleet run in progress (F220's rule).
+
+## 2026-10-25 — row 390A; the service on 390's code
+
+- **Row 390A, 🚧, on `master`** (`9f0bd7b`, 57 words, `roadmap_check`
+  ok, `wholetree.sh` exit 0 before the commit), pushed; `master` merged
+  into the branch (`67735e2`) and pushed. **A miss, recorded:** the merge
+  commit was made before its own `wholetree.sh` run; run straight after,
+  on `67735e2`: exit 0 (2182 passed). Its content was the branch plus the
+  one row, each checked on its own side.
+- `recover --dry-run` on the live state with the final code: "nothing to
+  resume", exit 0.
+- **The service on the phase branch, in a gap** (pre-approval (c)): the
+  last stage line 16:29:02, the unit's cgroup holding only the dispatcher
+  (PID 203, no child). Its clone `~/motodiag/fleet/code` switched to
+  `phase-390-resume` at `67735e2`; SIGTERM to PID 203 at 17:22:01 (no
+  sudo for this unit, as in 389); `Restart=always` brought it back at
+  17:22:31 (`NRestarts=1`, PID 2463289). Its first cycle: issues 10 and 9
+  skipped (closed phases), #14 left alone (`needs-admiral`).
+- **Seen in that start:** a start with nothing to resume logged nothing,
+  so the log could not show the search had run. Added: one summary line
+  per start ("the search on start: nothing to resume", or "N stage(s)
+  acted on"), and its test; `COLLECTED_TEST_FLOOR` 11499 → 11500.

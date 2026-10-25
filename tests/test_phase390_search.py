@@ -132,7 +132,8 @@ def test_the_dry_run_on_14s_stall_writes_nothing(w):
     said = w.fleet.recover(dry_run=True)
     assert said and said[0].startswith("stop the engineer on issue 14")
     assert stops(w) == [] and (log.read_text() if log.exists() else "") == before
-    assert all(ln.startswith("would ") for ln in w.lines[-len(said):])
+    assert all(ln.startswith("would ") for ln in w.lines[-len(said) - 1:-1])
+    assert w.lines[-1] == "the search on start: 1 stage(s) acted on"
 
 
 # ----------------------------------------------------- journals not resumed
@@ -290,3 +291,11 @@ def test_a_killed_stage_is_not_quiet(w):
     said = restart(w, *SCOUT)
     assert said and said[0].startswith("resume scout")
     assert any("resume scout" in ln for ln in w.lines)
+    assert w.lines[-1].endswith("the search on start: 1 stage(s) acted on")
+
+
+def test_a_start_with_nothing_to_resume_says_so(w):
+    w.fleet.recover()
+    assert w.lines[-1].endswith("the search on start: nothing to resume")
+    log = (w.fleet.state_dir / "dispatcher.log").read_text()
+    assert log.rstrip().endswith("the search on start: nothing to resume")
