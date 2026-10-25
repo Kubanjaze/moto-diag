@@ -3859,6 +3859,18 @@ on the same desktop was unreachable for the same 39 hours.
 
 Whether Windows slept on its own timer or by hand is not in the log.
 
+**Corrected 2026-10-25.** It was neither: the PC was powered off. The
+operator: "F217's 39 hours were the PC being off, not asleep." Event 1074
+at 06:09:30 on 10-23 reads "has initiated the power off … on behalf of
+user DESKTOP-76S9BQV\lilcu … Shutdown Type: power off"; the Kernel-Power
+42 after it is Fast Startup's hibernation of the kernel, which is why
+`LastBootUpTime` is still 2026-10-21 07:48:30 and the WSL VM, with the
+dispatcher, resumed instead of restarting. The digest gap stands either
+way. Sleep and hibernate are now off on mains power (the operator,
+2026-10-24: "Sleep is set to Never on mains power as of tonight"; read
+back with `powercfg /query`: AC index 0 for both). That does not stop a
+power-off, so the catch-up is still what closes this.
+
 What it affects: the proposal's always-on host; every label due during a
 sleep waits for the wake; a missed digest leaves a gap in the operator's
 daily record.
