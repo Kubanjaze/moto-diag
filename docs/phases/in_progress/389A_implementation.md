@@ -6,6 +6,10 @@ Written by the Captain from `docs/phases/in_progress/389A_step0.md`
 (classification: extension), the ROADMAP row 389A and the mission prompt
 `docs/prompts/389A_385_s_roadmap_row.txt`. The Executive Officer checks this
 document before any work; the Chief Engineer builds to it and writes v1.1.
+This revision answers the Executive Officer's four items on the first draft:
+the review stage that does not exist in this trial (Logic, section 5), the
+shape of the ROADMAP diff (section 1's finish line), the phase log's own
+commit (section 3's finish line) and the draft row's word count (section 1).
 
 ---
 
@@ -52,8 +56,10 @@ wording, never the facts):
 - that this row was added by Phase 389A, and that 385's own session turns it
   🚧 at its Step 0.
 
-A draft that carries all of them, 88 words in the body cell by the one
-counting method:
+A draft that carries all of them. Its body cell is 87 words by
+`roadmap_words.count`, which splits the fourth cell on whitespace; the finish
+line records the script's own printed count, and that count is the one that
+stands:
 
 ```
 | 385 | The push token's own write | 🔲 | `device_tokens.last_seen_at` joins `SERVER_WRITES`, 383's set-aside list, with 383's three controls each seen failing (another column of that row, an added token row, the same column in another table); the live check `verify_phase.sh 384` passes again from the Mac. Closes F212 (the operator's K39, 2026-10-21, scoped to that one column); F210 names what the list still cannot cover. No migration and no change to live expected. Prompt: `docs/prompts/385_the_push_tokens_own_write.txt`. Row added by Phase 389A, the fleet's first trial mission; 385's own session turns it 🚧 at its Step 0. |
@@ -67,9 +73,13 @@ row 389A changes, and no other row changes.
 **Finish line:** `grep -c '^| 385 |' docs/ROADMAP.md` prints 1 (the Step 0
 census printed 0); `python3 .claude/skills/closeout/roadmap_words.py 385
 --check` exits 0 and its printed count is recorded in the phase log;
-`python3 .claude/skills/closeout/roadmap_check.py` exits 0; `git diff --stat
-master -- docs/ROADMAP.md` shows one file, one line inserted and one line
-changed (389A's), and nothing removed.
+`python3 .claude/skills/closeout/roadmap_check.py` exits 0;
+`git diff --stat master -- docs/ROADMAP.md` prints exactly
+`1 file changed, 2 insertions(+), 1 deletion(-)`, because git shows the
+change to row 389A as one line removed and one added; and the diff body,
+`git diff master -- docs/ROADMAP.md`, has exactly one `-` line, 389A's old
+row, and exactly two `+` lines, row 385 and 389A's new row. Both the stat
+line and the three diff lines go in the phase log.
 
 ### 2. `docs/phases/in_progress/389A_implementation.md`: this plan, then v1.1
 
@@ -88,13 +98,18 @@ A new file, in the shape of `docs/phases/completed/388_phase_log.md`. One
 dated entry per event: the plan commit and its hash; the row commit and its
 hash; `wholetree.sh`'s exit code before each commit, read on its own, never
 through a pipe; the regression attempt and its printed line, marked of record
-or not; any guard that blocks a command, recorded and never loosened; the
+or not; any guard that blocks a command, recorded and never loosened; every
+label on issue #14 as it actually moved, and which script moved it; the
 status note (section 5's third point); and the line "No refute pass ran",
 since nothing here is a content row.
 
-**Finish line:** every commit on the branch after the plan commit has an
-entry naming its hash; every `wholetree.sh` run has its exit code; the
-regression attempt has its line verbatim.
+**Finish line:** every commit on the branch after the plan commit, except the
+last, has an entry naming its hash; every `wholetree.sh` run has its exit
+code; the regression attempt has its line verbatim. The last commit on the
+branch is the one that lands the log's final entry, so the log cannot name
+its own hash. That hash is recorded in the Captain's merge recommendation on
+the pull request (section 5), and the operator's merge-outcome line in the
+handoff, added after the merge, names it again.
 
 ### 4. `docs/handoffs/YYYY-MM-DD_389A_closed.md`: the handoff, and the close-out it hands over
 
@@ -127,23 +142,43 @@ the regression of record and the close-out are the operator's on the Mac.
 
 ### 5. The Captain's merge recommendation
 
-Not a file in the repository: three lines on the pull request, after the Red
-Team's clear, as the fleet proposal's label table orders. It must carry:
+Not a file in the repository: three lines on the pull request. In this trial
+it follows the pull request's opening directly, with no review stage between.
+The reason is on this branch: `dispatcher.py`'s `NEXT_RANK` names the Red
+Team as the mover of `review:open`, but the dispatcher here has only
+`stage_xo` and `stage_digest`; 388's non-goals list every seat that writes
+code, including the Red Team, as a later rollout step; and row 389A says 389
+builds the Captain and the Engineer only. No rank in this trial can move
+`review:open` to `review:clear`, so the trial does not pass through those two
+labels. The Engineer's stage opens the pull request; the Captain's stage,
+389's, reads the pull request as opened and posts the recommendation. The
+label it then sets is the one 389's script sets from its parsed result; the
+phase log records that label by name. If 389's scripts set no label at the
+pull request, the issue's label stays where the last script left it, and the
+recommendation says so as the trial's first finding for 389, instead of
+anyone moving it by hand.
+
+The recommendation must carry:
 
 - the diff's shape: one ROADMAP row added, 389A's row updated, the three
   phase documents and the handoff, nothing under `src/` or `tests/`;
-- each check's exit code from the phase log;
+- the hash of the branch's last commit (the one the phase log cannot name,
+  section 3) and each check's exit code from the phase log;
 - the status note for the operator: the mission says 🔲 and 385's prompt says
   "add it as 🚧 before Step 0". Both hold: the row is 🔲 until 385 starts,
   and 385's session turns it 🚧. The prompt's first line will read as if the
   row were missing; the prompt is a committed record and is not edited here;
+- that no Red Team ran, and why (the paragraph above), so the operator reads
+  the diff knowing it had the Executive Officer's check on the plan and no
+  adversarial pass on the result;
 - that the close-out is the operator's on the Mac (section 4), and why
   (F216);
 - that issues #9 and #10 from Phase 388 are untouched and remain the
   operator's to close.
 
-**Finish line:** the recommendation is posted, and the mission's labels are
-moved only by the rank scripts, never by hand.
+**Finish line:** the recommendation is posted on the pull request, and every
+label on issue #14 was set by a rank's script from a parsed result, none by
+hand; the phase log's label entries show it.
 
 ### What this phase does not change in the code
 
@@ -195,13 +230,16 @@ closed, no label by hand, no write to `master`.
   fleet's own identity (F214) is not made here.
 - **A real fork: none expected.** The row's facts come from the mission, the
   385 prompt, K39 and F212; there is one way to write them and nothing else
-  ships.
+  ships. Skipping the review labels (Logic, section 5) is not a fork: no
+  second plan exists that could run a Red Team on this branch, and the
+  recommendation tells the operator plainly that none ran.
 - **A threshold or a rule's definition: none expected.** The 120-word cap and
   the status key are applied, not changed. `SERVER_WRITES` is a gate's
   definition and is not touched; the operator's K39 approval covers its change
   for Phase 385's own run, scoped to one column, and no part of it is spent
   here. The 🔲/🚧 wording is a note for the operator, not a change to either
-  definition.
+  definition. The label table in the fleet proposal is not edited; the trial
+  records which of its labels it passed through and which it could not.
 - **A live-database change: none expected.** No migration, no live row, no
   read of live.
 
@@ -227,6 +265,9 @@ code in the phase log:
   121, run from the stage's run directory on a string, not on the repository.
 - `grep -c '^| 385 |' docs/ROADMAP.md`: 0 before (the Step 0 census), 1
   after.
+- `git diff --stat master -- docs/ROADMAP.md` prints
+  `1 file changed, 2 insertions(+), 1 deletion(-)`, and the diff body has one
+  `-` line and two `+` lines, the three rows named in Logic, section 1.
 - `.claude/skills/closeout/wholetree.sh` (fast mode) before every commit, run
   on its own, its exit code read before the commit.
 - `python3 .claude/skills/fleet/plan_check.py 389A`: exit 0 against v1.0
@@ -252,6 +293,10 @@ code in the phase log:
 - Pinning any skip or fixing any of F216's four failures; closing F216 or
   F217.
 - The fleet's GitHub identity and the master ruleset (F214).
+- A Red Team stage, a `review:open` or `review:clear` move, or any edit to
+  `dispatcher.py`'s label table to match this trial: 389 and the later
+  rollout steps own those. This trial only records which labels it passed
+  through.
 - Merging, closing issues #9, #10 or #14, or moving any label by hand.
 - Any new check that reads the `<!-- fleet-trial -->` marker, which the
   census finds nowhere.
@@ -263,12 +308,15 @@ code in the phase log:
       sentence updated; `wholetree.sh` exit 0 before the commit
 - [ ] the checks run and recorded: `roadmap_check.py` and its `--self-test`,
       `tests/test_roadmap_continuity.py`, `roadmap_words.py 385 --check` with
-      its count and its 121-word control, the `grep -c` before and after
+      its count and its 121-word control, the `grep -c` before and after, the
+      `--stat` line and the three diff lines
 - [ ] `wholetree.sh --full` and `regression.sh` once in the stage clone, the
       line recorded verbatim and marked of record or not
-- [ ] `389A_phase_log.md` with every commit, exit code and guard block
+- [ ] `389A_phase_log.md` with every commit but the last, every exit code,
+      every guard block and every label move
 - [ ] `389A_implementation.md` v1.1 with Deviations and Results
 - [ ] the handoff on the branch, with the operator's paste block for the Mac
       and the close-out steps
-- [ ] the pull request; the Captain's merge recommendation after the Red
-      Team's clear, carrying the status note and the close-out hand-over
+- [ ] the pull request; the Captain's merge recommendation directly after it
+      opens, naming the last commit's hash, that no Red Team ran, the status
+      note and the close-out hand-over
