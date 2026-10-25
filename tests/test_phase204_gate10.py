@@ -12,7 +12,9 @@ from __future__ import annotations
 
 import subprocess
 
+import pytest
 from pydantic import BaseModel
+from support.fleet_fence import in_fleet_fence
 
 from motodiag.media import ffmpeg as ffmpeg_mod
 
@@ -41,6 +43,8 @@ class TestFfmpegArgsSurviveModernFfmpeg:
         A pure string assertion would still pass if a future ffmpeg
         removed ``-fps_mode`` too; this asks the binary.
         """
+        if in_fleet_fence():
+            pytest.skip("inside the fleet's fence: no ffmpeg on the home desktop")
         binary = ffmpeg_mod.FFMPEG_BIN
         proc = subprocess.run(
             [binary, "-hide_banner", "-h", "full"],

@@ -302,19 +302,13 @@ class FencedRunner:
             os.close(r_fd)
 
     def usage(self) -> dict | None:
-        r = self.fenced(["claude", "-p", "/usage", "--output-format", "json",
-                         "--strict-mcp-config"], timeout=300)
-        try:
-            text = str(json.loads(r.stdout).get("result") or "")
-        except (ValueError, AttributeError):
-            return None
-        return parse_usage(text, self.fleet.now()) or None
+        return self.fleet.usage()
 
     def gate_model(self, model: str | None) -> None:
         """No new Opus or Fable stage over its ceiling; a resumed one is not new."""
         if self.resume is not None or model not in (OPUS, FABLE):
             return
-        usage = self.usage()
+        usage = self.fleet.usage()
         why = opus_refusal(usage) if model == OPUS else fable_refusal(usage)
         if why:
             raise Stop(f"no new {'Opus' if model == OPUS else 'Fable'} stage: {why}")
@@ -430,6 +424,27 @@ class Fleet:
         p = self.state_dir / "state.json"
         p.with_suffix(".tmp").write_text(json.dumps(state, indent=2), encoding="utf-8")
         p.with_suffix(".tmp").replace(p)
+
+    def usage(self) -> dict | None:
+        """The 5-hour and weekly figures, read on the operator's own sign-in,
+        outside the fence: `claude -p "/usage"`, a slash command with no
+        model call (0 turns, no cost). The fleet's setup-token cannot read
+        them (F218: inside the fence `/usage` prints a cost summary, and
+        `api/oauth/usage` answers it 403); the operator, 2026-10-25: "Use my
+        sign-in to read (Recommended)". The sign-in never enters the fence;
+        the token the fleet runs on plays no part here."""
+        env = {k: v for k, v in os.environ.items()
+               if k not in ("CLAUDE_CODE_OAUTH_TOKEN", "CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR",
+                            "ANTHROPIC_API_KEY")}
+        self.state_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            r = self.host(["claude", "-p", "/usage", "--output-format", "json",
+                           "--strict-mcp-config"], capture_output=True, text=True, timeout=300,
+                          cwd=self.state_dir, env=env, stdin=subprocess.DEVNULL)
+            text = str(json.loads(r.stdout).get("result") or "")
+        except (ValueError, AttributeError, OSError, subprocess.SubprocessError):
+            return None
+        return parse_usage(text, self.now()) or None
 
     def fleet_identity(self) -> fleet_git.Identity | None:
         try:
@@ -1180,9 +1195,7 @@ def main(argv: list[str]) -> int:
         return 4
     with held:
         if a.cmd == "usage":
-            fleet.update_mirror()
-            run = fleet.new_run("usage")
-            usage = FencedRunner(fleet, fleet.clone(run, "master"), run / "run").usage()
+            usage = fleet.usage()
             for what, (pct, reset) in (usage or {}).items():
                 print(f"{what}: {pct}% used, resets {reset.isoformat() if reset else 'unknown'}")
             return 0 if usage else 1

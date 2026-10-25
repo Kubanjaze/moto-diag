@@ -79,6 +79,7 @@ class Host:
         self.usage_text = USAGE_OK
         self.usage_after: str | None = None    # what /usage says once a model call has run
         self.fenced: list[tuple[list[str], dict]] = []
+        self.usage_reads: list[tuple[list[str], dict]] = []   # outside the fence, since 389
         self.gh_calls: list[tuple[list[str], dict]] = []
 
     def issue(self, n: int, title: str, body: str = "", labels: dict[str, dt.datetime] | None = None):
@@ -104,6 +105,9 @@ class Host:
         if cmd[0] == "gh":
             self.gh_calls.append((cmd, kw))
             return self.gh(cmd)
+        if cmd[0] == "claude" and "/usage" in cmd:
+            self.usage_reads.append((cmd, kw))
+            return subprocess.CompletedProcess(cmd, 0, json.dumps({"result": self.usage_text}), "")
         if cmd[0] == self.fence:
             inner = cmd[cmd.index("--") + 1:]
             self.fenced.append((inner, kw))
@@ -254,7 +258,7 @@ class TestTheOpusCeiling:
         host.replies = [claude_json({}, model=rank_call.HAIKU)]
         D.FencedRunner(fleet, tmp_path, tmp_path / "run")(["claude", "-p", "x", "--model",
                                                            rank_call.HAIKU])
-        assert not any("/usage" in inner for inner, _ in host.fenced)
+        assert host.usage_reads == []
 
     def test_fable_is_gated_by_its_own_week_since_389(self, world, tmp_path):
         """USAGE_CEILING: all models at 70%, Fable at 52%: Fable passes."""
@@ -263,7 +267,18 @@ class TestTheOpusCeiling:
         host.replies = [claude_json({}, model=rank_call.FABLE)]
         D.FencedRunner(fleet, tmp_path, tmp_path / "run")(["claude", "-p", "x", "--model",
                                                            rank_call.FABLE])
-        assert len(host.model_calls()) == 1 and any("/usage" in i for i, _ in host.fenced)
+        assert len(host.model_calls()) == 1 and len(host.usage_reads) == 1
+
+    def test_the_usage_is_read_outside_the_fence_on_the_operators_sign_in(self, world):
+        """F218 and the operator's "Use my sign-in to read (Recommended)":
+        not through fence.sh, and with no token of the fleet's in reach."""
+        fleet, host, _, _ = world
+        assert D.parse_usage(USAGE_OK, T0) == fleet.usage()
+        (cmd, kw), = host.usage_reads
+        assert cmd[:3] == ["claude", "-p", "/usage"] and not any(i for i, _ in host.fenced)
+        assert {"CLAUDE_CODE_OAUTH_TOKEN", "CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR",
+                "ANTHROPIC_API_KEY"}.isdisjoint(kw["env"])
+        assert "pass_fds" not in kw
 
     def test_a_resumed_opus_stage_is_not_new(self, world, tmp_path):
         fleet, host, _, _ = world

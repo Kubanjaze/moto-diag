@@ -36,6 +36,7 @@ WORKSPACE_DOCS = ROOT.parent / "workspace-docs"
 sys.path.insert(0, str(FLEET))
 
 from fence_net import allowed  # noqa: E402
+from support.fleet_fence import in_fleet_fence  # noqa: E402
 
 @pytest.fixture(scope="module", autouse=True)
 def linux_only():
@@ -43,6 +44,10 @@ def linux_only():
     "Mac runs it (Recommended)", Phase 388): the Mac's fence is 257's."""
     if sys.platform == "darwin":
         pytest.skip("macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py")
+    if in_fleet_fence():
+        # Phase 389, the operator: "Sandbox counts (Recommended)". From
+        # inside, the outer fence's paths are the inner one's writable ones.
+        pytest.skip("inside the fleet's fence: its boundary is proven from the host, not from inside")
 
 
 HOME = pathlib.Path.home()
