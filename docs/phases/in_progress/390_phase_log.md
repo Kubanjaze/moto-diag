@@ -63,3 +63,55 @@ model cost of the measurement under one cent.
 
 The service was not touched: the probe used its own run directory in the
 scratchpad and a clone of the mirror (read).
+
+## 2026-10-25 — v1.0 committed and pushed
+
+`ea1f057`. `plan_check.py 390`: P1–P8 pass, after Step 0's two counts
+were given their source (`KEEP_RUNS = 20`; `grep -n 'self.pause('`).
+
+## 2026-10-25 — the build
+
+- `journal.py` (new); `dispatcher.py`: `new_run` writes the journal before
+  the clone; `begin`/`finish`/`step`; the replay in `FencedRunner` (calls,
+  the Engineer's session) and `checked` (model-free runs); every stage on
+  steps with GitHub checks; ` run=` on every marker; a `started` marker for
+  every rank; `run_stage`; `recover` and `recover --dry-run`; the pause kept
+  until its stage ends; `prune_runs` keeps unfinished runs.
+  `rank_call.call` skips the ledger for a replayed call;
+  `engineer.CONTINUE`.
+- **Decision: the `started` marker has its own prefix**,
+  `<!-- fleet-started:`, not the dispatcher's. With the dispatcher's
+  prefix, six of 389's tests went red: the XO's due rule counts every
+  dispatcher comment as a rank comment, so the Captain's `started` marker
+  made the XO not due whenever `plan:needs-review` was applied in the same
+  second. No due rule reads the new prefix.
+- **Decision: a call's journal key leaves the prompt out** (model, tools,
+  schema only). The replay of a cut Science Officer stage ran its finished
+  second call fresh: its prompt carries a census of the clone, and the
+  stage's own committed Step 0 had changed that census. A finished call's
+  answer is still the right one. Deviation from v1.0 section 2.
+- **Decision: the marker search says a stop only when no stage is due**
+  (F219's stall), in place of v1.0's "a flow label applied after it". #14's
+  real history, read into `fixtures/resume/` at 16:33, showed why: at 15:50
+  the operator re-applied `review:open`, a label the Engineer also sets, so
+  the label rule read the operator's hand as the Engineer's own work and
+  would have commented on #14. The due rule sees the Red Team due and says
+  nothing. Deviation from v1.0 section 5.
+- 388's `test_a_resumed_opus_stage_is_not_new` now builds its resumed
+  session from a journal (the runner's `resume=` argument is gone); the
+  assertion is unchanged.
+- **#14 reached `needs-admiral` at 16:29** (the Engineer's fix round 2:
+  "the work says it is ready, and the checks say it is not"). No #14 stage
+  runs since; it is the operator's.
+- **The dry run on the live state** (16:3x, `dispatcher.py recover
+  --dry-run` from this checkout): "nothing to resume", exit 0;
+  `state.json` and `dispatcher.log` modification times unchanged before
+  and after. No journal exists yet on the live host, and #14 is held.
+- **A guard block, recorded (rule 6):** a `sed -i` of mine on
+  `tests/test_phase390_search.py` was refused by `edit_guard.sh`. Made with
+  the Edit tool instead; the guard untouched.
+- Tests: `test_phase390_resume.py` (29: every kill point in Step 0's
+  tables, and the pause), `test_phase390_search.py` (18, #14 at 15:34,
+  15:50 and 16:33), `test_phase390_kill.py` (1: a real process SIGKILLed
+  with its group, a second process resumes). 128 passed with 388's and
+  389's dispatcher tests.

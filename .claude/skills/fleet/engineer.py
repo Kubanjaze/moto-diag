@@ -42,6 +42,9 @@ MAX_BUG_FIXES = 2            # the third stops
 RESULT = "engineer.json"     # in the run directory, /fleet/run inside the fence
 STOP_KINDS = ("third-bug-fix", "guard-blocked-twice", "fork", "threshold-or-rule",
               "test-cannot-be-green", "login-or-credential", "live-database-change")
+#: The prompt a cut session is resumed with (389 for a usage limit; 390 for a restart too).
+CONTINUE = ("You were stopped part-way, by a usage limit or a restart of the machine. Continue "
+            "the work from where you were, and finish as the brief says.")
 _BUG = re.compile(r"^### Bug fix #(\d+)\b", re.M)
 _HOOK = "PreToolUse:Bash hook error:"
 _COUNTS = re.compile(r"(\d[\d,]*) passed, (\d[\d,]*) failed, (\d[\d,]*) skipped")

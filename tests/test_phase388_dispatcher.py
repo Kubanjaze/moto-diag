@@ -284,7 +284,10 @@ class TestTheOpusCeiling:
         fleet, host, _, _ = world
         host.usage_text = USAGE_CEILING
         host.replies = [claude_json({}, model=rank_call.OPUS)]
-        D.FencedRunner(fleet, tmp_path, tmp_path / "run", resume="s-9")(
+        # Phase 390: the session comes from the stage's journal, not an argument.
+        j = D.journal.Journal.create(tmp_path, {"stage": "xo", "session": "s-9"}, T0)
+        j.resumed = True
+        D.FencedRunner(fleet, tmp_path, tmp_path / "run", journal=j)(
             ["claude", "-p", "x", "--model", rank_call.OPUS])
         assert host.model_calls()[0][:3] == ["claude", "--resume", "s-9"]
 

@@ -124,7 +124,9 @@ def call(rank: str, prompt: str, model: str, schema: dict | None = None, *,
              int(d.get("num_turns") or 0), (d.get("duration_ms") or 0) / 1000,
              dt.datetime.now().astimezone().isoformat(timespec="seconds"),
              d.get("structured_output"), str(d.get("result") or ""))
-    record(c, ledger)
+    # A call a resumed stage replays from its journal was recorded when it ran (Phase 390).
+    if not d.get("fleet_replayed"):
+        record(c, ledger)
     return c
 
 
