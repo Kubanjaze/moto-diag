@@ -126,7 +126,19 @@ class TestTheCalls:
         run = Replies(COUNTED, GOOD)
         v, calls = scout.assess(MISSION, ROW, "table", [], "", cwd=repo, run=run)
         assert v == GOOD and len(calls) == 2
-        assert "write it again" in run.calls[1][2] and "14 files" in run.calls[1][2]
+        assert scout.RECOUNT in run.calls[1][2] and "14 files" in run.calls[1][2]
+
+    def test_a_bare_phase_number_is_a_count_to_the_checker(self, repo):
+        """Phase 389, bug fix #1: the trial's first report said "No row for
+        385 exists", which P3 reads as a count. The brief and the corrective
+        call both say to write the word Phase before a phase number."""
+        bare = json.loads((FIX / "assess_bare_phase_number.json").read_text())
+        assert plan_check.unshown_counts(bare["reason"])
+        assert not plan_check.unshown_counts(bare["reason"].replace("for 385", "for Phase 385"))
+        assert '"Phase 385", never "385" alone' in " ".join(scout.ASSESS_BRIEF.split())
+        run = Replies(bare, GOOD)
+        scout.assess(MISSION, ROW, "table", [], "", cwd=repo, run=run)
+        assert '"Phase 385"' in run.calls[1][2] and "385 exists" in run.calls[1][2]
 
     def test_counts_in_prose_twice_is_a_stop(self, repo):
         with pytest.raises(rank_call.Stop, match="no query"):

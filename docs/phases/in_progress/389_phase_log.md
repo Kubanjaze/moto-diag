@@ -298,3 +298,69 @@ control, 204's ffmpeg and 244H. **A regression of record produced inside
 the fence, by a run no model touched: shown.** Its wall time, 29 min 54 s
 against run 2's 10 min 26 s, overlapped a run of the fleet's 420 tests on
 the same machine; the next one will say whether that was all of it.
+
+### 2026-10-25 — The service on 389's code; the two live proofs planted
+
+The dispatcher's clone `~/motodiag/fleet/code` was switched to
+`phase-389-captain-engineer` at `390d8e4`, and the running process
+(PID 117421, idle: its last line the 07:03 digest, no child process) was
+sent SIGTERM at 09:46:37; the unit's `Restart=always` started it again at
+09:47:08 (`NRestarts=1`, the restart being this one). No sudo: the process
+is the operator's user's. Its first lines: "issue 10: phase 388's row on
+master is '✅', not 🚧: no stage", and the same for issue 9 (387). The
+service runs the phase branch's code until 389 merges; then its clone goes
+back to `master`.
+
+Planted, under the operator's login (pre-approval (b)):
+- **Row 389A** on `master`, 🚧 (`6adffc5`): the dispatcher acts only on a
+  phase whose row on master is 🚧.
+- **The Red Team proof**: branch `phase-389A-planted-bug` (`1cd2670`), a
+  v1.0 commit and then a v1.1, a phase log and row 385, each saying 385
+  closes F213. F213 is "B2 reads only phase documents…"; the push token's
+  finding is F212. Pull request #12 ("[planted, do not merge]"), issue #13
+  at `mission` and `review:open`, no trial marker, so no fix round can
+  push. A first build of the branch moved its documents to `completed/`
+  while row 389A is 🚧, which the ledger check refuses (R3); rebuilt with
+  them in `in_progress/`, as a PR before merge has them.
+- **The trial**: issue #14, "Phase 389A: 385's ROADMAP row", `mission`,
+  the trial marker, branch `phase-389A-385s-roadmap-row` named.
+
+**A fifth guard block, mine.** The command that opened #12 and #13 first
+carried a stray trailing `sed -i … /dev/null`, which does nothing; the edit
+guard refused the whole command before any of it ran (`gh pr list` and
+`gh issue list` showed nothing created), and it was rerun without it. No
+guard changed.
+
+### Bug fix #1 — 2026-10-25 — the Science Officer's report stopped on a bare phase number
+
+**Issue.** The trial's first stage, live, at 09:53:15: "issue 14: stopped:
+the report still counts things with no query: '385 exists' in 'No row for
+385 exists in docs/ROADMAP.md, while its prompt, docs/prompts/385_the_push_toke…'".
+The label stayed at `mission`, as built.
+
+**Root cause.** The report's prose must carry no count without its query
+(P3, `plan_check.unshown_counts`), and P3 reads a number followed within
+two words by a word ending in s as a count: "385 exists". A phase number
+reads as a name to P3 only after the word Phase (its `_NAMING`). The brief
+told Haiku to write no counts and said nothing about phase numbers, and
+the corrective call only repeated "no counts", so Haiku wrote it the same
+way twice. A mission about a phase names its number constantly.
+
+**Fix.** The brief: "Write a phase's number only after the word Phase
+("Phase 385", never "385" alone…)", with the reason. The corrective call
+says the same (`scout.RECOUNT`). `plan_check` is unchanged: the checker is
+the XO's and is right to read "385 exists" as it does.
+
+**Files.** `.claude/skills/fleet/scout.py`;
+`fixtures/scout/assess_bare_phase_number.json` (the reason the trial's
+report wrote, from the dispatcher's log) and its README row;
+`tests/test_phase389_scout.py` (1 new test).
+
+**Verified.** `plan_check.unshown_counts` flags "No row for 385 exists in
+docs/ROADMAP.md." and not "No row for Phase 385 exists…", nor "Phase 385
+closes F212.", nor "385's prompt is committed.". The new test: the fixture
+is a count to the checker, its "Phase" form is not, the brief says so, and
+the corrective call carries both the rule and the flagged phrase. Against
+the old `scout.py` (only it stashed): red. 18/18 in the file.
+
+**Commit.** The commit that carries this entry.

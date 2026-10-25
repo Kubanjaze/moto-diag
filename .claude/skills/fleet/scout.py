@@ -89,8 +89,15 @@ Return:
 
 **Write no numbers that count things** (no "3 files", "12 hits"): the
 table holds the counts and their commands. Name files and functions
-instead. Plain sentences.
+instead. **Write a phase's number only after the word Phase** ("Phase
+385", never "385" alone, and never "385's"), and an F-number or K-id as
+it is ("F212"): a bare number followed by a word ending in s reads to the
+checker as a count. Plain sentences.
 """
+#: Said on the corrective call, beside what the checker flagged.
+RECOUNT = ("your last answer has numbers the checker reads as counts with no command "
+           "shown. Write it again with no counts, and with every phase number after the "
+           "word Phase (\"Phase 385\"), never alone")
 
 
 # ------------------------------------------------------------------ calls
@@ -165,8 +172,7 @@ def assess(mission: str, row: str, table: str, excerpts: list[dict], context: st
         counts = plan_check.unshown_counts(prose)
         if not counts:
             return v, calls
-        prompt += ("\n\n=== your last answer counted things with no command shown; write it again "
-                   "with no counts ===\n" + "\n".join(counts))
+        prompt += f"\n\n=== {RECOUNT} ===\n" + "\n".join(counts)
     raise Stop(f"the report still counts things with no query: {counts[0]}")
 
 
