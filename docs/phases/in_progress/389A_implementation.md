@@ -6,10 +6,18 @@ Written by the Captain from `docs/phases/in_progress/389A_step0.md`
 (classification: extension), the ROADMAP row 389A and the mission prompt
 `docs/prompts/389A_385_s_roadmap_row.txt`. The Executive Officer checks this
 document before any work; the Chief Engineer builds to it and writes v1.1.
-This revision answers the Executive Officer's four items on the first draft:
+This revision answers the Executive Officer's items on the first two drafts:
 the review stage that does not exist in this trial (Logic, section 5), the
 shape of the ROADMAP diff (section 1's finish line), the phase log's own
-commit (section 3's finish line) and the draft row's word count (section 1).
+commit (section 3's finish line), the draft row's word count (section 1), and
+the ref the diff is taken against. The first draft diffed against `master`,
+which does not resolve in the stage clone: `dispatcher.py` line 376 makes
+that clone with `git clone --branch <branch> <mirror>`, so the clone's only
+local head is the phase branch and `master` exists there only as
+`refs/remotes/origin/master` (at `6adffc5` in this fence's clone, the commit
+that added row 389A). Every diff in this plan is now against
+`origin/master`, and the phase log records the hash that ref resolved to when
+the diff was taken, since the mirror is refreshed before each stage.
 
 ---
 
@@ -70,16 +78,28 @@ ledger rule asks: "Step 0 next." becomes what is true at the commit (the plan
 committed, row 385 added, awaiting the operator's merge). Nothing else in
 row 389A changes, and no other row changes.
 
+The diff is taken against `origin/master`, never `master`: the stage clone
+has no local `master` (the revision in this document's opening paragraph).
+Before taking it, the Engineer runs `git rev-parse origin/master` and records
+the hash it prints in the phase log next to the diff, because the mirror is
+refreshed before each stage and the ref can move between stages. The
+expected shape below holds while that hash is `6adffc5` or a descendant that
+carries row 389A unchanged; if the ref has moved past that, the Engineer
+records the new hash and the shape it produces, and the recommendation names
+the difference.
+
 **Finish line:** `grep -c '^| 385 |' docs/ROADMAP.md` prints 1 (the Step 0
 census printed 0); `python3 .claude/skills/closeout/roadmap_words.py 385
 --check` exits 0 and its printed count is recorded in the phase log;
 `python3 .claude/skills/closeout/roadmap_check.py` exits 0;
-`git diff --stat master -- docs/ROADMAP.md` prints exactly
+`git rev-parse origin/master` is recorded in the phase log;
+`git diff --stat origin/master -- docs/ROADMAP.md` prints exactly
 `1 file changed, 2 insertions(+), 1 deletion(-)`, because git shows the
 change to row 389A as one line removed and one added; and the diff body,
-`git diff master -- docs/ROADMAP.md`, has exactly one `-` line, 389A's old
-row, and exactly two `+` lines, row 385 and 389A's new row. Both the stat
-line and the three diff lines go in the phase log.
+`git diff origin/master -- docs/ROADMAP.md`, has exactly one `-` row line,
+389A's old row, and exactly two `+` row lines, row 385 and 389A's new row,
+not counting the `---`/`+++` header lines. The resolved hash, the stat line
+and the three diff lines go in the phase log.
 
 ### 2. `docs/phases/in_progress/389A_implementation.md`: this plan, then v1.1
 
@@ -96,16 +116,19 @@ reads a history row as a close.
 
 A new file, in the shape of `docs/phases/completed/388_phase_log.md`. One
 dated entry per event: the plan commit and its hash; the row commit and its
-hash; `wholetree.sh`'s exit code before each commit, read on its own, never
-through a pipe; the regression attempt and its printed line, marked of record
-or not; any guard that blocks a command, recorded and never loosened; every
-label on issue #14 as it actually moved, and which script moved it; the
-status note (section 5's third point); and the line "No refute pass ran",
-since nothing here is a content row.
+hash; the hash `origin/master` resolved to when the ROADMAP diff was taken,
+with the stat line and the three diff lines; `wholetree.sh`'s exit code
+before each commit, read on its own, never through a pipe; the regression
+attempt and its printed line, marked of record or not; any guard that blocks
+a command, recorded and never loosened; every label on issue #14 as it
+actually moved, and which script moved it; the status note (section 5's
+third point); and the line "No refute pass ran", since nothing here is a
+content row.
 
 **Finish line:** every commit on the branch after the plan commit, except the
 last, has an entry naming its hash; every `wholetree.sh` run has its exit
-code; the regression attempt has its line verbatim. The last commit on the
+code; the regression attempt has its line verbatim; the ROADMAP diff entry
+names the `origin/master` hash it was taken against. The last commit on the
 branch is the one that lands the log's final entry, so the log cannot name
 its own hash. That hash is recorded in the Captain's merge recommendation on
 the pull request (section 5), and the operator's merge-outcome line in the
@@ -161,7 +184,8 @@ anyone moving it by hand.
 The recommendation must carry:
 
 - the diff's shape: one ROADMAP row added, 389A's row updated, the three
-  phase documents and the handoff, nothing under `src/` or `tests/`;
+  phase documents and the handoff, nothing under `src/` or `tests/`; and the
+  `origin/master` hash the shape was measured against;
 - the hash of the branch's last commit (the one the phase log cannot name,
   section 3) and each check's exit code from the phase log;
 - the status note for the operator: the mission says 🔲 and 385's prompt says
@@ -265,9 +289,12 @@ code in the phase log:
   121, run from the stage's run directory on a string, not on the repository.
 - `grep -c '^| 385 |' docs/ROADMAP.md`: 0 before (the Step 0 census), 1
   after.
-- `git diff --stat master -- docs/ROADMAP.md` prints
-  `1 file changed, 2 insertions(+), 1 deletion(-)`, and the diff body has one
-  `-` line and two `+` lines, the three rows named in Logic, section 1.
+- `git rev-parse origin/master`: the hash recorded, then
+  `git diff --stat origin/master -- docs/ROADMAP.md` prints
+  `1 file changed, 2 insertions(+), 1 deletion(-)`, and
+  `git diff origin/master -- docs/ROADMAP.md` has one `-` row line and two
+  `+` row lines (header lines not counted), the three rows named in Logic,
+  section 1. `master` is not used: the stage clone has no such local ref.
 - `.claude/skills/closeout/wholetree.sh` (fast mode) before every commit, run
   on its own, its exit code read before the commit.
 - `python3 .claude/skills/fleet/plan_check.py 389A`: exit 0 against v1.0
@@ -297,6 +324,9 @@ code in the phase log:
   `dispatcher.py`'s label table to match this trial: 389 and the later
   rollout steps own those. This trial only records which labels it passed
   through.
+- Creating a local `master` branch in the stage clone, or changing how
+  `dispatcher.py` clones, so that `master` would resolve: the diff is taken
+  against `origin/master` instead.
 - Merging, closing issues #9, #10 or #14, or moving any label by hand.
 - Any new check that reads the `<!-- fleet-trial -->` marker, which the
   census finds nowhere.
@@ -309,14 +339,16 @@ code in the phase log:
 - [ ] the checks run and recorded: `roadmap_check.py` and its `--self-test`,
       `tests/test_roadmap_continuity.py`, `roadmap_words.py 385 --check` with
       its count and its 121-word control, the `grep -c` before and after, the
-      `--stat` line and the three diff lines
+      `origin/master` hash from `git rev-parse`, the `--stat` line and the
+      three diff lines against `origin/master`
 - [ ] `wholetree.sh --full` and `regression.sh` once in the stage clone, the
       line recorded verbatim and marked of record or not
 - [ ] `389A_phase_log.md` with every commit but the last, every exit code,
-      every guard block and every label move
+      every guard block, every label move and the `origin/master` hash the
+      diff was taken against
 - [ ] `389A_implementation.md` v1.1 with Deviations and Results
 - [ ] the handoff on the branch, with the operator's paste block for the Mac
       and the close-out steps
 - [ ] the pull request; the Captain's merge recommendation directly after it
-      opens, naming the last commit's hash, that no Red Team ran, the status
-      note and the close-out hand-over
+      opens, naming the last commit's hash, the `origin/master` hash, that no
+      Red Team ran, the status note and the close-out hand-over
