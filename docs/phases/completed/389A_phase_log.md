@@ -167,9 +167,7 @@ Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:2
 
 This session moved no label and has no network but the model's. Every label
 on issue #14 is set by the dispatcher's scripts from a parsed result, outside
-this session: before this round, 389's handoff records `needs-admiral` taken
-off and `plan:approved` re-applied by the planter's maintenance after 389's
-merge. The labels this round's result moves are the dispatcher's, recorded on
+this session. The labels this round's result moves are the dispatcher's, recorded on
 the issue and in the Captain's recommendation, not here: this log is written
 inside the stage and cannot see them.
 
@@ -196,3 +194,58 @@ section 3); the pull request and the handoff's merge outcome name it.
 close-out staged: exit 0, "2085 passed, 10 skipped" (92.9 s wall).
 `closeout_check.py . 389A` printed nothing; `roadmap_check.py` exit 0;
 `roadmap_words.py 389A --check` printed 79, exit 0.
+
+### 2026-10-25 — Fix round 2: the Red Team's findings on PR #15
+
+The Red Team sent the pull request back with six findings. All six are about
+the documents; no code changed, so there is no bug fix and the regression of
+record stands. Each finding and what was done:
+
+1. *v1.1 claims `plan_check.py 389A` passed against v1.1, and this log had
+   no such run.* True: no run was recorded, and on the closed tree the
+   checker cannot read the plan. `python3 .claude/skills/fleet/plan_check.py
+   389A` on the branch printed "CANNOT READ
+   docs/phases/in_progress/389A_implementation.md", exit 2. It was then run
+   on a scratch worktree (`git worktree add --detach /fleet/run/pc389A
+   e69c6f6`, row 389A 🚧 there) with this round's v1.1 copied into
+   `docs/phases/in_progress/`: `plan_check.py 389A --repo /fleet/run/pc389A`
+   printed P1–P8 pass and "plan_check 389A: PASS", exit 0. The worktree was
+   removed afterwards. v1.1's Results and Deviations now say how it ran, and
+   "(every output in the phase log)" is deleted.
+2. *"`e69c6f6`, the one commit between the plan and the close-out".* Two:
+   `93e1df0` (the merge of `master`) and `e69c6f6`. Corrected.
+3. *`dispatcher.py` "line 376" and "only `stage_xo` and `stage_digest`".*
+   The line number is deleted (the clone is at line 597 here). Section 5
+   now says that was the dispatcher when the plan was written, and its As
+   built names the five stages 389 added.
+4. *"again at the close-out".* No second measurement was recorded; deleted.
+   Measured this round instead: `git rev-parse origin/master` printed
+   `6f32013dae67300eb57fcab5230c4d8cc70a9114` (row 390 and 389's merge
+   outcome), a descendant of `7ca42e0`. `git diff --stat origin/master --
+   docs/ROADMAP.md`: `1 file changed, 2 insertions(+), 2 deletions(-)`; its
+   row lines are `+` 385, `-` 389A 🚧, `-` 390 (absent from this branch),
+   `+` 389A ✅. Against the merge base (`git merge-base` printed
+   `7ca42e0`), `git diff --stat origin/master...HEAD -- docs/ROADMAP.md`:
+   `1 file changed, 2 insertions(+), 1 deletion(-)`, with `+` 385, `-` 389A
+   🚧 and `+` 389A ✅. The branch was not merged with `master` here.
+5. *The handoff's list of what differs from `origin/master` leaves out
+   `docs/prompts/389A_385_s_roadmap_row.txt`.* Added to the handoff, and to
+   v1.1's Deviations (committed with Step 0, `ffe1691`).
+6. *This log said 389's handoff records the label moves on #14.* This
+   branch's copy of that handoff lists them only as next steps. The clause
+   is deleted.
+
+`wholetree.sh` (fast) before the round-2 commit, first run on its own:
+exit 1, "2 failed, 2083 passed, 10 skipped". `finding_check` B2: this
+round's new text cited a finding filed on `master` after `7ca42e0`, which
+has no entry on this branch. The second failure,
+`test_phase379_wholetree_output.py::test_a_passing_run_keeps_its_log_too`,
+runs the same full check. Not a code bug: my citation. The number was
+deleted from both documents and `plan_check.py 389A` was run again on the
+scratch worktree with the final v1.1: PASS, exit 0. The second run failed
+the same way because this entry itself named the number; it now does not.
+
+`wholetree.sh` (fast), third run, on its own: exit 0, "2085 passed, 10
+skipped" (101.7 s wall). Then, with this round staged, `closeout_check.py .
+389A` printed nothing, `roadmap_check.py` exit 0, and `wholetree.sh` was run
+once more on its own before the commit (exit below the commit's message).

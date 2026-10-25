@@ -18,7 +18,7 @@ the review stage that does not exist in this trial (Logic, section 5), the
 shape of the ROADMAP diff (section 1's finish line), the phase log's own
 commit (section 3's finish line), the draft row's word count (section 1), and
 the ref the diff is taken against. The first draft diffed against `master`,
-which does not resolve in the stage clone: `dispatcher.py` line 376 makes
+which does not resolve in the stage clone: `dispatcher.py` makes
 that clone with `git clone --branch <branch> <mirror>`, so the clone's only
 local head is the phase branch and `master` exists there only as
 `refs/remotes/origin/master` (at `6adffc5` in this fence's clone, the commit
@@ -116,8 +116,9 @@ regression line (Deviations). `grep -c` printed 1; `roadmap_check.py` exit
 0. `origin/master` resolved to `7ca42e0` (389's merge), a descendant of
 `6adffc5` carrying row 389A unchanged, so the expected shape held: the
 `--stat` line was `1 file changed, 2 insertions(+), 1 deletion(-)`, with one
-`-` row line (389A old) and two `+` (385, 389A new), at the row commit and
-again at the close-out.
+`-` row line (389A old) and two `+` (385, 389A new), at the row commit. By
+fix round 2, `origin/master` had moved to `6f32013` (row 390); that
+measurement is in the phase log and under Deviations.
 
 ### 2. `docs/phases/in_progress/389A_implementation.md`: this plan, then v1.1
 
@@ -157,7 +158,8 @@ the pull request (section 5), and the operator's merge-outcome line in the
 handoff, added after the merge, names it again.
 
 **As built:** `389A_phase_log.md`, moved to `completed/` at the close-out.
-It names `e69c6f6`, the one commit between the plan and the close-out, the
+It names `93e1df0` (the merge of `master`) and `e69c6f6` (the row), the two
+commits between the plan and the close-out, the
 `origin/master` hash `7ca42e0`, every `wholetree.sh` exit code, and the
 regression lines as printed. No label moved inside this session (it has no
 network but the model's); the log says so and leaves the label record to the
@@ -209,8 +211,8 @@ the merge" section is for whoever merges.
 Not a file in the repository: three lines on the pull request. In this trial
 it follows the pull request's opening directly, with no review stage between.
 The reason is on this branch: `dispatcher.py`'s `NEXT_RANK` names the Red
-Team as the mover of `review:open`, but the dispatcher here has only
-`stage_xo` and `stage_digest`; 388's non-goals list every seat that writes
+Team as the mover of `review:open`, but when this plan was written the
+dispatcher had only `stage_xo` and `stage_digest`; 388's non-goals list every seat that writes
 code, including the Red Team, as a later rollout step; and row 389A says 389
 builds the Captain and the Engineer only. No rank in this trial can move
 `review:open` to `review:clear`, so the trial does not pass through those two
@@ -248,10 +250,12 @@ hand; the phase log's label entries show it.
 **As built:** outside this session. The Engineer's stage cannot open the
 pull request, post on it or set a label from inside the fence; the
 dispatcher pushes and opens the pull request after its own checks and
-model-free run. Since this plan was written, 389 merged with `red_team.py`
-on the service, and 389's handoff names "the PR, the Red Team and the
-recommendation" as the trial's next stages; whether a Red Team runs on this
-pull request is the dispatcher's, and the recommendation says which. Two of
+model-free run. Since this plan was written, 389 merged with `red_team.py`,
+and the dispatcher on this branch has `stage_scout`, `stage_captain`,
+`stage_engineer`, `stage_red_team` and `stage_recommend` besides
+`stage_xo` and `stage_digest`, so the reason above no longer holds. A Red
+Team did run on the pull request (#15) and sent it back; its round-2
+findings and their fixes are in the phase log. Two of
 the points above changed with the build: the close-out is no longer the
 operator's on the Mac (section 4, as built), and the branch's last commit is
 the close-out commit.
@@ -361,7 +365,7 @@ code in the phase log:
   a regression of record and the merge recommendation says so as a change
   from this plan.
 
-**As run** (every output in the phase log): `roadmap_check.py` exit 0, its
+**As run**: `roadmap_check.py` exit 0, its
 `--self-test` R1–R7 each fire and the good tree passes, exit 0 (R5 read the
 mobile copy inside the fence); `tests/test_roadmap_continuity.py` 28 passed
 under `.venv/bin/python` (the host's `python3` has no pytest);
@@ -442,8 +446,20 @@ and of record. `plan_check.py 389A` against v1.1: Results.
   host interpreter has no pytest. Same test, the canonical interpreter.
 - **Section 5 is outside this session.** The labels, the pull request and
   the recommendation are the dispatcher's and the Captain's. 389 has since
-  merged a Red Team rank; whether it runs here is the dispatcher's, and the
-  recommendation says which.
+  merged a Red Team rank, and it ran on the pull request (#15).
+- **`plan_check.py 389A` against v1.1 ran in a scratch worktree.** The
+  checker reads only `docs/phases/in_progress/` and P1 wants the row 🚧, so
+  on the closed tree it prints "CANNOT READ", exit 2. It ran on a worktree
+  of `e69c6f6` (row 389A 🚧) with v1.1 copied into `in_progress/`; the
+  phase log has the command and the file's hash.
+- **The branch's diff also carries `docs/prompts/389A_385_s_roadmap_row.txt`**,
+  the mission prompt, committed with Step 0 (`ffe1691`) before the plan;
+  section 5's diff shape does not name it.
+- **`origin/master` moved to `6f32013` by fix round 2** (389's handoff
+  outcome, row 390). Against it, the two-dot `--stat` reads
+  `2 insertions(+), 2 deletions(-)`, because this branch predates row 390;
+  against the merge base, `7ca42e0`, the shape is still the planned one.
+  The phase log has both.
 - No bug fixes; no guard blocked a command.
 
 ## Results
@@ -463,5 +479,5 @@ are in the phase log as printed.
 - **Checks**: `roadmap_check.py` exit 0 and its self-test R1–R7 fire;
   `tests/test_roadmap_continuity.py` 28 passed; `wholetree.sh` fast exit 0
   before each commit; `wholetree.sh --full` 4530 passed, 36 skipped, exit 0.
-- **`plan_check.py 389A` against v1.1**: P1–P8 pass, "plan_check 389A:
-  PASS", exit 0.
+- **`plan_check.py 389A` against v1.1**, in the scratch worktree
+  (Deviations): P1–P8 pass, "plan_check 389A: PASS", exit 0.
