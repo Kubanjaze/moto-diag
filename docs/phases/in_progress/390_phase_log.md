@@ -115,3 +115,64 @@ were given their source (`KEEP_RUNS = 20`; `grep -n 'self.pause('`).
   15:50 and 16:33), `test_phase390_kill.py` (1: a real process SIGKILLed
   with its group, a second process resumes). 128 passed with 388's and
   389's dispatcher tests.
+
+## 2026-10-25 — the operator, from the fleet watch (16:4x)
+
+"Two things from the fleet watch. (1) Your whole-tree run at 16:16 and the
+pytest runs at 16:27 overlapped #14's model-free run (16:11 to 16:29), and
+it failed on one load timeout: test_phase240_gate12 -> test_phase159_gate_7
+-> test_phase147_gate_6's 60-second subprocess limit on test_phase121_gate_r
+(log in runs/20261025_161137_check/clone/.git/motodiag_wholetree/last_full.log).
+File it as a finding. From now on, before any whole-tree or regression run,
+check dispatcher.log for a fleet model-free run in progress and wait for it
+to end. (2) #14 is on needs-admiral because of that, not because of the
+work. Its round-2 fix is e15b462 in runs/20261025_160200_engineer_389A/clone.
+Keep that folder from being pruned by your proofs. Make #14 the
+real-artefact proof: once 390 is merged and live, the operator taking
+needs-admiral off an Engineer stop whose only failure was the model-free run
+should rerun that run on the same commit, then push and go on to Red Team
+round 3. Write that as my paste block when it is time. Don't touch #14 or
+its labels yourself."
+
+- **Checked, and it holds.** The model-free run: 16:11:37 to 16:29:02
+  (`dispatcher.log`). Its log, l. 95: "timed out after 60 seconds"; l. 117:
+  "1 failed, 4529 passed, 36 skipped … in 1039.46s". My `wholetree.sh` for
+  the v1.0 commit ended 16:17:49 at 88.5 s wall (55–57 s before and after).
+  My mistake: I did not look for a fleet run before mine.
+- **Filed F220** (`next_f_number.sh`: F219 here, F181 in mobile; next F220).
+  `finding_check.py` exit 0.
+- **The rule, kept from now on:** before each `wholetree.sh`, regression or
+  large pytest run, the last line of `dispatcher.log` is read for a
+  model-free run in progress. Every run since has been preceded by that
+  read (the last line each time: 16:29:02 "issue 14: checks failed").
+- **Read-only, #14's run:** `runs/20261025_160200_engineer_389A/clone` at
+  `e15b462`, clean; `engineer.json` `pr-ready`; its stop comment's two
+  items are both the model-free run's; `engineer.verify` with the
+  Engineer's own regression line: `[]` (nothing else fails), the clone
+  unchanged after (0 changed paths before and after). GitHub's branch is
+  at `bdecabd`: `e15b462` was never pushed.
+- **Built, at the operator's word** (an addition to v1.0; Deviations):
+  `engineer_finish` (the Engineer's tail, shared); when only the model-free
+  run fails (the Engineer's own line passes every other check), the run is
+  **held** (`journal.hold`, `held.json` in the run folder) and the stop
+  says "take `needs-admiral` off to run it again on the same commit";
+  `prune_runs` keeps a held run; `held_for` and `stage_recheck`: with
+  `build:open`, a held run for the issue, and the Engineer's stop still the
+  last rank comment (the operator has taken the label off), the model-free
+  run again on the held commit, then the push, the PR comment, `pr-ready`,
+  `review:open`, and the hold released; failing again, held again.
+- **#14's run held by hand** (17:0x): `held.json` written into
+  `runs/20261025_160200_engineer_389A` with `journal.hold`: issue 14, phase
+  389A, round 2, commit `e15b46278cc0fe64fb3269909f38a1b1a1642693`. The
+  running service (old code) does not read it; nothing on #14, its labels,
+  PR #15 or the 389A branch was touched. It keeps the folder from 390's
+  prune and is what the recheck finds once 390 is live.
+- **Two more guard blocks, recorded (rule 6):** a `sed -i` and a `>>`
+  redirect of mine into `tests/` were refused by `edit_guard.sh`. Both
+  redone with the Edit tool; the guard untouched.
+- Tests added: the held stop, the recheck on the same commit and on to the
+  Red Team, a failure beyond the model-free run not held, the recheck
+  failing again, the recheck cut half way, the prune keeping a held run,
+  and #14's real comments with `needs-admiral` off and its run held (the
+  recheck due; without the hold, nothing). 95 passed across the four 390
+  files.

@@ -144,6 +144,7 @@ _STARTED = re.compile(r"^<!-- fleet-started: rank=(\S+) run=(\S+) -->")
 _ENG_STARTED = re.compile(r"^<!-- fleet-engineer: started round=\d+(?: run=(\S+))? -->")
 #: The rank each journal's stage is said as, in markers and stop comments.
 STAGE_RANK = {"scout": "scout", "captain": "captain", "xo": "xo", "engineer": "engineer",
+              "recheck": "engineer",
               "red_team": "red-team", "recommend": "captain", "digest": "digest"}
 _RED = re.compile(r"^<!-- fleet-red-team: verdict=(\w+) round=(\d+)", re.M)
 _XO = re.compile(r"^<!-- xo-verdict: \S+ round=\d+ applied=(\S+)", re.M)
@@ -848,6 +849,10 @@ class Fleet:
         runs = sorted(p for p in self.runs.iterdir() if p.is_dir())
         for p in runs[:-KEEP_RUNS]:
             j = journal.Journal.load(p)
+            if j is None and (p / journal.FILE).is_file():
+                continue                      # unreadable: the search on start names it
+            if (p / journal.HELD).is_file():
+                continue                      # held for the operator (F220)
             if str(p) not in keep_also and not (j and j.unfinished):
                 shutil.rmtree(p, ignore_errors=True)
 
@@ -1087,6 +1092,16 @@ class Fleet:
                           f"Chief Engineer, phase {phase}: stopped ({result['kind']}). "
                           f"{result['question']}")
             return f"stopped: {result['kind']}"
+        return self.engineer_finish(issue, phase, branch, ident, run, result, rnd)
+
+    def engineer_finish(self, issue: int, phase: str, branch: str, ident: fleet_git.Identity,
+                        run: pathlib.Path, result: dict, rnd: int) -> str:
+        """A `pr-ready`, checked: the model-free run on HEAD, then the push,
+        the PR and `review:open`. When the model-free run is all that failed
+        (the Engineer's own line passes every other check: F220, a run lost
+        to load), the run is held (`journal.hold`): the operator taking
+        `needs-admiral` off runs it again on the same commit (`stage_recheck`)."""
+        clone = run / "clone"
         head = self.git("-C", str(clone), "rev-parse", "HEAD").stdout.strip()
         self.log(f"issue {issue}: the model-free run on {head[:12]}")
         check = self.checked(clone, head, full=True)
@@ -1094,10 +1109,17 @@ class Fleet:
         if not check.ok:
             fails.append(f"the model-free run did not pass: {check.line or check.why}"[:400])
         if fails:
+            again = not check.ok and not engineer.verify(clone, phase, result,
+                                                         result["regression_line"])
+            if again:
+                self.step("hold", lambda: journal.hold(run, {"issue": issue, "phase": phase,
+                                                             "rnd": rnd, "commit": head}))
             self.escalate(issue, "engineer", "needs-admiral",
                           f"Chief Engineer, phase {phase}: the work says it is ready, and the "
                           f"checks say it is not. " + " ".join(f"({i + 1}) {f}" for i, f in
-                                                              enumerate(fails))[:1500])
+                                                              enumerate(fails))[:1500]
+                          + (" Only the run with no model failed: take `needs-admiral` off to "
+                             f"run it again on the same commit ({head[:12]})." if again else ""))
             return "checks failed"
         self.push_once(clone, head, rank="engineer", phase=phase, branch=branch, ident=ident,
                        tested=lambda c: (check.ok and c == check.commit,
@@ -1130,6 +1152,32 @@ class Fleet:
                       f"({pr and pr['url']}). The model-free run: {check.line}")
         self.label_once(issue, "review:open")
         return f"PR {pr and pr['number']} ready"
+
+    def stage_recheck(self, issue: int, phase: str, body: str, branch: str, held: pathlib.Path,
+                      *, resume: dict | None = None) -> str:
+        """The operator took `needs-admiral` off an Engineer stop whose only
+        failure was the model-free run: that run again, on the commit the
+        Engineer left in its held run, then the rest of a `pr-ready`."""
+        ident = self.identity_for(issue, body, "engineer")
+        if ident is None:
+            return "needs hands"
+        info = journal.held(held)
+        if info is None:
+            raise Stop(f"the held run {held.name} is no longer held")
+        run, j = self.begin(f"recheck_{phase}", {"stage": "recheck", "issue": issue,
+                                                 "phase": phase, "body": body, "branch": branch,
+                                                 "held": str(held)}, resume)
+        self.started(issue, "engineer", f"**Chief Engineer, phase {phase}: the run with no model, "
+                                        f"again**, on `{info['commit'][:12]}`, as the operator "
+                                        "took `needs-admiral` off.")
+        head = self.git("-C", str(held / "clone"), "rev-parse", "HEAD").stdout.strip()
+        if head != info["commit"]:
+            raise Stop(f"the held clone is at {head[:12]}, not {info['commit'][:12]}")
+        out = self.engineer_finish(issue, phase, branch, ident, held,
+                                   engineer.read_result(held / "run"), info["rnd"])
+        if out != "checks failed":
+            self.step("release", lambda: journal.release(held))
+        return out
 
     def gh_as(self, ident: fleet_git.Identity, *args: str) -> str:
         r = self.host(["gh", *args], capture_output=True, text=True, timeout=120,
@@ -1292,6 +1340,9 @@ class Fleet:
             return self.stage_engineer(n, ph, paused["body"], paused["branch"],
                                        findings=paused.get("findings"), rnd=paused.get("rnd", 0),
                                        resume=paused)
+        if s == "recheck":
+            return self.stage_recheck(n, ph, paused["body"], paused["branch"],
+                                      pathlib.Path(paused["held"]), resume=paused)
         if s == "red_team":
             return self.stage_red_team(n, ph, paused["body"], paused["branch"], resume=paused)
         return self.stage_recommend(n, ph, paused["body"], paused["branch"], resume=paused)
@@ -1331,6 +1382,19 @@ class Fleet:
             return None
         return day
 
+    def held_for(self, n: int) -> pathlib.Path | None:
+        """The issue's held Engineer run, when the operator has taken
+        `needs-admiral` off the stop that held it: that stop is still the
+        issue's last rank comment (the cycle never looks at an issue the
+        operator holds)."""
+        runs = journal.held_runs(self.runs, n)
+        if not runs:
+            return None
+        ranked = [c["body"].lstrip() for c in self.comments(n)
+                  if c.get("body", "").lstrip().startswith(RANK_PREFIXES)]
+        stop = f"{MARKER} needs-admiral rank=engineer"
+        return runs[0] if ranked and ranked[-1].startswith(stop) else None
+
     def next_stage(self, n: int, phase: str, labels: set[str], body: str, title: str
                    ) -> tuple[str, Callable[[], str]] | None:
         """The one stage the labels ask for on this issue, latest state first."""
@@ -1346,6 +1410,8 @@ class Fleet:
         if "review:open" in labels and self.due_for(n, "review:open",
                                                     self.markers(RED_M, "red-team")):
             return "red-team", lambda: self.stage_red_team(n, phase, body, branch())
+        if "build:open" in labels and (held := self.held_for(n)) is not None:
+            return "engineer", lambda: self.stage_recheck(n, phase, body, branch(), held)
         if "build:open" in labels:
             back, mine = self.newest(n, f"{RED_M} verdict=back"), self.newest(n, ENGINEER_M)
             stop = self.newest(n, f"{MARKER} stopped rank=engineer")
@@ -1498,6 +1564,9 @@ class Fleet:
             "issue", "list", "--state", "open", "--limit", "200", "--json",
             "number,title,body,labels"))}
         paused = (self.load().get("paused") or {}).get("run")
+        for p in journal.unreadable(self.runs):
+            act(f"leave {p.name}: its journal cannot be read, so its stage is not resumed; "
+                "the run is kept for the operator")
         for j in journal.unfinished(self.runs):
             rec, n = j.record, j.record.get("issue")
             rank, where = STAGE_RANK[rec["stage"]], f"{rec['stage']} from {j.run.name}"

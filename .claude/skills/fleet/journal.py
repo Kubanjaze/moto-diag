@@ -137,6 +137,44 @@ class Journal:
         self.save()
 
 
+HELD = "held.json"
+
+
+def hold(run: pathlib.Path, info: dict) -> None:
+    """An Engineer run kept for the operator: its model-free run failed and
+    nothing else did. `info`: issue, phase, rnd, commit. `prune_runs` keeps it."""
+    tmp = run / (HELD + ".tmp")
+    tmp.write_text(json.dumps(info, indent=1), encoding="utf-8")
+    tmp.replace(run / HELD)
+
+
+def held(run: pathlib.Path) -> dict | None:
+    try:
+        return json.loads((run / HELD).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
+def release(run: pathlib.Path) -> None:
+    (run / HELD).unlink(missing_ok=True)
+
+
+def held_runs(runs: pathlib.Path, issue: int) -> list[pathlib.Path]:
+    """The issue's held Engineer runs, newest first."""
+    if not runs.is_dir():
+        return []
+    return [p for p in sorted(runs.iterdir(), reverse=True)
+            if (info := held(p)) is not None and info.get("issue") == issue]
+
+
+def unreadable(runs: pathlib.Path) -> list[pathlib.Path]:
+    """Runs whose `stage.json` is there and cannot be read: said, and kept."""
+    if not runs.is_dir():
+        return []
+    return [p for p in sorted(runs.iterdir())
+            if (p / FILE).is_file() and Journal.load(p) is None]
+
+
 def unfinished(runs: pathlib.Path) -> list[Journal]:
     """Every journal under `runs` with no `ended`, oldest first."""
     if not runs.is_dir():

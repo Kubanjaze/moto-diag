@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F219** (this file). The
+At the time of writing the highest assigned is **F220** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3929,7 +3929,7 @@ live that morning: session 1%, week 15%, Fable 21%.
 `tests/test_phase388_dispatcher.py::TestTheOpusCeiling::test_the_usage_is_read_outside_the_fence_on_the_operators_sign_in`
 holds it.
 
-### F219
+### F219 — CLOSED by Phase 390 (`84a9bd4`)
 
 **A stage killed by a restart is lost, and its issue stalls with no stage due**
 
@@ -3958,3 +3958,58 @@ before it starts (the same record a pause writes), clears it when the
 stage ends, and on start, a record still there is resumed: the same run
 directory, `--resume` for a session that was cut, the model-free run
 rerun. A test kills a stage half way and restarts the dispatcher.
+
+Closed by Phase 390 (`84a9bd4`, `.claude/skills/fleet/journal.py` and
+`dispatcher.py`), as asked, with the record in the run directory rather
+than `state.json`: each stage's journal (`runs/<run>/stage.json`, outside
+the fence) is written before the stage starts and after each step, and
+ended when it ends. On every start, before the first cycle, `recover()`
+resumes each unfinished one from the same run directory: finished model
+calls and model-free runs replayed, the cut call with `--resume` and the
+session its transcript names (measured in the fence, `390_phase_log.md`
+S0-5), the model-free run again on the same commit, each GitHub write
+checked for first. A `started` marker left open with no stage due gets a
+stop comment. The tests: `tests/test_phase390_resume.py` (every kill
+point in `390_step0.md`), `tests/test_phase390_kill.py` (a process
+SIGKILLed half way, then restarted), `tests/test_phase390_search.py`
+(#14's real history at 15:34 and 15:50). The live proofs are in
+`390_phase_log.md`.
+
+### F220
+
+**A test run in the operator's checkout, beside a fleet model-free run on the same machine, can fail that run on a load timeout, and the fleet takes it for the work's failure**
+
+Found 2026-10-25 by the operator, watching the fleet during Phase 390.
+#14's Engineer, fix round 2, handed `e15b462` (its clone in
+`runs/20261025_160200_engineer_389A`) to the dispatcher's model-free run,
+from 16:11:37 to 16:29:02 (`dispatcher.log`). In that window the Phase 390
+session, in `~/Projects/moto-diag` on the same desktop, ran
+`wholetree.sh` (ended 16:17:49, 88.5 s wall, where that session's runs
+before and after took 55–57 s) and pytest on the fleet's tests (about
+16:27). The model-free run's `wholetree.sh --full` failed on one test:
+`1 failed, 4529 passed, 36 skipped … in 1039.46s`
+(`runs/20261025_161137_check/clone/.git/motodiag_wholetree/last_full.log`,
+l. 117). The failure is a chain of nested runs, each under the one
+above: `test_phase240_gate12` runs `test_phase159_gate_7`, which runs
+`test_phase147_gate_6`, whose `test_phase121_gate_r_still_passes` gives
+its subprocess 60 seconds: "timed out after 60 seconds" (l. 95).
+Nothing in the work failed.
+
+What it affects: the dispatcher read the failed run as the work's
+("the work says it is ready, and the checks say it is not … the
+model-free run produced no regression of record") and put #14 on
+`needs-admiral` at 16:29. Every fleet model-free run (the Engineer's, an
+hour; the push gate's fast run; the Red Team's F9 run) shares the machine
+with whatever else runs there, and a nested gate's fixed 60-second limit
+is the first thing to go under load. A stop for the operator costs a
+round trip, and a fix round's own regression is spent.
+
+The operator's rule, 2026-10-25, from now on: "before any whole-tree or
+regression run, check dispatcher.log for a fleet model-free run in
+progress and wait for it to end." Held by hand, not by a check.
+
+To close: the whole-tree command and the regression of record, on the
+fleet's host, wait while a fleet model-free run is in progress (or
+refuse, naming it); and an Engineer stop whose only failure is the
+model-free run can be sent back to rerun that run on the same commit
+(Phase 390 builds the second half, at the operator's word).

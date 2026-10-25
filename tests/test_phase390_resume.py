@@ -36,8 +36,8 @@ import engineer as E  # noqa: E402
 import journal as J  # noqa: E402
 import rank_call  # noqa: E402
 from test_phase388_dispatcher import LIMITED, USAGE_LIMITED, Clock, claude_json  # noqa: E402
-from test_phase389_dispatcher import (  # noqa: E402
-    ASSESS, BRANCH, LINE, PHASE, PLAN, TERMS, TITLE, TRIAL, FakeEngineer, GitHub)
+from test_phase389_dispatcher import ASSESS, BRANCH, LINE, PHASE, PLAN, TERMS  # noqa: E402
+from test_phase389_dispatcher import TITLE, TRIAL, FakeEngineer, GitHub  # noqa: E402
 from test_phase389_fleet_git import git, make_origin  # noqa: E402
 from test_phase389_red_team import FINDING, TABLE  # noqa: E402
 
@@ -137,6 +137,7 @@ class World:
     lines: list
     fleet: D.Fleet = None
     check_kill: object = None     # (full, after) for the next model-free run
+    check_fail: bool = False      # the next full model-free run fails (F220: lost to load)
     session_kill: bool = False    # the next Engineer session dies, its transcript written
 
     def make(self) -> D.Fleet:
@@ -145,6 +146,9 @@ class World:
             if self.check_kill is not None and self.check_kill == (full, command is not None):
                 self.check_kill = None
                 raise Killed("the model-free run")
+            if full and self.check_fail:
+                self.check_fail = False
+                return D.Check(False, commit, None, "subprocess timed out after 60 seconds")
             return D.Check(True, commit, LINE if full else None,
                            "F9 lint: clean" if command else "")
 
@@ -403,11 +407,30 @@ def test_engineer_cut_in_its_model_free_run_f219(w):
     assert labels(w) == ["mission", "review:open"] and BRANCH in w.host.prs
 
 
+def test_engineer_cut_after_its_session_ended_before_the_journal_knew(w):
+    """The session wrote its final JSON, and the kill fell before the
+    journal recorded it: `session.json` says it ended; it is not run again."""
+    to_approved(w)
+    w.check_kill = (True, False)
+    killed(w)
+    (j,) = J.unfinished(w.fleet.runs)
+    j.data["calls"][0].update(done=False)
+    j.data["checks"].clear()
+    j.save()
+    (j.run / "run" / "session.json").write_text(json.dumps({"type": "result", "is_error": False,
+                                                           "result": "done"}))
+    restart(w)
+    assert len(w.sessions) == 1, "a session that had ended ran again"
+    assert labels(w) == ["mission", "review:open"]
+
+
 def test_engineer_cut_after_its_push_before_the_pr(w):
     to_approved(w)
     w.kill.at(push, after=True)
     killed(w)
+    full = len([c for c in w.checks if c[1]])
     restart(w)
+    assert len([c for c in w.checks if c[1]]) == full, "the finished model-free run ran again"
     assert len(w.sessions) == 1 and BRANCH in w.host.prs
     assert labels(w) == ["mission", "review:open"]
 
@@ -541,6 +564,81 @@ def test_digest_cut_in_its_model_call(w):
     assert calls(w)[-1][:3] == ["claude", "--resume", CUT]
     assert w.fleet.load()["last_digest"] == "2026-10-21"
     no_unfinished(w)
+
+
+# ------------------------------- a model-free run lost to load (F220, #14)
+def held_stop(w):
+    to_approved(w)
+    w.check_fail = True
+    advance(w)
+    (held,) = J.held_runs(w.fleet.runs, N)
+    return held
+
+
+def test_a_stop_whose_only_failure_is_the_model_free_run_is_held(w):
+    held = held_stop(w)
+    info = J.held(held)
+    head = subprocess.run(["git", "-C", str(held / "clone"), "rev-parse", "HEAD"],
+                          capture_output=True, text=True).stdout.strip()
+    assert info == {"issue": N, "phase": PHASE, "rnd": 0, "commit": head}
+    assert "needs-admiral" in labels(w) and "take `needs-admiral` off" in w.host.comments(N)[-1]
+    assert BRANCH not in w.host.prs
+    n = len(w.host.comments(N))
+    advance(w)                                           # the operator has not answered
+    assert len(w.host.comments(N)) == n and J.held_runs(w.fleet.runs, N) == [held]
+
+
+def test_taking_needs_admiral_off_runs_it_again_on_the_same_commit(w):
+    held = held_stop(w)
+    commit = J.held(held)["commit"]
+    w.host.issues[N]["labels"].remove("needs-admiral")      # the operator's hand
+    n = len(w.checks)
+    advance(w)
+    assert [c[:2] for c in w.checks[n:] if c[1]] == [(commit, True)]
+    assert len(w.sessions) == 1, "the Engineer ran again"
+    assert BRANCH in w.host.prs and labels(w) == ["mission", "review:open"]
+    assert J.held_runs(w.fleet.runs, N) == [] and held.is_dir()
+    advance(w, BACK)                                        # the Red Team, its next round
+    assert said(w, f"{D.RED_M} verdict=back round=1") == 1
+
+
+def test_a_failure_beyond_the_model_free_run_is_not_held(w, monkeypatch):
+    to_approved(w)
+    monkeypatch.setattr(D.engineer, "verify", lambda *a, **k: ["close-out: A6 the row is long"])
+    w.check_fail = True
+    advance(w)
+    assert J.held_runs(w.fleet.runs, N) == []
+    assert "take `needs-admiral` off" not in w.host.comments(N)[-1]
+    w.host.issues[N]["labels"].remove("needs-admiral")
+    n = len(w.host.comments(N))
+    advance(w)
+    assert len(w.host.comments(N)) == n and BRANCH not in w.host.prs
+
+
+def test_the_recheck_failing_again_holds_again(w):
+    held = held_stop(w)
+    w.host.issues[N]["labels"].remove("needs-admiral")
+    w.check_fail = True
+    advance(w)
+    assert "needs-admiral" in labels(w) and J.held_runs(w.fleet.runs, N) == [held]
+
+
+def test_the_recheck_cut_in_its_model_free_run(w):
+    held = held_stop(w)
+    w.host.issues[N]["labels"].remove("needs-admiral")
+    w.check_kill = (True, False)
+    killed(w)
+    said_lines = restart(w)
+    assert said_lines[0].startswith("resume recheck")
+    assert labels(w) == ["mission", "review:open"] and J.held_runs(w.fleet.runs, N) == []
+    assert held.is_dir()
+
+
+def test_prune_keeps_a_held_run(w, monkeypatch):
+    held = held_stop(w)
+    monkeypatch.setattr(D, "KEEP_RUNS", 0)
+    w.fleet.prune_runs(set())
+    assert held.is_dir()
 
 
 # -------------------------------------------------- the pause (389's resume)

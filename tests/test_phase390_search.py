@@ -21,8 +21,6 @@ import json
 import pathlib
 import sys
 
-import pytest
-
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SKILL = ROOT / ".claude" / "skills" / "fleet"
 FIX = SKILL / "fixtures" / "resume"
@@ -33,8 +31,8 @@ import dispatcher as D  # noqa: E402
 import journal as J  # noqa: E402
 from test_phase388_dispatcher import iso  # noqa: E402
 from test_phase389_fleet_git import git  # noqa: E402
-from test_phase390_resume import (  # noqa: E402
-    APPROVE, N, SCOUT, V1, advance, killed, labels, ledger, model, restart, to_review, w)
+from test_phase390_resume import APPROVE, SCOUT, V1, N, advance, killed, labels  # noqa: E402
+from test_phase390_resume import ledger, model, restart, to_review, w  # noqa: E402
 
 assert w and ledger  # the fixtures, imported for their names
 
@@ -84,7 +82,7 @@ def test_14_at_f219s_restart_is_a_stall_and_gets_one_stop(w):
     `build:open` is on, the Red Team's back is older: nothing is due."""
     plant14(w, "2026-10-25T19:34:11Z", ["mission", "build:open"])
     said = w.fleet.recover()
-    assert said == [f"stop the engineer on issue 14: started 2026-10-25T19:06:25+00:00, "
+    assert said == ["stop the engineer on issue 14: started 2026-10-25T19:06:25+00:00, "
                     "nothing to resume from"]
     (stop,) = stops(w)
     assert "stopped rank=engineer run=none" in stop and "`review:open` again" in stop
@@ -103,6 +101,28 @@ def test_14_now_is_the_operators_and_nothing_is_said(w):
     plant14(w, "2026-10-25T20:33:00Z", ISSUE14["labels"])
     assert "needs-admiral" in ISSUE14["labels"]
     assert w.fleet.recover() == [] and stops(w) == []
+
+
+def test_14_with_needs_admiral_taken_off_and_its_run_held_has_the_recheck_due(w):
+    """The operator's ask (2026-10-25): #14 stopped at 16:29 only because
+    its model-free run was lost to load (F220). Its run is held by hand
+    (`held.json`, as 390's code writes one); once the operator takes
+    `needs-admiral` off, the recheck is the stage due, and nothing else."""
+    plant14(w, "2026-10-25T20:33:00Z", ["mission", "build:open"])
+    held = w.fleet.runs / "20261025_160200_engineer_389A"
+    (held / "run").mkdir(parents=True)
+    J.hold(held, {"issue": 14, "phase": "389A", "rnd": 2,
+                  "commit": "e15b46278cc0" + "0" * 28})
+    issue = {"title": ISSUE14["title"], "body": "planted trial",
+             "labels": [{"name": "mission"}, {"name": "build:open"}]}
+    assert w.fleet.held_for(14) == held
+    rank, _ = w.fleet.next_stage(14, "389A", {"mission", "build:open"}, "planted trial",
+                                 ISSUE14["title"])
+    assert rank == "engineer" and not w.fleet.stalled(14, "389A", issue)
+    J.release(held)
+    assert w.fleet.held_for(14) is None
+    assert w.fleet.next_stage(14, "389A", {"mission", "build:open"}, "planted trial",
+                              ISSUE14["title"]) is None, "without the hold, #14 stays as it is"
 
 
 def test_the_dry_run_on_14s_stall_writes_nothing(w):
@@ -143,7 +163,8 @@ def test_a_journal_on_an_issue_the_operator_holds_is_ended_and_said(w):
 def test_a_journal_whose_phase_closed_is_ended(w):
     cut_scout(w)
     road = w.origin / "docs" / "ROADMAP.md"
-    road.write_text(road.read_text().replace("| 902 | The trial | 🚧 |", "| 902 | The trial | ✅ |"))
+    road.write_text(road.read_text().replace("| 902 | The trial | 🚧 |",
+                                             "| 902 | The trial | ✅ |"))
     git("-c", "user.name=t", "-c", "user.email=t@l", "commit", "-qam", "902 closed", cwd=w.origin)
     said = restart(w)
     assert "not 🚧" in said[0]
