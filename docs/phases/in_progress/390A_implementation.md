@@ -6,6 +6,10 @@ Written by the Captain from `390A_step0.md` (classification: greenfield),
 ROADMAP row 390A and the mission prompt
 `docs/prompts/390A_the_quartermaster_s_roadmap_row_the.txt` (issue #16).
 Branch: `phase-390A-quartermaster-row`, from `master` at `9f0bd7b`.
+Revised once before the push on the Executive Officer's two items: the
+before-the-PR check is `closeout_check.py` and the push gate, with
+`verify_phase.sh` as the operator's after-the-merge check; and the root
+`implementation.md`'s Roadmap count line is re-measured at close-out.
 
 ---
 
@@ -86,7 +90,7 @@ any guard block (recorded, never loosened). It carries the line
 "No refute pass ran" unless a refute pass runs, in which case it carries the
 `## Refuter pass` checklist (A8). A bug-fix register appears only if a bug
 fix happens; a docs row is expected to need none. Its status line reads
-Complete at close-out (A2). Finish line: `closeout_check.py 390A` reports
+Complete at close-out (A2). Finish line: `closeout_check.py . 390A` reports
 nothing.
 
 ### 4. `docs/phases/in_progress/390A_implementation.md`, this document
@@ -98,18 +102,43 @@ differs from v1.0 only where Deviations says so.
 ### 5. The close-out records
 
 - `docs/handoffs/YYYY-MM-DD_390A_closed.md`: what shipped, what is open,
-  what is next, written before the merge (rule 4, R6); the merge's outcome
-  added after it.
+  what is next, written before the merge (rule 4, R6). It ends with an
+  `## After the merge` section, in the form of Phase 389's handoff, that
+  the operator fills in after the merge with the merge's outcome and the
+  verify script's result (below).
 - The root `phase_log.md`: a `## Phase 390A` section pointing at the two
   phase documents, in the form of Phase 389's.
 - The root `implementation.md`: the version header naming Phase 390A and a
-  history row (A7).
+  history row (A7), and its Roadmap count line re-measured with row 391 in
+  the ledger. The line today reads `407 rows, 368 numbered phases and 39
+  letter follow-ons, on 2026-10-25`; `master` already carries 409 rows
+  (369 numbered and 40 letter), and with row 391 the ledger holds 410 rows,
+  370 numbered phases and 40 letter follow-ons. The Engineer counts the
+  `| N |` and `| NX |` rows on the close-out tree (the same rows
+  `roadmap_check.py` reads), writes the three counts it gets and the
+  close-out date, and records the count's command in the phase log. The
+  figures above are what the count is expected to give, not what is
+  written: what is written is what the count returns on that tree. Phases
+  386 and 389 re-measured this line at their close-outs; a phase whose one
+  deliverable is a ROADMAP row cannot leave it stale.
 - The three 390A documents (`390A_step0.md`, `390A_implementation.md`,
   `390A_phase_log.md`) moved to `docs/phases/completed/`, none left in
   `in_progress/` (A1).
 
-Finish line: `.claude/skills/closeout/verify_phase.sh 390A <hash>` reads
-every check green.
+Finish line, in two parts, as Phase 389 ran it:
+
+- **Before the PR**, on the branch: `python3
+  .claude/skills/closeout/closeout_check.py . 390A` reports nothing (A1 to
+  A8), and the push gate in `.claude/skills/fleet/fleet_git.py` passes the
+  close-out commit. `verify_phase.sh` is not run before the PR: its usage is
+  `verify_phase.sh PHASE REG_HASH TIP` and it exits on a missing third
+  argument; its check 1 greps `origin/master` for the tip, which reads
+  MISSING until the merge; and its check 8 reads live or the way in to it,
+  which a stage clone inside the fence cannot reach.
+- **After the merge**, the operator's check: `verify_phase.sh 390A
+  <regression hash> <merge commit>`, as 389's was
+  (`verify_phase.sh 389 2754a01 7ca42e0`). Its result goes in the handoff's
+  `## After the merge` section, with the merge's outcome.
 
 ### 6. The order of work
 
@@ -129,13 +158,15 @@ another phase's row.
   the table. This phase adds nothing to the folder; the dispatcher's note
   that the Quartermaster is not built yet stays true until Phase 391.
 - **2026-10-20, rule 6: plain English to the operator.** No check: the
-  entry says "Text only; no check holds it." The one thing this phase may
-  hand the operator is a stop from the Engineer, written as a plain-English
-  question with no internal labels.
+  entry says "Text only; no check holds it." What this phase hands the
+  operator is the after-the-merge check in Logic 5 and, if one arises, a
+  stop from the Engineer; each is written as plain English with one paste
+  block and no internal labels.
 - **2026-10-19, live is on the home desktop.** The check it became:
   `tests/test_phase382_live_location.py`. This phase reads nothing from
   live and writes nothing to it; a stage clone inside the fence is a machine
-  that does not hold live.
+  that does not hold live, which is why the verify script, whose check 8
+  reads live, is the operator's to run after the merge.
 
 ## Rule-1 stops anticipated
 
@@ -168,7 +199,8 @@ already exist and are run on it:
 - `tests/test_roadmap_continuity.py` runs `roadmap_check.py` R1–R7 over the
   ledger with row 391 in it, with every suite run and on every push.
 - `roadmap_words.py 391 --check` and `roadmap_words.py 390A --check`, run
-  by hand before the commit and again by `verify_phase.sh` (check 6).
+  by hand before each commit that touches the row; the verify script runs
+  the cap check again after the merge, in the operator's hands.
 - `roadmap_check.py --self-test` run once on this branch and its output
   kept in the phase log: its known-bad fixtures go red (a reused number, a
   row with no documents' agreement, a number outside every range), so the
@@ -178,7 +210,12 @@ already exist and are run on it:
   as the fallback the rule names), its line recorded in the phase log,
   v1.1's Results and row 390A.
 - `plan_check.py 390A` on this plan (P1–P8) before it is pushed;
-  `closeout_check.py 390A` and `verify_phase.sh 390A` at close.
+  `closeout_check.py . 390A` and the push gate before the PR;
+  `verify_phase.sh 390A <regression hash> <merge commit>` by the operator
+  after the merge, its result in the handoff.
+- The root `implementation.md`'s Roadmap count line: the row count on the
+  close-out tree matches the three figures written, and the date is the
+  close-out's; the command and its output are in the phase log.
 - `COLLECTED_TEST_FLOOR` does not move: no test is added or removed, and
   the floor test is expected to pass unchanged.
 
@@ -189,12 +226,17 @@ already exist and are run on it:
   391's, and this phase only gives it a row.
 - Anything under `src/`, `tests/` or `.claude/skills/fleet/`, including the
   dispatcher's "not built yet" note and the `merge:needs-review` label text.
+- Changing `verify_phase.sh` so that it can run inside the fence before the
+  merge: the script's checks 1 and 8 are right to read `origin/master` and
+  live, and the split between the Engineer's before-the-PR checks and the
+  operator's after-the-merge check is 389's practice, kept.
 - Any migration, anything on live, any path under the data folder, seed
   content, splits, eval protocols.
 - Row 385 (389A's deliverable) and its branch; the machine user and the
   master ruleset (F214's other half): the operator's and 389A's.
 - Correcting the ROADMAP header's phase total, which already predates rows
-  386 to 390A; a nit for a records phase.
+  386 to 390A; a nit for a records phase. The root `implementation.md`'s
+  count line is a different line and is re-measured here (Logic 5).
 - Closing issue #16: the planter's, once the resumed stage has started.
 - Phase 390's own proofs and F219: 390's branch.
 
@@ -210,9 +252,14 @@ already exist and are run on it:
 - [ ] 4. `wholetree.sh --full`, then `regression.sh`; the line recorded
 - [ ] 5. v1.1 of this plan: every section as built, Deviations, Results
 - [ ] 6. Row 390A to ✅ with the CLOSED date and the regression line; the
-      handoff `docs/handoffs/YYYY-MM-DD_390A_closed.md`; the root
-      `phase_log.md` section; `implementation.md`'s header and history row;
-      the three documents to `completed/`
-- [ ] 7. `closeout_check.py 390A` reporting nothing; `verify_phase.sh 390A`
-      green; the PR naming issue #16, the regression line and the model-free
-      run
+      handoff `docs/handoffs/YYYY-MM-DD_390A_closed.md` with its
+      `## After the merge` section left for the operator; the root
+      `phase_log.md` section; `implementation.md`'s header, history row and
+      Roadmap count line re-measured with row 391 in the ledger (expected
+      410 rows, 370 numbered and 40 letter follow-ons, written as counted,
+      with the close-out date); the three documents to `completed/`
+- [ ] 7. Before the PR: `closeout_check.py . 390A` reporting nothing and
+      the push gate passing; the PR naming issue #16, the regression line
+      and the model-free run. After the merge, the operator runs
+      `verify_phase.sh 390A <regression hash> <merge commit>` and its
+      result goes in the handoff's `## After the merge` section
