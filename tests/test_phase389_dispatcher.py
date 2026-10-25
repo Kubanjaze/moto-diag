@@ -55,6 +55,16 @@ class GitHub(Host):
 
     def gh(self, cmd):
         ok = lambda out="": subprocess.CompletedProcess(cmd, 0, out, "")  # noqa: E731
+        if cmd[1:3] == ["issue", "edit"]:
+            # GitHub records no `labeled` event for a label already there
+            # (measured in 388, S0-6); 388's stand-in records one.
+            n, i = int(cmd[3]), self.issues[int(cmd[3])]
+            for k, a in enumerate(cmd):
+                if a == "--remove-label" and cmd[k + 1] in i["labels"]:
+                    i["labels"].remove(cmd[k + 1])
+                if a == "--add-label" and cmd[k + 1] not in i["labels"]:
+                    self.label(n, cmd[k + 1])
+            return ok()
         if cmd[1] == "pr":
             if cmd[2] == "list":
                 b = cmd[cmd.index("--head") + 1]
@@ -330,8 +340,61 @@ def test_a_new_fable_stage_over_fables_ceiling_never_starts(world):
     assert len(host.model_calls()) == calls
 
 
+def test_an_issue_the_operator_holds_gets_no_stage(world):
+    """needs-admiral beside a label a rank would act on: the XO is due on
+    plan:needs-review, and does not run while the operator holds it."""
+    fleet, host, clock, origin, *_ = world
+    git("branch", f"phase-{PHASE}-held", "master", cwd=origin)
+    host.issue(31, TITLE, f"{TRIAL} `phase-{PHASE}-held`",
+               {"mission": T0, "plan:needs-review": T0, "needs-admiral": T0})
+    step(clock, fleet, host)
+    assert host.model_calls() == [] and host.comments(31) == []
+
+
 def test_a_closed_phase_gets_no_stage(world):
     fleet, host, clock, *_ = world
     host.issue(9, "Phase 898: a closed phase", TRIAL, {"mission": T0, "plan:approved": T0})
     step(clock, fleet, host)
     assert host.model_calls() == [] and host.comments(9) == []
+
+
+def test_the_scout_makes_the_branch_the_body_names(world):
+    fleet, host, clock, origin, *_ = world
+    host.issue(31, TITLE, f"{TRIAL}\n\nBranch: `phase-{PHASE}-named-here`.", {"mission": T0})
+    step(clock, fleet, host, claude_json(TERMS, model=rank_call.HAIKU),
+         claude_json(ASSESS, model=rank_call.HAIKU))
+    assert on_origin(origin, f"refs/heads/phase-{PHASE}-named-here")
+    assert not on_origin(origin, f"refs/heads/{BRANCH}")
+
+
+def planted_pr(world, number=7):
+    fleet, host, clock, origin, *_ = world
+    planted = f"phase-{PHASE}-planted"
+    git("branch", planted, "master", cwd=origin)
+    fleet.update_mirror()
+    host.prs[planted] = {"number": number, "url": f"https://github.com/pr/{number}",
+                         "body": "planted", "comments": []}
+    host.issue(32, TITLE, f"Planted. Branch `{planted}`.", {"mission": T0, "review:open": T0})
+    return planted
+
+
+def test_the_red_team_runs_without_a_push_identity_and_the_fix_round_does_not(world):
+    """The planted-bug proof's shape: no trial marker, so the Red Team
+    comments (as 387's and 388's ranks do) and sends it back, and the
+    Engineer's fix round, which would push, waits for the operator."""
+    fleet, host, clock, origin, engineer, *_ = world
+    planted = planted_pr(world)
+    step(clock, fleet, host, claude_json({"verdict": "back", "findings": [FINDING],
+                                          "refuter_pass": TABLE}, model=rank_call.OPUS))
+    assert labels(host, 32) == ["build:open", "mission"]
+    assert "F213" in host.prs[planted]["comments"][-1]
+    step(clock, fleet, host)
+    assert "needs-hands" in labels(host, 32) and engineer.runs == 0
+
+
+def test_a_clear_with_no_push_identity_waits_for_one(world):
+    fleet, host, clock, *_ = world
+    planted_pr(world)
+    step(clock, fleet, host, claude_json({"verdict": "clear", "findings": [],
+                                          "refuter_pass": TABLE}, model=rank_call.OPUS))
+    assert "needs-hands" in labels(host, 32) and "review:clear" not in labels(host, 32)

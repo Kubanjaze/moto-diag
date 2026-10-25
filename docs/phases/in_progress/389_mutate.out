@@ -1,0 +1,47 @@
+F1 the old token variable let through: red
+F2 the network helper drops the token's pipe: red
+F3 the descriptor variable not set: red
+F4 the venv bound writable: red
+F5 a missing venv not refused: red
+F6 fd 3 not checked: red
+G1 master allowed: red
+G2 a non-fast-forward allowed: red
+G3 the scout may touch anything: red
+G3b the guards and the fleet open to the engineer: red
+G3c another phase's row may change: red
+G4 no credential scan: red
+G5 the ledger not checked: red
+G6 an untested commit allowed: red
+G7 any issue may use the operator's login: red
+G8 a file others can read accepted: red
+G9 the operator's own account accepted: red
+G10 the operator's credential helper not reset: red
+D1 no Fable gate: red
+D2 a closed phase gets a stage: red
+D3 an operator-held issue gets a stage: red
+D4 the token in the environment again: red
+D5 the Engineer's checks ignored: red
+D6 a failed model-free run not counted: red
+D7 no limit on Red Team rounds: red
+D8 the revision does not make the XO due: red
+D9 the body's branch name ignored: red
+D10 a watcher's reason ignored: red
+D11 a non-trial issue pushed without an account: red
+S1 counts in the prose let through: red
+S2 the census table without its query: red
+S3 no mobile census: red
+S4 an existing prompt overwritten: red
+C1 the plan not checked: red
+C2 a failed plan left in place: red
+C3 a recommendation of any length: red
+E1 a third bug fix goes on: red
+E2 a guard may block twice: red
+E3 any result accepted: red
+E4 the close-out not checked: red
+E5 the counts not compared: red
+E6 the session not bypassing permissions in the fence: red
+R1 the refute table not checked: red
+R2 a clear with factual findings: red
+R3 'No refute pass ran' kept: red
+R4 the plan's diff not given: red
+46/46 red

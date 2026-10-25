@@ -128,3 +128,43 @@ the Edit tool. No guard changed. (Earlier in the build I also edited
 `fence.sh` and `fence_net.py` with a short Python script making exact,
 count-checked replacements; the working rules ask for the Edit tool on
 source, which every later edit used.)
+
+### 2026-10-25 — Mutations, and what planning the proofs changed
+
+`389_mutate.py`: 46 mutations over the fence, the push gate and identity,
+the dispatcher and the four ranks. The first run: 44/46 red. The two that
+survived, and why:
+- **D8, a revision that adds the label instead of removing and adding
+  it.** The stand-in for GitHub recorded a `labeled` event for a label
+  already present; GitHub records none (388, S0-6). The stand-in was wrong,
+  not the code: 389's stand-in now behaves as GitHub was measured to.
+- **D3, an issue the operator holds still gets a stage.** The only test of
+  it held an issue at `mission`, where the Science Officer cannot run
+  anyway. A test now holds one at `plan:needs-review` with the XO due.
+
+Then 46/46 red (`389_mutate.out`).
+
+**Planning the live proofs changed two things.** (1) The Red Team and the
+Captain's recommendation only comment, so neither needs a push identity
+up front: comments go out as 387's and 388's ranks' do, and only the push
+of a cleared refute table asks for one. Without that, the planted-bug
+proof (no trial marker, so no Engineer fix round can start on it) could
+not run. (2) Two planted proofs and the trial share phase 389A, so each
+issue names its branch, and the Science Officer makes the branch the body
+names when GitHub lacks it. Four tests hold these; the floor 11370 →
+11374.
+
+**A third guard block, mine.** The edit guard refused a heredoc appended
+with `>>` to `tests/test_phase389_dispatcher.py` ("the redirect `>>`
+writes into tests/…"); done with the Edit tool. No guard changed.
+
+**A fourth, also mine: the push guard.** A commit and a push in one
+command ("This command runs `git commit` before `git push` … Run `git
+commit` and `git push` as separate commands"). The guard judged it before
+anything ran (`git log` still showed `ccdef49`); rerun as two commands.
+
+`SKILL.md` and `CHANGELOG.md` updated. The skill's title said "the ranks
+that read and never write code"; it no longer does. **CLAUDE.md's
+procedure-folders row for `fleet` still says "read-only ranks, no
+pushes"**: CLAUDE.md is the operator's, so it is left as it is and the
+handoff names it.

@@ -373,8 +373,11 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: (the token pipe, the venv and mobile binds; the environment test
 #: rewritten, since nothing crosses now); test_phase388_dispatcher.py +3 -2
 #: (Fable gated by its own week, the closed-phase skip). Measured: 11370.
+#: Then +4, by a diff of collected ids against ccdef49 (+4 -0), all in
+#: test_phase389_dispatcher.py: the named branch, the Red Team without a
+#: push identity (two), an issue the operator holds. Measured: 11374.
 #:
-COLLECTED_TEST_FLOOR = 11370
+COLLECTED_TEST_FLOOR = 11374
 
 
 def _collected_count() -> int:

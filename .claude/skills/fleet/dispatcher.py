@@ -693,7 +693,11 @@ class Fleet:
             return "needs hands"
         branch, _ = self.branch_for(phase, body)
         new = branch is None
-        branch = branch or f"phase-{phase}-{scout.slug(title).replace('_', '-')}"
+        # A branch the body names and GitHub lacks yet is the one made: two
+        # issues for one phase each name theirs (Phase 389's planted proofs).
+        named = re.search(rf"`(phase-{re.escape(phase)}-[A-Za-z0-9._-]+)`", body or "")
+        branch = branch or (named.group(1) if named else
+                            f"phase-{phase}-{scout.slug(title).replace('_', '-')}")
         run = pathlib.Path(resume["run"]) if resume else self.new_run(f"scout_{phase}")
         clone = run / "clone" if resume else self.clone(run, "master" if new else branch)
         if new and not resume:
@@ -852,9 +856,8 @@ class Fleet:
 
     def stage_red_team(self, issue: int, phase: str, body: str, branch: str, *,
                        resume: dict | None = None) -> str:
-        ident = self.identity_for(issue, body, "red-team")
-        if ident is None:
-            return "needs hands"
+        """Comments are made as every rank's are (387, 388); only the push of
+        a cleared table needs a push identity."""
         pr = self.pr_for(branch)
         if pr is None:
             raise Stop(f"no open pull request for `{branch}`")
@@ -873,10 +876,10 @@ class Fleet:
             self.pause({"stage": "red_team", "issue": issue, "phase": phase, "body": body,
                         "branch": branch, "run": str(run), "session": e.session}, e.text, runner)
             return "rate-limited"
-        self.gh_as(ident, "pr", "comment", str(pr["number"]), "--body",
-                   f"<!-- fleet-red-team-pr: verdict={v['verdict']} round={rnd} -->\n"
-                   f"**Red Team, round {rnd}: {v['verdict']}**\n\nFindings:\n"
-                   f"{red_team.findings_text(v)}\n\n{v['refuter_pass'].strip()}\n\n{call.line()}")
+        self.gh("pr", "comment", str(pr["number"]), "--body",
+                f"<!-- fleet-red-team-pr: verdict={v['verdict']} round={rnd} -->\n"
+                f"**Red Team, round {rnd}: {v['verdict']}**\n\nFindings:\n"
+                f"{red_team.findings_text(v)}\n\n{v['refuter_pass'].strip()}\n\n{call.line()}")
         self.say(issue, f"{RED_M} verdict={v['verdict']} round={rnd} -->",
                  f"**Red Team, phase {phase}, round {rnd}: {v['verdict']}** (PR #{pr['number']}).\n\n"
                  f"{red_team.findings_text(v)}")
@@ -889,6 +892,9 @@ class Fleet:
                 return "back, rounds exhausted"
             self.set_state(issue, "build:open")
             return f"back, round {rnd}"
+        ident = self.identity_for(issue, body, "red-team")
+        if ident is None:
+            return "clear; the refute table waits for a push identity"
         self.author(clone, "red-team-record", ident if ident.is_fleet else None)
         log = red_team.record_in_log(clone, phase, v["refuter_pass"])
         self.commit(clone, [log], f"Phase {phase}: the Red Team's refuter pass, round {rnd}",
@@ -900,9 +906,6 @@ class Fleet:
 
     def stage_recommend(self, issue: int, phase: str, body: str, branch: str, *,
                         resume: dict | None = None) -> str:
-        ident = self.identity_for(issue, body, "captain")
-        if ident is None:
-            return "needs hands"
         pr = self.pr_for(branch)
         if pr is None:
             raise Stop(f"no open pull request for `{branch}`")
@@ -923,9 +926,9 @@ class Fleet:
                         "branch": branch, "run": str(run), "session": e.session}, e.text, runner)
             return "rate-limited"
         lines = "\n".join(v["lines"])
-        self.gh_as(ident, "pr", "comment", str(pr["number"]), "--body",
-                   f"<!-- fleet-captain-pr: recommendation={v['decision']} -->\n"
-                   f"**The Captain's recommendation: {v['decision']}**\n\n{lines}\n\n{call.line()}")
+        self.gh("pr", "comment", str(pr["number"]), "--body",
+                f"<!-- fleet-captain-pr: recommendation={v['decision']} -->\n"
+                f"**The Captain's recommendation: {v['decision']}**\n\n{lines}\n\n{call.line()}")
         self.say(issue, f"{CAPTAIN_M} recommendation={v['decision']} -->",
                  f"**Captain, phase {phase}: recommends {v['decision']}** (PR #{pr['number']}).\n\n"
                  f"{lines}\n\nThe operator merges.")
