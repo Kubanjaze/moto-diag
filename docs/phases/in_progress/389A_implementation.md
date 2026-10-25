@@ -1,6 +1,6 @@
 # Phase 389A — 385's ROADMAP row
 
-**Version:** 1.0 | **Date:** 2026-10-25
+**Version:** 1.1 | **Date:** 2026-10-25
 
 ## Goal
 
@@ -31,3 +31,14 @@ Phase 385 itself.
 ## Planned items
 
 - [ ] the row
+
+## Deviations
+
+None.
+
+## Results
+
+Row 385 added after 384's, not started. It names its prompt,
+`docs/prompts/385_the_push_tokens_own_write.txt`, and the finding it
+closes, F213: the API's own write of `device_tokens.last_seen_at`, which
+`SERVER_WRITES` does not name.
