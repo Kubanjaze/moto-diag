@@ -1,6 +1,6 @@
 # Phase 388 — The fleet's host and its fence — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-10-24)
 **Branch:** `phase-388-fleet-host` (Opus session on the home desktop, the only writer)
 
 ---
@@ -195,7 +195,7 @@ Not changed: 386's procedure in `.claude/skills/deploy/CHANGELOG.md`
 keeps its prefix check. It is a dated record of what that phase wrote; the
 handoff names it for whoever next uses it.
 
-**Commit.** The commit that carries this entry.
+**Commit.** `ac6b039`.
 
 ### 2026-10-22 — The billing check, the first call on the fleet's token
 
@@ -420,7 +420,7 @@ record and outside this phase; the handoff names it.
   step's own explanation; it now reads command lines only.
 - `COLLECTED_TEST_FLOOR` 11225 → 11226, +1 −0 against `7b6b766`.
 
-**Commit.** The commit that carries this entry.
+**Commit.** `19228f1`.
 
 **Held for close-out, outside this phase:** the operator sent proof 5's
 Mac half for 382 ("Please record it when you next touch master"): on the
@@ -544,7 +544,7 @@ new test), `tests/test_phase255B_collected_test_floor.py`.
   back.
 - `COLLECTED_TEST_FLOOR` 11226 → 11227, +1 −0 against `bcabc89`.
 
-**Commit.** The commit that carries this entry.
+**Commit.** `54e6d6f`.
 
 **The third bug fix, and the shared cause.** All three are in the
 operator's paste blocks, and each block's check was proven only where I
@@ -568,3 +568,54 @@ hung (every call has a timeout). On waking: the sweep on issue #10 at
 since the dispatcher writes only yesterday's. Filed as **F217**
 (`next_f_number.sh`: F216 here, F181 in mobile, next F217). The power
 settings are the operator's call; a paste block was offered.
+
+### 2026-10-24 — The regression of record, on the Mac
+
+The operator's first Mac run, at `bcabc89`, stopped at `wholetree.sh
+--full` (1 failed, 4411 passed): bug fix #3. The rerun, at `54e6d6f`,
+everything it printed, from the operator:
+
+`wholetree.sh --full`: record `9ad4df51baa82457da287715aff23aedd146c799_full.json` for commit `54e6d6f71d1d`.
+
+Regression of record: 11187 passed, 0 failed, 40 skipped, 0 errors at `54e6d6f` (25 min 47 s wall, `python -m pytest -n auto --dist load`, exit 0)
+Skipped in the regression of record: [1] tests/test_phase244H_test_db_isolation.py:79: no production database on this machine
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:56: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [4] tests/test_phase388_fence_boundary.py:90: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [3] tests/test_phase388_fence_boundary.py:99: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:107: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:114: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:119: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:125: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:133: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:142: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:153: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:158: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:164: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:171: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:180: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:192: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:204: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:210: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [7] tests/test_phase388_fence_boundary.py:215: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:229: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:238: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:245: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:250: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:258: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:264: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:270: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:274: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:280: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+
+The operator's first relay of the run summed the 28 fence lines into one
+("39 tests in … (lines …)"), which A5 cannot read; the lines above are
+the second relay, as `regression.sh` printed them ("skips counted: 40").
+
+11187 + 40 = 11227, the floor. Both skips are pinned in
+`EXPECTED_SKIPS`. Everything after `54e6d6f` is documents: v1.1, the
+handoff, row 388, `implementation.md`'s version and history row (and its
+count line, which 387 left at 403 rows: measured 405, 367 numbered, 38
+letter follow-ons), the root `phase_log.md`'s pointer, and 382's handoff
+(proof 5's Mac half, the operator's output verbatim).
+
+No refute pass ran.

@@ -3852,3 +3852,8 @@ Write-up: [`386_implementation.md`](docs/phases/completed/386_implementation.md)
 
 Log: [`docs/phases/completed/387_phase_log.md`](docs/phases/completed/387_phase_log.md).
 Write-up: [`387_implementation.md`](docs/phases/completed/387_implementation.md).
+
+## Phase 388 — The fleet's host and its fence — CLOSED 2026-10-24
+
+Log: [`docs/phases/completed/388_phase_log.md`](docs/phases/completed/388_phase_log.md).
+Write-up: [`388_implementation.md`](docs/phases/completed/388_implementation.md).

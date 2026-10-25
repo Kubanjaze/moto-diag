@@ -1,6 +1,9 @@
 # Phase 388 — The fleet's host and its fence
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-22
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-24 (v1.0 2026-10-22, `2f570ce`)
+
+v1.1 updates every section to what shipped, ticks the planned items, and
+adds Deviations and Results.
 
 ---
 
@@ -25,9 +28,13 @@ ship, all read-only toward the repository:
    `motodiag-wsl-boot.xml`. Both installs, and the reboot proof, are the
    operator's paste blocks under pre-approval (a).
 
+All three shipped. The fence's boundary is 39 tests on Linux; one real
+dispatcher cycle ran on a planted issue; the service is installed and
+active. The reboot proof is the operator's, still to come.
+
 The prompt is `docs/prompts/388_fleet_host.txt`. Step 0 is `388_step0.md`
 (classification: extension). The XO ran on the Mac in 387, as that prompt
-said; from this phase it runs here.
+said; from this phase it runs here (it did: 388's own plan, on issue #10).
 
 ## Logic
 
@@ -46,7 +53,7 @@ that does not exist; a `workspace-docs` that does not hold
 Step 0 S0-2, so it does not run at all).
 
 **The layout** (measured in Step 0 S0-5):
-- `--unshare-all --die-with-parent --new-session --clearenv`;
+- `--unshare-all --die-with-parent --new-session`;
 - `/usr` and `/etc` read-only, the four root symlinks, a private `/proc`,
   `/dev` and `/tmp`;
 - no `/home`: the operator's home is absent, not masked by a list;
@@ -62,7 +69,10 @@ Step 0 S0-2, so it does not run at all).
 `PATH=/fleet/bin:/usr/bin:/bin`, `TERM=dumb`, `LANG=C.UTF-8`,
 `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`, and `CLAUDE_CODE_OAUTH_TOKEN`
 only when the caller set it. Nothing else of the caller's environment
-crosses.
+crosses. As built, the caller's environment is emptied in a subshell with
+bash builtins (`compgen -e`, `unset`) before `exec bwrap`, and the token is
+inherited, never passed with `--setenv`: an argument to `bwrap` is readable
+by any process through `/proc/<pid>/cmdline`.
 
 **The import approval.** Before the run, `fence.sh` makes sure
 `/fleet/run/claude/.claude.json` holds `hasClaudeMdExternalIncludesApproved`
@@ -103,7 +113,9 @@ between ranks; the flock is the lock between dispatchers.
 `~/.config/motodiag/anthropic.env` (386's procedure) and passes it to
 `fence.sh` and nothing else. It refuses to start, exit 4, when the file is
 missing, holds anything but that one variable, or holds a value that is not
-of the OAuth class (`sk-ant-oat`), and when `ANTHROPIC_API_KEY` is in its own
+of the OAuth class (`sk-ant-oat`) or is more than one token (as built, after
+bug fix #1: the value must be exactly one `sk-ant-oat[A-Za-z0-9_-]+` and
+nothing else), and when `ANTHROPIC_API_KEY` is in its own
 environment: a key would bill API rates silently (the proposal's cost
 model). `gh` runs outside the fence on the operator's login, a stand-in
 until the fleet has its own identity (F214, K40), with `GH_REPO` set.
@@ -183,7 +195,9 @@ It keeps the newest 20 run directories.
   `motodiag-api.service`: `User=lilcu`, `WorkingDirectory` its own clone
   (`~/motodiag/fleet/code`), `ExecStart=` `/usr/bin/python3` on that
   clone's `.claude/skills/fleet/dispatcher.py run`, `PATH` naming `~/.local/bin`
-  for `claude` and `gh`, `Restart=always`, `WantedBy=multi-user.target`, and
+  for `claude` and `gh`, `Restart=always` (as built, with `RestartSec=30`
+  and `RestartPreventExitStatus=4`, so a refusal is not retried),
+  `WantedBy=multi-user.target`, and
   `ConditionPathExists` on the token file, so the unit never starts without
   its credential, as the API's never starts without live. No
   `EnvironmentFile`: the dispatcher reads the token itself and hands it only
@@ -195,13 +209,19 @@ It keeps the newest 20 run directories.
   `motodiag-wsl-boot.xml` (boot trigger, S4U, least privilege, `wsl.exe -d
   Ubuntu-26.04 --exec /bin/sleep infinity`), its own name
   `\motodiag\fleet-boot` and description, so the fleet holds the VM up
-  whether or not the API's task exists. Registered elevated by the operator.
+  whether or not the API's task exists. Registered elevated by the operator,
+  with `Register-ScheduledTask` and the `<?xml?>` declaration stripped
+  (bug fix #2: `schtasks /Create /XML` refuses a UTF-8 file).
+- **`ops/desktop/fleet_boot_check.py`** (not in v1.0): the restart test's
+  judge, comparing the unit's `ActiveEnterTimestamp` with the Windows
+  sign-in time from `quser.exe`.
 - **The paste blocks**, plain English, which computer and which window, one
   block each, ending ALL GOOD or SOMETHING IS OFF: the code clone and the
   unit's install (Ubuntu window, sudo); the task's registration (Windows,
   an administrator PowerShell); the service restart proof; the reboot proof
   written like 382's M7 (task off then on, nobody signed in), for the
-  operator to run tomorrow.
+  operator to run tomorrow. As built: `388_operator_steps.md`, steps 1–4
+  (the token, the unit, the task, the restart test).
 
 ## The change log's three newest entries
 
@@ -228,6 +248,12 @@ It keeps the newest 20 run directories.
 - None expected from a fork, a threshold or a rule's definition (the 70%
   and the 24 hours are the operator's), a test that cannot be made green,
   or a live-database change (nothing touches live).
+
+As it went: the token stop, as planned ("ALL GOOD"). And one not
+anticipated: the desktop could not produce a regression of record, and
+the Mac could not either without pinning the fence test's Mac skip in
+`EXPECTED_SKIPS`, the operator's call (F206). The operator picked "Mac
+runs it (Recommended)".
 
 ## Tests
 
@@ -264,6 +290,12 @@ It keeps the newest 20 run directories.
   known-bad unit under `fixtures/service/` failing its own rule.
 - `388_mutate.py`: every mutation red.
 
+As built: 39 tests in the fence file (27 functions), 62 in the dispatcher
+file, 33 in the service file; 134 in all. The service file also runs
+step 1's token check on planted files, with the Mac's `stat` and `wc`
+stood in, and holds step 3 to `Register-ScheduledTask`. Mutations: 44/44
+red.
+
 ## Non-goals
 
 - Any seat that writes code, pushes or merges (the Captain, the Engineer,
@@ -278,18 +310,86 @@ It keeps the newest 20 run directories.
   anything under `src/`; live.
 - Closing issue #9: it is the operator's.
 
+Held: none of these was done.
+
 ## Planned items
 
-- [ ] `fence_net.py` and `fence.sh`
-- [ ] `tests/test_phase388_fence_boundary.py`, and the fence proofs in the log
-- [ ] `dispatcher.py`, its fixtures and `tests/test_phase388_dispatcher.py`
-- [ ] the unit, the install script, the task, their known-bad fixtures and
+- [x] `fence_net.py` and `fence.sh`
+- [x] `tests/test_phase388_fence_boundary.py`, and the fence proofs in the log
+- [x] `dispatcher.py`, its fixtures and `tests/test_phase388_dispatcher.py`
+- [x] the unit, the install script, the task, their known-bad fixtures and
       `tests/test_phase388_service_contract.py`
-- [ ] `SKILL.md` and `CHANGELOG.md`
-- [ ] the paste blocks
-- [ ] after the operator's token: the import inside the fence, one
+- [x] `SKILL.md` and `CHANGELOG.md`
+- [x] the paste blocks
+- [x] after the operator's token: the import inside the fence, one
       dispatcher cycle on a planted issue, one sweep comment, the unit
       active after a restart
-- [ ] the mutation run; `COLLECTED_TEST_FLOOR` raised
-- [ ] close-out: `wholetree.sh --full`, `regression.sh`, the handoff,
-      `verify_phase.sh`, row 388 to ✅
+- [x] the mutation run; `COLLECTED_TEST_FLOOR` raised
+- [x] close-out: `wholetree.sh --full`, `regression.sh`, the handoff,
+      `verify_phase.sh`, row 388 to ✅ (`verify_phase.sh` after the merge,
+      as the closeout sequence orders it)
+
+## Deviations
+
+- **Three bug fixes, all in the operator's paste blocks.** #1: step 1's
+  check, and `load_token`, judged only how the token's line started, and
+  passed a file holding the token five times with a stray escape
+  character (caught by the operator). #2: step 3 registered the Windows
+  task with `schtasks /Create /XML`, which refuses a UTF-8 task file; it
+  now uses `Register-ScheduledTask` with the declaration stripped (caught
+  by the operator). #3: step 1's check used Linux's `stat -c` and `wc -l`,
+  so its test failed on the Mac (caught by the Mac's `wholetree --full`).
+  The shared cause, in the log: each block's check was proven only where
+  it was written. 386's procedure and `motodiag-wsl-boot.xml`'s comment,
+  the records #1 and #2 copied, are not changed here; the handoff names
+  both.
+- **The regression of record ran on the Mac**, with the fence test's Mac
+  skip pinned in `EXPECTED_SKIPS` (the operator's "Mac runs it
+  (Recommended)"), and 383's equality literal updated with it. The
+  desktop's own run failed for want of the Mac's tools: **F216**.
+- **The billing check ran through the fence**, not bare as 386's procedure
+  wrote it: that is how every fleet call goes.
+- **`ops/desktop/fleet_boot_check.py`, a file the plan did not name**: the
+  restart test's judge, a script rather than an inline heredoc (382's relay
+  lost heredocs and `<`), reading the Windows sign-in time with `quser.exe`.
+- **The token never rides on a command line**, a decision the plan did not
+  spell out: `bwrap --setenv` would put it in an argv any process can read;
+  `fence.sh` cleans the environment with builtins and the token is
+  inherited. So no `--clearenv`.
+- **A test the plan claimed and nothing held**: the fence's own `/` and
+  `/fleet` read-only, added before the mutation run.
+- **The XO's note measured**: the due rule depended on GitHub making no
+  event when a present label is re-added; measured on #10, with the
+  remove-and-add control.
+- **The sweep proof ran at a 1-hour threshold** (`--sweep-hours 1`), so it
+  could run the same night and show both sides in one run; the log says so.
+- **The host slept for 39 hours** (2026-10-23 06:09 to 10-24 21:37); the
+  dispatcher resumed on waking but skipped the digest for 10-22: **F217**.
+- **An extra record for 382**: the operator's proof-5 Mac output, added to
+  382's handoff in this close-out at the operator's request.
+- **Guard blocks**: the push guard (a commit and a push in one `bwrap … sh
+  -c` line, Step 0), the edit guard twice (a redirect to a variable path;
+  `sed -i` on `FOLLOWUPS.md`, my slip), and one built-in Claude Code check
+  (an `rm -rf` of a variable path). Each in the log; no guard changed.
+
+## Results
+
+Regression of record: 11187 passed, 0 failed, 40 skipped, 0 errors at `54e6d6f` (25 min 47 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+Run on the Mac, after `wholetree.sh --full` at `54e6d6f` (record
+`9ad4df51…_full.json`). The 40 skips are 244H's "no production database
+on this machine" and the 39 fence tests on macOS, both pinned.
+
+- The fence: 39 tests on Linux, 257's eight planted attempts among them;
+  the workspace rules load inside the fence, and not without the
+  approval.
+- One dispatcher cycle, real: the XO approved 388 on issue #10 and the
+  script set `plan:approved`; the digest for 2026-10-21; one sweep comment
+  on #9, not repeated.
+- The service: active and enabled since 2026-10-22 23:16:27, `NRestarts=0`;
+  the task Running, S4U.
+- The billing check: claude.ai usage moved (session 2% → 3%, week 9% →
+  10%); the Console half is open until its data passes 03:07 UTC.
+- Mutations 44/44 red. `COLLECTED_TEST_FLOOR` 11093 → 11227 (+134).
+- Open: the restart test (the operator's), the Console reading, F216,
+  F217.
