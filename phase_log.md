@@ -3862,3 +3862,8 @@ Write-up: [`388_implementation.md`](docs/phases/completed/388_implementation.md)
 
 Log: [`docs/phases/completed/389_phase_log.md`](docs/phases/completed/389_phase_log.md).
 Write-up: [`389_implementation.md`](docs/phases/completed/389_implementation.md).
+
+## Phase 389A — 385's ROADMAP row — CLOSED 2026-10-25
+
+Log: [`docs/phases/completed/389A_phase_log.md`](docs/phases/completed/389A_phase_log.md).
+Write-up: [`389A_implementation.md`](docs/phases/completed/389A_implementation.md).

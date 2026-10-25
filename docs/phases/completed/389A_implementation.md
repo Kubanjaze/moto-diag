@@ -1,6 +1,13 @@
 # Phase 389A — 385's ROADMAP row
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-25
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-25 (v1.0 `f13d170`)
+
+v1.1, written by the Chief Engineer after the build: every section updated to
+what shipped (each change marked "As built"), the planned items ticked, and
+Deviations and Results added. The one change of substance: the regression run
+in the stage clone **was of record** (389's "Sandbox counts", which closed
+after this plan was written), so the close-out was done on the branch rather
+than handed to the operator on the Mac. The Tests section foresaw this case.
 
 Written by the Captain from `docs/phases/in_progress/389A_step0.md`
 (classification: extension), the ROADMAP row 389A and the mission prompt
@@ -101,6 +108,17 @@ change to row 389A as one line removed and one added; and the diff body,
 not counting the `---`/`+++` header lines. The resolved hash, the stat line
 and the three diff lines go in the phase log.
 
+**As built** (`e69c6f6`): the draft row verbatim, inserted after 384's;
+`roadmap_words.py 385 --check` printed 87, exit 0. Row 389A's "Step 0 next."
+became "Plan committed; row 385 added; awaiting the operator's merge.", and
+then, at the close-out, the row went ✅ with its CLOSED date and the
+regression line (Deviations). `grep -c` printed 1; `roadmap_check.py` exit
+0. `origin/master` resolved to `7ca42e0` (389's merge), a descendant of
+`6adffc5` carrying row 389A unchanged, so the expected shape held: the
+`--stat` line was `1 file changed, 2 insertions(+), 1 deletion(-)`, with one
+`-` row line (389A old) and two `+` (385, 389A new), at the row commit and
+again at the close-out.
+
 ### 2. `docs/phases/in_progress/389A_implementation.md`: this plan, then v1.1
 
 This document is v1.0. After the row is committed the Engineer writes v1.1:
@@ -111,6 +129,10 @@ reads a history row as a close.
 
 **Finish line:** v1.1 committed on the branch; `python3
 .claude/skills/fleet/plan_check.py 389A` still exits 0 against it.
+
+**As built:** this v1.1 is in the close-out commit, together with the close
+date and the history row, because the close-out happened on the branch
+(section 4, as built). `plan_check.py 389A` against it: see Results.
 
 ### 3. `docs/phases/in_progress/389A_phase_log.md`: the dated record
 
@@ -133,6 +155,13 @@ branch is the one that lands the log's final entry, so the log cannot name
 its own hash. That hash is recorded in the Captain's merge recommendation on
 the pull request (section 5), and the operator's merge-outcome line in the
 handoff, added after the merge, names it again.
+
+**As built:** `389A_phase_log.md`, moved to `completed/` at the close-out.
+It names `e69c6f6`, the one commit between the plan and the close-out, the
+`origin/master` hash `7ca42e0`, every `wholetree.sh` exit code, and the
+regression lines as printed. No label moved inside this session (it has no
+network but the model's); the log says so and leaves the label record to the
+dispatcher and the recommendation.
 
 ### 4. `docs/handoffs/YYYY-MM-DD_389A_closed.md`: the handoff, and the close-out it hands over
 
@@ -162,6 +191,18 @@ regression of record, and F216 is open. So on this branch:
 **Finish line:** the handoff exists on the branch, its paste block is one
 block ending ALL GOOD or SOMETHING IS OFF, and it says in plain words that
 the regression of record and the close-out are the operator's on the Mac.
+
+**As built:** not as planned. 389 closed, before this round, with the
+operator's "Sandbox counts (Recommended)": a regression run inside the
+fleet's fence is of record. The run in the stage clone was: "Regression of
+record: 11297 passed, 0 failed, 105 skipped, 0 errors at `e69c6f6`", exit 0,
+inside the fence. So the close-out ran on the branch, in the closeout
+skill's order: row 389A ✅ with its CLOSED date and the regression line, the
+three documents moved to `docs/phases/completed/`, `implementation.md`'s
+history row and version, the root `phase_log.md`'s pointer, and the handoff
+`docs/handoffs/2026-10-25_389A_closed.md`. The handoff has no paste block for
+the Mac: nothing is left for the operator to run but the merge. Its "After
+the merge" section is for whoever merges.
 
 ### 5. The Captain's merge recommendation
 
@@ -204,6 +245,17 @@ The recommendation must carry:
 label on issue #14 was set by a rank's script from a parsed result, none by
 hand; the phase log's label entries show it.
 
+**As built:** outside this session. The Engineer's stage cannot open the
+pull request, post on it or set a label from inside the fence; the
+dispatcher pushes and opens the pull request after its own checks and
+model-free run. Since this plan was written, 389 merged with `red_team.py`
+on the service, and 389's handoff names "the PR, the Red Team and the
+recommendation" as the trial's next stages; whether a Red Team runs on this
+pull request is the dispatcher's, and the recommendation says which. Two of
+the points above changed with the build: the close-out is no longer the
+operator's on the Mac (section 4, as built), and the branch's last commit is
+the close-out commit.
+
 ### What this phase does not change in the code
 
 `src/motodiag/api/routes/push.py`, `motodiag/push/registry.py` and
@@ -228,7 +280,8 @@ closed, no label by hand, no write to `master`.
   says "Text only; no check holds it." The one thing this phase hands the
   operator, the paste block in the handoff (Logic, section 4), is written to
   it: which computer, which window, one block, ending ALL GOOD or SOMETHING
-  IS OFF, no internal labels.
+  IS OFF, no internal labels. As built: the regression was of record in the
+  fence, so the handoff hands the operator no paste block, only the merge.
 - **2026-10-19, live is on the home desktop.** The check it became:
   `tests/test_phase382_live_location.py`. The fleet's host is the machine that
   holds live; this phase never reads live, names no live path and ships no
@@ -247,6 +300,9 @@ closed, no label by hand, no write to `master`.
   there, as 388's "Mac runs it (Recommended)" did; the handoff carries the
   paste block. If `wholetree.sh` fast mode itself blocks a commit on the host
   for the same want, that is the same stop: record it, never loosen it.
+  **As built: did not occur.** 389's "Sandbox counts" made a fenced run of
+  record, and the run here was green with every skip pinned; fast mode
+  never blocked.
 - **A login or a credential: covered, not open.** The mission runs under the
   operator's login by Phase 389's pre-approval (b), "a planted trial mission
   may use my login until the identity exists", applied literally to the
@@ -305,6 +361,16 @@ code in the phase log:
   a regression of record and the merge recommendation says so as a change
   from this plan.
 
+**As run** (every output in the phase log): `roadmap_check.py` exit 0, its
+`--self-test` R1–R7 each fire and the good tree passes, exit 0 (R5 read the
+mobile copy inside the fence); `tests/test_roadmap_continuity.py` 28 passed
+under `.venv/bin/python` (the host's `python3` has no pytest);
+`roadmap_words.py` 87 for 385 and 60 for 389A before the close-out, exit 0;
+the control returned 121; `grep -c` 0 then 1; `origin/master` `7ca42e0`
+and the expected `--stat` and three row lines; `wholetree.sh` fast exit 0
+before each commit; `wholetree.sh --full` exit 0; `regression.sh` exit 0
+and of record. `plan_check.py 389A` against v1.1: Results.
+
 ## Non-goals
 
 - Phase 385's own work: the change to `SERVER_WRITES` in `deploy.py`, its
@@ -333,22 +399,69 @@ code in the phase log:
 
 ## Planned items
 
-- [ ] the plan commit: this v1.0 on `phase-389A-385s-roadmap-row`
-- [ ] row 385 in `docs/ROADMAP.md`, after 384's, and 389A's row's last
+- [x] the plan commit: this v1.0 on `phase-389A-385s-roadmap-row` (`f13d170`, the approved revision)
+- [x] row 385 in `docs/ROADMAP.md`, after 384's, and 389A's row's last
       sentence updated; `wholetree.sh` exit 0 before the commit
-- [ ] the checks run and recorded: `roadmap_check.py` and its `--self-test`,
+- [x] the checks run and recorded: `roadmap_check.py` and its `--self-test`,
       `tests/test_roadmap_continuity.py`, `roadmap_words.py 385 --check` with
       its count and its 121-word control, the `grep -c` before and after, the
       `origin/master` hash from `git rev-parse`, the `--stat` line and the
       three diff lines against `origin/master`
-- [ ] `wholetree.sh --full` and `regression.sh` once in the stage clone, the
+- [x] `wholetree.sh --full` and `regression.sh` once in the stage clone, the
       line recorded verbatim and marked of record or not
-- [ ] `389A_phase_log.md` with every commit but the last, every exit code,
+- [x] `389A_phase_log.md` with every commit but the last, every exit code,
       every guard block, every label move and the `origin/master` hash the
       diff was taken against
-- [ ] `389A_implementation.md` v1.1 with Deviations and Results
-- [ ] the handoff on the branch, with the operator's paste block for the Mac
-      and the close-out steps
-- [ ] the pull request; the Captain's merge recommendation directly after it
-      opens, naming the last commit's hash, the `origin/master` hash, that no
-      Red Team ran, the status note and the close-out hand-over
+- [x] `389A_implementation.md` v1.1 with Deviations and Results
+- [x] the handoff on the branch; as built, with the close-out done on the
+      branch and no paste block (Deviations)
+- the pull request and the Captain's merge recommendation: the dispatcher's
+      stages after this session, which cannot open or post on a pull request
+      from inside the fence (Logic, section 5, as built)
+
+## Deviations
+
+- **The close-out ran on the branch, not on the Mac.** v1.0 (section 4 and
+  its anticipated rule-1 stop) assumed F216 made a regression of record
+  impossible on the fleet's host. 389 closed before this round with the
+  operator's "Sandbox counts (Recommended)": a regression run inside the
+  fence is of record, with the fence's skips pinned. The run here was green,
+  of record, with every skip pinned, which is the case this plan's Tests
+  section names ("that is a regression of record and the merge
+  recommendation says so as a change from this plan"). So row 389A is ✅
+  with its CLOSED date and the regression line, the three documents are in
+  `completed/`, `implementation.md` has its history row and version, the
+  root `phase_log.md` its pointer, and the handoff hands the operator only
+  the merge, with no paste block. Not a fork: the plan named this outcome,
+  and the mission prompt for this round asks for the close-out.
+- **`origin/master` was `7ca42e0`, not `6adffc5`**: 389's merge, a
+  descendant carrying row 389A unchanged, so the expected diff shape held.
+  The stage clone now also has a local `master` (389's bug fix #3); the diff
+  was still taken against `origin/master`, as the plan says.
+- **The continuity test ran under `.venv/bin/python`**, not `python3`: the
+  host interpreter has no pytest. Same test, the canonical interpreter.
+- **Section 5 is outside this session.** The labels, the pull request and
+  the recommendation are the dispatcher's and the Captain's. 389 has since
+  merged a Red Team rank; whether it runs here is the dispatcher's, and the
+  recommendation says which.
+- No bug fixes; no guard blocked a command.
+
+## Results
+
+Regression of record: 11297 passed, 0 failed, 105 skipped, 0 errors at `e69c6f6` (30 min 18 s wall, `python -m pytest -n auto --dist load`, exit 0) (run inside the fleet's fence)
+
+11297 + 105 = 11402, `COLLECTED_TEST_FLOOR`, unchanged. The skip lines
+are in the phase log as printed.
+
+- **Row 385**, 🔲, 87 words, after 384's (`e69c6f6`). `grep -c '^| 385 |'`
+  printed 0 before and 1 after.
+- **Row 389A**: "Step 0 next." moved with the work at `e69c6f6`, then ✅ at
+  the close-out.
+- **The diff against `origin/master` (`7ca42e0`)**: `docs/ROADMAP.md` only
+  `1 file changed, 2 insertions(+), 1 deletion(-)`; nothing under `src/` or
+  `tests/`; no migration, nothing on live.
+- **Checks**: `roadmap_check.py` exit 0 and its self-test R1–R7 fire;
+  `tests/test_roadmap_continuity.py` 28 passed; `wholetree.sh` fast exit 0
+  before each commit; `wholetree.sh --full` 4530 passed, 36 skipped, exit 0.
+- **`plan_check.py 389A` against v1.1**: P1–P8 pass, "plan_check 389A:
+  PASS", exit 0.
