@@ -1,0 +1,7 @@
+A planted mission for Phase 390's restart proofs, opened by the Phase 390 build session under the operator's login (390's pre-approval (a): "planted missions push under my login until the machine user exists"). Branch: `phase-390A-quartermaster-row`.
+
+This issue proves one rank: the Science Officer (Step 0). The planter restarts the fleet's service while that rank's stage runs, and closes this issue once the resumed stage has started, so no other rank runs on it.
+
+The mission: add row 391 to `docs/ROADMAP.md`, after row 390A, status 🔲 (not started): "The Quartermaster", step 8 of `docs/reports/2026-10-22_fleet_proposal.md`, the Quartermaster in shadow. Docs only: nothing under `src/`, no migration, nothing on live.
+
+<!-- fleet-trial -->
