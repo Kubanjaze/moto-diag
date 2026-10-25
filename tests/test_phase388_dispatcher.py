@@ -77,7 +77,9 @@ class Host:
         self.issues: dict[int, dict] = {}
         self.replies: list[str] = []
         self.usage_text = USAGE_OK
+        self.usage_after: str | None = None    # what /usage says once a model call has run
         self.fenced: list[tuple[list[str], dict]] = []
+        self.usage_reads: list[tuple[list[str], dict]] = []   # outside the fence, since 389
         self.gh_calls: list[tuple[list[str], dict]] = []
 
     def issue(self, n: int, title: str, body: str = "", labels: dict[str, dt.datetime] | None = None):
@@ -103,12 +105,17 @@ class Host:
         if cmd[0] == "gh":
             self.gh_calls.append((cmd, kw))
             return self.gh(cmd)
+        if cmd[0] == "claude" and "/usage" in cmd:
+            self.usage_reads.append((cmd, kw))
+            return subprocess.CompletedProcess(cmd, 0, json.dumps({"result": self.usage_text}), "")
         if cmd[0] == self.fence:
             inner = cmd[cmd.index("--") + 1:]
             self.fenced.append((inner, kw))
             if "/usage" in inner:
                 return subprocess.CompletedProcess(cmd, 0, json.dumps({"result": self.usage_text}), "")
             out = self.replies.pop(0)
+            if self.usage_after is not None:
+                self.usage_text, self.usage_after = self.usage_after, None
             rc = 1 if '"is_error": true' in out else 0
             return subprocess.CompletedProcess(cmd, rc, out, "")
         return subprocess.run(cmd, **kw)
@@ -117,7 +124,9 @@ class Host:
         ok = lambda out="": subprocess.CompletedProcess(cmd, 0, out, "")  # noqa: E731
         if cmd[1:3] == ["issue", "list"]:
             want = cmd[cmd.index("--label") + 1] if "--label" in cmd else None
-            rows = [{"number": n, "title": i["title"], "body": i["body"],
+            rows = [{"number": n, "title": i["title"], "body": i["body"], "state": "OPEN",
+                     "url": f"https://github.com/{D.REPO}/issues/{n}",
+                     "updatedAt": iso(self.clock()),
                      "labels": [{"name": lab} for lab in i["labels"]]}
                     for n, i in sorted(self.issues.items()) if want is None or want in i["labels"]]
             return ok(json.dumps(rows))
@@ -243,13 +252,33 @@ class TestTheOpusCeiling:
             ["claude", "-p", "x", "--model", rank_call.OPUS], cwd=tmp_path)
         assert len(host.model_calls()) == 1
 
-    @pytest.mark.parametrize("model", [rank_call.FABLE, rank_call.HAIKU])
-    def test_fable_and_haiku_are_not_gated(self, world, tmp_path, model):
+    def test_haiku_is_not_gated(self, world, tmp_path):
         fleet, host, _, _ = world
         host.usage_text = USAGE_CEILING
-        host.replies = [claude_json({}, model=model)]
-        D.FencedRunner(fleet, tmp_path, tmp_path / "run")(["claude", "-p", "x", "--model", model])
-        assert not any("/usage" in inner for inner, _ in host.fenced)
+        host.replies = [claude_json({}, model=rank_call.HAIKU)]
+        D.FencedRunner(fleet, tmp_path, tmp_path / "run")(["claude", "-p", "x", "--model",
+                                                           rank_call.HAIKU])
+        assert host.usage_reads == []
+
+    def test_fable_is_gated_by_its_own_week_since_389(self, world, tmp_path):
+        """USAGE_CEILING: all models at 70%, Fable at 52%: Fable passes."""
+        fleet, host, _, _ = world
+        host.usage_text = USAGE_CEILING
+        host.replies = [claude_json({}, model=rank_call.FABLE)]
+        D.FencedRunner(fleet, tmp_path, tmp_path / "run")(["claude", "-p", "x", "--model",
+                                                           rank_call.FABLE])
+        assert len(host.model_calls()) == 1 and len(host.usage_reads) == 1
+
+    def test_the_usage_is_read_outside_the_fence_on_the_operators_sign_in(self, world):
+        """F218 and the operator's "Use my sign-in to read (Recommended)":
+        not through fence.sh, and with no token of the fleet's in reach."""
+        fleet, host, _, _ = world
+        assert D.parse_usage(USAGE_OK, T0) == fleet.usage()
+        (cmd, kw), = host.usage_reads
+        assert cmd[:3] == ["claude", "-p", "/usage"] and not any(i for i, _ in host.fenced)
+        assert {"CLAUDE_CODE_OAUTH_TOKEN", "CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR",
+                "ANTHROPIC_API_KEY"}.isdisjoint(kw["env"])
+        assert "pass_fds" not in kw
 
     def test_a_resumed_opus_stage_is_not_new(self, world, tmp_path):
         fleet, host, _, _ = world
@@ -395,8 +424,9 @@ class TestOneCycle:
         assert host.comments(21)[-1].startswith("<!-- xo-verdict: approve round=0")
         (inner, kw), = [(c, k) for c, k in host.fenced if "/usage" not in c]
         assert inner[0] == "claude" and "--model" in inner and rank_call.FABLE in inner
-        assert kw["env"] == {"PATH": os.environ.get("PATH", "/usr/bin:/bin"),
-                             "CLAUDE_CODE_OAUTH_TOKEN": TOKEN}
+        # Since 389 the token is on a pipe at fd 3, never in the environment.
+        assert kw["env"] == {"PATH": os.environ.get("PATH", "/usr/bin:/bin")}
+        assert kw["pass_fds"] == (3,) and callable(kw["preexec_fn"])
         assert all(k["env"]["GH_REPO"] == D.REPO for _, k in host.gh_calls)
 
     def test_the_fence_gets_the_stage_clone_of_the_phase_branch(self, world):
@@ -407,7 +437,7 @@ class TestOneCycle:
         real = host.__call__
 
         def spy(cmd, **kw):
-            if cmd[0] == host.fence:
+            if cmd[0] == host.fence and "/usage" not in cmd:
                 clone = pathlib.Path(cmd[cmd.index("--clone") + 1])
                 seen.append((cmd, subprocess.run(["git", "-C", str(clone), "branch", "--show-current"],
                                                  capture_output=True, text=True).stdout.strip()))
@@ -429,6 +459,10 @@ class TestOneCycle:
         clock.t = T0 + dt.timedelta(minutes=5)
         fleet.cycle()
         assert len(host.model_calls()) == 1, "a back-to-captain was reviewed again unasked"
+        # Since 389 the Captain's revision is next; with no fleet account and
+        # no trial marker that is the operator's step (needs-hands).
+        assert "needs-hands" in host.issues[21]["labels"]
+        host.issues[21]["labels"].remove("needs-hands")
         clock.t = T0 + dt.timedelta(minutes=10)
         host.label(21, "plan:needs-review")
         host.replies = [claude_json(V_APPROVE)]
@@ -457,9 +491,19 @@ class TestOneCycle:
 
     def test_no_branch_comments_and_runs_nothing(self, world):
         fleet, host, _, _ = world
-        host.issue(23, "Phase 777: none", "", {"plan:needs-review": T0})
+        host.issue(23, f"Phase {FIXTURE_PHASE}: gone", f"Mission, branch `phase-{FIXTURE_PHASE}-gone`.",
+                   {"plan:needs-review": T0})
         fleet.cycle()
-        assert host.model_calls() == [] and "no branch `phase-777-…`" in host.comments(23)[-1]
+        assert host.model_calls() == []
+        assert f"`phase-{FIXTURE_PHASE}-gone` the issue names is not on GitHub" in host.comments(23)[-1]
+
+    def test_a_phase_with_no_active_row_gets_no_stage_and_no_comment(self, world):
+        """Since 389: every stage refuses a phase whose row on master is not 🚧."""
+        fleet, host, _, lines = world
+        host.issue(24, "Phase 777: none", "", {"plan:needs-review": T0})
+        fleet.cycle()
+        assert host.model_calls() == [] and host.comments(24) == []
+        assert any("phase 777's row on master is 'missing'" in ln for ln in lines)
 
     def test_a_model_call_outside_the_clone_is_a_stop(self, world, tmp_path):
         fleet, host, _, _ = world
@@ -472,7 +516,7 @@ class TestTheRateLimitPauses:
     def test_recorded_commented_paused_then_resumed(self, world):
         fleet, host, clock, _ = world
         mission(host)
-        host.usage_text = USAGE_LIMITED
+        host.usage_after = USAGE_LIMITED      # the call finds the limit; the gate did not
         host.replies = [LIMITED]
         fleet.cycle()
         paused = fleet.load()["paused"]
@@ -502,7 +546,7 @@ class TestTheRateLimitPauses:
     def test_with_no_reset_readable_it_waits_an_hour(self, world):
         fleet, host, _, _ = world
         mission(host)
-        host.usage_text = USAGE_BAD
+        host.usage_after = USAGE_BAD
         host.replies = [LIMITED]
         fleet.cycle()
         assert D._time(fleet.load()["paused"]["until"]) == T0 + D.RESET_UNKNOWN
@@ -510,7 +554,7 @@ class TestTheRateLimitPauses:
     def test_the_paused_run_is_kept(self, world):
         fleet, host, _, _ = world
         mission(host)
-        host.usage_text = USAGE_LIMITED
+        host.usage_after = USAGE_LIMITED
         host.replies = [LIMITED]
         fleet.cycle()
         run = pathlib.Path(fleet.load()["paused"]["run"])

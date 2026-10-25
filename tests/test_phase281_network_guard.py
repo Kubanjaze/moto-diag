@@ -87,10 +87,11 @@ PLANTED_LOOPBACK = textwrap.dedent('''
 ''')
 
 
-def _run_planted(tmp_path: Path, body: str) -> subprocess.CompletedProcess:
+def _run_planted(tmp_path: Path, body: str, extra_env: dict | None = None
+                 ) -> subprocess.CompletedProcess:
     test_file = tmp_path / "test_planted.py"
     test_file.write_text(body)
-    env = {"PYTHONPATH": str(TESTS_DIR), "PATH": "/usr/bin:/bin"}
+    env = {"PYTHONPATH": str(TESTS_DIR), "PATH": "/usr/bin:/bin", **(extra_env or {})}
     return subprocess.run(
         [sys.executable, "-m", "pytest", "-q", "-p", "no:xdist", "-p", "support.network_guard",
          "-p", "no:cacheprovider", "-o", "addopts=", str(test_file)],
@@ -104,6 +105,18 @@ def test_the_planted_known_bad_test_is_caught(tmp_path):
     assert "NetworkBlockedInTests" in res.stdout
     assert "recall-service.invalid" in res.stdout
     assert "1 failed" in res.stdout
+
+
+def test_a_proxy_on_loopback_is_no_way_out(tmp_path):
+    """Phase 389, bug fix #4: inside the fleet's fence, `HTTPS_PROXY` points at
+    the model's gate on 127.0.0.1, and a test that went through it passed the
+    socket checks (loopback) and reached past them. The guard removes an
+    inherited proxy, so the planted known-bad test fails on the guard's own
+    error, not on whatever the proxy says."""
+    res = _run_planted(tmp_path, PLANTED_BAD, {"HTTPS_PROXY": "http://127.0.0.1:9",
+                                               "https_proxy": "http://127.0.0.1:9"})
+    assert res.returncode == 1, res.stdout + res.stderr
+    assert "NetworkBlockedInTests" in res.stdout and "recall-service.invalid" in res.stdout
 
 
 def test_the_planted_loopback_control_passes(tmp_path):

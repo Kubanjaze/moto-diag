@@ -334,6 +334,44 @@ EXPECTED_SKIPS = frozenset({
      "macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py"),
 })
 
+#: Phase 389, the operator, 2026-10-25: "Sandbox counts (Recommended)" — the
+#: tests that cannot run inside the fleet's fence skip there with a reason
+#: naming it, "and the machine-shaped skips are accepted only for runs made
+#: in the sandbox". So these count only on a line `regression.sh` printed
+#: inside the fence, which carries FENCE_MARK; the Mac keeps EXPECTED_SKIPS
+#: alone. Measured in the fence at `c7f61bc` (389_step0.md, S0-5) and
+#: re-measured after the skips above were given their reasons.
+#: `test_phase389_fence_regression.py` holds it to equality.
+FENCE_MARK = "(run inside the fleet's fence)"
+FENCE_ROOT = pathlib.Path("/fleet/moto-diag")
+FENCE_EXPECTED_SKIPS = frozenset({
+    ("tests/test_phase191b_ffmpeg.py", "real ffmpeg binary or fixture mp4 not available"),
+    ("tests/test_phase204_gate10.py", "inside the fleet's fence: no ffmpeg on the home desktop"),
+    ("tests/test_phase209_packaging.py", "inside the fleet's fence: no network to build a wheel"),
+    ("tests/test_phase257_orchestrator_guards.py",
+     "inside the fleet's fence: no Subconscious login there (K42)"),
+    ("tests/test_phase257_orchestrator_guards.py", "inside the fleet's fence: osacompile is macOS-only"),
+    ("tests/test_phase257_sandbox_boundary.py", "sandbox-exec is macOS-only; the orchestrator runs only there"),
+    ("tests/test_phase257_source_checks.py", "needs the on-disk library"),
+    ("tests/test_phase257_source_checks.py",
+     "acquired/Yamaha/library_om_contents_pdf_10_5YR-F8199-15_02.pdf is not in this machine's library"),
+    ("tests/test_phase257_source_checks.py",
+     "acquired/KTM/24_3214961_en_OM.pdf is not in this machine's library"),
+    ("tests/test_phase257_source_checks.py", "the KTM manual is not in this machine's library"),
+    ("tests/test_phase257_manual_route_excerpts.py", "needs the on-disk library"),
+    ("tests/test_phase388_fence_boundary.py",
+     "inside the fleet's fence: its boundary is proven from the host, not from inside"),
+})
+
+
+def in_fleet_fence(root: pathlib.Path | None = None) -> bool:
+    """A run inside the fleet's fence: the clone is at /fleet/moto-diag and the
+    run directory /fleet/run exists (`fence.sh`); no machine of the
+    operator's has either."""
+    root = root or pathlib.Path(__file__).resolve().parents[3]
+    return root.resolve() == FENCE_ROOT and pathlib.Path("/fleet/run").is_dir()
+
+
 #: The closed logs whose regression line records a skip with no line naming
 #: it, measured 2026-10-19 over every completed log: 382, before 1C. Pinned,
 #: with the same equality control as A5_COMMAND_EXEMPT.
@@ -379,6 +417,7 @@ def regression_record(log_txt: str, phase: str | None = None
                       "'Regression of record: N passed, F failed, S skipped, E errors at "
                       "`HASH` (…, `… pytest …`, exit RC)'")
     count, failed, skipped, errors, commit, command, rc = m.groups()
+    allowed = EXPECTED_SKIPS | (FENCE_EXPECTED_SKIPS if FENCE_MARK in lines[at[-1]] else frozenset())
     if (failed, errors, rc) != ("0", "0", "0"):
         return None, (f"the regression of record did not pass: {failed} failed, "
                       f"{errors} errors, exit {rc}")
@@ -391,7 +430,7 @@ def regression_record(log_txt: str, phase: str | None = None
             problems.append(f"a skip line that does not parse: {ln.strip()[:120]!r}")
             continue
         named += int(s.group(1))
-        if (s.group(2), s.group(3)) not in EXPECTED_SKIPS:
+        if (s.group(2), s.group(3)) not in allowed:
             problems.append(f"an unexpected skip: {s.group(2)}: {s.group(3)!r}")
     unnamed_ok = named == 0 and phase in A5_UNNAMED_SKIP_EXEMPT
     if named != int(skipped) and not unnamed_ok:
@@ -407,13 +446,15 @@ def regression_line(log_txt: str, phase: str | None = None) -> tuple[str, str, s
     return regression_record(log_txt, phase)[0]
 
 
-def format_regression(log_text: str, commit: str, wall_s: int, command: str, rc: int) -> str:
+def format_regression(log_text: str, commit: str, wall_s: int, command: str, rc: int,
+                      fence: bool = False) -> str:
     """The lines `regression.sh` prints, from the pytest log of its run.
 
     One writer beside its reader, so the two cannot drift (F206, Phase 383).
     The prefix "Regression of record:" is printed only for a run that exits
     0 with 0 failed and 0 errors. Each skip in pytest's -rA summary follows
-    on its own line, with its count, file and reason.
+    on its own line, with its count, file and reason. A run inside the
+    fleet's fence ends its line with FENCE_MARK (Phase 389).
     """
     summaries = [m.group(0) for m in _SUMMARY.finditer(log_text)]
     summary = summaries[-1] if summaries else ""
@@ -425,7 +466,8 @@ def format_regression(log_text: str, commit: str, wall_s: int, command: str, rc:
     p, f, s, e = n("passed"), n("failed"), n("skipped"), n("errors?")
     prefix = PREFIX if (rc, f, e) == (0, 0, 0) else FAILED_PREFIX
     out = [f"{prefix} {p} passed, {f} failed, {s} skipped, {e} errors at `{commit}` "
-           f"({wall_s // 60} min {wall_s % 60} s wall, `{command}`, exit {rc})"]
+           f"({wall_s // 60} min {wall_s % 60} s wall, `{command}`, exit {rc})"
+           + (f" {FENCE_MARK}" if fence else "")]
     out += [f"{SKIP_PREFIX} [{k}] {where}: {why}"
             for k, where, why in _PYTEST_SKIP.findall(log_text)]
     return "\n".join(out)
@@ -468,7 +510,8 @@ ASSERTION_IDS = ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8")
 def main() -> int:
     if len(sys.argv) == 7 and sys.argv[1] == "--format-regression":
         _, _, log, commit, wall, command, rc = sys.argv
-        print(format_regression(_read(pathlib.Path(log)), commit, int(wall), command, int(rc)))
+        print(format_regression(_read(pathlib.Path(log)), commit, int(wall), command, int(rc),
+                                fence=in_fleet_fence()))
         return 0
     if len(sys.argv) < 3:
         print("usage: closeout_check.py <repo> <phase>\n"

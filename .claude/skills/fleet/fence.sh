@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # fence.sh — one fleet stage inside bubblewrap (Phase 388).
 #
-#   fence.sh --clone DIR --run DIR --workspace-docs DIR [--net model|none] -- CMD [ARG...]
+#   fence.sh --clone DIR --run DIR --workspace-docs DIR [--net model|none]
+#            [--venv DIR] [--mobile DIR] [--token-fd] -- CMD [ARG...]
 #
 # Runs CMD with the clone as its working directory and exits with CMD's code.
 # What CMD can see (measured in 388_step0.md, S0-5):
@@ -11,6 +12,10 @@
 #   /fleet/workspace-docs   read-only, so CLAUDE.md's ../workspace-docs import
 #                           resolves from the clone
 #   /fleet/bin/claude       the claude binary, read-only
+#   /fleet/moto-diag/.venv  --venv: the fleet's virtualenv, read-only, built
+#                           at this path (Phase 389, S0-5)
+#   /fleet/moto-diag-mobile --mobile: the mobile repository, read-only, so
+#                           ../moto-diag-mobile resolves from the clone
 #   /usr, /etc              read-only; private /proc, /dev and /tmp
 # and nothing else: there is no /home, so the operator's home, ~/.config,
 # ~/.ssh and every credential in it are not there to read. / and /fleet are
@@ -20,14 +25,20 @@
 # CONNECT to the model API through and refuses everything else; --net none:
 # no network at all.
 #
-# The environment is built from nothing. CLAUDE_CODE_OAUTH_TOKEN crosses when
-# the caller set it, inherited and never on a command line (any process can
-# read another's argv). Nothing else of the caller's environment crosses.
+# The environment is built from nothing, and holds no credential (Phase 389,
+# S0-4). With --token-fd the caller hands the token on file descriptor 3; it
+# reaches claude through CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR=3, read once
+# from the pipe, so no process inside can find it in an environment
+# (/proc/<pid>/environ), a command line or an open file. A caller that still
+# sets CLAUDE_CODE_OAUTH_TOKEN is refused: 388 passed it in the environment,
+# where a Bash tool inside could read it from claude's /proc entry.
 #
 # Exit 2, before bwrap starts: no bwrap; the clone is not a git work tree, or
 # is the repository this script lives in (rule 5: never a checkout someone
 # works in); no run directory; no working-rules.md under --workspace-docs (a
-# fence without it runs with no workspace rules, S0-2).
+# fence without it runs with no workspace rules, S0-2); CLAUDE_CODE_OAUTH_TOKEN
+# in the environment; --token-fd with fd 3 not open; a --venv or --mobile
+# that is not a directory.
 set -euo pipefail
 
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
@@ -36,13 +47,16 @@ INSIDE=/fleet/moto-diag
 
 refuse() { echo "fence.sh: refused: $*" >&2; exit 2; }
 
-clone="" run="" wsdocs="" net=model
+clone="" run="" wsdocs="" net=model venv="" mobile="" tokenfd=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --clone) clone=$2; shift 2 ;;
     --run) run=$2; shift 2 ;;
     --workspace-docs) wsdocs=$2; shift 2 ;;
     --net) net=$2; shift 2 ;;
+    --venv) venv=$2; shift 2 ;;
+    --mobile) mobile=$2; shift 2 ;;
+    --token-fd) tokenfd=3; shift ;;
     --) shift; break ;;
     *) refuse "unknown argument $1" ;;
   esac
@@ -63,6 +77,19 @@ run=$(cd "$run" && pwd -P)
 [ -n "$wsdocs" ] && [ -f "$wsdocs/claude/working-rules.md" ] \
   || refuse "no claude/working-rules.md under --workspace-docs ${wsdocs:-unset}"
 wsdocs=$(cd "$wsdocs" && pwd -P)
+[ -z "${CLAUDE_CODE_OAUTH_TOKEN+x}" ] \
+  || refuse "CLAUDE_CODE_OAUTH_TOKEN is set: the token goes in on fd 3 (--token-fd), never the environment"
+if [ -n "$tokenfd" ]; then
+  { true <&3; } 2>/dev/null || refuse "--token-fd, but file descriptor 3 is not open"
+fi
+if [ -n "$venv" ]; then
+  [ -d "$venv" ] || refuse "no virtualenv directory: $venv"
+  venv=$(cd "$venv" && pwd -P)
+fi
+if [ -n "$mobile" ]; then
+  [ -d "$mobile" ] || refuse "no mobile repository directory: $mobile"
+  mobile=$(cd "$mobile" && pwd -P)
+fi
 
 mkdir -p "$run/home" "$run/tmp" "$run/claude"
 # The operator's 2026-09-23 approval of this import, for the fence's clone
@@ -85,6 +112,9 @@ args=(--unshare-all --die-with-parent --new-session
       --bind "$clone" "$INSIDE" --bind "$run" /fleet/run
       --ro-bind "$wsdocs" /fleet/workspace-docs
       --ro-bind "$HERE/fence_net.py" /fleet/lib/fence_net.py)
+[ -n "$venv" ] && args+=(--ro-bind "$venv" "$INSIDE/.venv")
+[ -n "$mobile" ] && args+=(--ro-bind "$mobile" /fleet/moto-diag-mobile)
+[ -n "$tokenfd" ] && args+=(--setenv CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR 3)
 if claude_bin=$(readlink -f "$(command -v claude 2>/dev/null)" 2>/dev/null) && [ -x "$claude_bin" ]; then
   args+=(--ro-bind "$claude_bin" /fleet/bin/claude)
 fi
@@ -101,7 +131,7 @@ inner=("$@")
 if [ "$net" = model ]; then
   # A short directory: a unix socket path is limited to 108 bytes (S0-5).
   netdir=$(mktemp -d /tmp/fleet-net.XXXXXX)
-  /usr/bin/python3 "$HERE/fence_net.py" proxy "$netdir/gate.sock" "$run/net.log" &
+  /usr/bin/python3 "$HERE/fence_net.py" proxy "$netdir/gate.sock" "$run/net.log" 3<&- &
   proxy_pid=$!
   for _ in $(seq 50); do [ -S "$netdir/gate.sock" ] && break; sleep 0.1; done
   [ -S "$netdir/gate.sock" ] || refuse "the network gate did not start"
@@ -118,11 +148,11 @@ args+=(--remount-ro /fleet --remount-ro /
        --setenv CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC 1
        --chdir "$INSIDE")
 
-# The environment from nothing, by builtins: bwrap inherits only the token.
+# The environment from nothing, by builtins: bwrap inherits none of it.
 status=0
 (
   for var in $(compgen -e); do
-    [ "$var" = CLAUDE_CODE_OAUTH_TOKEN ] || unset "$var" 2>/dev/null || true
+    unset "$var" 2>/dev/null || true
   done
   exec "$BWRAP" "${args[@]}" -- "${inner[@]}"
 ) || status=$?

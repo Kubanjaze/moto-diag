@@ -19,6 +19,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / ".claude" / "skills" / "source-transmission"))
 
 import orchestrate as O  # noqa: E402
+from support.fleet_fence import in_fleet_fence  # noqa: E402
 
 FAKE_ANTHROPIC = "sk-ant-oat01-" + "x" * 40
 FAKE_SUBC = "sk-gw-" + "y" * 40
@@ -80,6 +81,8 @@ class TestACredentialNeverCrossesRoutes:
 
     def test_the_real_subc_profile_points_at_subconscious(self):
         """Live control: the operator's own subc profile, read by name only."""
+        if in_fleet_fence():
+            pytest.skip("inside the fleet's fence: no Subconscious login there (K42)")
         if not O.SUBC_PROFILE.is_file():
             pytest.fail(f"control missing: {O.SUBC_PROFILE} (run `subc login`)")
         assert O.subc_gateway() == "api.subconscious.dev"
@@ -142,6 +145,8 @@ class TestTheStopAlertCompiles:
     def test_the_script_compiles(self, tmp_path, title, message):
         import shutil
         import subprocess
+        if in_fleet_fence():
+            pytest.skip("inside the fleet's fence: osacompile is macOS-only")
         if not shutil.which("osacompile"):
             pytest.fail("osacompile missing: this check needs macOS")
         src = tmp_path / "alert.applescript"

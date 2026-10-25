@@ -365,7 +365,28 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: check with the Mac's stat and wc, in test_phase388_service_contract.py.
 #: Measured: 11227.
 #:
-COLLECTED_TEST_FLOOR = 11227
+#: Phase 389 (2026-10-25): 11227 -> 11370, by a diff of collected ids
+#: against 18af1fa: +146 -3. New files: tests/test_phase389_fleet_git.py
+#: (53), test_phase389_engineer.py (26), test_phase389_scout.py (17),
+#: test_phase389_red_team.py (15), test_phase389_captain.py (12),
+#: test_phase389_dispatcher.py (11); test_phase388_fence_boundary.py +9 -1
+#: (the token pipe, the venv and mobile binds; the environment test
+#: rewritten, since nothing crosses now); test_phase388_dispatcher.py +3 -2
+#: (Fable gated by its own week, the closed-phase skip). Measured: 11370.
+#: Then +4, by a diff of collected ids against ccdef49 (+4 -0), all in
+#: test_phase389_dispatcher.py: the named branch, the Red Team without a
+#: push identity (two), an issue the operator holds. Measured: 11374.
+#: Then +21, by a diff of collected ids against 273a6bd (+21 -0): the
+#: operator's two answers, tests/test_phase389_fence_regression.py (20) and
+#: the usage read on the operator's sign-in in test_phase388_dispatcher.py
+#: (1). Measured: 11395.
+#: Then +6, by a diff of collected ids against 390d8e4 (+6 -0): bug fixes
+#: #1 (1, scout), #2 (2, red team), #3 (1, the stage clone's master), and
+#: the two measured dry runs (engineer 1, captain 1). Measured: 11401.
+#: Then +1 against 46023c5: bug fix #4, the planted known-bad test under a
+#: loopback proxy, in test_phase281_network_guard.py. Measured: 11402.
+#:
+COLLECTED_TEST_FLOOR = 11402
 
 
 def _collected_count() -> int:
