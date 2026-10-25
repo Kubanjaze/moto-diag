@@ -1,0 +1,1 @@
+{"type": "result", "subtype": "success", "is_error": true, "num_turns": 4, "session_id": "sess-limited-1", "result": "Claude usage limit reached. Your limit will reset at 2am (America/New_York).", "total_cost_usd": 0.0, "usage": {"input_tokens": 0, "output_tokens": 0}, "modelUsage": {}}

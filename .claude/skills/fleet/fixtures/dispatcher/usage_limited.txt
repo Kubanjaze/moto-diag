@@ -1,0 +1,5 @@
+You are currently using your subscription to power your Claude Code usage
+
+Current session: 100% used · resets Oct 23, 2am (America/New_York)
+Current week (all models): 64% used · resets Oct 28, 12pm (America/New_York)
+Current week (Fable): 100% used · resets Oct 28, 12pm (America/New_York)

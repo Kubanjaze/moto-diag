@@ -1,6 +1,6 @@
 ---
 name: fleet
-description: The fleet's read-only ranks — the Executive Officer's plan checklist and verdict (plan_check.py, xo.py), the Yeoman's decisions file and daily digest (yeoman.py), and the GitHub labels that carry a phase's state (labels.py). Use when reviewing a phase's v1.0 before the build, recording an operator decision as a K-id, writing the day's digest, or checking the fleet's labels.
+description: The fleet's read-only ranks — the Executive Officer's plan checklist and verdict (plan_check.py, xo.py), the Yeoman's decisions file and daily digest (yeoman.py), the GitHub labels that carry a phase's state (labels.py) — and, on the home desktop, the bubblewrap fence every model call runs in (fence.sh) and the dispatcher that polls the labels (dispatcher.py, its systemd unit). Use when reviewing a phase's v1.0 before the build, recording an operator decision as a K-id, writing the day's digest, checking the fleet's labels, or running, checking or changing the fence or the dispatcher.
 ---
 
 # fleet — the ranks that read and never write code
@@ -112,8 +112,85 @@ The eleven, in the order a phase passes through them: `mission`,
 Made under the operator's login (K40), a stand-in until the fleet's own
 identity (F214).
 
+## The fence on Linux — `fence.sh`, `fence_net.py` (Phase 388)
+
+```
+.claude/skills/fleet/fence.sh --clone DIR --run DIR --workspace-docs DIR [--net model|none] -- CMD…
+```
+
+One stage under bubblewrap, on the home desktop (WSL2). What CMD sees: the
+clone at `/fleet/moto-diag` and the run directory at `/fleet/run`, both
+writable; `workspace-docs` read-only at `/fleet/workspace-docs`, so the
+`../workspace-docs` import resolves; the claude binary; `/usr` and `/etc`
+read-only. **No `/home`**: the operator's home, `~/.config`, `~/.ssh` and
+every credential are not there to read, which closes F215 by construction
+rather than by a list. `/` and `/fleet` are read-only.
+
+- **The environment is built from nothing**; only `CLAUDE_CODE_OAUTH_TOKEN`
+  crosses, inherited, never on a command line.
+- **The import approval** for `/fleet/moto-diag` is seeded in the fence's
+  own `.claude.json`: Claude Code's approval is per project path, and a
+  fresh clone without it runs with no workspace rules (388 Step 0, S0-2).
+- **The network**: `fence_net.py proxy`, outside, allows `CONNECT
+  api.anthropic.com:443` and nothing else (403), logging each request to
+  `<run>/net.log`; `fence_net.py inside` bridges `127.0.0.1:18080` in the
+  fence's empty network to it; `HTTPS_PROXY` points there. `--net none`: no
+  network.
+- **Exit 2 before bwrap**: no bwrap, the clone not a work tree or the
+  repository `fence.sh` lives in, no run directory, no `working-rules.md`.
+
+The Mac's fence is `sandbox-exec` (`source-transmission/sandbox.sb.tmpl`,
+`tests/test_phase257_sandbox_boundary.py`); this one is proven by
+`tests/test_phase388_fence_boundary.py`, skipped on macOS.
+
+**Known limit:** the token is in the stage's environment. The read-only
+ranks have no Bash to print it; the first writing seat's phase answers this.
+
+## The dispatcher — `dispatcher.py` (Phase 388)
+
+```
+.claude/skills/fleet/dispatcher.py run [--interval 300]   # the unit's command
+.claude/skills/fleet/dispatcher.py once                   # one cycle
+.claude/skills/fleet/dispatcher.py usage                  # the parsed /usage lines
+```
+
+Not the 384 door's dispatcher. One process (an exclusive `flock` on
+`dispatcher.lock`), on the home desktop, as the operator's user. State in
+`~/.local/state/motodiag/fleet/` (`$FLEET_STATE`): its own GitHub mirror,
+`runs/`, `state.json`, `digests/`, `dispatcher.log`.
+
+Each cycle: the mirror updated; **the sweep** (one comment per state label,
+every label but `mission`, that has sat more than 24 hours, saying who
+moves it next; never twice for one application); a paused stage resumed
+after its reset with `--resume`; **the Executive Officer** on each open
+`plan:needs-review` issue once per application of the label (due when the
+label's last `labeled` event is newer than the rank's last comment), in a
+stage clone of the phase branch the issue's body names; after 07:00,
+**yesterday's digest**, kept in `digests/`, not committed or posted.
+
+- **Every `claude` goes through `fence.sh`**; the ranks' scripts and `gh`
+  run outside it (`gh` with `GH_REPO`). It never moves a label itself.
+- **A usage limit** pauses: the reset from `/usage`, the session, a comment
+  on the issue, no model stage until the reset, then `--resume` in the same
+  run directory. No reset readable: one hour.
+- **No new Opus stage** at or above 70% of the weekly all-models figure, or
+  with the usage unreadable (none is wired yet).
+- **Exit 4, before any cycle**: another dispatcher; no
+  `~/.config/motodiag/anthropic.env`; a token that is not `sk-ant-oat…`;
+  `ANTHROPIC_API_KEY` in its environment.
+
+**The service**: `ops/desktop/motodiag-fleet.service` (installed by
+`install_fleet_unit.sh`, with sudo, by the operator) runs `dispatcher.py
+run` from its own clone `~/motodiag/fleet/code`; `ops/desktop/
+motodiag-fleet-boot.xml` is 382's boot task under its own name, so the VM is
+held up for it. The operator's steps are in `388_operator_steps.md`.
+
 ## What is held by a test
 
 `tests/test_phase387_fleet_contract.py` (the checklist, every known-bad
 case on its own item, the pin's equality, 384/386/387 at their v1.0, the
-reuse, the labels), `tests/test_phase387_xo.py`, `tests/test_phase387_yeoman.py`.
+reuse, the labels), `tests/test_phase387_xo.py`, `tests/test_phase387_yeoman.py`;
+`tests/test_phase388_fence_boundary.py` (the planted attempts and their
+controls), `tests/test_phase388_dispatcher.py`,
+`tests/test_phase388_service_contract.py` (the unit's known-bad cases in
+`fixtures/service/cases.json`).

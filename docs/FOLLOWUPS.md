@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F215** (this file). The
+At the time of writing the highest assigned is **F217** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3802,3 +3802,69 @@ ranks' reads to their clone the way it confines writes, a read of a
 planted canary outside the clone refused as one of its cases; or, before
 then, a read allowlist if Claude Code gains one. Until then a new
 credential location on this Mac is added to `SECRET_HOMES`.
+
+### F216
+
+**The home desktop cannot produce a regression of record: four tests fail there for want of a Mac tool, and 33 skips are not pinned**
+
+Found in Phase 388 (2026-10-22), the first regression run on the desktop,
+the fleet's host. `regression.sh` at `74012fc`, `python -m pytest -n auto
+--dist load`: "Regression run FAILED (not of record): 11189 passed, 4
+failed, 33 skipped, 0 errors" (9 min 26 s, exit 1). The four failures:
+- `test_phase204_gate10.py::TestFfmpegArgsSurviveModernFfmpeg::test_installed_ffmpeg_accepts_the_flag_we_pass`:
+  no ffmpeg on the desktop (`which ffmpeg` prints nothing); the test raises
+  `TypeError` on `None` rather than failing with a reason.
+- `test_phase257_orchestrator_guards.py::TestACredentialNeverCrossesRoutes::test_the_real_subc_profile_points_at_subconscious`:
+  "control missing: /home/lilcu/.subconscious/profiles/default.env (run
+  `subc login`)"; Subconscious is not set up here, and lapses 2026-10-23
+  (K11).
+- `test_phase257_orchestrator_guards.py::TestTheStopAlertCompiles::test_the_script_compiles` (2):
+  "osacompile missing: this check needs macOS"; it fails, not skips, off a
+  Mac.
+
+And the 33 skips, none in `closeout_check.EXPECTED_SKIPS`: 257's
+`sandbox-exec` tests (macOS-only) and its tests that need the on-disk
+manuals library, which is on the Mac. So even with the four fixed, A5
+refuses the desktop's line. (On the desktop, 244H's pinned skip does not
+fire: live is there.)
+
+What it affects: every regression of record since 383 ran on the Mac; this
+phase's too (the operator's "Mac runs it (Recommended)"). The fleet
+proposal puts the Engineer's build and its regression on the desktop, so a
+writing seat there cannot close a phase until this is answered.
+
+To close: the operator's call, since it adds to `EXPECTED_SKIPS` (F206):
+either the desktop's machine-shaped skips are pinned and the four tests
+skip off a Mac with a reason (ffmpeg installed here, or 204's test skips
+without it; 257's Subconscious and `osacompile` tests skip off a Mac), with
+the same equality control; or the regression of record stays the Mac's,
+and the Engineer's phases hand their regression to it.
+
+### F217
+
+**The fleet's host sleeps, and the dispatcher does not catch up a day it slept through**
+
+Found in Phase 388 (2026-10-24). Windows' System log on the home desktop
+(Kernel-Power and Power-Troubleshooter events) shows it going to sleep at
+06:09 on 2026-10-23 and waking at 21:37 on 2026-10-24. The WSL VM paused
+with it: `motodiag-fleet.service` stayed active (`NRestarts=0`, no
+reboot, `uptime -s` 2026-10-22 23:16:35) and `dispatcher.log` has no line
+from 23:07 on 10-22 to 21:37 on 10-24. On waking it acted within a
+minute: the 24-hour sweep on issue #10 at 47 h, and the digest for
+2026-10-23. **The digest for 2026-10-22 was never written:**
+`Fleet.stage_digest` writes only yesterday's, once per day
+(`state.json` `last_digest`), so a day the host slept through is skipped
+without a word. `digests/` holds 2026-10-21 and 2026-10-23. The live API
+on the same desktop was unreachable for the same 39 hours.
+
+Whether Windows slept on its own timer or by hand is not in the log.
+
+What it affects: the proposal's always-on host; every label due during a
+sleep waits for the wake; a missed digest leaves a gap in the operator's
+daily record.
+
+To close: the operator's call on the desktop's power settings (sleep and
+hibernate off on mains power: `powercfg /change standby-timeout-ac 0`,
+`hibernate-timeout-ac 0`, no administrator needed), and the dispatcher
+writes every day since `last_digest`, not only yesterday, with a test
+for a two-day gap.

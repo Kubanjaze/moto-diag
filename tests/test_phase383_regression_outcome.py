@@ -120,7 +120,10 @@ class TestThePins:
         """Adding to it is the operator's call: this literal changes with it."""
         assert C.EXPECTED_SKIPS == frozenset({
             ("tests/test_phase244H_test_db_isolation.py",
-             "no production database on this machine")})
+             "no production database on this machine"),
+            # Phase 388, the operator: "Mac runs it (Recommended)".
+            ("tests/test_phase388_fence_boundary.py",
+             "macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py")})
 
     def test_each_expected_skip_is_still_in_its_file(self):
         for path, reason in C.EXPECTED_SKIPS:

@@ -1,0 +1,31 @@
+# moto-diag's fleet dispatcher on the home desktop (Phase 388). Installed by
+# install_fleet_unit.sh as /etc/systemd/system/motodiag-fleet.service.
+#
+# - The read-only ranks only: the Executive Officer on plan:needs-review, the
+#   Yeoman's daily digest, the 24-hour sweep. Every model call runs inside
+#   fence.sh; the dispatcher never moves a label itself, writes code or merges.
+# - Code from its own clone (~/motodiag/fleet/code), never the operator's
+#   checkout (rule 5); its state in ~/.local/state/motodiag/fleet.
+# - No EnvironmentFile: dispatcher.py reads the fleet's token from
+#   ~/.config/motodiag/anthropic.env itself and hands it only to the fence.
+# - Exit 4 is a refusal (another dispatcher, no token, an API key in the
+#   environment): the unit stays down and says so, rather than retrying.
+[Unit]
+Description=moto-diag fleet dispatcher (read-only ranks, fenced)
+After=network-online.target
+Wants=network-online.target
+# Without the fleet's token the dispatcher refuses; the unit never starts.
+ConditionPathExists=/home/lilcu/.config/motodiag/anthropic.env
+
+[Service]
+Type=simple
+User=lilcu
+WorkingDirectory=/home/lilcu/motodiag/fleet/code
+Environment=PATH=/home/lilcu/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/python3 /home/lilcu/motodiag/fleet/code/.claude/skills/fleet/dispatcher.py run
+Restart=always
+RestartSec=30
+RestartPreventExitStatus=4
+
+[Install]
+WantedBy=multi-user.target
