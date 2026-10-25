@@ -258,3 +258,43 @@ What each became (`d3e4388`):
   removed from its environment, cwd the dispatcher's state directory: the
   limits, read on the operator's sign-in. A test holds that it does not go
   through the fence and carries no token.
+
+### 2026-10-25 — The model-free run in the real fence, three times
+
+`Fleet.check_run` on 389's own HEAD, in the real fence (venv, mobile, no
+token), each from a fresh clone:
+1. At `d3e4388`: `wholetree.sh --full` failed two of 389's own new tests
+   (`test_this_checkout_is_not_the_fence`, and the command-line one): they
+   assumed this checkout is never the fence, and inside it, it is. Fixed in
+   `a0e4861` to hold what is true in both places. The model-free run caught
+   a defect the desktop's own runs could not: the reason it exists.
+2. At `a0e4861`: the whole-tree check passed; the regression died after
+   1 min 12 s, exit 3, "OSError: [Errno 28] No space left on device". Not a
+   lost worker: this desktop's `/tmp` is a 16 GB in-memory filesystem
+   (`df -h /tmp`: 16G used of 16G), and this session's scratch runs (the
+   Step 0 fence copies, three check runs, each a full clone with its test
+   output) filled it. Cleared (`/tmp` 5% used after); the live service was
+   unharmed (the 07:03 digest written, `NRestarts=0`), though its network
+   gate's socket lives in `/tmp`. The dispatcher's own runs live on the
+   real disk (`~/.local/state/motodiag/fleet/runs`, 950 GB free); a full
+   check run leaves 1.5–3 GB, and the newest 20 runs are kept.
+3. At `a0e4861` again, its state on the real disk: below.
+
+Also: F218 closed by the operator's answer, and F216 noted: answered for
+the fence, still open for the bare desktop.
+
+The third run, at `a0e4861`, state on the real disk, as `check.txt`
+recorded it:
+
+Regression of record: 11290 passed, 0 failed, 105 skipped, 0 errors at `a0e4861` (29 min 54 s wall, `python -m pytest -n auto --dist load`, exit 0) (run inside the fleet's fence)
+
+`check.ok` True: A5 (`regression_record`) accepted it with the fence's
+pins. 11290 + 105 = 11395, the floor. Its skips, grouped by file and
+reason (from the run's `Skipped in the regression of record:` lines):
+388's fence module 47, 209's packaging 21, 257's sandbox 12, 257's library
+tests 12 ("needs the on-disk library", 7 + 5) and 3 that name a manual,
+191B's ffmpeg 5, 257's stop-alert 2, and one each for 257's Subconscious
+control, 204's ffmpeg and 244H. **A regression of record produced inside
+the fence, by a run no model touched: shown.** Its wall time, 29 min 54 s
+against run 2's 10 min 26 s, overlapped a run of the fleet's 420 tests on
+the same machine; the next one will say whether that was all of it.

@@ -376,8 +376,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: Then +4, by a diff of collected ids against ccdef49 (+4 -0), all in
 #: test_phase389_dispatcher.py: the named branch, the Red Team without a
 #: push identity (two), an issue the operator holds. Measured: 11374.
+#: Then +21, by a diff of collected ids against 273a6bd (+21 -0): the
+#: operator's two answers, tests/test_phase389_fence_regression.py (20) and
+#: the usage read on the operator's sign-in in test_phase388_dispatcher.py
+#: (1). Measured: 11395.
 #:
-COLLECTED_TEST_FLOOR = 11374
+COLLECTED_TEST_FLOOR = 11395
 
 
 def _collected_count() -> int:

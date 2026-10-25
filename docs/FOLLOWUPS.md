@@ -3840,6 +3840,15 @@ without it; 257's Subconscious and `osacompile` tests skip off a Mac), with
 the same equality control; or the regression of record stays the Mac's,
 and the Engineer's phases hand their regression to it.
 
+**2026-10-25, Phase 389: answered for runs inside the fleet's fence.** The
+operator: "Sandbox counts (Recommended)". A regression run inside the fence
+on this desktop can be of record: the tests that cannot run there skip with
+a reason naming the fence, and `closeout_check.FENCE_EXPECTED_SKIPS`
+accepts those skips only on a line carrying the fence's mark. So the
+Engineer's phases close on the desktop. This finding stays open for the
+bare desktop, outside the fence, where the four tests still fail and the
+skips are still not pinned; nothing needs that run now.
+
 ### F217
 
 **The fleet's host sleeps, and the dispatcher does not catch up a day it slept through**
@@ -3881,7 +3890,7 @@ hibernate off on mains power: `powercfg /change standby-timeout-ac 0`,
 writes every day since `last_digest`, not only yesterday, with a test
 for a two-day gap.
 
-### F218
+### F218 — CLOSED by the operator's "Use my sign-in to read (Recommended)" (Phase 389, `d3e4388`)
 
 **The fleet's own token cannot read the usage, so the dispatcher's 70% gates can never pass**
 
@@ -3911,3 +3920,11 @@ To close: the operator's call, since it puts a login to a new use: the
 dispatcher reads `/usage` outside the fence on the operator's own login
 (no model call, 0 turns, no cost; the pool is the same subscription), or
 another way to read the figures, or a different gate.
+
+**Closed 2026-10-25.** The operator picked the first: "Use my sign-in to
+read (Recommended)". `Fleet.usage` runs `claude -p "/usage"` on the host,
+outside the fence, with the fleet's token variables and any API key
+removed from its environment; the sign-in never enters the fence. Read
+live that morning: session 1%, week 15%, Fable 21%.
+`tests/test_phase388_dispatcher.py::TestTheOpusCeiling::test_the_usage_is_read_outside_the_fence_on_the_operators_sign_in`
+holds it.
