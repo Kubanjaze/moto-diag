@@ -1,0 +1,14 @@
+New phase: the fleet picks up where it left off; closes F219 (docs/FOLLOWUPS.md). Next free ROADMAP number (390 unless the ledger says otherwise), row 🚧 first, branch phase-<N>-resume, prompt to docs/prompts/<N>_resume.txt. The Quartermaster moves to the phase after. Stops only for CLAUDE.md rule 1.
+
+State now: F219 is on master at 0ea69e8. Trial 389A (issue #14, PR #15) was restarted by hand: review:open re-applied at 15:50, so Red Team round 2 runs on bdecabd, then the Engineer's fix round. Do not touch #14, PR #15, their labels or the 389A branch, and never restart motodiag-fleet.service or Ubuntu while any #14 stage is running (dispatcher.log shows a stage started with no end line). Wait for a gap.
+
+What ships, under .claude/skills/fleet/ with CHANGELOG, fixtures, contract tests and mutations:
+- On every start, before its first cycle, the dispatcher searches for where each issue left off: a rank's "started" marker with no matching end (pr-ready, verdict, stopped) after it, or a run dir with no live process. For each one it resumes the stage from its run dir and session id: a model run with --resume, a model-free run started again on the same commit, then the push it was waiting on. It logs one line per resumed stage. If a stage can't be resumed, it posts a stop comment and leaves the label as it was. It never goes quiet.
+- The search covers every rank: scout, captain, XO, engineer (including its model-free run and push), red team, the Captain's recommendation, and the digest.
+- prune_runs never deletes an unfinished run's folder.
+
+Proofs, "restart each portion of the fleet": one planted mission per rank, the service restarted mid-stage (systemctl restart), and that stage resumes and reaches its next label with no hand on it. Do one whole-Ubuntu restart too, which is mine: write it as a paste block for the administrator PowerShell (wsl --shutdown, then the check) ending ALL GOOD or SOMETHING IS OFF, and tell me when it is safe to run.
+
+Scoped pre-approvals, apply literally: (a) planted missions push under my login until the machine user exists; (b) raising COLLECTED_TEST_FLOOR for this phase's own tests is not a stop; (c) restarting motodiag-fleet.service for a planted proof, in a gap with no #14 stage running, is not a stop.
+
+Step 0 first, and report before v1.0: every place a stage can be killed today and what each leaves behind (markers, labels, run dirs, unpushed commits), and which of 389's resume code (paused, rate-limit) this reuses. Then v1.0, plan commit pushed, build, close out, handoff, row to ✅. Merge stays mine.
