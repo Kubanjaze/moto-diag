@@ -3857,3 +3857,8 @@ Write-up: [`387_implementation.md`](docs/phases/completed/387_implementation.md)
 
 Log: [`docs/phases/completed/388_phase_log.md`](docs/phases/completed/388_phase_log.md).
 Write-up: [`388_implementation.md`](docs/phases/completed/388_implementation.md).
+
+## Phase 389 — The Captain and the Engineer — CLOSED 2026-10-25
+
+Log: [`docs/phases/completed/389_phase_log.md`](docs/phases/completed/389_phase_log.md).
+Write-up: [`389_implementation.md`](docs/phases/completed/389_implementation.md).

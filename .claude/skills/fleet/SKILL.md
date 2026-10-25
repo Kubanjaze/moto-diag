@@ -1,9 +1,13 @@
 ---
 name: fleet
-description: The fleet's read-only ranks — the Executive Officer's plan checklist and verdict (plan_check.py, xo.py), the Yeoman's decisions file and daily digest (yeoman.py), the GitHub labels that carry a phase's state (labels.py) — and, on the home desktop, the bubblewrap fence every model call runs in (fence.sh) and the dispatcher that polls the labels (dispatcher.py, its systemd unit). Use when reviewing a phase's v1.0 before the build, recording an operator decision as a K-id, writing the day's digest, checking the fleet's labels, or running, checking or changing the fence or the dispatcher.
+description: The fleet's ranks — the Executive Officer's plan checklist and verdict (plan_check.py, xo.py), the Yeoman's decisions file and daily digest (yeoman.py), the GitHub labels that carry a phase's state (labels.py), and since Phase 389 the ranks that write — the Science Officer's Step 0 (scout.py), the Captain's v1.0 and merge recommendation (captain.py), the Chief Engineer's build to a PR (engineer.py), the Red Team's refute (red_team.py) — with the push gate and identity they push through (fleet_git.py); on the home desktop, the bubblewrap fence every model call runs in (fence.sh) and the dispatcher that polls the labels (dispatcher.py, its systemd unit). Use when reviewing a phase's v1.0, recording an operator decision as a K-id, writing the digest, checking the labels, opening a mission for the fleet, or running, checking or changing the fence, the push gate, a rank or the dispatcher.
 ---
 
-# fleet — the ranks that read and never write code
+# fleet — the ranks, the fence and the dispatcher
+
+The first two ranks (387) read and never write code. Since Phase 389 four
+more write, each only through the dispatcher's push gate, and merging stays
+the operator's.
 
 ## Why this folder exists
 
@@ -115,7 +119,8 @@ identity (F214).
 ## The fence on Linux — `fence.sh`, `fence_net.py` (Phase 388)
 
 ```
-.claude/skills/fleet/fence.sh --clone DIR --run DIR --workspace-docs DIR [--net model|none] -- CMD…
+.claude/skills/fleet/fence.sh --clone DIR --run DIR --workspace-docs DIR [--net model|none] \
+    [--venv DIR] [--mobile DIR] [--token-fd] -- CMD…
 ```
 
 One stage under bubblewrap, on the home desktop (WSL2). What CMD sees: the
@@ -126,8 +131,21 @@ read-only. **No `/home`**: the operator's home, `~/.config`, `~/.ssh` and
 every credential are not there to read, which closes F215 by construction
 rather than by a list. `/` and `/fleet` are read-only.
 
-- **The environment is built from nothing**; only `CLAUDE_CODE_OAUTH_TOKEN`
-  crosses, inherited, never on a command line.
+- **The environment is built from nothing, and holds no credential**
+  (Phase 389). With `--token-fd` the token comes on file descriptor 3 and
+  reaches claude through `CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR=3`, read
+  once from the pipe: a Bash command inside finds it in no
+  `/proc/<pid>/environ`, command line or open file (389 Step 0, S0-4; in
+  388's environment variable three processes' `environ` held it). A
+  caller that sets `CLAUDE_CODE_OAUTH_TOKEN` is refused.
+- **`--venv`**: the fleet's virtualenv (`~/.local/state/motodiag/fleet/venv`),
+  read-only at `/fleet/moto-diag/.venv`, built with the project installed
+  editable at `/fleet/moto-diag/src`, so a stage tests its own clone's code
+  (the repository's `.venv` is uv's Python under `/home`, editable at the
+  operator's checkout: the GLM report's trap 1). **`--mobile`**: the mobile
+  repository, read-only at `/fleet/moto-diag-mobile`.
+- **The repository's hooks fire inside** (measured: the edit guard refused a
+  planted `sed -i`, under `dontAsk` and under `bypassPermissions`).
 - **The import approval** for `/fleet/moto-diag` is seeded in the fence's
   own `.claude.json`: Claude Code's approval is per project path, and a
   fresh clone without it runs with no workspace rules (388 Step 0, S0-2).
@@ -143,8 +161,10 @@ The Mac's fence is `sandbox-exec` (`source-transmission/sandbox.sb.tmpl`,
 `tests/test_phase257_sandbox_boundary.py`); this one is proven by
 `tests/test_phase388_fence_boundary.py`, skipped on macOS.
 
-**Known limit:** the token is in the stage's environment. The read-only
-ranks have no Bash to print it; the first writing seat's phase answers this.
+**A regression inside the fence is not of record as the rules stand** (389
+Step 0, S0-5): 14 failures (the desktop's four, F216, and 388's fence tests
+run inside a fence) and 53 skips `EXPECTED_SKIPS` does not pin. Which
+skips a fenced run may carry is the operator's call (F206).
 
 ## The dispatcher — `dispatcher.py` (Phase 388)
 
@@ -173,8 +193,9 @@ stage clone of the phase branch the issue's body names; after 07:00,
 - **A usage limit** pauses: the reset from `/usage`, the session, a comment
   on the issue, no model stage until the reset, then `--resume` in the same
   run directory. No reset readable: one hour.
-- **No new Opus stage** at or above 70% of the weekly all-models figure, or
-  with the usage unreadable (none is wired yet).
+- **No new Opus stage** at or above 70% of the weekly all-models figure,
+  **and no new Fable stage** at or above 70% of Fable's own week (389), or
+  with the usage unreadable. A resumed stage is not new.
 - **Exit 4, before any cycle**: another dispatcher; no
   `~/.config/motodiag/anthropic.env`; a token that is not `sk-ant-oat…`;
   `ANTHROPIC_API_KEY` in its environment.
@@ -185,6 +206,78 @@ run` from its own clone `~/motodiag/fleet/code`; `ops/desktop/
 motodiag-fleet-boot.xml` is 382's boot task under its own name, so the VM is
 held up for it. The operator's steps are in `388_operator_steps.md`.
 
+## The ranks that write — Phase 389
+
+The dispatcher's cycle, on each open `Phase <N>: …` issue whose row on
+`master` is 🚧 and that carries neither `needs-admiral` nor `needs-hands`
+(the operator's: the fleet leaves it alone until the label comes off), runs
+the one stage its labels ask for, latest state first:
+
+| on the issue | the stage | it sets |
+|---|---|---|
+| `mission` only | the Science Officer (`scout.py`, Haiku) | `step0:done` |
+| `step0:done` | the Captain, v1.0 (`captain.py`, Fable) | `plan:needs-review` |
+| `plan:needs-review`, due | the Executive Officer (`xo.py`, 387) | `plan:approved`, or back |
+| `plan:needs-review`, XO's newest verdict back | the Captain, revision | `plan:needs-review`, removed and added |
+| `plan:approved` | the Chief Engineer (`engineer.py`, Opus) | `build:open`, then `review:open` |
+| `review:open` | the Red Team (`red_team.py`, Opus) | `review:clear`, or `build:open` |
+| `build:open`, findings newer | the Chief Engineer, a fix round | `review:open` |
+| `review:clear` | the Captain's recommendation | `merge:needs-review` (the operator merges) |
+
+- **The Science Officer**: 257's census shape. The terms from one no-tools
+  Haiku call; the counts by `git grep -c` per area (and the mobile
+  repository's `src/`), each beside its command, so P3 holds by
+  construction; bounded excerpts; the judgement from a second no-tools
+  call, whose prose may carry no count. It saves the issue's body as the
+  phase's prompt when there is none.
+- **The Captain**: read-only Fable; the script writes the one file it may
+  change and runs `plan_check`; a failure gets one more call, then a stop.
+- **The Chief Engineer**: one Opus session per round in the fence,
+  `bypassPermissions` (the fence and the hooks are the boundary). It ends by
+  writing `/fleet/run/engineer.json` (`pr-ready` or `stop`). Two watchers
+  outside the model end it early: the phase log reaching `### Bug fix #3`,
+  and two guard blocks with the same guard and reason in its transcript.
+  A `pr-ready` is believed only when the clone is clean, `closeout_check`
+  is empty, and **a run no model touched** (`Fleet.check_run`: a fresh
+  fenced clone, `wholetree.sh --full`, `regression.sh`, no token) counts
+  what the Engineer's line counts.
+- **The Red Team**: a fresh read-only Opus call with A1–A8, the F9 lint, the
+  plan as approved and as it stands, and the branch's diff. Its `## Refuter
+  pass` table must pass `refute_check` (C1–C7). **For a repository file the
+  page is the line number** (`docs/FOLLOWUPS.md p. 3677` is line 3677). Three
+  rounds, then `needs-admiral` (K9). A cleared table is committed into the
+  branch's phase log (A8).
+
+**The push gate** (`fleet_git.gate`), before every push, outside any
+session: G1 a `phase-<N>-…` branch, never `master`; G2 a fast-forward; G3
+each path one the rank may touch (no rank changes `CLAUDE.md`, the hook
+settings, the guards, or `.claude/skills/fleet/`; the Engineer may add
+ROADMAP rows but change only its own); G4 no credential in an added line;
+G5 `roadmap_check`; G6 a model-free run passed. Whole-tree records written
+inside a fence are not trusted: their key is the run's own.
+
+**The push identity** (`fleet_git.identity`): the fleet's machine user from
+`~/.config/motodiag/fleet-github.env` (mode 600), named on the one push
+command with the operator's credential helper reset; without it, the
+operator's login only for an issue carrying `<!-- fleet-trial -->`; any
+other issue gets `needs-hands`. Comments and labels go out in the fleet's
+name once the file exists, else the operator's, as in 387 and 388.
+
+**No rank goes live on a new check until it has run once against a real
+artefact in the real place** (Phase 389's rule-5 stop). The build's three
+bug fixes were each a check of a model's work tested only against
+stand-ins written from the same picture as the code: a bare phase number
+P3 reads as a count, C6 held on a back's table, a stage clone with no
+`master`. All three failed in the first minutes of the first live run. So:
+a fenced dry run of the rank on a real branch first, its output kept as a
+fixture; every live failure's real artefact kept as a fixture too; and
+where a check and a brief could disagree, the brief states the check's
+rule in its own words.
+
+**Commits** made for a rank carry `MotoDiag fleet (<rank>)`,
+`fleet@motodiag.invalid` until the account exists, and a `Co-Authored-By:`
+line naming the model.
+
 ## What is held by a test
 
 `tests/test_phase387_fleet_contract.py` (the checklist, every known-bad
@@ -193,4 +286,8 @@ reuse, the labels), `tests/test_phase387_xo.py`, `tests/test_phase387_yeoman.py`
 `tests/test_phase388_fence_boundary.py` (the planted attempts and their
 controls), `tests/test_phase388_dispatcher.py`,
 `tests/test_phase388_service_contract.py` (the unit's known-bad cases in
-`fixtures/service/cases.json`).
+`fixtures/service/cases.json`); `tests/test_phase389_fleet_git.py` (every
+known-bad push in `fixtures/push_gate/cases.json` on its own G-id, the
+identity), `tests/test_phase389_scout.py`, `test_phase389_captain.py`,
+`test_phase389_engineer.py`, `test_phase389_red_team.py`,
+`test_phase389_dispatcher.py` (the label table end to end on stand-ins).

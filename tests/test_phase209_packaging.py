@@ -35,6 +35,7 @@ import zipfile
 from pathlib import Path
 
 import pytest
+from support.fleet_fence import in_fleet_fence
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SRC_PKG = REPO_ROOT / "src" / "motodiag"
@@ -55,6 +56,8 @@ def wheel(tmp_path_factory) -> Path:
     proc = _run([sys.executable, "-m", "build", "--wheel", "--outdir", str(out)],
                 cwd=str(REPO_ROOT))
     if proc.returncode != 0:
+        if in_fleet_fence():     # one reason, so the fence's pin can name it (Phase 389)
+            pytest.skip("inside the fleet's fence: no network to build a wheel")
         pytest.skip(f"wheel build unavailable: {proc.stderr[-400:]}")
     wheels = list(out.glob("*.whl"))
     assert len(wheels) == 1, f"expected one wheel, got {wheels}"

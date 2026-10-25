@@ -1,5 +1,33 @@
 # fleet — changelog
 
+## 2026-10-25 — the ranks that write: Science Officer, Captain, Engineer, Red Team (Phase 389)
+
+Steps 6 and 7 of `docs/reports/2026-10-22_fleet_proposal.md`. The prompt is
+`docs/prompts/389_captain_engineer.txt`; Step 0 is `389_step0.md`.
+
+- **`scout.py`** (Haiku, K42), **`captain.py`** (Fable), **`engineer.py`**
+  (Opus), **`red_team.py`** (Opus, fresh): each a script around fenced
+  calls; every label moved by the dispatcher from a checked result.
+- **`fleet_git.py`**: the push gate G1–G6, run outside any session because
+  the push guard is a hook; the push identity (the fleet's machine user, or
+  the operator's login for a planted trial only).
+- **`fence.sh`**: the token on a pipe (`--token-fd`), never the environment
+  (measured: in the environment a Bash tool could read it from three
+  processes' `/proc/<pid>/environ`); `--venv` and `--mobile`.
+- **`dispatcher.py`**: the four stages and their resumes, the model-free
+  check run, the Fable gate, closed phases and operator-held issues left
+  alone, the Engineer's watched session.
+- **`rank_call.py`**: `tools=`, and `NO_TOOLS` for one-turn calls.
+- **Fixtures**: `fixtures/push_gate/cases.json` (hand-written known-bad
+  pushes, one G-id each), `fixtures/scout/` (hand-written replies, the
+  known-bad ones named in its README), `fixtures/dispatcher/usage_fable_at_ceiling.txt`.
+- **Decided**: for a repository file, a refute table's page is the line
+  number (C4 asks for a page; a text file has none).
+
+Not done here, and why: the master ruleset (F214's other half) changes who
+may push to `master`, the operator's call; the push gate refuses `master`
+meanwhile.
+
 ## 2026-10-22 — the fence on Linux and the dispatcher (Phase 388)
 
 Steps 4 and 5 of `docs/reports/2026-10-22_fleet_proposal.md`, built on the

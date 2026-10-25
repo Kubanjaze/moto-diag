@@ -1,0 +1,42 @@
+{
+  "about": "Hand-written known-bad pushes for fleet_git.gate (Phase 389). Each case is applied to a clone of a repository built from 387's good fixture tree (phase 900, row 🚧), committed, and gated; it must fail on exactly its own G-id. The good cases must pass. 'write' replaces a file's whole text; 'append' adds a line; 'replace' swaps one text that must occur once.",
+  "good": [
+    {"id": "good-scout", "rank": "scout", "branch": "phase-900-fixture",
+     "edits": [{"path": "docs/phases/in_progress/900_step0.md", "append": "One more line of the report."},
+               {"path": "docs/prompts/900_the_mission.txt", "write": "The mission, verbatim.\n"}]},
+    {"id": "good-captain", "rank": "captain", "branch": "phase-900-fixture",
+     "edits": [{"path": "docs/phases/in_progress/900_implementation.md", "append": "A revised line."}]},
+    {"id": "good-engineer", "rank": "engineer", "branch": "phase-900-fixture",
+     "edits": [{"path": "src/motodiag/new_module.py", "write": "VALUE = 1\n"},
+               {"path": "docs/ROADMAP.md", "replace": ["| 900 | The phase under review | 🚧 |", "| 900 | The phase under review, built | 🚧 |"]},
+               {"path": "docs/ROADMAP.md", "append": "| 385 | The push token's own write | 🔲 | Not started. |"}]},
+    {"id": "good-red-team-record", "rank": "red-team-record", "branch": "phase-900-fixture",
+     "edits": [{"path": "docs/phases/in_progress/900_phase_log.md", "write": "# log\n\n## Refuter pass\n"}]}
+  ],
+  "bad": [
+    {"id": "G1-master", "item": "G1", "rank": "engineer", "branch": "master",
+     "edits": [{"path": "src/motodiag/x.py", "write": "X = 1\n"}]},
+    {"id": "G1-another-phase", "item": "G1", "rank": "engineer", "branch": "phase-901-other",
+     "edits": [{"path": "src/motodiag/x.py", "write": "X = 1\n"}]},
+    {"id": "G3-scout-writes-src", "item": "G3", "rank": "scout", "branch": "phase-900-fixture",
+     "edits": [{"path": "src/motodiag/x.py", "write": "X = 1\n"}]},
+    {"id": "G3-captain-writes-the-step0", "item": "G3", "rank": "captain", "branch": "phase-900-fixture",
+     "edits": [{"path": "docs/phases/in_progress/900_step0.md", "append": "The captain edits step 0."}]},
+    {"id": "G3-engineer-edits-claude-md", "item": "G3", "rank": "engineer", "branch": "phase-900-fixture",
+     "edits": [{"path": "CLAUDE.md", "append": "A new rule."}]},
+    {"id": "G3-engineer-edits-the-settings", "item": "G3", "rank": "engineer", "branch": "phase-900-fixture",
+     "edits": [{"path": ".claude/settings.json", "write": "{}\n"}]},
+    {"id": "G3-engineer-edits-the-edit-guard", "item": "G3", "rank": "engineer", "branch": "phase-900-fixture",
+     "edits": [{"path": ".claude/skills/closeout/_edit_guard.py", "write": "pass\n"}]},
+    {"id": "G3-engineer-edits-the-fleet", "item": "G3", "rank": "engineer", "branch": "phase-900-fixture",
+     "edits": [{"path": ".claude/skills/fleet/dispatcher.py", "write": "pass\n"}]},
+    {"id": "G3-engineer-changes-another-row", "item": "G3", "rank": "engineer", "branch": "phase-900-fixture",
+     "edits": [{"path": "docs/ROADMAP.md", "replace": ["| 898 | A closed phase | ✅ |", "| 898 | A closed phase, renamed | ✅ |"]}]},
+    {"id": "G4-a-credential", "item": "G4", "rank": "engineer", "branch": "phase-900-fixture",
+     "edits": [{"path": "src/motodiag/x.py", "write": "TOKEN = 'sk-ant-oat01-AbCdEfGhIjKlMnOpQrStUvWxYz0123456789AbCdEfGhIjKlMnOpQrStUvWxYz0123'\n"}]},
+    {"id": "G4-a-github-token", "item": "G4", "rank": "engineer", "branch": "phase-900-fixture",
+     "edits": [{"path": "docs/notes.md", "write": "ghp_AbCdEfGhIjKlMnOpQrStUvWxYz0123456789\n"}]},
+    {"id": "G5-docs-with-no-row", "item": "G5", "rank": "engineer", "branch": "phase-900-fixture",
+     "edits": [{"path": "docs/phases/in_progress/901_step0.md", "write": "A phase with no row.\n"}]}
+  ]
+}

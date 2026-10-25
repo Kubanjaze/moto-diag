@@ -14,6 +14,7 @@ raises `NetworkBlockedInTests`, naming the host, which fails the test.
 from __future__ import annotations
 
 import ipaddress
+import os
 import socket
 
 _LOOPBACK_NAMES = frozenset({"localhost", "localhost.localdomain", "", None})
@@ -76,7 +77,18 @@ def _guarded_create_connection(address, *args, **kwargs):
     return _real_create_connection(address, *args, **kwargs)
 
 
+#: A proxy on loopback is a way out the socket checks cannot see: the client
+#: connects to 127.0.0.1 and the proxy reaches the host. Inside the fleet's
+#: fence the model's own gate is such a proxy (`HTTPS_PROXY`, Phase 388), and
+#: a test run in the Engineer's session inherits it (Phase 389, bug fix #4).
+#: No test uses a proxy, so an inherited one is removed.
+PROXY_VARIABLES = ("HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy",
+                   "ALL_PROXY", "all_proxy")
+
+
 def install() -> None:
+    for name in PROXY_VARIABLES:
+        os.environ.pop(name, None)
     socket.socket.connect = _guarded_connect
     socket.socket.connect_ex = _guarded_connect_ex
     socket.getaddrinfo = _guarded_getaddrinfo
