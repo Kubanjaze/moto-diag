@@ -364,3 +364,38 @@ the corrective call carries both the rule and the flagged phrase. Against
 the old `scout.py` (only it stashed): red. 18/18 in the file.
 
 **Commit.** The commit that carries this entry.
+
+### Bug fix #2 — 2026-10-25 — the Red Team's back verdict was refused for the defects it found
+
+**Issue.** The planted-bug proof's first round, live, at 09:53:59 (Opus, 39
+s): "issue 13: stopped: the refute table fails the checklist: C6 row 1
+("Row 385 closes F213, the API's own") has an open citation defect: the
+row does not ship; C6 row 2 ('The finding about `device_tokens.l') has an
+open citation defect …", four rows. The Red Team had found the planted
+bug, the F213 citations, and the stage refused its verdict.
+
+**Root cause.** `red_team.review` applied all of `refute_check` (C1–C7) to
+every table. C6 ("no factual or citation defect is still open: the row
+does not ship") holds a table that ships, the one a clear commits into
+the phase log. A table that sends a PR back has its killed rows open by
+definition: the Engineer has not fixed them yet. The test of a back used a
+table with no open row (`TABLE`), so it never met this; my own docstring
+in that test named the distinction and the code did not apply it.
+
+**Fix.** On a back, C6's failures are not refusals; every other item
+(C1–C5, C7) still is, and on a clear C6 holds as before.
+
+**Files.** `.claude/skills/fleet/red_team.py`;
+`tests/test_phase389_red_team.py` (the back test now carries an open
+killed row; 2 new tests: a clear with an open row still stops on C6, a
+back without a page still stops on C4).
+
+**Verified.** Against the old `red_team.py` (only it stashed), the back
+test with an open row: red. With the fix, 17/17 in the file
+(`pytest tests/test_phase389_red_team.py`), and the dispatcher's 15.
+
+**Commit.** The commit that carries this entry.
+
+Two bug fixes in this build, both found by the live proofs in their first
+minutes, each in a check of a model's text that was stricter than what it
+guards: the next would be the third, the stop to find a shared cause.

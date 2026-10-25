@@ -66,12 +66,24 @@ class TestReview:
         assert "1 · none" in cmd[2] and "p. <line>" in cmd[2]
 
     def test_a_back_with_a_killed_row_open(self, tmp_path):
-        """A killed factual row is open until the Engineer fixes it: C6
-        refuses it in a log that ships, so the table posted on a back is the
-        PR's, and only a clear's table is recorded."""
+        """Phase 389, bug fix #2: a killed factual row is open until the
+        Engineer fixes it. C6 refuses it in a log that ships, so it holds
+        only a clear's table; a back's table, posted on the PR, may carry it."""
         v, _ = R.review("389A", 1, "ctx", clone=tmp_path, run=Replies(
-            {"verdict": "back", "findings": [FINDING], "refuter_pass": TABLE}))
+            {"verdict": "back", "findings": [FINDING], "refuter_pass": KILLED}))
         assert v["verdict"] == "back" and "F213" in R.findings_text(v)
+
+    def test_a_clear_with_a_row_left_open_still_stops(self, tmp_path):
+        """The control: on a clear, C6 still holds."""
+        with pytest.raises(rank_call.Stop, match="C6"):
+            R.review("389A", 1, "ctx", clone=tmp_path, run=Replies(
+                {"verdict": "clear", "findings": [], "refuter_pass": KILLED}))
+
+    def test_a_back_still_needs_the_rest_of_the_checklist(self, tmp_path):
+        with pytest.raises(rank_call.Stop, match="C4"):
+            R.review("389A", 1, "ctx", clone=tmp_path, run=Replies(
+                {"verdict": "back", "findings": [FINDING],
+                 "refuter_pass": KILLED.replace("docs/FOLLOWUPS.md p. 3677", "docs/FOLLOWUPS.md")}))
 
     @pytest.mark.parametrize("reply,why", [
         ({"verdict": "clear", "findings": [FINDING], "refuter_pass": TABLE}, "clear, with 1"),

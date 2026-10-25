@@ -145,7 +145,12 @@ def review(phase: str, rnd: int, context: str, *, clone: pathlib.Path, run: Runn
     if v["verdict"] == BACK and not findings:
         raise Stop("back, with no findings")
     table = str(v.get("refuter_pass", ""))
-    bad = refute_check.check(table)
+    # C6 ("no factual or citation defect is still open: the row does not
+    # ship") holds a table that ships, the one a clear commits. On a back the
+    # killed rows are open by definition: the Engineer has not fixed them yet
+    # (Phase 389, bug fix #2: the planted-bug proof's first round).
+    bad = [f for f in refute_check.check(table)
+           if not (v["verdict"] == BACK and f.startswith("C6 "))]
     if bad:
         raise Stop("the refute table fails the checklist: " + "; ".join(bad)[:400])
     return v, c
