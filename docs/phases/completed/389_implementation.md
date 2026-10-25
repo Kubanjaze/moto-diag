@@ -1,6 +1,9 @@
 # Phase 389 — The Captain and the Engineer
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-25
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-25 (v1.0 `18af1fa`)
+
+v1.1 updates every section to what shipped (each change marked "As
+built"), ticks the planned items, and adds Deviations and Results.
 
 ---
 
@@ -34,6 +37,11 @@ The prompt is `docs/prompts/389_captain_engineer.txt`. Step 0 is
 `389_step0.md` (classification: extension). The operator's steps are
 `389_operator_steps.md`.
 
+As built: all four ranks, the gate and the dispatcher's stages shipped and
+ran live on the service. Two of the operator's answers added to the goal:
+a regression run inside the fence can be of record, and the gates read the
+usage on the operator's sign-in (both in Deviations).
+
 ## Logic
 
 ### 1. The fence (`fence.sh`, `fence_net.py`)
@@ -53,6 +61,11 @@ Three changes, each measured in Step 0:
   `/fleet/moto-diag-mobile`, so `../moto-diag-mobile` resolves from the
   clone (S0-5: four gate tests, two finding tests and the ledger test
   read it).
+
+As built: all three, as planned; the network gate's proxy is started with
+`3<&-`, so only the command inside holds the token's pipe. And, after the
+operator's "Sandbox counts", five tests skip inside the fence with a reason
+naming it, beside `closeout_check.FENCE_EXPECTED_SKIPS` (Deviations).
 
 ### 2. The dispatcher's plumbing (`dispatcher.py`, and `fleet_git.py`, new)
 
@@ -100,6 +113,15 @@ Three changes, each measured in Step 0:
   builds, no other stage runs (one writer per phase branch, and one
   phase building at a time).
 
+As built, four changes: **the usage** is read by `Fleet.usage` on the
+operator's sign-in, outside the fence (F218: the fleet's token cannot read
+it; the operator's "Use my sign-in to read"); **the gate lets the Engineer
+add ROADMAP rows**, refusing only a change to or removal of another
+phase's row; **issues carrying `needs-admiral` or `needs-hands` are left
+alone**; and **every stage clone has a local `master`** tracking
+`origin/master` (bug fix #3). `RANK_PATHS` shipped as `fleet_git.may_touch`
+and `NEVER`.
+
 ### 3. The Science Officer (`scout.py`)
 
 On an open issue whose only fleet label is `mission`, titled
@@ -133,6 +155,14 @@ On an open issue whose only fleet label is `mission`, titled
 A reshape is written as found; P4 then sends the plan to the Admiral at
 the XO, as 387 built.
 
+As built: as planned, with three changes. A branch the issue's body names
+and GitHub lacks yet is the one made (two planted proofs and the trial
+shared phase 389A). The brief says to write a phase's number only after
+the word Phase, and so does the corrective call (bug fix #1: "385 exists"
+read to P3 as a count). The slug drops a leading `Phase <N>:`. Ran live on
+the trial: twelve terms, the report pushed (`ffe1691`). Its title repeats
+the phase, a nit, logged.
+
 ### 4. The Captain (`captain.py`)
 
 - **v1.0, on `step0:done`.** A clone of the phase branch; one Fable call
@@ -156,6 +186,14 @@ the XO, as 387 built.
   (merge or hold, and why); posted on the PR; then `merge:needs-review`.
 - It never touches `src/`: its pushes may change only its plan
   (`RANK_PATHS`).
+
+As built: as planned, except that the recommendation needs no push
+identity, since it only comments. Ran live on the trial: v1.0 (`4eee8ab`),
+and two revisions on the XO's items (`a28256b`, `f13d170`). The second
+revision answered a defect of the fleet's, not the plan's (bug fix #3); the
+operator: "don't make the Captain revise for a defect that isn't its own".
+The recommendation was dry-run on the trial's plan before going live:
+"hold", three lines (`fixtures/dry_runs/recommend_hold.json`).
 
 ### 5. The Chief Engineer (`engineer.py`)
 
@@ -194,6 +232,14 @@ the XO, as 387 built.
 - **A rate limit** leaves the label, records the reset and the session,
   and resumes the same session in the same run directory (388's pause).
 
+As built: as planned. Its harness was dry-run on the trial's branch before
+its first live run (`fixtures/dry_runs/engineer_result.json`). Live, it
+built the trial's row, ran its own regression, and stopped at a rule-1
+condition ("a test it cannot make green"), with a plain-English question.
+The dispatcher set `needs-admiral` and pushed nothing. Two causes: the
+trial's branch predated 389's fence pins on `master` (my ordering error),
+and the suite's network guard let a loopback proxy through (bug fix #4).
+
 ### 6. The Red Team (`red_team.py`)
 
 - **On `review:open`.** A fresh clone of the PR's branch. The script
@@ -214,6 +260,12 @@ the XO, as 387 built.
   `clear` sets `review:clear`, and the dispatcher commits the table into
   the branch's phase log (replacing a "No refute pass ran" line), so A8
   holds on what merges; the model-free fast run and the push gate first.
+
+As built: as planned, with two changes. C6 holds only a clear's table: a
+back's open rows are what it found (bug fix #2). And it comments with no
+push identity; only the push of a cleared table needs one. Ran live on
+the planted bug: back, round 1, naming the F213 citations with quotes and
+line numbers.
 
 ### 7. The labels
 
@@ -240,6 +292,12 @@ saves it (mode 600), invites the account with write access under the
 operator's login, accepts as the account, and prints ALL GOOD only when
 the account can write and is not an administrator.
 
+As built: tightened at the operator's request, "the exact repo permission
+it needs and nothing more". The account gets Write and is checked to be
+neither a maintainer nor an administrator. If the token cannot accept the
+invitation, the block says where to press Accept. The operator does it on
+2026-10-25.
+
 ### 9. The proofs, in the phase log
 
 1. **The trial, end to end:** issue `Phase 389A: 385's ROADMAP row`
@@ -251,6 +309,14 @@ the account can write and is not an administrator.
    section; the XO sends it back (P8) with no model call.
 3. **A planted bug:** a copy of the trial's PR whose row names F213 for
    385 instead of F212; the Red Team sends it back naming it.
+
+As built: proofs 2 and 3 shown live (issue #11, and PR #12 with issue #13).
+The trial ran live through the Science Officer, the Captain (v1.0 and two
+revisions), the XO (two rounds back, then approve) and the Engineer, which
+stopped at a rule-1 condition and was handed to the operator. Its last
+stages (the Engineer's fresh round, the PR, the Red Team, the
+recommendation and the operator's merge) need 389 on `master` and are
+recorded after the merge, in the handoff.
 
 ## The change log's three newest entries
 
@@ -282,6 +348,13 @@ the account can write and is not an administrator.
 - None expected from a test that cannot be made green (the 14 are the
   stop above) or a live-database change (no rank reads live).
 
+As it went: the login stop as planned, with the operator's step written.
+The rule's definition was answered by the operator: "Sandbox counts
+(Recommended)". A third stop came up while building, a login put to a new
+use (F218: how the gates read the usage), answered with "Use my sign-in to
+read (Recommended)". And the rule-5 stop after the third bug fix, at the
+operator's instruction, with its shared cause and the fleet rule it became.
+
 ## Tests
 
 - `tests/test_phase389_fence_token.py` (Linux, skipped on macOS like
@@ -309,6 +382,18 @@ the account can write and is not an administrator.
   pipe.
 - `389_mutate.py`: every mutation red.
 
+As built: the fence's new tests went into `tests/test_phase388_fence_boundary.py`
+(`TestTheTokenPipe`, `TestTheVenvAndTheMobileRepository`), under its
+already-pinned Mac skip, not a new file: a new file's Mac skip would have
+needed a new pin. New files: `test_phase389_fleet_git.py` (53),
+`test_phase389_engineer.py` (27), `test_phase389_scout.py` (18),
+`test_phase389_red_team.py` (17), `test_phase389_dispatcher.py` (16),
+`test_phase389_captain.py` (13), and `test_phase389_fence_regression.py`
+(20, for the operator's "Sandbox counts"). 388's dispatcher tests changed
+where 389 changed the behaviour (the phase log lists each). 281's guard
+test gained one (bug fix #4). Mutations: 46/46 red. `COLLECTED_TEST_FLOOR`
+went from 11227 to 11402.
+
 ## Non-goals
 
 - The Quartermaster and merging by the fleet: the next phase.
@@ -322,14 +407,119 @@ the account can write and is not an administrator.
 
 ## Planned items
 
-- [ ] the fence: the token pipe, `--venv`, `--mobile`; 388's tests moved
-- [ ] `fleet_git.py`: the push gate and the identity, with fixtures
-- [ ] the dispatcher: the pipe, the model-free run, the Fable gate, closed
+- [x] the fence: the token pipe, `--venv`, `--mobile`; 388's tests moved
+- [x] `fleet_git.py`: the push gate and the identity, with fixtures
+- [x] the dispatcher: the pipe, the model-free run, the Fable gate, closed
       phases, the four stages
-- [ ] `scout.py`, `captain.py`, `engineer.py`, `red_team.py`, each with
+- [x] `scout.py`, `captain.py`, `engineer.py`, `red_team.py`, each with
       fixtures and tests
-- [ ] `SKILL.md`, `CHANGELOG.md`, `389_operator_steps.md`
-- [ ] the mutation run; `COLLECTED_TEST_FLOOR` raised
-- [ ] the service on the new code; the three proofs
-- [ ] close-out: `wholetree.sh --full`, the regression of record, the
+- [x] `SKILL.md`, `CHANGELOG.md`, `389_operator_steps.md`
+- [x] the mutation run; `COLLECTED_TEST_FLOOR` raised
+- [x] the service on the new code; the three proofs (the bad v1.0 and the
+      planted bug in full; the trial through the Engineer's stop, its last
+      stages after the merge, in the handoff)
+- [x] close-out: `wholetree.sh --full`, the regression of record, the
       handoff, row 389 to ✅
+
+## Deviations
+
+- **Two rule-1 answers changed what ships.** The operator, 2026-10-25:
+  "Sandbox counts (Recommended)": a regression run inside the fence is of
+  record, with `closeout_check.FENCE_EXPECTED_SKIPS` (twelve pairs) accepted
+  only on a line carrying `FENCE_MARK`, and five tests skipping inside the
+  fence with a reason naming it (204's ffmpeg, 257's Subconscious control
+  and stop-alert compile, 209's wheel build, 388's fence module). And "Use
+  my sign-in to read (Recommended)": `Fleet.usage` reads `/usage` on the
+  operator's sign-in, outside the fence (F218: the fleet's setup-token
+  cannot read it; `/usage` inside the fence prints a cost summary and
+  `api/oauth/usage` answers 403). v1.0 had both as stops; neither plan was
+  built before the answer.
+- **F218, found while building**, not at Step 0: the fenced usage read was
+  never seen to work (388 measured it on the operator's login). The service
+  stayed on 388's code until the answer.
+- **Four bug fixes**, all found by the first live runs, and the rule-5
+  stop after the third (the operator's instruction): #1 the Science
+  Officer's bare phase number, #2 the Red Team's back refused on C6, #3 a
+  stage clone with no `master`, #4 the suite's network guard letting a
+  loopback proxy through inside the Engineer's session. The shared
+  cause (checks of a model's work tested only against stand-ins written
+  from the same picture as the code) became the fleet's rule in `SKILL.md`:
+  no rank live on a new check before one run against a real artefact. The
+  Engineer and the Captain's recommendation were dry-run on the trial's
+  branch before their first live run; both outputs are fixtures. #4 is
+  the same cause: the Engineer's dry run checked its harness, not the
+  suite in its own environment.
+- **The trial could not finish before 389 merges**, my ordering error: its
+  branch came from `master`, which lacks the fence's pins and skips, so the
+  Engineer's run there could not be of record; it stopped correctly. The
+  trial resumes after the merge, recorded in the handoff.
+- **The push gate lets the Engineer add ROADMAP rows** and refuses only a
+  change to, or removal of, another phase's row: v1.0's "other phases'
+  ROADMAP rows" would have refused the trial's own deliverable.
+- **The Red Team and the Captain's recommendation need no push identity**:
+  they comment as 387's and 388's ranks do; only the push of a cleared
+  refute table needs one. Without this, the planted-bug proof (no trial
+  marker) could not run.
+- **The Science Officer makes the branch an issue's body names**, so the two
+  planted proofs and the trial could share phase 389A.
+- **A stage clone has a local `master`** (bug fix #3), a change to 388's
+  `Fleet.clone`.
+- **The fence gained no `--wheelhouse`**: 209's packaging tests skip inside
+  it ("no network to build a wheel") rather than build offline.
+- **`fleet_git.py` is a new file the plan named; `tests/support/fleet_fence.py`
+  is one it did not**: the tests' handle on `closeout_check.in_fleet_fence`.
+- **The service was restarted four times by this session** (SIGTERM to the
+  operator's own process; `Restart=always` brought it back) to load the
+  phase branch's code: to 389's at 09:47, then after bug fixes #1–#2 and #3.
+  Its clone runs the phase branch until 389 merges.
+- **The trial's issue was held twice with `needs-admiral`** by this
+  session, each with a comment: for bug fix #3 (the operator's instruction),
+  and before the Engineer's first live run (the rule-5 stop's rule).
+- **Six guard blocks, all mine**: a `cp` to a variable path; a needless
+  `sed -i` (twice, once trailing a command that opened the planted PR); a
+  `>>` into `tests/`; a commit and a push in one command (twice, the second
+  time the point at which every commit and push became its own command).
+  Each refused before anything ran; no guard changed.
+- **This desktop's `/tmp` is a 16 GB in-memory filesystem**, filled once by
+  this session's scratch runs; one model-free run died of it. The
+  dispatcher's own runs are on the real disk.
+- **Not done**: CLAUDE.md's procedure-folders row for `fleet` still says
+  "read-only ranks, no pushes" (CLAUDE.md is the operator's); the master
+  ruleset (F214's other half); the Science Officer's duplicated title (a
+  nit, logged).
+
+## Results
+
+Regression of record: 11297 passed, 0 failed, 105 skipped, 0 errors at `2754a01` (30 min 19 s wall, `python -m pytest -n auto --dist load`, exit 0) (run inside the fleet's fence)
+
+That's the dispatcher's own model-free run, in the real fence, with no
+model and no token. Its 105 skips are those `FENCE_EXPECTED_SKIPS` and
+`EXPECTED_SKIPS` pin. 11297 + 105 = 11402, the floor.
+
+- **The four ranks, live on the service**: the Science Officer wrote and
+  pushed the trial's Step 0 (twelve terms, each count with its command).
+  The Captain wrote v1.0 and two revisions, each passing P1–P8 before its
+  commit. The XO sent it back twice and then approved it. The Engineer
+  built the row, ran its own regression, and stopped at a rule-1
+  condition with a plain-English question; the dispatcher set
+  `needs-admiral` and pushed nothing. The Red Team sent the planted PR back,
+  naming the F213 citations with quotes and line numbers (11 turns, 31 s,
+  $0.13).
+- **A planted bad v1.0, sent back by the XO** on P8 with no model call
+  (issue #11). **A planted bug, caught by the Red Team** (PR #12, issue
+  #13). **The trial** ran through the Engineer's stop. It resumes after the
+  merge, recorded in the handoff.
+- **The fence**: the token on a pipe, found by a probe in no environment,
+  command line or open file. The fleet's venv is at the fence's paths; the
+  mobile repository is bound read-only.
+- **The push gate**: G1–G6, each known-bad case refused on its own item.
+  **The identity**: the fleet's machine user, or the operator's login for
+  a trial only. The operator's step is written (Write, nothing more).
+- **The usage**: read on the operator's sign-in outside the fence (F218,
+  closed). **The Fable gate** is at 70% of Fable's own week.
+- **Measured costs**: a Captain v1.0 about 5–8 min of Fable ($2.36 dry
+  run). An XO review 3–5 min ($1.77–2.43). A model-free full check 45 min
+  (the whole-tree check, then the 30-minute regression).
+- Four bug fixes, the rule-5 stop and its rule. Mutations 46/46 red.
+  `COLLECTED_TEST_FLOOR` went from 11227 to 11402. F218 filed and closed;
+  F216 answered for the fence; F217 corrected.
