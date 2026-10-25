@@ -67,9 +67,13 @@ def test_a_known_bad_journal_is_named_and_kept(w, bad, monkeypatch):
     assert J.Journal.load(run) is None and J.unfinished(w.fleet.runs) == []
     said = w.fleet.recover()
     assert said[0].startswith(f"leave {run.name}: its journal cannot be read")
-    monkeypatch.setattr(D, "KEEP_RUNS", 0)
+    control = w.fleet.runs / "20261025_150000_finished"
+    (control / "run").mkdir(parents=True)
+    monkeypatch.setattr(D, "KEEP_RUNS", 1)
+    (w.fleet.runs / "29991231_000000_newest").mkdir()        # the one KEEP_RUNS keeps
     w.fleet.prune_runs(set())
     assert run.is_dir(), "a run with an unreadable journal was pruned"
+    assert not control.exists(), "the control: an older run with no journal is removed"
 
 
 def test_the_journal_is_outside_the_fences_writable_run(w):

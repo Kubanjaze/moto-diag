@@ -176,3 +176,21 @@ its labels yourself."
   and #14's real comments with `needs-admiral` off and its run held (the
   recheck due; without the hold, nothing). 95 passed across the four 390
   files.
+
+## 2026-10-25 — mutations, and the floor
+
+- `390_mutate.py`, first run: 29/33 red. Four survived, and each was a
+  gap in the tests: P3 and P4 (my prune tests set `KEEP_RUNS = 0`, and
+  `runs[:-0]` is empty, so they removed nothing whatever the code did);
+  P1 (no test of a resumed stage pausing again); H4 (no test of an old
+  hold once the issue has moved on). Fixed: the prune tests use
+  `KEEP_RUNS = 1` with a control run that must go; two new tests. Also
+  J5's assertion added (the resumed Step 0 dated by its stage's start).
+  Second run, recorded in `390_mutate.out`: **33/33 red**, the source
+  restored (`git status` clean under `.claude/`).
+- `COLLECTED_TEST_FLOOR` 11402 → 11499 (pre-approval (b)): `master` at
+  `6f32013` collects 11402, the branch 11499; the four new files collect
+  38 + 19 + 39 + 1 = 97; 388's dispatcher tests 52 functions before and
+  after.
+- Before each run above, `dispatcher.log`'s last line read: 16:29:02
+  "issue 14: checks failed", no fleet run in progress (F220's rule).

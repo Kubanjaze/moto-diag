@@ -385,8 +385,14 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: the two measured dry runs (engineer 1, captain 1). Measured: 11401.
 #: Then +1 against 46023c5: bug fix #4, the planted known-bad test under a
 #: loopback proxy, in test_phase281_network_guard.py. Measured: 11402.
+#: Phase 390 (a stage a restart cuts off is resumed, F219): +97 against
+#: master at 6f32013 (11402 → 11499, +97 -0), all in the four new files:
+#: test_phase390_resume.py (38), test_phase390_search.py (19),
+#: test_phase390_resume_contract.py (39), test_phase390_kill.py (1);
+#: test_phase388_dispatcher.py's count unchanged (one test reworded).
+#: Measured: 11499.
 #:
-COLLECTED_TEST_FLOOR = 11402
+COLLECTED_TEST_FLOOR = 11499
 
 
 def _collected_count() -> int:

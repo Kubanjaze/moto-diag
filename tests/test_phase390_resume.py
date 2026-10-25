@@ -271,6 +271,10 @@ def test_scout_cut_in_its_second_model_call(w):
     assert labels(w) == ["mission", "step0:done"] and commits(w, STEP0) == 1
     assert said(w, D.SCOUT_M) == 1 and said(w, D.STARTED_M) == 1
     assert any(s.startswith("resume scout") for s in said_lines)
+    step0 = subprocess.run(["git", "-C", str(w.origin), "show",
+                            f"{BRANCH}:docs/phases/in_progress/{PHASE}_step0.md"],
+                           capture_output=True, text=True).stdout
+    assert "**Written 2026-10-22**" in step0, "the resumed Step 0 is not dated by its start"
     no_unfinished(w)
 
 
@@ -636,9 +640,33 @@ def test_the_recheck_cut_in_its_model_free_run(w):
 
 def test_prune_keeps_a_held_run(w, monkeypatch):
     held = held_stop(w)
-    monkeypatch.setattr(D, "KEEP_RUNS", 0)
+    monkeypatch.setattr(D, "KEEP_RUNS", 1)
+    (w.fleet.runs / "29991231_000000_newest").mkdir()        # the one KEEP_RUNS keeps
     w.fleet.prune_runs(set())
     assert held.is_dir()
+    assert not list(w.fleet.runs.glob("*_scout_*")), "the control: a finished run is removed"
+
+
+def test_an_old_hold_is_not_due_once_the_issue_has_moved_on(w):
+    """The operator answered the stop some other way (here the Red Team has
+    spoken since): the held run is not the stage due."""
+    held = held_stop(w)
+    w.host.issues[N]["labels"].remove("needs-admiral")
+    w.host.issues[N]["comments"].append({"body": f"{D.RED_M} verdict=back round=1 -->\nby hand",
+                                         "createdAt": w.host.issues[N]["comments"][-1]["createdAt"]})
+    assert w.fleet.held_for(N) is None and J.held(held) is not None
+
+
+def test_a_resumed_stage_that_pauses_again_keeps_its_new_pause(w):
+    to_review(w)
+    w.host.usage_after = USAGE_LIMITED
+    advance(w, LIMITED)
+    first = w.fleet.load()["paused"]
+    w.clock.t = D._time(first["until"]) + dt.timedelta(minutes=1)
+    w.host.usage_after = USAGE_LIMITED
+    advance(w, LIMITED)
+    again = w.fleet.load().get("paused")
+    assert again is not None and again["run"] == first["run"], "the second pause was dropped"
 
 
 # -------------------------------------------------- the pause (389's resume)
