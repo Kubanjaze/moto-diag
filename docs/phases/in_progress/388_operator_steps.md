@@ -28,7 +28,7 @@ will not show as you paste: that is on purpose. **Never paste the token
 into a chat, a message or a document.**
 
 ```
-claude setup-token && read -rsp "Paste the token here (it will not show), then press Enter: " T && echo && mkdir -p ~/.config/motodiag && printf 'CLAUDE_CODE_OAUTH_TOKEN=%s\n' "$T" > ~/.config/motodiag/anthropic.env && chmod 600 ~/.config/motodiag/anthropic.env; unset T; F=~/.config/motodiag/anthropic.env; if [ "$(grep -c '' "$F" 2>/dev/null)" = 1 ] && [ "$(grep -cE '^CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat[A-Za-z0-9_-]+$' "$F")" = 1 ] && [ "$(grep -o 'sk-ant-oat' "$F" | wc -l)" = 1 ] && [ "$(stat -c %a "$F")" = 600 ]; then echo "ALL GOOD"; else echo "SOMETHING IS OFF"; fi
+claude setup-token && read -rsp "Paste the token here (it will not show), then press Enter: " T && echo && mkdir -p ~/.config/motodiag && printf 'CLAUDE_CODE_OAUTH_TOKEN=%s\n' "$T" > ~/.config/motodiag/anthropic.env && chmod 600 ~/.config/motodiag/anthropic.env; unset T; F=~/.config/motodiag/anthropic.env; if [ "$(grep -c '' "$F" 2>/dev/null)" = 1 ] && [ "$(grep -cE '^CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat[A-Za-z0-9_-]+$' "$F")" = 1 ] && [ "$(grep -o 'sk-ant-oat' "$F" | grep -c '')" = 1 ] && [ -n "$(find "$F" -perm 600 2>/dev/null)" ]; then echo "ALL GOOD"; else echo "SOMETHING IS OFF"; fi
 ```
 
 The check passes only when the file is one line holding exactly one token,

@@ -9,6 +9,7 @@ cases.json` that fails it and no other.
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import subprocess
 import xml.etree.ElementTree as ET
@@ -106,7 +107,7 @@ class TestTheTokenStepsCheck:
     STEPS = ROOT / "docs" / "phases" / "in_progress" / "388_operator_steps.md"
     TOKEN = "sk-ant-oat01-" + "Ab9_-" * 19          # 108 characters, the measured length
 
-    def check(self, tmp_path, content: str, mode: int = 0o600) -> str:
+    def check(self, tmp_path, content: str, mode: int = 0o600, path: str | None = None) -> str:
         steps = self.STEPS if self.STEPS.is_file() else \
             ROOT / "docs" / "phases" / "completed" / "388_operator_steps.md"
         block = next(ln for ln in steps.read_text().splitlines() if ln.startswith("claude setup-token"))
@@ -116,11 +117,31 @@ class TestTheTokenStepsCheck:
         f.chmod(mode)
         check = check.replace("F=~/.config/motodiag/anthropic.env", f"F={f}", 1)
         assert f"F={f}" in check
-        return subprocess.run(["bash", "-c", check], capture_output=True, text=True).stdout.strip()
+        env = {**os.environ, "PATH": f"{path}:{os.environ['PATH']}"} if path else None
+        return subprocess.run(["bash", "-c", check], capture_output=True, text=True,
+                              env=env).stdout.strip()
 
     def test_one_token_passes(self, tmp_path):
         assert len(self.TOKEN) == 108
         assert self.check(tmp_path, f"CLAUDE_CODE_OAUTH_TOKEN={self.TOKEN}\n") == "ALL GOOD"
+
+    def test_one_token_passes_with_the_macs_tools(self, tmp_path):
+        """The Mac's `stat` has no `-c` and its `wc -l` pads the count with
+        spaces; the check's first two versions passed only with Linux's
+        (the Mac's wholetree --full, 2026-10-24). Stand-ins for both."""
+        bsd = tmp_path / "bsd"
+        bsd.mkdir()
+        (bsd / "stat").write_text('#!/bin/sh\n[ "$1" = -c ] && { echo "stat: illegal option -- c" >&2; '
+                                  'exit 1; }\nexec /usr/bin/stat "$@"\n')
+        (bsd / "wc").write_text('#!/bin/sh\nprintf "%8s\\n" "$(/usr/bin/wc "$@" | tr -d " ")"\n')
+        for tool in ("stat", "wc"):
+            (bsd / tool).chmod(0o755)
+        assert subprocess.run(["bash", "-c", "printf 'a\\n' | wc -l"], capture_output=True, text=True,
+                              env={**os.environ, "PATH": f"{bsd}:{os.environ['PATH']}"}
+                              ).stdout == "       1\n"
+        assert self.check(tmp_path, f"CLAUDE_CODE_OAUTH_TOKEN={self.TOKEN}\n", path=str(bsd)) == "ALL GOOD"
+        assert self.check(tmp_path, f"CLAUDE_CODE_OAUTH_TOKEN={self.TOKEN}\n", 0o644,
+                          path=str(bsd)) == "SOMETHING IS OFF"
 
     @pytest.mark.parametrize("content", [
         "CLAUDE_CODE_OAUTH_TOKEN=" + "sk-ant-oat01-" * 0 + ("sk-ant-oat01-" + "Ab9_-" * 19) * 5 + "\x1b\n",

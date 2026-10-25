@@ -501,3 +501,70 @@ assigned" header with `sed -i` was refused by the edit guard ("`sed -i`
 edits a file in place, and is blocked wherever it points"). My slip: the
 working rules forbid it. Done with the Edit tool; the guard ran before
 `sed`, so nothing was written. The guard is unchanged.
+
+### Bug fix #3 — 2026-10-24 — step 1's check passed only with Linux's tools
+
+**Issue.** The operator, from the Mac, at `bcabc89`: "wholetree --full
+FAILED, 1 failed, 4411 passed, 10 warnings in 8m 31s (511.5 s wall), so
+regression.sh never started … FAILED
+tests/test_phase388_service_contract.py::TestTheTokenStepsCheck::test_one_token_passes".
+They asked whether it depends on the desktop's state; if so, skip it with
+the machine named, and if it is a defect in 388, fix it on the branch.
+
+**Root cause.** A defect in 388, not the desktop's state. The test runs
+step 1's own check on a planted file, and the check used
+`stat -c %a "$F"`: the Mac's `stat` has no `-c`, so the permission test
+fails and a good file gives SOMETHING IS OFF. Reproduced here with a
+stand-in `stat` that refuses `-c`: the same one test red, 7 green. A
+second difference sat behind it: `grep -o … | wc -l`, whose count the
+Mac's `wc` pads with spaces, so `= 1` never matches. The step runs on the
+desktop and was right there; its test runs on every machine.
+
+**Fix.** The check counts with `grep -c ''` and tests the mode with
+`find "$F" -perm 600`, which mean the same on both machines' tools
+(`-perm` with no sign is an exact match on both). No skip: a skip on the
+Mac would have needed a new `EXPECTED_SKIPS` pin, the operator's call,
+for a test that can run there.
+
+**Files.** `388_operator_steps.md` (step 1's check), `388_mutate.py`
+(S6's text, and S7 new), `tests/test_phase388_service_contract.py` (1
+new test), `tests/test_phase255B_collected_test_floor.py`.
+
+**Verified.**
+- The new test runs the check with stand-ins on `PATH` for the Mac's
+  `stat` (refuses `-c`) and `wc` (pads; the test asserts the padding
+  first): ALL GOOD on one token at 600, SOMETHING IS OFF at 644. With the
+  old check restored (only the steps file stashed): red. With the fix:
+  33/33 in the file; with the `-c`-refusing `stat` alone, 9/9 of the
+  class.
+- The Mac's `wholetree --full` ran `test_phase388_dispatcher.py` and the
+  rest of `test_phase388_service_contract.py` (both are members of the
+  full set, 106 files): every other test there passed.
+- Mutations: 44/44 red (`388_mutate.out`); S7 puts the Linux-only check
+  back.
+- `COLLECTED_TEST_FLOOR` 11226 → 11227, +1 −0 against `bcabc89`.
+
+**Commit.** The commit that carries this entry.
+
+**The third bug fix, and the shared cause.** All three are in the
+operator's paste blocks, and each block's check was proven only where I
+wrote it: #1's against a good file and no known-bad one, #2's command
+copied from 382's comment and never run, #3's against the desktop's tools
+while its test runs on the Mac too. The remedy applied in each: a
+known-bad case (#1), the command run on the machine that runs it (#2,
+through interop), and the other machine's tools stood in (#3). Steps 2–4
+run on the desktop or Windows only, and no test runs their commands on
+the Mac (read: `grep -n "subprocess" tests/test_phase388_service_contract.py`,
+one call, this class's).
+
+### 2026-10-24 — The host slept for 39 hours
+
+Found while waiting for the Mac: `dispatcher.log` has no line between
+23:07 on 10-22 and 21:37 on 10-24. Windows' System log: sleep at 06:09 on
+10-23, wake at 21:37 on 10-24. The service never restarted
+(`NRestarts=0`, `ActiveEnterTimestamp` 23:16:27 on 10-22) and nothing
+hung (every call has a timeout). On waking: the sweep on issue #10 at
+47 h and the digest for 10-23; **the digest for 10-22 was skipped**,
+since the dispatcher writes only yesterday's. Filed as **F217**
+(`next_f_number.sh`: F216 here, F181 in mobile, next F217). The power
+settings are the operator's call; a paste block was offered.

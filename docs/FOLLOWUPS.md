@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F216** (this file). The
+At the time of writing the highest assigned is **F217** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3839,3 +3839,32 @@ skip off a Mac with a reason (ffmpeg installed here, or 204's test skips
 without it; 257's Subconscious and `osacompile` tests skip off a Mac), with
 the same equality control; or the regression of record stays the Mac's,
 and the Engineer's phases hand their regression to it.
+
+### F217
+
+**The fleet's host sleeps, and the dispatcher does not catch up a day it slept through**
+
+Found in Phase 388 (2026-10-24). Windows' System log on the home desktop
+(Kernel-Power and Power-Troubleshooter events) shows it going to sleep at
+06:09 on 2026-10-23 and waking at 21:37 on 2026-10-24. The WSL VM paused
+with it: `motodiag-fleet.service` stayed active (`NRestarts=0`, no
+reboot, `uptime -s` 2026-10-22 23:16:35) and `dispatcher.log` has no line
+from 23:07 on 10-22 to 21:37 on 10-24. On waking it acted within a
+minute: the 24-hour sweep on issue #10 at 47 h, and the digest for
+2026-10-23. **The digest for 2026-10-22 was never written:**
+`Fleet.stage_digest` writes only yesterday's, once per day
+(`state.json` `last_digest`), so a day the host slept through is skipped
+without a word. `digests/` holds 2026-10-21 and 2026-10-23. The live API
+on the same desktop was unreachable for the same 39 hours.
+
+Whether Windows slept on its own timer or by hand is not in the log.
+
+What it affects: the proposal's always-on host; every label due during a
+sleep waits for the wake; a missed digest leaves a gap in the operator's
+daily record.
+
+To close: the operator's call on the desktop's power settings (sleep and
+hibernate off on mains power: `powercfg /change standby-timeout-ac 0`,
+`hibernate-timeout-ac 0`, no administrator needed), and the dispatcher
+writes every day since `last_digest`, not only yesterday, with a test
+for a two-day gap.

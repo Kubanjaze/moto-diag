@@ -36,9 +36,10 @@ D21 an issue with no branch run anyway: red
 D22 the paused run pruned: red
 D23 a doubled or dirty token accepted: red
 S6 step 1's check back to the line's start only: red
+S7 step 1's check back to Linux-only tools: red
 S1 the unit runs as root: red
 S2 the unit retries a refusal: red
 S3 the task does not hold the VM: red
 S4 the install script starts the service: red
 S5 the restart check passes after sign-in: red
-43/43 red
+44/44 red

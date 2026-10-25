@@ -361,8 +361,11 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: Then +1, by a diff of collected ids against 7b6b766 (+1 -0): step 3
 #: registers the Windows task without schtasks /Create /XML, in
 #: test_phase388_service_contract.py. Measured: 11226.
+#: Then +1, by a diff of collected ids against bcabc89 (+1 -0): step 1's
+#: check with the Mac's stat and wc, in test_phase388_service_contract.py.
+#: Measured: 11227.
 #:
-COLLECTED_TEST_FLOOR = 11226
+COLLECTED_TEST_FLOOR = 11227
 
 
 def _collected_count() -> int:
