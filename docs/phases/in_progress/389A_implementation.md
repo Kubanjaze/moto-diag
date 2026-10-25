@@ -1,0 +1,274 @@
+# Phase 389A — 385's ROADMAP row
+
+**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-25
+
+Written by the Captain from `docs/phases/in_progress/389A_step0.md`
+(classification: extension), the ROADMAP row 389A and the mission prompt
+`docs/prompts/389A_385_s_roadmap_row.txt`. The Executive Officer checks this
+document before any work; the Chief Engineer builds to it and writes v1.1.
+
+---
+
+## Goal
+
+Phase 385, "the push token's own write", has a committed prompt
+(`docs/prompts/385_the_push_tokens_own_write.txt`), an operator decision
+(K39 in `docs/decisions.md`, 2026-10-21) and the finding it will close (F212
+in `docs/FOLLOWUPS.md`), but no row in `docs/ROADMAP.md`. The Step 0 census
+searched the docs folder for `| 385 |` and found nothing, so the gap is real.
+
+This phase adds that one row, after 384's, status 🔲, naming the prompt and
+F212. It is docs only: nothing under `src/`, nothing under `tests/`, no
+migration, nothing on live. It is also the fleet's first trial mission, run by
+the dispatcher from Step 0 to the Captain's merge recommendation, under the
+operator's login as Phase 389's pre-approval (b) allows. The operator merges
+by hand.
+
+The one deliverable is the row. Everything else in this document is the
+record a phase leaves behind so the ledger, the checks and the next session
+agree about what happened.
+
+## Logic
+
+### 1. `docs/ROADMAP.md`: row 385
+
+One new table row, inserted directly after row 384 (today line 661) and
+before row 386. The ROADMAP's rows from 353 on sit in numeric order in the
+Track T table, and 385 belongs between 384 and 386.
+
+The row's facts, which are the contract (the Engineer may tighten the
+wording, never the facts):
+
+- status 🔲, the status key's "not started", because Phase 385 has not begun;
+- the title "The push token's own write";
+- what 385 will do: `device_tokens.last_seen_at` joins `SERVER_WRITES`, the
+  set-aside list Phase 383 built, with 383's three controls each seen failing
+  (another column of that row, an added token row, the same column in another
+  table), and the live check `verify_phase.sh 384` passes again from the Mac;
+- the finding it closes, F212, under the operator's K39 of 2026-10-21, scoped
+  to that one column; F210 keeps what the list still cannot cover;
+- no migration and no change to live are expected of 385;
+- its prompt, `docs/prompts/385_the_push_tokens_own_write.txt`;
+- that this row was added by Phase 389A, and that 385's own session turns it
+  🚧 at its Step 0.
+
+A draft that carries all of them, 88 words in the body cell by the one
+counting method:
+
+```
+| 385 | The push token's own write | 🔲 | `device_tokens.last_seen_at` joins `SERVER_WRITES`, 383's set-aside list, with 383's three controls each seen failing (another column of that row, an added token row, the same column in another table); the live check `verify_phase.sh 384` passes again from the Mac. Closes F212 (the operator's K39, 2026-10-21, scoped to that one column); F210 names what the list still cannot cover. No migration and no change to live expected. Prompt: `docs/prompts/385_the_push_tokens_own_write.txt`. Row added by Phase 389A, the fleet's first trial mission; 385's own session turns it 🚧 at its Step 0. |
+```
+
+In the same commit, row 389A's last sentence moves with the work, as the
+ledger rule asks: "Step 0 next." becomes what is true at the commit (the plan
+committed, row 385 added, awaiting the operator's merge). Nothing else in
+row 389A changes, and no other row changes.
+
+**Finish line:** `grep -c '^| 385 |' docs/ROADMAP.md` prints 1 (the Step 0
+census printed 0); `python3 .claude/skills/closeout/roadmap_words.py 385
+--check` exits 0 and its printed count is recorded in the phase log;
+`python3 .claude/skills/closeout/roadmap_check.py` exits 0; `git diff --stat
+master -- docs/ROADMAP.md` shows one file, one line inserted and one line
+changed (389A's), and nothing removed.
+
+### 2. `docs/phases/in_progress/389A_implementation.md`: this plan, then v1.1
+
+This document is v1.0. After the row is committed the Engineer writes v1.1:
+every section updated to what shipped, the planned items ticked, and two new
+sections, Deviations and Results. v1.1 carries no close date and no history
+row: the close-out writes those (see section 4), and `roadmap_check.py` R6
+reads a history row as a close.
+
+**Finish line:** v1.1 committed on the branch; `python3
+.claude/skills/fleet/plan_check.py 389A` still exits 0 against it.
+
+### 3. `docs/phases/in_progress/389A_phase_log.md`: the dated record
+
+A new file, in the shape of `docs/phases/completed/388_phase_log.md`. One
+dated entry per event: the plan commit and its hash; the row commit and its
+hash; `wholetree.sh`'s exit code before each commit, read on its own, never
+through a pipe; the regression attempt and its printed line, marked of record
+or not; any guard that blocks a command, recorded and never loosened; the
+status note (section 5's third point); and the line "No refute pass ran",
+since nothing here is a content row.
+
+**Finish line:** every commit on the branch after the plan commit has an
+entry naming its hash; every `wholetree.sh` run has its exit code; the
+regression attempt has its line verbatim.
+
+### 4. `docs/handoffs/YYYY-MM-DD_389A_closed.md`: the handoff, and the close-out it hands over
+
+The Engineer writes the handoff on the branch, dated the day it is written:
+what shipped (one row), what is open, what is next (Phase 385 itself, from
+its prompt, flipping the row to 🚧 at its Step 0).
+
+The close-out of 389A itself cannot finish on the fleet's host. F216 records
+that the home desktop's regression run fails four tests for want of a Mac
+tool and carries 33 unpinned skips, so `regression.sh` there is not a
+regression of record, and F216 is open. So on this branch:
+
+- row 389A stays 🚧 and its documents stay in `docs/phases/in_progress/`, so
+  `roadmap_check.py` R3 holds at the merge;
+- the handoff says "Regression of record: the operator's, on the Mac (F216)"
+  and carries one paste block for the operator, in rule 6's form: the Mac, a
+  Terminal window at the checkout, one block that runs `wholetree.sh --full`
+  and then `regression.sh` on this branch and prints the regression line,
+  ending ALL GOOD or SOMETHING IS OFF, with no internal labels in what the
+  operator reads;
+- the handoff names the close-out steps that follow the regression of record,
+  in the closeout skill's order: row 389A to ✅ with its CLOSED date and the
+  regression line, the three documents moved to `docs/phases/completed/`,
+  this handoff dated to the close day (R6 refuses a handoff dated before the
+  close), the merge, and the merge's outcome added after it.
+
+**Finish line:** the handoff exists on the branch, its paste block is one
+block ending ALL GOOD or SOMETHING IS OFF, and it says in plain words that
+the regression of record and the close-out are the operator's on the Mac.
+
+### 5. The Captain's merge recommendation
+
+Not a file in the repository: three lines on the pull request, after the Red
+Team's clear, as the fleet proposal's label table orders. It must carry:
+
+- the diff's shape: one ROADMAP row added, 389A's row updated, the three
+  phase documents and the handoff, nothing under `src/` or `tests/`;
+- each check's exit code from the phase log;
+- the status note for the operator: the mission says 🔲 and 385's prompt says
+  "add it as 🚧 before Step 0". Both hold: the row is 🔲 until 385 starts,
+  and 385's session turns it 🚧. The prompt's first line will read as if the
+  row were missing; the prompt is a committed record and is not edited here;
+- that the close-out is the operator's on the Mac (section 4), and why
+  (F216);
+- that issues #9 and #10 from Phase 388 are untouched and remain the
+  operator's to close.
+
+**Finish line:** the recommendation is posted, and the mission's labels are
+moved only by the rank scripts, never by hand.
+
+### What this phase does not change in the code
+
+`src/motodiag/api/routes/push.py`, `motodiag/push/registry.py` and
+`deploy.py`'s `SERVER_WRITES` are the code Phase 385 concerns. This phase
+reads none of them and edits none of them. No test file is added or changed,
+so `COLLECTED_TEST_FLOOR` does not move.
+
+### The login's scope
+
+Every write under the operator's login is one of: a push of this branch, a
+comment on mission issue #14, the pull request the recommendation goes on,
+and a label set by a rank's script from a parsed result. No merge, no issue
+closed, no label by hand, no write to `master`.
+
+## The change log's three newest entries
+
+- **2026-10-22, `fleet` joins the procedure folders.** No check: the entry
+  says the table row "is text only, and no check reads the table". This
+  mission is the first run through that folder's dispatcher from Step 0 to a
+  merge recommendation, which is why its records are kept to the letter.
+- **2026-10-20, rule 6: plain English to the operator.** No check: the entry
+  says "Text only; no check holds it." The one thing this phase hands the
+  operator, the paste block in the handoff (Logic, section 4), is written to
+  it: which computer, which window, one block, ending ALL GOOD or SOMETHING
+  IS OFF, no internal labels.
+- **2026-10-19, live is on the home desktop.** The check it became:
+  `tests/test_phase382_live_location.py`. The fleet's host is the machine that
+  holds live; this phase never reads live, names no live path and ships no
+  migration, so the check has nothing to see here and nothing to refuse.
+
+## Rule-1 stops anticipated
+
+- **A test it cannot make green: anticipated, from F216.** The regression of
+  record cannot be produced on the fleet's host: four tests fail there for
+  want of a Mac tool and 33 skips are not pinned, so `regression.sh` there is
+  not of record. The Engineer runs `wholetree.sh --full` and `regression.sh`
+  once in the stage clone, records the printed line and exit code verbatim as
+  not of record, and stops there. The guard is not loosened and no skip is
+  pinned here (pinning is the operator's call under F206). Recommended: the
+  operator runs the regression of record on the Mac and does the close-out
+  there, as 388's "Mac runs it (Recommended)" did; the handoff carries the
+  paste block. If `wholetree.sh` fast mode itself blocks a commit on the host
+  for the same want, that is the same stop: record it, never loosen it.
+- **A login or a credential: covered, not open.** The mission runs under the
+  operator's login by Phase 389's pre-approval (b), "a planted trial mission
+  may use my login until the identity exists", applied literally to the
+  writes listed under Logic. Any other write under that login is a stop. The
+  fleet's own identity (F214) is not made here.
+- **A real fork: none expected.** The row's facts come from the mission, the
+  385 prompt, K39 and F212; there is one way to write them and nothing else
+  ships.
+- **A threshold or a rule's definition: none expected.** The 120-word cap and
+  the status key are applied, not changed. `SERVER_WRITES` is a gate's
+  definition and is not touched; the operator's K39 approval covers its change
+  for Phase 385's own run, scoped to one column, and no part of it is spent
+  here. The 🔲/🚧 wording is a note for the operator, not a change to either
+  definition.
+- **A live-database change: none expected.** No migration, no live row, no
+  read of live.
+
+## Tests
+
+No test file is added: a test that one ROADMAP row exists would be a test
+that cannot fail once the row is in, and the ledger already has its checks.
+The build runs the checks that exist and records each one's output and exit
+code in the phase log:
+
+- `python3 .claude/skills/closeout/roadmap_check.py`: exit 0 on the branch
+  (R1 no duplicate number, R2 and R3 the row and documents agree, R4 385 is
+  in this repository's range, R6 and R7 unaffected). Then
+  `roadmap_check.py --self-test`, which plants each rule's bad case and
+  watches it fire, so the check is seen red before it is trusted green. If R5
+  cannot read the mobile repository's copy of the authority contract inside
+  the fence, the log says so and the fast gate's verdict stands.
+- `python3 -m pytest tests/test_roadmap_continuity.py`: passes, the same
+  check as the suite runs it.
+- `python3 .claude/skills/closeout/roadmap_words.py 385 --check`: exit 0,
+  the count printed; the same for 389A after its row's last sentence
+  changes. As the control, the module's `count()` on a 121-word cell returns
+  121, run from the stage's run directory on a string, not on the repository.
+- `grep -c '^| 385 |' docs/ROADMAP.md`: 0 before (the Step 0 census), 1
+  after.
+- `.claude/skills/closeout/wholetree.sh` (fast mode) before every commit, run
+  on its own, its exit code read before the commit.
+- `python3 .claude/skills/fleet/plan_check.py 389A`: exit 0 against v1.0
+  (the Executive Officer's run) and against v1.1.
+- `wholetree.sh --full` then `regression.sh`, once, in the stage clone: the
+  line recorded verbatim with its exit code and marked not of record, F216's
+  expected outcome. If it unexpectedly passes with every skip pinned, that is
+  a regression of record and the merge recommendation says so as a change
+  from this plan.
+
+## Non-goals
+
+- Phase 385's own work: the change to `SERVER_WRITES` in `deploy.py`, its
+  three controls, the live check from the Mac, closing F212. 385 runs from
+  its own prompt and turns the row 🚧 at its Step 0.
+- Anything under `src/` or `tests/`, including the push routes and the
+  registry; `COLLECTED_TEST_FLOOR` is unchanged.
+- Any migration, any read or write of live, any path under `data/`, seed
+  data, a split or an eval protocol.
+- Editing `docs/prompts/385_the_push_tokens_own_write.txt`, whose first line
+  says to add the row as 🚧: a committed prompt is a record. Editing
+  `docs/decisions.md` K39, whose "not built" stays true.
+- Pinning any skip or fixing any of F216's four failures; closing F216 or
+  F217.
+- The fleet's GitHub identity and the master ruleset (F214).
+- Merging, closing issues #9, #10 or #14, or moving any label by hand.
+- Any new check that reads the `<!-- fleet-trial -->` marker, which the
+  census finds nowhere.
+
+## Planned items
+
+- [ ] the plan commit: this v1.0 on `phase-389A-385s-roadmap-row`
+- [ ] row 385 in `docs/ROADMAP.md`, after 384's, and 389A's row's last
+      sentence updated; `wholetree.sh` exit 0 before the commit
+- [ ] the checks run and recorded: `roadmap_check.py` and its `--self-test`,
+      `tests/test_roadmap_continuity.py`, `roadmap_words.py 385 --check` with
+      its count and its 121-word control, the `grep -c` before and after
+- [ ] `wholetree.sh --full` and `regression.sh` once in the stage clone, the
+      line recorded verbatim and marked of record or not
+- [ ] `389A_phase_log.md` with every commit, exit code and guard block
+- [ ] `389A_implementation.md` v1.1 with Deviations and Results
+- [ ] the handoff on the branch, with the operator's paste block for the Mac
+      and the close-out steps
+- [ ] the pull request; the Captain's merge recommendation after the Red
+      Team's clear, carrying the status note and the close-out hand-over
