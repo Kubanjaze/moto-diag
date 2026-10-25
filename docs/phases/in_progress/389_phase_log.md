@@ -573,3 +573,75 @@ checks the account is not a maintainer (`push maintain admin` must read
 `true false false`), says why Write and only Write, and, if GitHub does
 not let the token accept the invitation, says where to press Accept and
 that pasting the block again is safe.
+
+### 2026-10-25 — Proof: the Engineer stops at a rule-1 condition
+
+The hold off at 11:19:37; at 11:20:07 "issue 14: the Chief Engineer on
+phase 389A, round 0", label `build:open`. In its fenced clone it read the
+plan and Step 0, committed row 385 as 🔲 with 389A's row moving with the
+work (`628eb8a`), ran `wholetree.sh --full` and `regression.sh`: "Regression
+run FAILED (not of record): 11157 passed, 16 failed, 54 skipped, 0 errors
+at `628eb8a` (30 min 2 s wall, …, exit 1)". It committed v1.1, its log and
+a handoff (`e9cc9ec`), and wrote `engineer.json`: `stop`,
+`test-cannot-be-green`, and a question in plain English ("The one change
+this mission asked for is done and committed … What I could not do is the
+final full test run … The decision I need: …"). 12:12:41: "issue 14:
+needs-admiral (engineer): Chief Engineer, phase 389A: stopped
+(test-cannot-be-green) …"; nothing pushed (only a checked `pr-ready` is),
+so its two commits stay in its run's clone. **The Engineer stopping and
+setting needs-admiral at a rule-1 condition: shown.**
+
+Why its run could not pass, two causes:
+1. **An ordering error, mine.** The trial's branch came from `master`, and
+   the fence's pins and skips (the operator's "Sandbox counts") are on
+   389's branch, not yet merged; so 14 of its 16 failures and 45 unpinned
+   skips are run 2's (S0-5). No run of the trial's tree inside the fence
+   can be of record until 389 merges.
+2. **Two failures my model-free runs never showed**: 273's
+   `test_the_network_guard_holds_for_the_sdk` and 281's
+   `test_urlopen_of_a_public_host_fails_loudly`. The model-free runs use
+   `--net none`; the Engineer runs the suite inside its own session, where
+   `HTTPS_PROXY` points at the fence's gate on 127.0.0.1. A connection to
+   a loopback proxy passes the guard's socket checks: a test there could
+   have reached the model API through the gate. Bug fix #4.
+
+### Bug fix #4 — 2026-10-25 — a proxy on loopback was a way past the network guard
+
+**Issue.** The trial Engineer's regression inside its session failed 273's
+and 281's network-guard tests; the model-free runs (no network, no proxy)
+passed them.
+
+**Root cause.** `tests/support/network_guard.py` refuses a socket to any
+host that is not loopback. With `HTTPS_PROXY` set to a loopback address,
+`urllib` (and the SDKs) connect to the proxy, which is loopback, and the
+proxy reaches the host. Inside the fleet's fence the model's gate is such
+a proxy, and the Engineer's Bash commands inherit it. **The shared cause
+of the rule-5 stop again**: the Engineer's dry run checked its harness,
+not the suite in the Engineer's own environment, so this was first seen
+live. Not a new family, so the build goes on; the operator's word was to
+find the shared cause before a fourth, and it was found.
+
+**Fix.** `install()` removes inherited proxy variables (`HTTPS_PROXY`,
+`HTTP_PROXY`, `ALL_PROXY`, each case) before patching the sockets: no test
+uses a proxy. The guard is stronger, not looser.
+
+**Files.** `tests/support/network_guard.py`;
+`tests/test_phase281_network_guard.py` (1 new test, the planted known-bad
+test run under a loopback `HTTPS_PROXY`).
+
+**Verified.** The new test against the old guard (only it stashed): red.
+With the fix: 30/30 in 281's and 273's files, and the same 30 with
+`HTTPS_PROXY=http://127.0.0.1:9` in the environment.
+
+**Commit.** The commit that carries this entry.
+
+**What follows, decided here.** The operator's answer, "Sandbox counts", stands:
+the builder's and the fleet's runs in the fence are official. So 389 closes
+and merges first (its regression of record from the dispatcher's
+model-free run in the fence), the service's clone goes back to `master`,
+`master` is merged into the trial's branch under the operator's login (the
+planter's maintenance, pre-approval (b): the push gate would rightly refuse
+the Engineer a push carrying fleet code), and `plan:approved` is
+re-applied so the Engineer starts a fresh round. The trial's remaining
+stages are recorded after 389's merge, in its handoff, as 388's restart
+test was.
