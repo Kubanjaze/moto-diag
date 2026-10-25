@@ -383,8 +383,10 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: Then +6, by a diff of collected ids against 390d8e4 (+6 -0): bug fixes
 #: #1 (1, scout), #2 (2, red team), #3 (1, the stage clone's master), and
 #: the two measured dry runs (engineer 1, captain 1). Measured: 11401.
+#: Then +1 against 46023c5: bug fix #4, the planted known-bad test under a
+#: loopback proxy, in test_phase281_network_guard.py. Measured: 11402.
 #:
-COLLECTED_TEST_FLOOR = 11401
+COLLECTED_TEST_FLOOR = 11402
 
 
 def _collected_count() -> int:
