@@ -247,19 +247,4 @@ part of (Logic 5, Deviations).
 
 ## Results
 
-- **Regression of record**, inside the fence, on a fresh clone of
-  `ac1dc6b` (`runs/20261026_144852_check`), after `wholetree.sh --full`
-  passed there (4716 passed, 36 skipped):
-
-  Regression of record: 11500 passed, 0 failed, 105 skipped, 0 errors at `ac1dc6b` (35 min 45 s wall, `python -m pytest -n auto --dist load`, exit 0) (run inside the fleet's fence)
-
-  The skip lines are in the phase log, each pinned by `EXPECTED_SKIPS`.
-- **Mutations: 59/59 red**, exit 0 (`391_mutate.out`), after a first run
-  of 55/60 whose five survivors are in the log.
-- **`COLLECTED_TEST_FLOOR` 11520 → 11605**: +78 by the diff of collected
-  ids (pre-approval (b)).
-- **One call's cost** (Step 0, PR #20): 61,300 tokens read, 1,093 written,
-  3 turns, 11 s, $0.28 at list price.
-- **On the real record:** 390 as it shipped fails Q8 on R8 (the paste
-  block of F222); PR #20's fence output fails V12, and its issue's markers
-  fail Q2 and Q3.
+To be written after the merge.
