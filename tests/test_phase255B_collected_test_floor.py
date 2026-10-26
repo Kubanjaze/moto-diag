@@ -393,8 +393,10 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: Measured: 11499.
 #: Then +1 against 67735e2: the search on start says one line when it has
 #: nothing to resume (test_phase390_search.py). Measured: 11500.
+#: Then +20 against ea1f8d1 (+20 -0), all in test_phase390_space.py: free
+#: space phase to phase (F221, scope the operator added). Measured: 11520.
 #:
-COLLECTED_TEST_FLOOR = 11500
+COLLECTED_TEST_FLOOR = 11520
 
 
 def _collected_count() -> int:

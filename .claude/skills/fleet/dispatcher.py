@@ -51,6 +51,14 @@ the session its transcript names, and each GitHub write is checked for
 before it is made. A `started` marker left open with nothing to resume from,
 or a stage whose issue has moved on, gets a stop comment; the label stays.
 
+**Free space is part of the method** (Phase 390, F221). The service hands
+Ubuntu's freed blocks back to Windows (`fstrim`, its one sudoers line, the
+disk image sparse) on a timer, at each merge and at each close-out. Each
+reclaim logs the free space on C: and in Ubuntu before and after. No new
+model stage or model-free run starts below either floor. Below a floor it
+reclaims first. If it is still below, it holds the stage: the label stays,
+a comment says why, and `needs-hands` is added.
+
 Exit 0 a cycle ran; 1 a cycle failed (the loop logs it and goes on); 4 a
 refusal before any cycle: another dispatcher holds the lock, no token file,
 a token that is not the fleet's OAuth class, or ANTHROPIC_API_KEY set.
@@ -109,6 +117,16 @@ DIGEST_HOUR = 7
 RESET_UNKNOWN = dt.timedelta(hours=1)
 KEEP_RUNS = 20
 CHECK_TIMEOUT_S = 3600
+#: Free space (Phase 390, F221): no new model stage or model-free run below
+#: either floor, in GB, after a reclaim. The operator's numbers, 2026-10-25:
+#: "50 GB on each", "every 3 hours".
+SPACE_FLOOR_GB = {"C:": 50, "Ubuntu": 50}
+RECLAIM_HOURS = 3.0
+#: Where each floor is read on the home desktop: Windows' C: through WSL's mount.
+DISKS = {"C:": pathlib.Path("/mnt/c"), "Ubuntu": pathlib.Path("/")}
+#: The one command `ops/desktop/install_fstrim_sudoers.sh` allows without a
+#: password: Ubuntu's freed blocks handed back through the sparse disk image.
+FSTRIM = ["sudo", "-n", "/usr/sbin/fstrim", "-v", "/"]
 
 REVIEW = "plan:needs-review"
 #: Every label but `mission`, which marks what the issue is for its whole life.
@@ -137,6 +155,9 @@ XO_OWN = (xo.MARKER, "Executive Officer, phase")
 #: A stage's first comment (Phase 390). Its own prefix: no due rule reads it,
 #: so a stage's start never makes its own label look handled.
 STARTED_M = "<!-- fleet-started:"
+#: A hold for free space. Its own prefix, read by no due rule: once the
+#: operator takes `needs-hands` off, the stage it held is due again.
+SPACE_M = "<!-- fleet-space:"
 #: Every rank's comment: one stage runs at a time, so a later one ends an earlier stage.
 RANK_PREFIXES = (STARTED_M, SCOUT_M, CAPTAIN_M, ENGINEER_M, RED_M, *RANK_COMMENT)
 _STARTED = re.compile(r"^<!-- fleet-started: rank=(\S+) run=(\S+) -->")
@@ -180,6 +201,11 @@ class RateLimited(Exception):
 
 class Escalated(Exception):
     """A stage handed the issue to the operator (`needs-admiral`)."""
+
+
+class LowSpace(Stop):
+    """Free space below a floor after a reclaim (F221): the stage is held for
+    the operator (`needs-hands`), its label where it was."""
 
 
 # --------------------------------------------------------------- the usage
@@ -507,7 +533,9 @@ class Fleet:
                  out=print, venv: pathlib.Path | None = None, mobile: pathlib.Path | None = None,
                  identity_file: pathlib.Path = fleet_git.IDENTITY_FILE, push_url: str | None = None,
                  popen: Callable[..., subprocess.Popen] = subprocess.Popen,
-                 check: Callable[..., Check] | None = None, sleep: Callable[[float], None] = time.sleep):
+                 check: Callable[..., Check] | None = None, sleep: Callable[[float], None] = time.sleep,
+                 disks: dict[str, pathlib.Path] | None = None, trim: list[str] | None = None,
+                 disk_usage: Callable[[pathlib.Path], tuple] = shutil.disk_usage):
         self.state_dir, self.token, self.host, self.fence = state, token, host, fence
         self.workspace_docs, self.repo_url, self.sweep_hours = workspace_docs, repo_url, sweep_hours
         self.now = now or (lambda: dt.datetime.now().astimezone())
@@ -519,6 +547,8 @@ class Fleet:
         self.identity_file, self.push_url = identity_file, push_url or repo_url
         self.popen, self.sleep = popen, sleep
         self.check = check or self.check_run
+        #: Free space is watched only where `main` names the disks (the desktop).
+        self.disks, self.trim, self.disk_usage = disks or {}, trim, disk_usage
         self._skipped: set[tuple[int, str]] = set()
         #: The running stage's journal (one stage runs at a time).
         self.journal: journal.Journal | None = None
@@ -540,6 +570,81 @@ class Fleet:
         p = self.state_dir / "state.json"
         p.with_suffix(".tmp").write_text(json.dumps(state, indent=2), encoding="utf-8")
         p.with_suffix(".tmp").replace(p)
+
+    # ---- free space (Phase 390, F221)
+    def free_gb(self) -> dict[str, float | None]:
+        """Each watched disk's free space in GB; None where it cannot be read."""
+        free: dict[str, float | None] = {}
+        for name, path in self.disks.items():
+            try:
+                free[name] = round(self.disk_usage(path)[2] / 1e9, 1)
+            except OSError:
+                free[name] = None
+        return free
+
+    @staticmethod
+    def below(free: dict[str, float | None]) -> list[str]:
+        return [f"{name} {'cannot be read' if gb is None else f'has {gb} GB free'} "
+                f"(floor {SPACE_FLOOR_GB[name]} GB)"
+                for name, gb in free.items() if gb is None or gb < SPACE_FLOOR_GB[name]]
+
+    def reclaim(self, why: str, *, record: bool = True) -> str:
+        """`fstrim` through its one sudoers line, which hands Ubuntu's freed
+        blocks back to Windows; free space on each disk before and after,
+        logged, and (`record`) the time kept for the timer. A failed trim is
+        said, not raised."""
+        before = self.free_gb()
+        if not self.trim:
+            trimmed = "not set up"
+        else:
+            try:
+                r = self.host(self.trim, capture_output=True, text=True, timeout=900,
+                              stdin=subprocess.DEVNULL)
+                said = " ".join(((r.stdout or "") + (r.stderr or "")).split())[:200]
+                trimmed = said if r.returncode == 0 else f"failed (exit {r.returncode}): {said}"
+            except (OSError, subprocess.TimeoutExpired) as e:
+                trimmed = f"failed: {e}"
+        after = self.free_gb()
+        line = "; ".join(f"{name} {before[name]} -> {after[name]} GB free"
+                         for name in self.disks) + f"; fstrim: {trimmed}"
+        self.log(f"reclaim ({why}): {line}")
+        if not record:
+            return line
+        state = self.load()
+        state["last_reclaim"] = self.now().isoformat(timespec="seconds")
+        self.save(state)
+        return line
+
+    def reclaim_due(self) -> bool:
+        last = self.load().get("last_reclaim")
+        return bool(self.disks) and (last is None or self.now() - _time(last)
+                                     >= dt.timedelta(hours=RECLAIM_HOURS))
+
+    def space_refusal(self) -> str | None:
+        """Why no new model stage or model-free run may start: a disk below
+        its floor even after a reclaim, or one that cannot be read."""
+        if not self.disks or not self.below(self.free_gb()):
+            return None
+        self.reclaim("below the floor")
+        low = self.below(self.free_gb())
+        return "free space is below the floor after a reclaim: " + "; ".join(low) if low else None
+
+    def hold_for_space(self, n: int | None, rank: str, why: str) -> None:
+        """A stage held for free space: said on its issue, `needs-hands`
+        added, its label left where it was (the digest has no issue: its
+        hold is the log line, and the day is tried again next cycle)."""
+        if n is None:
+            return
+        marker = self.tag(f"{SPACE_M} rank={rank} -->")
+        self.step("space", lambda: self.say(
+            n, marker, f"**Fleet dispatcher: the {rank} is held, label unchanged.** {why}. "
+                       "Free some space on the home desktop, then take `needs-hands` off: the "
+                       "fleet reclaims and checks again before it goes on."),
+                  lambda: self.has_comment(n, marker))
+        self.step("space-label", lambda: self.gh("issue", "edit", str(n), "--add-label",
+                                                 "needs-hands"),
+                  lambda: "needs-hands" in self.labels_of(n))
+        self.log(f"issue {n}: held ({rank}): {why}")
 
     def usage(self) -> dict | None:
         """The 5-hour and weekly figures, read on the operator's own sign-in,
@@ -822,6 +927,9 @@ class Fleet:
         saved = self.journal.check(key) if self.journal else None
         if saved is not None:
             return Check(**saved)
+        why = self.space_refusal()
+        if why:
+            raise LowSpace(f"no model-free run: {why}")
         c = self.check(clone, commit, full=full, command=command)
         if self.journal is not None:
             self.journal.put_check(key, {"ok": c.ok, "commit": c.commit, "line": c.line,
@@ -1104,7 +1212,18 @@ class Fleet:
         clone = run / "clone"
         head = self.git("-C", str(clone), "rev-parse", "HEAD").stdout.strip()
         self.log(f"issue {issue}: the model-free run on {head[:12]}")
-        check = self.checked(clone, head, full=True)
+        try:
+            check = self.checked(clone, head, full=True)
+        except LowSpace as e:
+            # Held like F220's run: `needs-hands` off runs it on this commit.
+            self.step("hold", lambda: journal.hold(run, {"issue": issue, "phase": phase,
+                                                         "rnd": rnd, "commit": head,
+                                                         "why": "space"}))
+            self.hold_for_space(issue, "engineer", str(e))
+            return "held: free space"
+        # The close-out's reclaim (the operator: "as a part of the overall
+        # process phase to phase"): its line goes in the PR, for the handoff.
+        space = self.reclaim(f"phase {phase}'s close-out") if check.ok and self.disks else None
         fails = engineer.verify(clone, phase, result, check.line if check.ok else None)
         if not check.ok:
             fails.append(f"the model-free run did not pass: {check.line or check.why}"[:400])
@@ -1127,7 +1246,8 @@ class Fleet:
         text = (f"{result['summary'].strip()}\n\nMission: #{issue}\n\n"
                 f"The Engineer's regression of record:\n\n    {result['regression_line']}\n\n"
                 f"The same commit, run again with no model (`wholetree.sh --full`, "
-                f"`regression.sh`, in the fence):\n\n    {check.line}\n")
+                f"`regression.sh`, in the fence):\n\n    {check.line}\n"
+                + (f"\nFree space after the close-out's reclaim:\n\n    {space}\n" if space else ""))
         # Whether this stage opens the PR or comments on it, decided once: a
         # PR this stage opened is there when it resumes.
         mode = self.step("pr-mode", lambda: "create" if self.pr_for(branch) is None else "comment")
@@ -1175,7 +1295,7 @@ class Fleet:
             raise Stop(f"the held clone is at {head[:12]}, not {info['commit'][:12]}")
         out = self.engineer_finish(issue, phase, branch, ident, held,
                                    engineer.read_result(held / "run"), info["rnd"])
-        if out != "checks failed":
+        if out.startswith("PR "):
             self.step("release", lambda: journal.release(held))
         return out
 
@@ -1390,6 +1510,16 @@ class Fleet:
         runs = journal.held_runs(self.runs, n)
         if not runs:
             return None
+        if (journal.held(runs[0]) or {}).get("why") == "space":
+            # Held for free space (F221): the cycle reaches the issue only once
+            # `needs-hands` is off, and the hold is due while its comment is
+            # newer than any rank comment but a `started` one (a recheck that
+            # then stops does not run again every cycle).
+            spaced = self.newest(n, SPACE_M)
+            later = [_time(c["createdAt"]) for c in self.comments(n)
+                     if (b := c.get("body", "").lstrip()).startswith(RANK_PREFIXES)
+                     and not (_STARTED.match(b) or _ENG_STARTED.match(b))]
+            return runs[0] if spaced and (not later or spaced[0] > max(later)) else None
         ranked = [c["body"].lstrip() for c in self.comments(n)
                   if c.get("body", "").lstrip().startswith(RANK_PREFIXES)]
         stop = f"{MARKER} needs-admiral rank=engineer"
@@ -1469,6 +1599,9 @@ class Fleet:
         cycle it ends the journal and goes on up, as in 389."""
         try:
             out = go()
+        except LowSpace as e:
+            out = f"held: {e}"
+            self.hold_for_space(n, rank, str(e))
         except Stop as e:
             out = f"stopped: {e}"
             if n is not None:
@@ -1618,9 +1751,24 @@ class Fleet:
             else "the search on start: nothing to resume")
         return said
 
+    def reclaim_boundaries(self, rows: dict[str, str]) -> None:
+        """A reclaim on the timer, and at each merge: a phase whose row was 🚧
+        on master at the last cycle and is ✅ now (Phase 390, F221)."""
+        if not self.disks or not rows:
+            return
+        merged = [p for p in self.load().get("active", []) if rows.get(p) == roadmap_check.DONE]
+        for p in merged:
+            self.reclaim(f"phase {p} merged")
+        if not merged and self.reclaim_due():
+            self.reclaim(f"the {RECLAIM_HOURS:g}-hour timer")
+        state = self.load()
+        state["active"] = sorted(p for p, s in rows.items() if s == roadmap_check.ACTIVE)
+        self.save(state)
+
     def cycle(self) -> None:
         self.update_mirror()
         self.sweep()
+        self.reclaim_boundaries(self.master_rows())
         state = self.load()
         paused = state.get("paused")
         if paused:
@@ -1671,10 +1819,18 @@ class Fleet:
                 self.log(f"issue {n}: stopped: {e}")
                 continue
             if chosen is not None:
+                why = self.space_refusal()
+                if why:
+                    self.hold_for_space(n, chosen[0], f"no new stage: {why}")
+                    continue
                 self.run_stage(n, *chosen)
         day = None if self.load().get("paused") else self.digest_day()
         if day is not None:
-            self.run_stage(None, "digest", lambda: self.stage_digest(day))
+            why = self.space_refusal()
+            if why:
+                self.log(f"digest: held, no new stage: {why}")
+            else:
+                self.run_stage(None, "digest", lambda: self.stage_digest(day))
         keep = self.load().get("paused", {}).get("run")
         self.prune_runs({keep} if keep else set())
 
@@ -1703,16 +1859,25 @@ def main(argv: list[str]) -> int:
     rc = sub.add_parser("recover")
     rc.add_argument("--dry-run", action="store_true", required=True,
                     help="print what the search on start would do; write nothing")
+    sub.add_parser("reclaim", help="hand Ubuntu's freed space back to Windows; print the line "
+                                   "a handoff records")
     a = ap.parse_args(argv)
     if a.cmd == "recover":
         # Read-only beside a running service: no lock, no token, no mirror update.
         said = Fleet(state=STATE, token="").recover(dry_run=True)
         print(f"{len(said)} stage(s) to act on" if said else "nothing to resume")
         return 0
+    if a.cmd == "reclaim":
+        # Beside a running service, which holds the lock: the log line only.
+        line = Fleet(state=STATE, token="", disks=DISKS, trim=FSTRIM,
+                     out=lambda s: None).reclaim("by hand", record=False)
+        print(line)
+        return 1 if "fstrim: failed" in line else 0
     try:
         held = lock(STATE)
         fleet = Fleet(state=STATE, token=load_token(TOKEN_FILE),
-                      sweep_hours=getattr(a, "sweep_hours", SWEEP_HOURS))
+                      sweep_hours=getattr(a, "sweep_hours", SWEEP_HOURS), disks=DISKS,
+                      trim=FSTRIM)
     except Refused as e:
         print(f"REFUSED: {e}", file=sys.stderr)
         return 4

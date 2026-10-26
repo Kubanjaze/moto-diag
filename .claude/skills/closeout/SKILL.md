@@ -85,7 +85,12 @@ uncommitted.
    shipped, what is open, what is next, and the live outcome. Write it in
    the close-out commit, before the merge: `roadmap_check.py` R6 refuses
    any push while a closed row has no handoff. Add the merge's outcome
-   after step 10.
+   after step 10. It also carries **the reclaim line** (Phase 390, F221):
+   the free space on C: and in Ubuntu before and after handing Ubuntu's
+   freed space back to Windows. On the home desktop, run
+   `python3 .claude/skills/fleet/dispatcher.py reclaim` and copy the line
+   it prints. A fleet build's PR already carries the dispatcher's own
+   close-out reclaim line, so copy that one instead.
 10. **Merge.** `git merge` takes `-m` or `-F <file>`. `-F -` exits 129
     ("could not read file '-'") and `master` does not move; that happened
     twice on 2026-09-24.

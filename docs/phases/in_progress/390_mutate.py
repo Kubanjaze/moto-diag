@@ -6,7 +6,8 @@ exact strings (each must occur once), the tests run after clearing
 `__pycache__`, every file restored whatever happens. Exits 1 if any mutation
 stays green. An argument runs only the mutations whose name starts with it:
 `J` the journal, `R` the replay, `S` the steps and markers, `P` the pause and
-the prune, `U` the search on start, `H` the held run and the recheck.
+the prune, `U` the search on start, `H` the held run and the recheck, `F`
+free space (F221).
 
 No mutation makes a real model call or reaches GitHub: every stage runs on
 389's stand-ins. Run it only when no fleet model-free run is in progress on
@@ -37,6 +38,7 @@ T_ALL = pytest("tests/test_phase390_resume.py", "tests/test_phase390_search.py",
                "tests/test_phase390_resume_contract.py", "tests/test_phase389_dispatcher.py",
                "tests/test_phase388_dispatcher.py")
 T_KILL = pytest("tests/test_phase390_kill.py")
+T_SPACE = pytest("tests/test_phase390_space.py")
 
 MUTATIONS = [
     # the journal
@@ -126,6 +128,49 @@ MUTATIONS = [
     # the real process
     ("K1 a real process's cut call not resumed", [(DI,
      'return entry.get("session") or next(', 'return None and next(')], T_KILL),
+    # free space, phase to phase (F221, the operator's added scope)
+    ("F1 the floor never read", [(DI,
+     "if not self.disks or not self.below(self.free_gb()):", "if True:")], T_SPACE),
+    ("F2 no reclaim before a hold", [(DI,
+     'self.reclaim("below the floor")', "None")], T_SPACE),
+    ("F3 a model-free run not gated", [(DI,
+     'raise LowSpace(f"no model-free run: {why}")', "pass")], T_SPACE),
+    ("F4 a new stage not gated", [(DI,
+     'self.hold_for_space(n, chosen[0], f"no new stage: {why}")\n                    continue',
+     "pass")], T_SPACE),
+    ("F5 needs-hands not added", [(DI,
+     'self.step("space-label", lambda:', '(lambda *a, **k: None)("space-label", lambda:')],
+     T_SPACE),
+    ("F6 a space hold never due again", [(DI,
+     "return runs[0] if spaced and (not later or spaced[0] > max(later)) else None",
+     "return None")], T_SPACE),
+    ("F7 a space hold due after it was answered", [(DI,
+     "return runs[0] if spaced and (not later or spaced[0] > max(later)) else None",
+     "return runs[0]")], T_SPACE),
+    ("F8 no timer", [(DI,
+     "if not merged and self.reclaim_due():", "if False:")], T_SPACE),
+    ("F9 a merge not seen", [(DI,
+     'merged = [p for p in self.load().get("active", []) if rows.get(p) == roadmap_check.DONE]',
+     "merged = []")], T_SPACE),
+    ("F10 no close-out reclaim", [(DI,
+     "space = self.reclaim(f\"phase {phase}'s close-out\") if check.ok and self.disks else None",
+     "space = None")], T_SPACE),
+    ("F11 the service not given the disks", [(DI,
+     'sweep_hours=getattr(a, "sweep_hours", SWEEP_HOURS), disks=DISKS,',
+     'sweep_hours=getattr(a, "sweep_hours", SWEEP_HOURS), disks=None,')], T_SPACE),
+    ("F12 a disk that cannot be read passes", [(DI,
+     "for name, gb in free.items() if gb is None or gb < SPACE_FLOOR_GB[name]]",
+     "for name, gb in free.items() if gb is not None and gb < SPACE_FLOOR_GB[name]]")],
+     T_SPACE),
+    ("F13 the CLI writes the service's state", [(DI,
+     '.reclaim("by hand", record=False)', '.reclaim("by hand")')], T_SPACE),
+    ("F14 a low-space stop said as a plain stop", [(DI,
+     'out = f"held: {e}"\n            self.hold_for_space(n, rank, str(e))',
+     'out = f"held: {e}"\n            self.say_stopped(n, rank, str(e))')], T_SPACE),
+    ("F15 an Engineer held for space not kept for the same commit", [(DI,
+     '"why": "space"}))', "}))")], T_SPACE),
+    ("F16 a recheck held again releases its run", [(DI,
+     'if out.startswith("PR "):', "if True:")], T_SPACE),
 ]
 
 

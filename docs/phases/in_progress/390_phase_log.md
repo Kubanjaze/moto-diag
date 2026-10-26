@@ -216,3 +216,249 @@ its labels yourself."
   so the log could not show the search had run. Added: one summary line
   per start ("the search on start: nothing to resume", or "N stage(s)
   acted on"), and its test; `COLLECTED_TEST_FLOOR` 11499 → 11500.
+
+## 2026-10-25 — proof 1: the Science Officer (#16)
+
+`390_proof.py scout 16 --close`. Issue #16 opened 17:2x with `mission`
+(planted, the trial marker, branch `phase-390A-quartermaster-row`). The
+stage began 17:32:35 (`runs/20261025_173233_scout_390A`); the service was
+restarted at 17:32:42 (SIGTERM to PID 2619082) and back at 17:33:14 (PID
+2621609): "resume scout from 20261025_173233_scout_390A (issue 16), after
+started, clone". #16 closed by the planter at 17:33:16, while the resumed
+stage ran. The stage pushed Step 0 at 17:35:18 (`9ad3bc3`, the branch's
+one commit past `master`), commented, and set `step0:done` at 17:35:22;
+"the search on start: 1 stage(s) acted on". #16's comments: one
+`fleet-started`, the planter's close, one `fleet-scout: step0` marker.
+Journal ended `step 0 pushed on phase-390A-quartermaster-row`.
+
+**What the cut was, read from the journal:** between the stage's two
+model calls, not inside one. Call 0 (session `c0e71e03`) had ended and
+been recorded (its transcript last written 17:32:41); call 1 had not
+begun. Resumed, call 0 was replayed, not made again, and call 1 ran fresh
+(`99b6d566`, its `known` holding only `c0e71e03`): two transcripts in
+the run. The proof script's cut test ("a transcript exists") fired on the
+finished call's transcript; it now waits for the journal's latest call
+to be unfinished with its own transcript, and checks again just before
+the restart.
+
+## 2026-10-25 — proof 2: the Captain, v1.0 (#17)
+
+`390_proof.py captain 17 --close`; #17 opened with `mission` and
+`step0:done`. The stage began 17:40:34 (`runs/20261025_174033_captain_390A`);
+cut **inside its Fable call** at 17:40:39 (the journal's call 0
+unfinished, its transcript `b3b110b8` there), SIGTERM to PID 2621609; back
+at 17:41:11 (PID 2637284): "resume captain from 20261025_174033_captain_390A
+(issue 17), after started, clone, session
+b3b110b8-9eea-421e-962c-38dccad6c7f6". #17 closed by the planter 17:41:13.
+The resumed call went on in that session: the run holds one transcript,
+`b3b110b8….jsonl`, and the journal one call, done, session `b3b110b8`.
+v1.0 pushed at 17:47:13 (`4123dfa`), marker and `plan:needs-review` at
+17:47:16. #17's comments: one `fleet-started`, the close, one
+`fleet-captain: v1.0 round=0 commit=4123dfa0e53d`. Journal ended "Phase
+390A v1.0: the plan", steps started, clone, commit, push, marker, label.
+
+## 2026-10-25 — proof 3: the Executive Officer (#18)
+
+`390_proof.py xo 18 --close`; #18 opened with `mission` and
+`plan:needs-review`. The stage began 17:52:27
+(`runs/20261025_175225_xo_390A`); cut **inside its Fable call** at
+17:52:33 (SIGTERM to PID 2637284); back at 17:53:04 (PID 2650947):
+"resume xo from 20261025_175225_xo_390A (issue 18), after started, clone,
+session e7286c05-5ff0-461e-8118-6989dfa21f2e". #18 closed 17:53:07. The
+resumed call went on in that session (one transcript, `e7286c05….jsonl`;
+the journal's one call done in it); the verdict, `back-to-captain` round
+1, commented once and applied at 17:57:26 (`plan:needs-review`, the
+XO's own label for a back). #18's comments: one `fleet-started`, the
+close, one `xo-verdict`. Journal ended "verdict applied".
+
+The XO's two items were real (`verify_phase.sh`'s arguments and its
+post-merge place; the root `implementation.md` row count). The Engineer's
+proof needs an approved plan, so #18 was reopened at 17:57:58 for the
+Captain's revision and the XO's next round, with no restart, and is
+closed again by the planter when the XO approves.
+- The revision round on #18, no restart: the Captain's revision 18:02:39
+  to 18:05:48; the XO, round 2, 18:10:55 to 18:14:20: **approve**
+  (`plan:approved`); #18 closed by the planter at 18:14:23, before the
+  next cycle. The branch at `e274426`.
+
+## 2026-10-25 — proof 4, cut 1: the Chief Engineer's session (#19)
+
+`390_proof.py engineer 19`; #19 opened 18:1x with `mission` and
+`plan:approved`. The stage began 18:19:29
+(`runs/20261025_181926_engineer_390A`); cut **inside its session** at
+18:19:33 (SIGTERM to PID 2650947); back at 18:20:04 (PID 2667175):
+"resume engineer from 20261025_181926_engineer_390A (issue 19), after
+started, clone, label-build, session 8fe99d8e-d20d-4ee7-a4fd-600a84f046f9".
+The running session's command line (`/proc/<pid>/cmdline`) carries
+`--resume 8fe99d8e-…` and `engineer.CONTINUE`; one transcript in the run.
+
+**The whole-Ubuntu restart handed to the operator** (18:3x), safe while no
+#14 stage runs (#14 on `needs-admiral`), timed for #19's Engineer: its
+session, then its model-free run, are the longest stretch of a stage. The
+check is `390_ubuntu_check.py`, run from this checkout (not committed yet:
+the Engineer was running its own pytest inside its session, so no
+`wholetree.sh` here, F220). Tried read-only first: it reads the boot time,
+the service, and the log lines after the boot, exit 0.
+
+## 2026-10-25 — C: full, Ubuntu read-only, and the whole-Ubuntu proof
+
+The operator: "continue. While I was out, C: filled at 19:02; Ubuntu's
+disk (131 GB vhdx) could not grow and went read-only until 19:55, the
+dispatcher crash-looping (Errno 30). I freed 200 GB and your Ubuntu-restart
+block ran at 19:55: ext4 recovered (85 orphan inodes deleted), the service
+came back with 0 restarts and resumed #19's Engineer at 19:55:27 from its
+18:20 session. Check your three uncommitted phase files and #19's run
+folder for damage, record what your check script printed, and count this
+as the whole-Ubuntu proof if it holds. File a finding: the fleet has no
+disk-space guard, and its run folders grew the vhdx until the host ran
+out; no new stage should start below a free-space floor on C: and in
+Ubuntu. Then carry on with the proofs, keeping the rule: no test runs
+while a fleet model-free run is going."
+
+- **The three uncommitted files, no damage:** `390_phase_log.md` (301
+  lines, every section through the hand-over), `390_proof.py` (150),
+  `390_ubuntu_check.py` (74): no NUL byte (`tr -cd '\000' | wc -c`: 0),
+  valid UTF-8 (`iconv`), both scripts compile, each ends where it was
+  written; `git fsck` of this repository clean.
+- **#19's run folder, no damage:** `stage.json` reads (unfinished: steps
+  started, clone, label-build; one call, session `8fe99d8e`, not done);
+  the clone's `git fsck` clean, its tree clean, the Engineer's two commits
+  from before 19:02 there (`95a127b` row 391, `44f846d` the phase log);
+  the transcript's 233 lines all JSON. #19 on GitHub: one comment (its
+  `started` marker), `build:open`: nothing written twice by the crash
+  loop, which could not write its journal past the first save.
+- **The record of the outage:** `dispatcher.log` has no line from 18:20:04
+  to 19:55:27, and the previous boot's system journal ends at 19:02:02, so
+  the crash loop is on record only in the operator's words. That boot's
+  six service restarts (counter to 6) are this session's: 17:22, 17:27,
+  17:33, 17:41, 17:53, 18:20. This boot: "EXT4-fs (sdd): 85 orphan inodes
+  deleted", "recovery complete", 19:55:25.
+- **The whole-Ubuntu proof holds:** Ubuntu started 19:55:19
+  (`uptime -s`); the service up by itself 19:55:25 (`NRestarts=0`); "resume
+  engineer from 20261025_181926_engineer_390A (issue 19), after started,
+  clone, label-build, session 8fe99d8e-d20d-4ee7-a4fd-600a84f046f9" at
+  19:55:27; the running session's command line carries `--resume`. Not a
+  clean shutdown: the disk had been read-only since 19:02. It completes
+  when #19 reaches `review:open`.
+- **What the check script printed in the operator's window is not known
+  here, and my script was wrong.** As handed over, it waited for both the
+  resume line and the search's summary line, and the summary is written
+  only when the resumed stage ends, an hour or more for an Engineer. Run
+  mid-build it could only wait five minutes and print "SOMETHING IS OFF:
+  no stage was picked up after the restart", which would be false. Re-run
+  here with a 90-second limit it timed out (exit 124, its output
+  buffered). Fixed: the resume line alone is the proof, the summary shown
+  if there; output flushed. Re-run at 20:0x:
+
+      Ubuntu started at:           19:55:19
+      the fleet's service:         running since Sun 2026-10-25 19:55:25 EDT
+      what it picked up:           resume engineer from 20261025_181926_engineer_390A (issue 19), after started, clone, label-build, session 8fe99d8e-d20d-4ee7-a4fd-600a84f046f9
+      its search on start:         still working on what it picked up
+      ALL GOOD: the fleet came back by itself and picked up the stage it was in the middle of
+
+- **Filed F221** (`next_f_number.sh`: F221): no disk-space guard. Measured:
+  the fleet's state 31 GB, 29.0 GB of it pytest's temporary folders in 21
+  run folders (`run/tmp`); 8.7 GB for one model-free full run, 11.6 GB in
+  #19's running Engineer stage; code under 0.1 GB a run. The floors are
+  the operator's (a threshold, rule 1); not built in 390.
+  `finding_check.py` exit 0.
+- C: 197 GB free, Ubuntu 912 GB free, at 20:0x.
+
+### 2026-10-25 21:07 — proof 4's second cut: inside the Engineer's model-free run
+
+- `390_proof.py engineer 19 --at check --close`: the cut point was reached in
+  `20261025_181926_engineer_390A` at 21:07:35, with the session done and the
+  model-free run started at 21:07:29 on `f987bf313087`. SIGTERM went to
+  PID 203, and the service was back as PID 64882 at 21:08:07: "resume
+  engineer from 20261025_181926_engineer_390A (issue 19), after started,
+  clone, label-build", then "the model-free run on f987bf313087", the same
+  commit. #19 was closed at 21:08:09. ALL GOOD. The push, the PR and
+  `review:open` are still to be confirmed when the run ends.
+
+### 2026-10-25 21:15 — F221 is bigger than the guard (the operator)
+
+- The operator: Ubuntu uses 44 GB, but `ext4.vhdx` grew from 131 to 164 GB
+  after 19:55 (C: 205 -> 175 GB free), about 25 GB an hour during
+  regressions, because freed blocks are never returned. Added to F221 with
+  what I measured at 21:20:
+  - the image is 163.9 GB and not sparse;
+  - root is mounted with `discard`;
+  - WSL 3.0.3.0 offers `--manage --set-sparse` and calls it "currently
+    experimental";
+  - `Optimize-VHD` is installed.
+  `finding_check.py .` exit 0.
+- **The operator's decision, verbatim:** "it's just something that needs
+  to be done frequently to free up the claimed space, now it just needs to
+  be written into the method itself. as a part of the overall process
+  phase to phase". So 390 closes F221 too, in the method. Scope added by
+  the operator; it goes in v1.1's Deviations.
+- **What I decided, and why:**
+  - **The privilege** is one sudoers line for `fstrim -v /`
+    (`ops/desktop/install_fstrim_sudoers.sh`, the shape of 382's
+    `install_sudoers.sh`), not systemd's `fstrim.timer`. The dispatcher has
+    to trim at its own boundaries, and starting a system unit as lilcu
+    would need a polkit rule, which is wider. `fstrim.timer` is enabled
+    here but never scheduled (`systemctl list-timers` shows it with no
+    next run).
+  - **A model cannot use the line:** `bwrap --dev-bind / / grep NoNewPrivs
+    /proc/self/status` prints `NoNewPrivs: 1` (outside the fence, 0).
+  - lilcu already has sudo with a password (`(ALL : ALL) ALL`), so
+    `sudo -n -l <cmd>` passes before the rule exists. The paste block
+    checks for the NOPASSWD line itself; checked negative now, before the
+    rule.
+  - **Only `main()` sets up the disks and the trim.** The test fakes pass
+    unknown commands to the real `subprocess.run`, so a default would run
+    sudo from the tests.
+  - **A hold for space has its own marker**, `<!-- fleet-space:`, read by
+    no due rule: taking `needs-hands` off makes the held stage due again.
+    An Engineer held before its model-free run keeps its run
+    (`why: space`), and that run goes again on the same commit. It is due
+    only while the hold comment is newer than any rank comment but a
+    `started` one, so a recheck that stops does not loop.
+  - **The merge boundary** is a row that was 🚧 on master at the last cycle
+    and is ✅ now. **The close-out boundary** is after the Engineer's
+    model-free run passes, with the line in the PR.
+- **The floors and the timer are thresholds** (rule 1). The code carries
+  50 GB on each disk and 1 hour as placeholders, and the operator has been
+  asked.
+- `390_compact_vhdx.ps1` is the operator's one-time paste block. It
+  installs the rule, copies the live database to C:, shuts Ubuntu down,
+  runs `wsl --manage --set-sparse true` (never `--allow-unsafe`), and
+  brings Ubuntu back with the boot task. It then trims and checks that
+  both services run, and prints C:'s free space before and after. If WSL
+  will not mark the image sparse, it compacts it once with `Optimize-VHD`
+  instead and says SOMETHING IS OFF. Its syntax is parsed clean. Only its
+  read-only parts were run: the busy check saw the fleet's run.
+- No test was run during #19's model-free run.
+- **The operator's answers** (21:5x): floor "50 GB on each"; timer "every 3
+  hours". `SPACE_FLOOR_GB = {"C:": 50, "Ubuntu": 50}`, `RECLAIM_HOURS = 3.0`.
+
+### 2026-10-25 21:56 — proof 4 done: the Engineer, cut in its model-free run, reached `review:open`
+
+- dispatcher.log: "pushed phase-390A-quartermaster-row at f987bf313087 as
+  operator (engineer)" at 21:56:28; "issue 19: PR 20 ready" at 21:56:35;
+  "the search on start: 1 stage(s) acted on" at 21:56:36.
+- GitHub:
+  - #19: closed, labels `mission`, `review:open`; 3 comments, of which 1
+    is `pr-ready` and 1 is a started marker;
+  - PR #20: open, head `f987bf3130874e806153d0784ecce246b971cbcb`, the
+    only PR for the branch;
+  - the push line occurs once in dispatcher.log.
+- The resumed stage reran only the model-free run, on the same commit, and
+  made no second session. **This also completes the whole-Ubuntu proof**:
+  the 19:55 restart's resumed Engineer has reached its next label with no
+  hand on it.
+
+### 2026-10-25 22:0x — free space built, tested, mutated
+
+- With the fleet idle (no pytest or bwrap process; the last log line is the
+  21:56 idle cycle):
+  - `tests/test_phase390_space.py`: 20 tests. The first run had 2 red, both
+    in the tests: the close-out's own reclaim counted in a trim count, and
+    the timer moved to 3 hours. Fixed, then one test added: a recheck that
+    falls below the floor again keeps its run held.
+  - That file with the 390, 389 and 388 dispatcher files: 224 passed in
+    36 s (before the added test).
+  - `390_mutate.py F`: 16/16 red.
+- `COLLECTED_TEST_FLOOR` 11500 → 11520 (pre-approval (b)): 11520 collected
+  against 11500 at `ea1f8d1`, +20 -0, all in `test_phase390_space.py`.

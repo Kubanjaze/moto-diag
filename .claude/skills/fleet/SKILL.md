@@ -327,6 +327,37 @@ resumed stage ends. `prune_runs` keeps every unfinished run.
 `recover --dry-run` says what a start would do and writes nothing (no lock,
 no mirror update): run it beside the live service before new code goes live.
 
+## Free space, phase to phase (Phase 390, F221)
+
+The operator, 2026-10-25: "it's just something that needs to be done
+frequently to free up the claimed space, now it just needs to be written
+into the method itself. as a part of the overall process phase to phase".
+
+- **The one-time switch is the operator's:** the disk image is made sparse
+  (`wsl --manage Ubuntu-26.04 --set-sparse true`), and
+  `ops/desktop/install_fstrim_sudoers.sh` gives lilcu one command with no
+  password, `fstrim -v /`. A model cannot use it: bubblewrap sets
+  `no_new_privs`, so sudo fails inside the fence.
+- **The dispatcher reclaims** (`Fleet.reclaim`):
+  - on a timer, every `RECLAIM_HOURS`;
+  - at each merge, when a row that was 🚧 on master is ✅;
+  - at each close-out, after the Engineer's model-free run passes. Its line
+    goes in the PR, for the handoff.
+  Each reclaim logs `reclaim (<why>): C: a -> b GB free; Ubuntu c -> d GB
+  free; fstrim: <its line>`.
+- **The floor** (`SPACE_FLOOR_GB`, the operator's numbers): no new model
+  stage and no model-free run below it on either disk, or when a disk
+  cannot be read. Below a floor it reclaims first. If it is still below, it
+  holds the stage: the label stays, the comment `<!-- fleet-space:` says
+  why, and `needs-hands` is added. That comment is read by no due rule, so
+  taking `needs-hands` off lets the held stage run. An Engineer held before
+  its model-free run keeps its run (`held.json`, `why: space`), and that
+  run goes again on the same commit.
+- **By hand:** `dispatcher.py reclaim` prints the line a handoff records.
+  It runs beside the service and writes no state.
+- **Only `main` sets the disks up.** A `Fleet` built without `disks`
+  reads none and trims nothing: that is every test's, and the default.
+
 **Commits** made for a rank carry `MotoDiag fleet (<rank>)`,
 `fleet@motodiag.invalid` until the account exists, and a `Co-Authored-By:`
 line naming the model.
@@ -348,4 +379,7 @@ identity), `tests/test_phase389_scout.py`, `test_phase389_captain.py`,
 kill_points.json`), `test_phase390_search.py` (#14's real history in
 `fixtures/resume/`), `test_phase390_kill.py` (a real process SIGKILLed and
 restarted), `test_phase390_resume_contract.py` (the kill-point list, the
-known-bad journals in `fixtures/resume/bad/`, the journal outside the fence).
+known-bad journals in `fixtures/resume/bad/`, the journal outside the fence),
+`test_phase390_space.py` (a planted low reading holds each kind of stage;
+the reclaim on the timer, at a merge and at a close-out; the service's
+wiring; the one sudoers line).

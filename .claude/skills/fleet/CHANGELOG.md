@@ -32,6 +32,15 @@ Closes F219. The prompt is `docs/prompts/390_resume.txt`; Step 0 is
   stage already wrote); a stop on an open marker only when no stage is due
   (#14's 15:50, where the operator's re-applied `review:open` made the Red
   Team due).
+- **Free space, phase to phase** (F221; scope added by the operator,
+  2026-10-25): `Fleet.reclaim` (fstrim through
+  `ops/desktop/install_fstrim_sudoers.sh`'s one line) on a timer, at each
+  merge and at each close-out, logged with the free space on C: and in
+  Ubuntu; `SPACE_FLOOR_GB`, below which no new model stage or model-free run
+  starts (reclaim first, then hold: label unchanged, a `fleet-space`
+  comment, `needs-hands`); an Engineer held before its model-free run keeps
+  its run for the same commit; `dispatcher.py reclaim`. Tests:
+  `tests/test_phase390_space.py`.
 
 ## 2026-10-25 — the ranks that write: Science Officer, Captain, Engineer, Red Team (Phase 389)
 

@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F220** (this file). The
+At the time of writing the highest assigned is **F221** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4013,3 +4013,61 @@ fleet's host, wait while a fleet model-free run is in progress (or
 refuse, naming it); and an Engineer stop whose only failure is the
 model-free run can be sent back to rerun that run on the same commit
 (Phase 390 builds the second half, at the operator's word).
+
+### F221
+
+**The fleet has no disk-space guard: its run folders keep every test run's temporary files, the Ubuntu disk image grew until Windows' C: was full, and Ubuntu went read-only**
+
+Found 2026-10-25 by the operator, during Phase 390's proofs. C: filled at
+19:02; Ubuntu's disk image (`ext4.vhdx`, 131 GB, the operator's figure)
+could not grow, and Ubuntu's disk went read-only until 19:55. The
+dispatcher crash-looped on `Errno 30` (read-only file system) and wrote
+nothing: `dispatcher.log` has no line from 18:20:04 to 19:55:27, and the
+previous boot's system journal ends at 19:02:02 (`journalctl
+--list-boots`). The operator freed 200 GB on C: and restarted Ubuntu;
+ext4 recovered ("85 orphan inodes deleted", "recovery complete", 19:55:25,
+`journalctl -b 0 -k`).
+
+Measured at 20:0x, after the recovery (`du -xs` per run folder): the
+fleet's state is 31 GB, 29.0 GB of it pytest's temporary folders in 21 run
+folders (`runs/*/run/tmp/pytest-of-lilcu`, where the fence puts `TMPDIR`).
+One model-free full run left 8.7 GB (`runs/20261025_140859_check`); a
+running Engineer stage held 11.6 GB (`runs/20261025_181926_engineer_390A`);
+the code in a run folder is under 0.1 GB. An Engineer stage runs the
+regression itself and the dispatcher runs it again, about 20 GB a stage,
+and `prune_runs` keeps 20 run folders. A disk image grows to its peak and
+does not give space back to Windows when files are deleted, so every
+stage's peak stays on C:.
+
+The guard alone does not close it (the operator, 2026-10-25, about
+21:15): Ubuntu uses 44 GB, but `ext4.vhdx` grew from 131 to 164 GB after
+19:55, and C:'s free space fell from 205 to 175 GB, about 25 GB an hour
+while the fleet runs regressions. Freed blocks are never returned to
+Windows. Measured at 21:20:
+- the image, at `C:\Users\lilcu\AppData\Local\wsl\{b384aa5c-…}\ext4.vhdx`,
+  is 163.9 GB and not sparse (the file's sparse attribute is off);
+- C: has 174.7 GB free, and `df /` in Ubuntu shows 44 GB used;
+- Ubuntu's root is mounted with `discard`, so a deleted file's blocks are
+  already passed down to the image as freed. A non-sparse image records
+  that and keeps its size;
+- WSL 3.0.3.0, on Windows 11 Pro 10.0.26300. Its help offers `wsl --manage
+  <distro> --set-sparse true`, and its own text calls sparse disks
+  "currently experimental";
+- `Optimize-VHD` (Hyper-V) is installed.
+A guard on free space would stop new stages, but the image would still
+not shrink.
+
+What it affects: a full C: stops the whole machine's Ubuntu, not only the
+fleet: the live database and the API run there (Phase 382). Nothing in
+the fleet looks at free space before a stage, and nothing removes a
+finished run's temporary files.
+
+To close: no new stage starts below a free-space floor on C: and in
+Ubuntu, with a comment on the issue and the label left where it is (the
+70% usage gates' shape); a finished run's `run/tmp` removed when its
+stage ends; and the disk image's size watched. The image's freed space is
+returned to Windows, either by compacting it (`Optimize-VHD`, with Ubuntu
+shut down) or by making it sparse. Sparse is experimental in this WSL
+release, and the live database is in this image, so choosing sparse is the
+operator's call. The floors are the operator's to set: a threshold,
+CLAUDE.md rule 1.
