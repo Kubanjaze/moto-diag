@@ -830,9 +830,12 @@ class TestRegression:
         in-process collection might mask.
         """
         test_file = Path(__file__).parent / "test_phase133_gate_5.py"
+        # 60 s until Phase 390 (bug fix #3, the operator's word): nested
+        # inside gate 12 and gate 7, in the fleet's fence, gate R ran past
+        # 60 s twice. A limit here only stops a hung run.
         result = subprocess.run(
             [sys.executable, "-m", "pytest", str(test_file), "-q", "-p", "no:xdist"],
-            capture_output=True, text=True, timeout=60,
+            capture_output=True, text=True, timeout=300,
         )
         assert result.returncode == 0, (
             f"Gate 5 failed after Track E:\n"
@@ -849,9 +852,10 @@ class TestRegression:
         retrofit substrate either.
         """
         test_file = Path(__file__).parent / "test_phase121_gate_r.py"
+        # 60 s until Phase 390 (bug fix #3): see the gate 5 re-run above.
         result = subprocess.run(
             [sys.executable, "-m", "pytest", str(test_file), "-q", "-p", "no:xdist"],
-            capture_output=True, text=True, timeout=60,
+            capture_output=True, text=True, timeout=300,
         )
         assert result.returncode == 0, (
             f"Gate R failed after Track E:\n"

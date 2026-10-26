@@ -665,3 +665,79 @@ while a fleet model-free run is going."
   Deviations. Results follow the regression.
 - F221 closed in `docs/FOLLOWUPS.md`, with what was not done (a finished
   run's `run/tmp` is not removed) said plainly.
+
+### 2026-10-26 00:0x — the regression, bare desktop, is not of record (F216); run again inside the fence
+
+- `wholetree.sh --full` at `e24020a`: PASSED, 4651 passed, 33 skipped (6 min
+  56 s); record `f41bf09c…_full.json` for `e24020a`.
+- `regression.sh` on the bare desktop: "Regression run FAILED (not of
+  record): 11483 passed, 4 failed, 33 skipped, 0 errors at `e24020a` (10
+  min 11 s wall, `python -m pytest -n auto --dist load`, exit 1)". The four
+  are F216's, by name:
+  - 204's ffmpeg test;
+  - 257's Subconscious profile test;
+  - 257's two `osacompile` tests.
+  The 33 skips are F216's too. Nothing in 390 touches them.
+- **Decided:** the regression of record runs as 389's did, under the
+  operator's 389 answer ("Sandbox counts (Recommended)"). That is the
+  dispatcher's own model-free run, `Fleet.check_run(…, full=True)`: a
+  fresh clone of `e24020a` in a new `runs/<stamp>_check`, then
+  `wholetree.sh --full && regression.sh` in the fence, `--net none`, no
+  token. Started at 00:0x with the fleet idle.
+- **The fenced run, first try** (`runs/20261026_000744_check`, 00:07 to
+  00:25): `wholetree.sh --full` FAILED, "2 failed, 4646 passed, 36 skipped
+  … in 1093.98s". The two are `test_phase240_gate12`'s runs of
+  `test_phase147_gate_6` and `test_phase159_gate_7`. The cause is
+  `test_phase147_gate_6::test_phase121_gate_r_still_passes`, its
+  subprocess past `timeout=60`: F220's chain, the same test.
+  - **Nothing else ran:** dispatcher.log has no line after midnight, and
+    this session ran nothing in that window.
+  - So F220's time-out needs no overlap. #14's run at 16:11 took 1039 s and
+    failed; #19's fenced run passed at 21:56. Inside the fence on this
+    machine, the nested gate's 60-second limit sits near the edge.
+  - **Decided:** run the fenced check once more. If it fails again, that is
+    a test I cannot make green, a stop for the operator (rule 1). F220
+    gains this measurement either way.
+- **The fenced run, second try** (`runs/20261026_002649_check`, 00:26 to
+  00:44, nothing else running): the same two failures, "2 failed, 4646
+  passed, 36 skipped … in 1080.64s". Both are gate R's subprocess "timed
+  out after 60 seconds".
+- **Measured:** `test_phase121_gate_r.py` alone takes 9.1 s bare and
+  19.9 s inside the fence (`--net none`, the venv's python). Inside
+  `wholetree --full`, three nested runs deep (gate 12 → gate 7 → gate 6 →
+  gate R) beside the parallel workers, it passes 60 s. The fixed limits
+  in the chain: `test_phase147_gate_6.py` l. 835 and 854 (60 s),
+  `test_phase159_gate_7.py` l. 543 (120 s) and 556 (60 s).
+- **Rule-1 stop: a test I cannot make green where the regression of
+  record must run.** Bare, F216's four fail. Fenced, gate R's 60 s limit
+  fails twice in a row. The ways forward change a test's limit or where
+  the record is made, so they are the operator's. Asked.
+- **The operator's answer** (00:5x): "Raise the old limits (Recommended)".
+  That is, raise the four fixed limits in the two old checks (60 s and
+  120 s) to 300 s as a logged fix in 390, then run the final run in the
+  fence again.
+
+**Bug fix #3 — 2026-10-26**
+- Issue: inside the fleet's fence, `wholetree.sh --full` fails twice in a
+  row on gate 12's runs of gates 6 and 7, with nothing else running. So
+  no regression of record can be made on the desktop (bare, F216 fails).
+- Root cause: gate 6 re-runs gate R and gate 5 with fixed 60 s
+  subprocess limits, and gate 7 re-runs gate 6 (120 s) and gate 5 (60 s).
+  Gate R alone takes 19.9 s in the fence (9.1 s bare). Three runs deep,
+  beside the parallel workers, it passes 60 s. These are F220's failures,
+  #14's at 16:11 included, which F220 put down to an overlap.
+- Fix: the four limits are 300 s, each with a comment (the operator's
+  word). A limit there only stops a hung run.
+- Files: `tests/test_phase147_gate_6.py`, `tests/test_phase159_gate_7.py`.
+- Verified: the fenced regression of record, below.
+- Commit: this one.
+- **Three bug fixes in one build: the shared cause.** #1 (388's fixture read
+  the desktop's real fleet identity) and #3 (the gates' fixed limits,
+  tuned on the Mac) are one family. Each is a test that assumed the host
+  it was written on: an absent file, or a machine's speed. 390 is the
+  first phase whose tests run on the desktop, inside the fence, as the
+  fleet's own check, so both surfaced here. #2 (the digest's "issue None")
+  is unrelated, a wording slip in 390's own code. Remedy for the family:
+  F216 already tracks the desktop's host-shaped tests. F220 now carries
+  this cause, and the fence's own speed, so that it is not mistaken for
+  an overlap again.

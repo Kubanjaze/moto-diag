@@ -4014,6 +4014,18 @@ refuse, naming it); and an Engineer stop whose only failure is the
 model-free run can be sent back to rerun that run on the same commit
 (Phase 390 builds the second half, at the operator's word).
 
+**2026-10-26, Phase 390: the overlap was not needed.** Two fenced runs of
+`wholetree.sh --full` at `e24020a`, with nothing else running
+(dispatcher.log silent, no session work), failed the same way, gate R
+"timed out after 60 seconds" (`runs/20261026_000744_check`,
+`runs/20261026_002649_check`). Gate R alone takes 19.9 s in the fence
+and 9.1 s bare. Three nested runs deep, beside the parallel workers, it
+passes 60 s. The fence's own speed is enough; an overlap only makes it
+likelier. Phase 390's bug fix #3 raised the four fixed limits in gates
+6 and 7 to 300 s, at the operator's word ("Raise the old limits"). The
+first half of "To close" (waiting for a fleet run in progress) still
+stands.
+
 ### F221 — CLOSED by Phase 390 (`6b1d7f7`)
 
 **The fleet has no disk-space guard: its run folders keep every test run's temporary files, the Ubuntu disk image grew until Windows' C: was full, and Ubuntu went read-only**
