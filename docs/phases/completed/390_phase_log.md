@@ -1,6 +1,6 @@
 # Phase 390 — phase log: the fleet resumes where it left off
 
-**Status:** In progress
+**Status:** Complete
 **Branch:** `phase-390-resume`
 **Prompt:** `docs/prompts/390_resume.txt`
 
@@ -463,7 +463,7 @@ while a fleet model-free run is going."
 - `COLLECTED_TEST_FLOOR` 11500 → 11520 (pre-approval (b)): 11520 collected
   against 11500 at `ea1f8d1`, +20 -0, all in `test_phase390_space.py`.
 
-### 2026-10-25 22:3x — the push guard blocked the push of 6b1d7f7; Bug fix #1
+### 2026-10-25 22:3x — the push guard blocked the push of 6b1d7f7
 
 - **Guard block (recorded, guard unchanged):** `git push origin
   phase-390-resume` was refused by `pre_push_guard.sh`. Fast mode failed on
@@ -474,7 +474,8 @@ while a fleet model-free run is going."
   `wholetree.sh` had passed before the commit. Re-run five times, they
   failed every time: deterministic.
 
-**Bug fix #1 — 2026-10-25**
+### Bug fix #1 — 2026-10-25 — 388's fixture read the desktop's real fleet identity
+
 - Issue: two 388 dispatcher tests fail on the home desktop from 22:25.
 - Root cause: 388's `world` fixture builds its `Fleet` without
   `identity_file`, so it reads the real default,
@@ -487,7 +488,8 @@ while a fleet model-free run is going."
 - Files: `tests/test_phase388_dispatcher.py`.
 - Verified: the 388, 389 and 390 fleet test files, `-n 8`: 346 passed
   (2 failed before the fix, 5 runs of 5).
-- Commit: (this one, separate from 6b1d7f7's).
+
+**Commit.** `3ad9dc3` (separate from 6b1d7f7's).
 - **The machine user now exists.** Pre-approval (a) ("planted missions push
   under the operator's login until the machine user exists") has ended
   its term. The remaining planted missions push under the machine user's
@@ -643,7 +645,8 @@ while a fleet model-free run is going."
   - the Captain's recommendation (#24);
   - the digest.
 
-**Bug fix #2 — 2026-10-25**
+### Bug fix #2 — 2026-10-25 — the digest's resume line said "(issue None)"
+
 - Issue: the resume line for the digest said "(issue None)".
 - Root cause: `recover()` formatted `(issue {n})` whatever `n` was, and
   the digest's journal has no issue.
@@ -654,7 +657,8 @@ while a fleet model-free run is going."
   line), `390_mutate.py` (U9).
 - Verified: the 388, 389 and 390 fleet files, 346 passed; `390_mutate.py
   U9` red.
-- Commit: this one.
+
+**Commit.** `f681617`.
 
 ### 2026-10-25 23:4x — close-out begins
 
@@ -717,7 +721,8 @@ while a fleet model-free run is going."
   120 s) to 300 s as a logged fix in 390, then run the final run in the
   fence again.
 
-**Bug fix #3 — 2026-10-26**
+### Bug fix #3 — 2026-10-26 — the old gates' fixed limits failed inside the fence
+
 - Issue: inside the fleet's fence, `wholetree.sh --full` fails twice in a
   row on gate 12's runs of gates 6 and 7, with nothing else running. So
   no regression of record can be made on the desktop (bare, F216 fails).
@@ -730,7 +735,8 @@ while a fleet model-free run is going."
   word). A limit there only stops a hung run.
 - Files: `tests/test_phase147_gate_6.py`, `tests/test_phase159_gate_7.py`.
 - Verified: the fenced regression of record, below.
-- Commit: this one.
+
+**Commit.** `8e70fc5`.
 - **Three bug fixes in one build: the shared cause.** #1 (388's fixture read
   the desktop's real fleet identity) and #3 (the gates' fixed limits,
   tuned on the Mac) are one family. Each is a test that assumed the host
@@ -741,3 +747,131 @@ while a fleet model-free run is going."
   F216 already tracks the desktop's host-shaped tests. F220 now carries
   this cause, and the fence's own speed, so that it is not mistaken for
   an overlap again.
+
+## 2026-10-26 — the regression of record, and the fleet's own reclaim
+
+- **Bug fix #3 committed and pushed** (`8e70fc5`). Then the final run in
+  the fence, as for 389 ("Sandbox counts"): `Fleet.check_run` on a fresh
+  clone of `8e70fc5` in `runs/20261026_072505_check`, `--net none`, no
+  token, with no fleet model-free run going.
+- **`wholetree.sh --full` inside the fence:** "PASSED — 4648 passed, 36
+  skipped, 32 warnings in 1113.07s (0:18:33)", record for commit
+  `8e70fc5152e3`. Gate 12's runs of gates 6 and 7, which failed twice at
+  60 s, pass at 300 s.
+- **The regression of record**, as printed, with its skip lines:
+
+Regression of record: 11415 passed, 0 failed, 105 skipped, 0 errors at `8e70fc5` (38 min 13 s wall, `python -m pytest -n auto --dist load`, exit 0) (run inside the fleet's fence)
+Skipped in the regression of record: [1] tests/test_phase191b_ffmpeg.py:249: real ffmpeg binary or fixture mp4 not available
+Skipped in the regression of record: [1] tests/test_phase191b_ffmpeg.py:264: real ffmpeg binary or fixture mp4 not available
+Skipped in the regression of record: [1] tests/test_phase191b_ffmpeg.py:269: real ffmpeg binary or fixture mp4 not available
+Skipped in the regression of record: [1] tests/test_phase191b_ffmpeg.py:277: real ffmpeg binary or fixture mp4 not available
+Skipped in the regression of record: [1] tests/test_phase191b_ffmpeg.py:283: real ffmpeg binary or fixture mp4 not available
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:104: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:121: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:137: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:145: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:153: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:162: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:175: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:185: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:218: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:223: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:248: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:259: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:272: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:292: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:306: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:321: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:333: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:340: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:438: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:445: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:464: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [4] tests/test_phase257_sandbox_boundary.py:72: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:80: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:87: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:93: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:106: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:112: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:119: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:125: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:131: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [7] tests/test_phase257_source_checks.py:211: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase257_source_checks.py:476: acquired/Yamaha/library_om_contents_pdf_10_5YR-F8199-15_02.pdf is not in this machine's library
+Skipped in the regression of record: [1] tests/test_phase257_source_checks.py:476: acquired/KTM/24_3214961_en_OM.pdf is not in this machine's library
+Skipped in the regression of record: [1] tests/test_phase257_source_checks.py:527: the KTM manual is not in this machine's library
+Skipped in the regression of record: [1] tests/test_phase204_gate10.py:47: inside the fleet's fence: no ffmpeg on the home desktop
+Skipped in the regression of record: [1] tests/test_phase257_manual_route_excerpts.py:147: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase257_manual_route_excerpts.py:352: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase257_manual_route_excerpts.py:358: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase257_manual_route_excerpts.py:364: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase257_manual_route_excerpts.py:367: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase257_orchestrator_guards.py:85: inside the fleet's fence: no Subconscious login there (K42)
+Skipped in the regression of record: [2] tests/test_phase257_orchestrator_guards.py:149: inside the fleet's fence: osacompile is macOS-only
+Skipped in the regression of record: [1] tests/test_phase244H_test_db_isolation.py:79: no production database on this machine
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:61: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [4] tests/test_phase388_fence_boundary.py:96: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [3] tests/test_phase388_fence_boundary.py:105: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [7] tests/test_phase388_fence_boundary.py:221: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:235: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:244: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:280: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:287: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:291: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:295: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:303: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:316: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:325: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:330: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:338: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:344: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:350: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:354: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:360: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:113: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:120: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:125: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:131: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:139: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:148: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:159: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:164: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:170: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:177: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:186: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:198: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:210: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:216: inside the fleet's fence: its boundary is proven from the host, not from inside
+
+- The 105 skips are those `EXPECTED_SKIPS` pins: inside the fence, 388's
+  boundary tests and 257's sandbox checks are proven from the host, and
+  the packaging, ffmpeg and live-database checks have nothing to run on.
+- **The fleet's own reclaim (the operator: "either reclaim once on start
+  or confirm the 01:46 timer line in dispatcher.log as the proof").**
+  Confirmed in `dispatcher.log`:
+
+  `2026-10-26T01:49:39-04:00 reclaim (the 3-hour timer): C: 250.5 -> 251.5 GB free; Ubuntu 987.2 -> 987.2 GB free; fstrim: /: 26.8 GiB (28761292800 bytes) trimmed`
+
+  It came 3 h 3 min after the 22:46 attempt (the timer counts from the
+  last reclaim, and the cycle runs once a minute). That earlier attempt
+  failed only because the sudoers line was not yet installed. The timer
+  has run since at 04:51:56 (1.2 GiB) and 07:54:47 (15.4 GiB), each
+  through the sudoers line, with no password.
+- **Guard block, 2026-10-26:** the edit guard blocked a `sed -i` on
+  `390_implementation.md` while I filled the Results table ("`sed -i` edits
+  a file in place, and is blocked wherever it points"). Done again as a
+  targeted replacement. The guard is unchanged.
+
+## 2026-10-26 — close-out
+
+No refute pass ran on 390 itself: its Red Team ran only on the planted
+missions (#21 to #23, PR #20), as the proof of its resume. 390 commits no
+content rows and cites no document for a claim.
+
+- `.claude/skills/closeout/closeout_check.py` first reported A4 (only
+  bug fix #1 sat under a heading, and with no `**Commit.**` line) and A8
+  (this paragraph was missing). The three entries now have 389's form.
+- The phase's files moved to `completed/` with `git mv`. The three
+  scripts' usage lines name the new folder.
+- The handoff is `docs/handoffs/2026-10-26_390_closed.md`, with the
+  reclaim line and #14's block for after the merge.

@@ -470,10 +470,16 @@ the dispatcher pushes as that account.
 - **F220 filed** (my test runs overlapped #14's model-free run, and it
   timed out). From then on, no test ran while a fleet model-free run was
   going, per the operator's rule.
-- **Two bug fixes:** 388's fixture read the real fleet identity, and the
-  digest's resume line said "(issue None)".
+- **Three bug fixes:** 388's fixture read the real fleet identity; the
+  digest's resume line said "(issue None)"; and the old gates' fixed
+  60/120 s limits failed inside the fence, raised to 300 s on the
+  operator's word ("Raise the old limits"). #1 and #3 share a cause: tests
+  that assumed the host they were written on (the log has the analysis).
+- **The regression of record was made inside the fleet's fence**, as for
+  389 (the operator's "Sandbox counts"): bare on the desktop, F216's four
+  Mac-only tests fail.
 - **Guard blocks, all recorded in the log:** two commit-and-push
-  commands, two `sed -i` and one `>>` into tests, and the push guard's
+  commands, three `sed -i` (one on this document) and one `>>` into tests, and the push guard's
   fast run catching bug fix #1's two tests. No guard was changed.
 - **Two misses in my own steps, recorded:**
   - a merge commit (`67735e2`) was made before its whole-tree run (it
@@ -486,5 +492,41 @@ the dispatcher pushes as that account.
 
 ## Results
 
-None at v1.0; v1.1 records the regression line, the mutation count and
-each proof.
+- **Regression of record**, inside the fence, on a fresh clone of
+  `8e70fc5` (`runs/20261026_072505_check`), after `wholetree.sh --full`
+  passed there (4648 passed, 36 skipped):
+
+  Regression of record: 11415 passed, 0 failed, 105 skipped, 0 errors at `8e70fc5` (38 min 13 s wall, `python -m pytest -n auto --dist load`, exit 0) (run inside the fleet's fence)
+
+  The 81 skip lines are in the phase log, each one pinned by
+  `EXPECTED_SKIPS`.
+- **Mutations: 50/50 red**, exit 0 (`390_mutate.out`): 33 for the resume,
+  16 for free space (F1 to F16) and U9 for bug fix #2.
+- **`COLLECTED_TEST_FLOOR` 11402 → 11520**, in two raises (pre-approval
+  (b)): +97 for the resume's four files, +20 for
+  `test_phase390_space.py`, and the rest from `master`'s merge.
+- **The proofs, each cut mid-stage by a restart and each reaching its next
+  label:**
+
+  | rank | issue | cut | reached |
+  |---|---|---|---|
+  | Science Officer | #16 | between its two model calls | `step0:done` |
+  | Captain, v1.0 | #17 | inside its model call | `plan:needs-review` |
+  | Executive Officer | #18 | inside its model call | its verdict, applied |
+  | Chief Engineer | #19 | its session, then its model-free run | PR #20, `review:open` |
+  | Red Team | #23 (#21 a miss, #22 the control) | inside its model call | `build:open`, round 1 |
+  | Captain, recommendation | #24 | inside its model call | `merge:needs-review` |
+  | the digest | none | inside its model call | written; `last_digest` back to 2026-10-24 |
+
+  The whole-Ubuntu restart (19:55, the operator's) resumed #19's Engineer
+  from its session, and that run reached `review:open` at 21:56. 388's two
+  PC restarts at 22:40 to 22:55 lost nothing: each start logged "nothing
+  to resume".
+- **The fleet's own reclaim**, from its 3-hour timer, through the sudoers
+  line: `2026-10-26T01:49:39-04:00 reclaim (the 3-hour timer): C: 250.5
+  -> 251.5 GB free; Ubuntu 987.2 -> 987.2 GB free; fstrim: /: 26.8 GiB
+  (28761292800 bytes) trimmed`. It has run again at 04:51 and 07:54.
+- **The operator's sparse block** (23:10): C: 196.6 → 225 GB free, the
+  vhdx sparse, "/: 923 GiB trimmed". Its last check's SOMETHING IS OFF
+  was the block's own miss (above).
+- **Findings:** F219 and F221 closed; F220 filed and updated.

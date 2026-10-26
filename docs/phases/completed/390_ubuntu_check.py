@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Phase 390: after a whole-Ubuntu restart, did the fleet pick up where it left off?
 
-    python3 ~/motodiag/fleet/code/docs/phases/in_progress/390_ubuntu_check.py
+    python3 ~/motodiag/fleet/code/docs/phases/completed/390_ubuntu_check.py
 
 Run by the operator's paste block, after `wsl --shutdown` and the boot
 task. Waits up to five minutes, then says in plain English: when Ubuntu

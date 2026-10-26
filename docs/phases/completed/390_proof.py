@@ -1,6 +1,6 @@
 """Phase 390's live proofs: restart the fleet's service in the middle of one stage.
 
-    python3 docs/phases/in_progress/390_proof.py STAGE ISSUE [--at model|check] [--close]
+    python3 docs/phases/completed/390_proof.py STAGE ISSUE [--at model|check] [--close]
 
 STAGE is the journal's stage name (scout, captain, xo, engineer, red_team,
 recommend, digest). The script, on the home desktop, beside the service:

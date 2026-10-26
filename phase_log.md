@@ -3862,3 +3862,8 @@ Write-up: [`388_implementation.md`](docs/phases/completed/388_implementation.md)
 
 Log: [`docs/phases/completed/389_phase_log.md`](docs/phases/completed/389_phase_log.md).
 Write-up: [`389_implementation.md`](docs/phases/completed/389_implementation.md).
+
+## Phase 390 — The fleet resumes where it left off — CLOSED 2026-10-26
+
+Log: [`docs/phases/completed/390_phase_log.md`](docs/phases/completed/390_phase_log.md).
+Write-up: [`390_implementation.md`](docs/phases/completed/390_implementation.md).
