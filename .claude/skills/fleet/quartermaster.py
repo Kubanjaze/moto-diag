@@ -287,8 +287,6 @@ def handoff(clone: pathlib.Path, phase: str, sibling: pathlib.Path | None = None
         why.append(f"no docs/handoffs/<date>_{phase}_closed.md")
     else:
         newest = found[-1]
-        if closed and newest.name[:10] < closed:
-            why.append(f"{newest.name} is dated before the close ({closed})")
         text = _text(newest)
         why += [f"{newest.name} has no '## {s}'" for s in ("What is open", "What is next")
                 if not re.search(rf"^## {s}\b", text, re.M)]

@@ -114,3 +114,29 @@ from the session's scratch folder; its paths are that folder's).
 - Tests: `test_phase391_quartermaster.py` 49, `test_phase391_dispatcher.py`
   15, `test_phase391_contract.py` 8; with 387–390's and the ledger's, 549
   passed. `wholetree.sh` exit 0 (2271 passed, 10 skipped).
+
+## 2026-10-26 — mutations
+
+`391_mutate.py`, 60 mutations at first, each one exact edit, the tests run
+after clearing `__pycache__`. **55/60 red; five survived**, each a defect
+in the tests or the code, not in the harness:
+- **Q4b** (a failed run passes): the test's failed run had no line, so the
+  counts check refused it anyway. Added a failed run whose counts match.
+- **Q5-3, Q5-5** (in_progress not read; A4 not read): each red section
+  also removed what the other half of the rule reads (no completed list;
+  no Deviations line), so the check refused for the wrong reason. Each
+  case now breaks one thing.
+- **Q8b** (an early handoff passes): Q8's own date rule repeated R6, which
+  Q8 runs on the branch. The duplicate is removed; the test now holds R6's
+  message inside Q8. The mutation goes with it.
+- **R8e** (a comment is a call): the skip was never reached, as no good
+  case had a `gh` after a separator inside a comment. The good fixture
+  gains one, so the skip is exercised.
+
+Two tests were added before the run, for gaps seen while writing it: a
+resumed stage reads `verify_phase.sh`'s output back from its journal
+(`Check.out`), and the digest stage carries the day's verdicts.
+`yeoman.shadow` now reads an unreadable `gh` answer as "unknown" (the
+stand-in's `pr view` answers with a body, not a state).
+
+Then **59/59 red** (`391_mutate.out`).

@@ -25,7 +25,7 @@ sys.path.insert(0, str(ROOT / "tests"))
 
 from test_phase388_dispatcher import claude_json  # noqa: E402
 from test_phase389_dispatcher import BRANCH  # noqa: E402
-from test_phase390_resume import (CLEAR, CUT, MERGE, SCOUT, N, D, J, World, advance, calls,  # noqa: E402,F401
+from test_phase390_resume import (CLEAR, CUT, DIGEST, MERGE, SCOUT, N, D, J, World, advance, calls,  # noqa: E402,F401
                                   comment, killed, labels, ledger, model, pr_comment, restart,
                                   said, to_pr, w)
 from test_phase390_space import Disk, s  # noqa: E402,F401
@@ -189,7 +189,49 @@ def test_quartermaster_cut_after_its_issue_marker(w):
     assert len(qm_comments(w)) == 1
 
 
+def test_a_resumed_stage_reads_verify_phases_output_back_from_its_journal(w, monkeypatch):
+    """The model call is cut after both model-free runs finished: the
+    resumed stage must hand the model the same verify_phase.sh output, read
+    from the journal, not an empty one (`Check.out`)."""
+    marker = "=== 2. no code after regression hash ===\n  none (docs only)\n"
+    plain = World.make
+
+    def make(self):
+        f = plain(self)
+        inner = f.check
+
+        def check(clone, commit, *, full, command=None):
+            c = inner(clone, commit, full=full, command=command)
+            if command and command[0].endswith("verify_phase.sh"):
+                c.out = marker
+            return c
+        f.check = check
+        return f
+    monkeypatch.setattr(World, "make", make)
+    w.make()
+    to_merge_review(w)
+    w.kill.at(model, cut=True)
+    killed(w)
+    runs = len(w.checks)
+    restart(w, REFUSE)
+    assert len(w.checks) == runs, "a finished model-free run was made again"
+    prompt = calls(w)[-1][calls(w)[-1].index("-p") + 1]
+    assert "V2 no code after the regression hash: pass" in prompt and marker.strip() in prompt
+
+
 # --------------------------------------------------------------- the digest
+def test_the_digest_stage_carries_the_days_verdicts(w):
+    w.host.issues.clear()
+    w.host.prs["b"] = {"number": 7, "url": "u", "body": "", "comments": []}
+    w.fleet.save({"last_digest": "2026-10-20"})
+    w.fleet.verdicts().write_text(json.dumps({
+        "at": "2026-10-21T12:00:00-04:00", "issue": 31, "pr": 7, "phase": "902",
+        "head": "abcdef1234", "verdict": "refuse", "failed": ["Q8"], "run": "r"}) + "\n")
+    advance(w, DIGEST)
+    page = (w.fleet.state_dir / "digests" / "2026-10-21.md").read_text()
+    assert "## The Quartermaster (shadow)" in page and "PR #7 (phase 902" in page
+
+
 def test_the_digest_sets_each_verdict_beside_the_operators():
     import yeoman
     states = {20: "CLOSED", 21: "MERGED", 22: "OPEN", 23: "MERGED"}

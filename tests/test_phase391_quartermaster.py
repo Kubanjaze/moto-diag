@@ -160,6 +160,7 @@ def test_q4(tree):
     assert Q.full_run(True, LINE, "", log).ok
     assert not Q.full_run(True, LINE.replace("11415", "11414"), "", log).ok
     assert not Q.full_run(False, None, "subprocess timed out", log).ok
+    assert not Q.full_run(False, LINE, "", log).ok, "a failed run whose counts match"
     assert not Q.full_run(True, LINE, "", "no line here").ok
     assert Q.regression_hash(tree, PHASE) == "8e70fc5"
 
@@ -181,8 +182,9 @@ def section(text: str, n: int, new: str) -> str:
 
 @pytest.mark.parametrize("n,new", [
     (2, "--- code after the regression hash ---\nsrc/motodiag/x.py"),
-    (3, "--- in_progress (empty) ---\n390A_phase_log.md"),
-    (5, "--- register contiguous from #1, each naming its commit ---\nA4 bug-fix numbering is not contiguous"),
+    (3, "390A_implementation.md\n--- in_progress (empty) ---\n390A_phase_log.md"),
+    (5, "311:## Deviations\n--- register contiguous from #1, each naming its commit ---\n"
+        "A4 bug-fix numbering is not contiguous"),
     (6, "131"),
     (10, "/usr/bin/python3: No module named pytest"),
     (10, "FAILED tests/test_x.py::t\n===== 1 failed, 3 passed in 2.00s ====="),
@@ -255,9 +257,10 @@ def test_q8_a_handoff_with_no_next(tree):
 
 
 def test_q8_a_handoff_dated_before_the_close(tree):
+    """Held by R6, which Q8 runs on the branch (no second date rule)."""
     git(tree, "mv", HANDOFF, HANDOFF.replace("2026-10-26", "2026-10-24"))
     git(tree, "commit", "-qm", "an early handoff")
-    assert failing(tree) == ["Q8"]
+    assert failing(tree) == ["Q8"] and "R6 phase 390 closed 2026-10-26" in Q.handoff(tree, PHASE).why
 
 
 # ------------------------------------------------------------ Q9 mergeable

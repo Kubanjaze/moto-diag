@@ -175,8 +175,11 @@ def shadow(verdicts: list[dict], run: Runner) -> list[str]:
     out = ["## The Quartermaster (shadow)", "", f"Verdicts in the window: {len(verdicts)}."]
     for v in verdicts:
         r = gh(["pr", "view", str(v["pr"]), "--json", "state"], run=run)
-        state = json.loads(r.stdout).get("state", "?").lower() if r.returncode == 0 else "unknown"
-        now = {"merged": "merged", "closed": "closed unmerged", "open": "open"}.get(state, state)
+        try:
+            state = str(json.loads(r.stdout).get("state")).lower() if r.returncode == 0 else ""
+        except (ValueError, AttributeError):
+            state = ""                                 # gh's answer unreadable: said so below
+        now = {"merged": "merged", "closed": "closed unmerged", "open": "open"}.get(state, "unknown")
         agree = ("not yet" if now == "open" else "unknown" if now not in ("merged", "closed unmerged")
                  else "yes" if (v["verdict"] == "merge") == (now == "merged") else "NO")
         named = ", ".join(v.get("failed") or []) or "none"
