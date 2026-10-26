@@ -34,6 +34,13 @@ The operator's words:
     - The next phase is a first-shop row, run through the fleet: staff logins with roles and the activity log (303 and 348), which need no outside account. That was the proposal's own step 6.
     - The proposal's last two steps, the Quartermaster in shadow and the end-to-end run, ride along inside those phases rather than taking phases of their own.
     - New fleet work waits, unless it blocks a first-shop phase.
+- **2026-10-26: shop work comes next, after 391.** The operator's decision is K43 in `docs/decisions.md`. Asked "Want me to write that rule into the plan of record, so the fleet and every builder sees it?", they answered "yes write it into the plan". The rule they approved:
+  1. **391 is the last fleet-only phase.** 391 is the Quartermaster, in shadow, already under way. It finishes.
+  2. **The trial is wrapped** when its builder asks: 389A, 385's row, issue #14.
+  3. **The next phase is first-shop work, run through the fleet:** staff logins with roles and the activity log (303 and 348). It is also the fleet's end-to-end run, the proposal's step 9, done on real work.
+  4. **No new fleet-only phase** unless it unblocks a first-shop phase, which its row names.
+  - **Where things stood:** 390 and 390A closed. None of the ten first-shop rows had started.
+  - **This confirms the 2026-10-25 recommendation with one change:** the Quartermaster took a phase of its own (391), which was already under way.
 
 ## Where the ledger stands
 
