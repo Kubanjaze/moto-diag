@@ -1,5 +1,47 @@
 # fleet — changelog
 
+## 2026-10-25 — a stage a restart cuts off is resumed (Phase 390)
+
+Closes F219. The prompt is `docs/prompts/390_resume.txt`; Step 0 is
+`390_step0.md`, every kill point and what it left.
+
+- **`journal.py`** (new): `runs/<run>/stage.json`, outside the fence,
+  written before the clone and after each step.
+- **`dispatcher.py`**: every stage on steps that check GitHub before each
+  write when resumed; the runner's replay (calls, the Engineer's session,
+  model-free runs); `recover()` before the first cycle, and
+  `recover --dry-run`; a `fleet-started` marker for every rank; ` run=` on
+  every marker; `paused` kept until its stage ends; `prune_runs` keeps
+  unfinished runs and unreadable journals. The runner's `resume=` argument
+  is gone: the session comes from the journal.
+- **A held run and the recheck** (the operator, 2026-10-25, after F220): an
+  Engineer stop whose only failure is the model-free run holds its run
+  (`journal.hold`, `held.json`); taking `needs-admiral` off runs it again on
+  the same commit (`stage_recheck`) and goes on to the push and the Red
+  Team. `prune_runs` keeps held runs.
+- **`rank_call.py`**: a replayed call is not recorded in the ledger again.
+- **`engineer.py`**: `CONTINUE`, the resumed session's prompt, for a
+  restart as well as a usage limit.
+- **Fixtures**: `fixtures/resume/kill_points.json` (hand-written, Step 0's
+  kill points, each naming its test), `fixtures/resume/bad/` (a truncated
+  journal), `fixtures/resume/issue14_*_1633` (#14's comments and label
+  events, read from GitHub).
+- **Decided**: the `started` marker has its own prefix (with the
+  dispatcher's, the XO's due rule read it as the Captain's comment); a
+  call's journal key leaves the prompt out (a prompt can read what its
+  stage already wrote); a stop on an open marker only when no stage is due
+  (#14's 15:50, where the operator's re-applied `review:open` made the Red
+  Team due).
+- **Free space, phase to phase** (F221; scope added by the operator,
+  2026-10-25): `Fleet.reclaim` (fstrim through
+  `ops/desktop/install_fstrim_sudoers.sh`'s one line) on a timer, at each
+  merge and at each close-out, logged with the free space on C: and in
+  Ubuntu; `SPACE_FLOOR_GB`, below which no new model stage or model-free run
+  starts (reclaim first, then hold: label unchanged, a `fleet-space`
+  comment, `needs-hands`); an Engineer held before its model-free run keeps
+  its run for the same commit; `dispatcher.py reclaim`. Tests:
+  `tests/test_phase390_space.py`.
+
 ## 2026-10-25 — the ranks that write: Science Officer, Captain, Engineer, Red Team (Phase 389)
 
 Steps 6 and 7 of `docs/reports/2026-10-22_fleet_proposal.md`. The prompt is

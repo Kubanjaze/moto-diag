@@ -184,9 +184,11 @@ def world(tmp_path, origin):
     fence = tmp_path / "fence.sh"
     host = Host(clock, fence)
     lines: list[str] = []
+    # No fleet account, planted: the default is the desktop's real file, which
+    # the operator created on 2026-10-25 at 22:25 (Phase 390, bug fix #1).
     fleet = D.Fleet(state=tmp_path / "state", token=TOKEN, host=host, fence=fence,
                     workspace_docs=tmp_path / "wsd", repo_url=str(origin), now=clock,
-                    out=lines.append)
+                    out=lines.append, identity_file=tmp_path / "no-identity.env")
     fleet.save({"last_digest": "2026-10-21"})      # T0's digest is done: cycles at T0 run none
     return fleet, host, clock, lines
 
@@ -284,7 +286,10 @@ class TestTheOpusCeiling:
         fleet, host, _, _ = world
         host.usage_text = USAGE_CEILING
         host.replies = [claude_json({}, model=rank_call.OPUS)]
-        D.FencedRunner(fleet, tmp_path, tmp_path / "run", resume="s-9")(
+        # Phase 390: the session comes from the stage's journal, not an argument.
+        j = D.journal.Journal.create(tmp_path, {"stage": "xo", "session": "s-9"}, T0)
+        j.resumed = True
+        D.FencedRunner(fleet, tmp_path, tmp_path / "run", journal=j)(
             ["claude", "-p", "x", "--model", rank_call.OPUS])
         assert host.model_calls()[0][:3] == ["claude", "--resume", "s-9"]
 

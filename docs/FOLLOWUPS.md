@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F219** (this file). The
+At the time of writing the highest assigned is **F221** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3929,7 +3929,7 @@ live that morning: session 1%, week 15%, Fable 21%.
 `tests/test_phase388_dispatcher.py::TestTheOpusCeiling::test_the_usage_is_read_outside_the_fence_on_the_operators_sign_in`
 holds it.
 
-### F219
+### F219 — CLOSED by Phase 390 (`84a9bd4`)
 
 **A stage killed by a restart is lost, and its issue stalls with no stage due**
 
@@ -3958,3 +3958,153 @@ before it starts (the same record a pause writes), clears it when the
 stage ends, and on start, a record still there is resumed: the same run
 directory, `--resume` for a session that was cut, the model-free run
 rerun. A test kills a stage half way and restarts the dispatcher.
+
+Closed by Phase 390 (`84a9bd4`, `.claude/skills/fleet/journal.py` and
+`dispatcher.py`), as asked, with the record in the run directory rather
+than `state.json`: each stage's journal (`runs/<run>/stage.json`, outside
+the fence) is written before the stage starts and after each step, and
+ended when it ends. On every start, before the first cycle, `recover()`
+resumes each unfinished one from the same run directory: finished model
+calls and model-free runs replayed, the cut call with `--resume` and the
+session its transcript names (measured in the fence, `390_phase_log.md`
+S0-5), the model-free run again on the same commit, each GitHub write
+checked for first. A `started` marker left open with no stage due gets a
+stop comment. The tests: `tests/test_phase390_resume.py` (every kill
+point in `390_step0.md`), `tests/test_phase390_kill.py` (a process
+SIGKILLed half way, then restarted), `tests/test_phase390_search.py`
+(#14's real history at 15:34 and 15:50). The live proofs are in
+`390_phase_log.md`.
+
+### F220
+
+**A test run in the operator's checkout, beside a fleet model-free run on the same machine, can fail that run on a load timeout, and the fleet takes it for the work's failure**
+
+Found 2026-10-25 by the operator, watching the fleet during Phase 390.
+#14's Engineer, fix round 2, handed `e15b462` (its clone in
+`runs/20261025_160200_engineer_389A`) to the dispatcher's model-free run,
+from 16:11:37 to 16:29:02 (`dispatcher.log`). In that window the Phase 390
+session, in `~/Projects/moto-diag` on the same desktop, ran
+`wholetree.sh` (ended 16:17:49, 88.5 s wall, where that session's runs
+before and after took 55–57 s) and pytest on the fleet's tests (about
+16:27). The model-free run's `wholetree.sh --full` failed on one test:
+`1 failed, 4529 passed, 36 skipped … in 1039.46s`
+(`runs/20261025_161137_check/clone/.git/motodiag_wholetree/last_full.log`,
+l. 117). The failure is a chain of nested runs, each under the one
+above: `test_phase240_gate12` runs `test_phase159_gate_7`, which runs
+`test_phase147_gate_6`, whose `test_phase121_gate_r_still_passes` gives
+its subprocess 60 seconds: "timed out after 60 seconds" (l. 95).
+Nothing in the work failed.
+
+What it affects: the dispatcher read the failed run as the work's
+("the work says it is ready, and the checks say it is not … the
+model-free run produced no regression of record") and put #14 on
+`needs-admiral` at 16:29. Every fleet model-free run (the Engineer's, an
+hour; the push gate's fast run; the Red Team's F9 run) shares the machine
+with whatever else runs there, and a nested gate's fixed 60-second limit
+is the first thing to go under load. A stop for the operator costs a
+round trip, and a fix round's own regression is spent.
+
+The operator's rule, 2026-10-25, from now on: "before any whole-tree or
+regression run, check dispatcher.log for a fleet model-free run in
+progress and wait for it to end." Held by hand, not by a check.
+
+To close: the whole-tree command and the regression of record, on the
+fleet's host, wait while a fleet model-free run is in progress (or
+refuse, naming it); and an Engineer stop whose only failure is the
+model-free run can be sent back to rerun that run on the same commit
+(Phase 390 builds the second half, at the operator's word).
+
+**2026-10-26, Phase 390: the overlap was not needed.** Two fenced runs of
+`wholetree.sh --full` at `e24020a`, with nothing else running
+(dispatcher.log silent, no session work), failed the same way, gate R
+"timed out after 60 seconds" (`runs/20261026_000744_check`,
+`runs/20261026_002649_check`). Gate R alone takes 19.9 s in the fence
+and 9.1 s bare. Three nested runs deep, beside the parallel workers, it
+passes 60 s. The fence's own speed is enough; an overlap only makes it
+likelier. Phase 390's bug fix #3 raised the four fixed limits in gates
+6 and 7 to 300 s, at the operator's word ("Raise the old limits"). The
+first half of "To close" (waiting for a fleet run in progress) still
+stands.
+
+### F221 — CLOSED by Phase 390 (`6b1d7f7`)
+
+**The fleet has no disk-space guard: its run folders keep every test run's temporary files, the Ubuntu disk image grew until Windows' C: was full, and Ubuntu went read-only**
+
+Found 2026-10-25 by the operator, during Phase 390's proofs. C: filled at
+19:02; Ubuntu's disk image (`ext4.vhdx`, 131 GB, the operator's figure)
+could not grow, and Ubuntu's disk went read-only until 19:55. The
+dispatcher crash-looped on `Errno 30` (read-only file system) and wrote
+nothing: `dispatcher.log` has no line from 18:20:04 to 19:55:27, and the
+previous boot's system journal ends at 19:02:02 (`journalctl
+--list-boots`). The operator freed 200 GB on C: and restarted Ubuntu;
+ext4 recovered ("85 orphan inodes deleted", "recovery complete", 19:55:25,
+`journalctl -b 0 -k`).
+
+Measured at 20:0x, after the recovery (`du -xs` per run folder): the
+fleet's state is 31 GB, 29.0 GB of it pytest's temporary folders in 21 run
+folders (`runs/*/run/tmp/pytest-of-lilcu`, where the fence puts `TMPDIR`).
+One model-free full run left 8.7 GB (`runs/20261025_140859_check`); a
+running Engineer stage held 11.6 GB (`runs/20261025_181926_engineer_390A`);
+the code in a run folder is under 0.1 GB. An Engineer stage runs the
+regression itself and the dispatcher runs it again, about 20 GB a stage,
+and `prune_runs` keeps 20 run folders. A disk image grows to its peak and
+does not give space back to Windows when files are deleted, so every
+stage's peak stays on C:.
+
+The guard alone does not close it (the operator, 2026-10-25, about
+21:15): Ubuntu uses 44 GB, but `ext4.vhdx` grew from 131 to 164 GB after
+19:55, and C:'s free space fell from 205 to 175 GB, about 25 GB an hour
+while the fleet runs regressions. Freed blocks are never returned to
+Windows. Measured at 21:20:
+- the image, at `C:\Users\lilcu\AppData\Local\wsl\{b384aa5c-…}\ext4.vhdx`,
+  is 163.9 GB and not sparse (the file's sparse attribute is off);
+- C: has 174.7 GB free, and `df /` in Ubuntu shows 44 GB used;
+- Ubuntu's root is mounted with `discard`, so a deleted file's blocks are
+  already passed down to the image as freed. A non-sparse image records
+  that and keeps its size;
+- WSL 3.0.3.0, on Windows 11 Pro 10.0.26300. Its help offers `wsl --manage
+  <distro> --set-sparse true`, and its own text calls sparse disks
+  "currently experimental";
+- `Optimize-VHD` (Hyper-V) is installed.
+A guard on free space would stop new stages, but the image would still
+not shrink.
+
+What it affects: a full C: stops the whole machine's Ubuntu, not only the
+fleet: the live database and the API run there (Phase 382). Nothing in
+the fleet looks at free space before a stage, and nothing removes a
+finished run's temporary files.
+
+To close: no new stage starts below a free-space floor on C: and in
+Ubuntu, with a comment on the issue and the label left where it is (the
+70% usage gates' shape); a finished run's `run/tmp` removed when its
+stage ends; and the disk image's size watched. The image's freed space is
+returned to Windows, either by compacting it (`Optimize-VHD`, with Ubuntu
+shut down) or by making it sparse. Sparse is experimental in this WSL
+release, and the live database is in this image, so choosing sparse is the
+operator's call. The floors are the operator's to set: a threshold,
+CLAUDE.md rule 1.
+
+Closed by Phase 390 (`6b1d7f7`, `.claude/skills/fleet/dispatcher.py`),
+in the method, as the operator decided: "it's just something that needs
+to be done frequently to free up the claimed space, now it just needs to
+be written into the method itself. as a part of the overall process phase
+to phase".
+- **The image is sparse** (the operator's paste block, 23:10: 28.4 GB back
+  on C:, "/: 923 GiB trimmed").
+- **The fleet reclaims** (`fstrim -v /`, its one sudoers line,
+  `ops/desktop/install_fstrim_sudoers.sh`) on a 3-hour timer, at each
+  merge and at each close-out, and logs the free space on C: and in Ubuntu
+  before and after.
+- **No new model stage or model-free run starts below 50 GB** on either
+  disk (the operator's numbers). Below it the fleet reclaims first; if
+  still below, the stage is held: label unchanged, a comment, and
+  `needs-hands`.
+- **The handoff carries the reclaim line** (closeout skill, step 9).
+- Tests: `tests/test_phase390_space.py`.
+
+**Not done**, and not in the operator's scope: a finished run's `run/tmp`
+is not removed when its stage ends. With the image sparse and Ubuntu's
+root mounted with `discard`, deleting a run (`prune_runs`, 20 kept)
+returns its space to Windows, and the floor stops new work before C:
+runs low. If the kept runs alone come near the floor, removing `run/tmp`
+at a stage's end is the next step.

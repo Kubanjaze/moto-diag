@@ -1,0 +1,52 @@
+J1 the journal not written before the clone: red
+J2 a paused stage's journal ended: red
+J3 a call known by its prompt: red
+J4 the clone made again on a resume: red
+J5 a resumed stage's date taken from today: red
+R1 a finished call made again: red
+R2 the cut call not resumed: red
+R3 a replayed call put in the ledger again: red
+R4 the cut session resumed without CONTINUE: red
+R5 a session that had ended run again: red
+R6 a finished model-free run run again: red
+S1 a resumed step does not ask GitHub first: red
+S2 markers without their run: red
+S3 the started marker under the dispatcher's prefix: red
+S4 the Engineer's PR mode decided again on a resume: red
+S5 the XO reviews again after its verdict: red
+P1 the pause dropped when its stage ends again paused: red
+P2 prune removes an unfinished run: red
+P3 prune removes an unreadable journal's run: red
+P4 prune removes a held run: red
+U1 no search before the first cycle: red
+U2 the paused run resumed before its reset: red
+U3 a journal resumed on an issue the operator holds: red
+U4 a journal resumed after another stage ran: red
+U5 a stop said when a stage is due: red
+U6 an open marker never said: red
+U7 the dry run writes: red
+U8 a failed resume not said: red
+U9 the digest's resume line names `issue None` (bug fix #2): red
+H1 a model-free-only failure not held: red
+H2 the recheck never due: red
+H3 the hold kept after the recheck: red
+H4 the recheck due while the operator's stop is not the last word: red
+K1 a real process's cut call not resumed: red
+F1 the floor never read: red
+F2 no reclaim before a hold: red
+F3 a model-free run not gated: red
+F4 a new stage not gated: red
+F5 needs-hands not added: red
+F6 a space hold never due again: red
+F7 a space hold due after it was answered: red
+F8 no timer: red
+F9 a merge not seen: red
+F10 no close-out reclaim: red
+F11 the service not given the disks: red
+F12 a disk that cannot be read passes: red
+F13 the CLI writes the service's state: red
+F14 a low-space stop said as a plain stop: red
+F15 an Engineer held for space not kept for the same commit: red
+F16 a recheck held again releases its run: red
+50/50 red
+exit 0

@@ -1,5 +1,15 @@
 # closeout — changelog
 
+## 2026-10-25 — the handoff carries the reclaim line (Phase 390, F221)
+
+The operator, 2026-10-25: "now it just needs to be written into the method
+itself. as a part of the overall process phase to phase". Step 9 (the
+handoff) now carries the free space on C: and in Ubuntu before and after
+the reclaim. For a hand close-out, that line is what `dispatcher.py reclaim`
+prints. For a fleet build, it is the line the dispatcher puts in the PR.
+Held by `tests/test_phase390_space.py`, which reads step 9. It is text
+only: no close-out check reads the handoff for it.
+
 ## 2026-10-19 — only a passing run is of record (Phase 383, F206)
 
 The operator: "1C: pin each expected skip by its test file and its reason,

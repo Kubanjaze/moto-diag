@@ -1,6 +1,6 @@
 ---
 name: fleet
-description: The fleet's ranks — the Executive Officer's plan checklist and verdict (plan_check.py, xo.py), the Yeoman's decisions file and daily digest (yeoman.py), the GitHub labels that carry a phase's state (labels.py), and since Phase 389 the ranks that write — the Science Officer's Step 0 (scout.py), the Captain's v1.0 and merge recommendation (captain.py), the Chief Engineer's build to a PR (engineer.py), the Red Team's refute (red_team.py) — with the push gate and identity they push through (fleet_git.py); on the home desktop, the bubblewrap fence every model call runs in (fence.sh) and the dispatcher that polls the labels (dispatcher.py, its systemd unit). Use when reviewing a phase's v1.0, recording an operator decision as a K-id, writing the digest, checking the labels, opening a mission for the fleet, or running, checking or changing the fence, the push gate, a rank or the dispatcher.
+description: The fleet's ranks — the Executive Officer's plan checklist and verdict (plan_check.py, xo.py), the Yeoman's decisions file and daily digest (yeoman.py), the GitHub labels that carry a phase's state (labels.py), and since Phase 389 the ranks that write — the Science Officer's Step 0 (scout.py), the Captain's v1.0 and merge recommendation (captain.py), the Chief Engineer's build to a PR (engineer.py), the Red Team's refute (red_team.py) — with the push gate and identity they push through (fleet_git.py); on the home desktop, the bubblewrap fence every model call runs in (fence.sh) and the dispatcher that polls the labels (dispatcher.py, its systemd unit), with since Phase 390 each stage's journal (journal.py) and the search on start that resumes a stage a restart cut off. Use when reviewing a phase's v1.0, recording an operator decision as a K-id, writing the digest, checking the labels, opening a mission for the fleet, running, checking or changing the fence, the push gate, a rank or the dispatcher, or restarting the fleet's service and checking what it resumed.
 ---
 
 # fleet — the ranks, the fence and the dispatcher
@@ -172,6 +172,7 @@ skips a fenced run may carry is the operator's call (F206).
 .claude/skills/fleet/dispatcher.py run [--interval 300]   # the unit's command
 .claude/skills/fleet/dispatcher.py once                   # one cycle
 .claude/skills/fleet/dispatcher.py usage                  # the parsed /usage lines
+.claude/skills/fleet/dispatcher.py recover --dry-run      # what a start would resume (390)
 ```
 
 Not the 384 door's dispatcher. One process (an exclusive `flock` on
@@ -274,6 +275,89 @@ fixture; every live failure's real artefact kept as a fixture too; and
 where a check and a brief could disagree, the brief states the check's
 rule in its own words.
 
+## A stage a restart cuts off — `journal.py` (Phase 390, F219)
+
+A restart, a power cut or a crash kills every process in the unit at once,
+and nothing runs at the moment of death. So each stage keeps a **journal**,
+`runs/<run>/stage.json`, beside `clone/` and `run/`: outside the fence's
+`/fleet/run`, so no model can write it. It is written before the clone and
+after each step: the stage and its arguments (the pause record's shape),
+each model call (its session once known, its output once it ended), each
+model-free run's verdict, each commit, push and GitHub write; and `ended`
+when the stage is over. A paused stage stays open.
+
+**On every start, before the first cycle** (`run` and `once`), `recover()`:
+- names any run whose journal cannot be read, and keeps it;
+- leaves the paused run to its reset;
+- **resumes** each unfinished journal from its run directory, unless its
+  issue is closed, held by the operator, no longer 🚧, or worked on by
+  another stage since (then it is ended, with a comment, label unchanged).
+  Resumed, the rank's script runs again from the top and the runner
+  **replays** it: a finished call returns its saved output (and is not put
+  in the cost ledger twice); the cut call goes on with `--resume` and the
+  session its transcript names (`run/claude/projects/*/<id>.jsonl`: a killed
+  `claude` prints nothing, and `--resume` keeps the id, measured in the
+  fence); a call cut before its first answer runs fresh in the same run. A
+  call is known by its model, tools and schema, not its prompt: a prompt
+  can read what the stage itself already wrote. A finished model-free run
+  is read back; an unfinished one runs again on the same commit. Every
+  commit, push and GitHub write is a step, and a resumed step asks GitHub
+  first (is the branch at this commit, is this marker there, is the label
+  on);
+- then, on each issue the cycle would work, a **`started` marker** that is
+  the issue's last rank comment, with no unfinished journal behind it and
+  **no stage due** (F219's stall), gets a stop comment saying which label
+  to apply again. When a stage is due (the operator re-applied a label),
+  nothing is said: the cycle runs it.
+
+**A model-free run lost to load (F220).** When the Engineer's work fails
+only its model-free run (with the Engineer's own regression line in its
+place, every other check passes), the run folder is **held** (`held.json`:
+issue, phase, round, commit) and the stop says so. The operator taking
+`needs-admiral` off then runs it again on the held commit (`stage_recheck`,
+journaled like any stage), and goes on as a `pr-ready` does: the push, the
+PR, `review:open`, the Red Team. `prune_runs` never removes a held run.
+Other stops are not held: taking the label off them changes nothing, as
+before.
+
+One log line per stage. Every rank posts `<!-- fleet-started: rank=<rank>
+run=<run> -->` first (its own prefix: no due rule reads it), and every marker
+a stage writes ends ` run=<run>`. `paused` stays in `state.json` until its
+resumed stage ends. `prune_runs` keeps every unfinished run.
+`recover --dry-run` says what a start would do and writes nothing (no lock,
+no mirror update): run it beside the live service before new code goes live.
+
+## Free space, phase to phase (Phase 390, F221)
+
+The operator, 2026-10-25: "it's just something that needs to be done
+frequently to free up the claimed space, now it just needs to be written
+into the method itself. as a part of the overall process phase to phase".
+
+- **The one-time switch is the operator's:** the disk image is made sparse
+  (`wsl --manage Ubuntu-26.04 --set-sparse true`), and
+  `ops/desktop/install_fstrim_sudoers.sh` gives lilcu one command with no
+  password, `fstrim -v /`. A model cannot use it: bubblewrap sets
+  `no_new_privs`, so sudo fails inside the fence.
+- **The dispatcher reclaims** (`Fleet.reclaim`):
+  - on a timer, every `RECLAIM_HOURS`;
+  - at each merge, when a row that was 🚧 on master is ✅;
+  - at each close-out, after the Engineer's model-free run passes. Its line
+    goes in the PR, for the handoff.
+  Each reclaim logs `reclaim (<why>): C: a -> b GB free; Ubuntu c -> d GB
+  free; fstrim: <its line>`.
+- **The floor** (`SPACE_FLOOR_GB`, the operator's numbers): no new model
+  stage and no model-free run below it on either disk, or when a disk
+  cannot be read. Below a floor it reclaims first. If it is still below, it
+  holds the stage: the label stays, the comment `<!-- fleet-space:` says
+  why, and `needs-hands` is added. That comment is read by no due rule, so
+  taking `needs-hands` off lets the held stage run. An Engineer held before
+  its model-free run keeps its run (`held.json`, `why: space`), and that
+  run goes again on the same commit.
+- **By hand:** `dispatcher.py reclaim` prints the line a handoff records.
+  It runs beside the service and writes no state.
+- **Only `main` sets the disks up.** A `Fleet` built without `disks`
+  reads none and trims nothing: that is every test's, and the default.
+
 **Commits** made for a rank carry `MotoDiag fleet (<rank>)`,
 `fleet@motodiag.invalid` until the account exists, and a `Co-Authored-By:`
 line naming the model.
@@ -290,4 +374,12 @@ controls), `tests/test_phase388_dispatcher.py`,
 known-bad push in `fixtures/push_gate/cases.json` on its own G-id, the
 identity), `tests/test_phase389_scout.py`, `test_phase389_captain.py`,
 `test_phase389_engineer.py`, `test_phase389_red_team.py`,
-`test_phase389_dispatcher.py` (the label table end to end on stand-ins).
+`test_phase389_dispatcher.py` (the label table end to end on stand-ins);
+`tests/test_phase390_resume.py` (every kill point in `fixtures/resume/
+kill_points.json`), `test_phase390_search.py` (#14's real history in
+`fixtures/resume/`), `test_phase390_kill.py` (a real process SIGKILLed and
+restarted), `test_phase390_resume_contract.py` (the kill-point list, the
+known-bad journals in `fixtures/resume/bad/`, the journal outside the fence),
+`test_phase390_space.py` (a planted low reading holds each kind of stage;
+the reclaim on the timer, at a merge and at a close-out; the service's
+wiring; the one sudoers line).
