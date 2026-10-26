@@ -395,8 +395,14 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: nothing to resume (test_phase390_search.py). Measured: 11500.
 #: Then +20 against ea1f8d1 (+20 -0), all in test_phase390_space.py: free
 #: space phase to phase (F221, scope the operator added). Measured: 11520.
+#: Phase 391 (the Quartermaster), by a diff of collected ids against master
+#: at 133dc26 (11527: R8's 7 in test_roadmap_continuity.py, F222, landed
+#: before 391 with no floor change): +78 -0: test_phase391_quartermaster.py
+#: (49), test_phase391_dispatcher.py (17), test_phase391_contract.py (8),
+#: test_phase390_resume_contract.py (4, the Quartermaster's kill points).
+#: Measured: 11605.
 #:
-COLLECTED_TEST_FLOOR = 11520
+COLLECTED_TEST_FLOOR = 11605
 
 
 def _collected_count() -> int:
