@@ -1,5 +1,30 @@
 # closeout — changelog
 
+## 2026-10-26 — R8: a paste block's `gh` names its repository (F222)
+
+The operator, in Phase 391's prompt: "Every gh call in an operator paste
+block must carry -R Kubanjaze/moto-diag or cd into the repo first. Make
+that a check (a close-out or fixture rule over handoffs' paste blocks), fix
+390's handoff block in place, and file it as a finding."
+- **`roadmap_check.py` R8**: in every `.md` under `docs/handoffs/` and
+  `docs/phases/`, a fenced block that prints ALL GOOD (rule 6's paste
+  block) may call `gh issue`, `pr`, `label`, `release`, `run`, `workflow`,
+  `secret`, `variable`, `cache`, `ruleset`, `browse` or `repo` only with
+  `-R`/`--repo`, after `export GH_REPO=…` or `GH_REPO=… gh`, or after a
+  `cd` into a path naming `moto-diag`. `gh api` needs one only when its
+  path has `{owner}` or `{repo}`. Comment lines are not calls.
+- It runs where R1–R7 run: with every suite
+  (`tests/test_roadmap_continuity.py`) and on every push (the push guard).
+- **Measured before it was written**: 45 handoffs hold one paste block
+  that calls `gh`, 390's; the phase documents hold one more, 389's
+  operator steps, whose `gh api` paths name the repository. R8 fires on
+  the first as first written (`edd286c`) and not on the second, its
+  exclusion's control. Four planted cases in `fixtures/roadmap_bad` and
+  twelve controls in `fixtures/roadmap_good`.
+- 390's handoff block is corrected in place, with a dated note under it.
+
+Not a phase: the operator's request before Phase 391's Step 0.
+
 ## 2026-10-25 — the handoff carries the reclaim line (Phase 390, F221)
 
 The operator, 2026-10-25: "now it just needs to be written into the method

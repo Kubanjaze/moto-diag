@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F221** (this file). The
+At the time of writing the highest assigned is **F222** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4108,3 +4108,31 @@ root mounted with `discard`, deleting a run (`prune_runs`, 20 kept)
 returns its space to Windows, and the floor stops new work before C:
 runs low. If the kept runs alone come near the floor, removing `run/tmp`
 at a stage's end is the next step.
+
+### F222 — CLOSED by `roadmap_check.py` R8 (the operator's request before Phase 391)
+
+**An operator paste block called `gh` with no repository, so it failed in a fresh terminal**
+
+Found 2026-10-26 by the operator. Phase 390's handoff ("After the merge:
+#14 picks up again") ran `gh issue edit 14 --remove-label needs-admiral`.
+Its other commands name their directory (`git -C "$CODE"`), but `gh`
+takes its repository from the working directory, and a fresh Ubuntu
+window is not inside a clone. Pasted there, the block had already
+restarted the fleet when it stopped: "fatal: not a git repository ...
+could not take the hold off issue 14". #14's hold was then taken off by
+hand, and the model-free run started at 13:05:48 (`dispatcher.log`).
+
+Measured: of 45 handoffs, one paste block calls `gh` (390's); in
+`docs/phases/`, one more (389's operator steps), whose `gh api` paths name
+the repository and so need none. No check read a paste block's commands.
+
+Closed by:
+- **`.claude/skills/closeout/roadmap_check.py` R8**: every `gh` call in an
+  operator paste block (a fenced block printing ALL GOOD) under
+  `docs/handoffs/` or `docs/phases/` carries `-R`/`--repo`, follows
+  `GH_REPO` or a `cd` into the repository, or is a `gh api` call whose path
+  names the repository. It runs with every suite and on every push.
+- **390's block corrected in place**, with a dated note under it.
+- Tests: `tests/test_roadmap_continuity.py` (four planted cases, the real
+  block as first written at `edd286c`, and 389's block as the control).
+

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """ROADMAP continuity: the phase ledger stays true while phases are worked.
 
-Seven rules, each a claim about what the two repos hold:
+Eight rules, each a claim about what the two repos hold:
 
   R1  no two rows in docs/ROADMAP.md share a phase number
   R2  every phase with documents under docs/phases/ has a row in the ROADMAP
@@ -20,6 +20,11 @@ Seven rules, each a claim about what the two repos hold:
   R7  a row that is ✅ "Folded into NNN" names a row that is ✅ with a CLOSED
       date (Phase 358, K5): a fold into a missing or unclosed phase closes
       nothing.
+  R8  every `gh` call in an operator paste block (a fenced block that prints
+      ALL GOOD, CLAUDE.md rule 6) under docs/handoffs/ or docs/phases/ names
+      the repository: `-R`/`--repo`, `GH_REPO` set first, or a `cd` into
+      moto-diag first. A fresh terminal has no repository (F222: 390's
+      "After the merge" block, 2026-10-26).
 
 **R6 is per phase, not "the newest handoff is as new as the newest close"
 (2026-09-24).** That was the rule as first proposed, and it was measured
@@ -74,6 +79,18 @@ R6_BEFORE = frozenset({"257", "257B"})
 #: the others read "✅ | Folded into 261 (…)". Only a row whose notes OPEN with
 #: the phrase is a fold; prose that mentions folding elsewhere is not.
 FOLDED = re.compile(r"^\s*Folded into (\d{2,3}[A-Z]?)\b")
+#: R8. A fenced block; an operator's paste block is one that prints ALL GOOD.
+FENCED = re.compile(r"^```[^\n]*\n(.*?)^```", re.S | re.M)
+#: `gh` as a command: at a line's start, after a shell separator, or after
+#: `VAR=value` assignments (`GH_TOKEN="$T" gh api …`). Not inside a word or a quote.
+GH_CALL = re.compile(r"(?:^|[;&|(`!]|\$\()\s*(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)*gh\s+(\S+)([^;&|`\n]*)",
+                     re.M)
+#: The subcommands that take their repository from the working directory.
+GH_REPO_SCOPED = frozenset({"issue", "pr", "label", "release", "run", "workflow", "secret",
+                            "variable", "cache", "ruleset", "browse", "repo"})
+GH_NAMED = re.compile(r"(?:^|\s)(?:-R|--repo)(?:\s+|=)\S+")
+#: What gives every later `gh` in the block its repository.
+GH_CONTEXT = re.compile(r"^\s*(?:export\s+GH_REPO=\S+|cd\s+\S*moto-diag\S*\s*(?:$|&&|;))", re.M)
 
 
 def _number(phase: str) -> int:
@@ -120,12 +137,41 @@ def closes(roadmap: str, history: str | None) -> dict[str, str]:
     return found
 
 
+def unnamed_gh(text: str) -> list[str]:
+    """R8: each `gh` call in a paste block of `text` that names no repository."""
+    found = []
+    for block in FENCED.finditer(text):
+        body = block.group(1)
+        if "ALL GOOD" not in body:
+            continue
+        for m in GH_CALL.finditer(body):
+            line = body[body.rfind("\n", 0, m.start()) + 1:].split("\n", 1)[0]
+            if line.lstrip().startswith("#"):
+                continue
+            sub, args = m.group(1), m.group(2)
+            at = body.rfind("gh", m.start(), m.start(1))     # where the `gh` word starts
+            ctx = GH_CONTEXT.search(body, 0, at) or "GH_REPO=" in body[
+                body.rfind("\n", 0, at) + 1:at]
+            if ctx or GH_NAMED.search(args):
+                continue
+            if sub == "api":
+                if not re.search(r"\{owner\}|\{repo\}|:owner\b|:repo\b", args):
+                    continue
+            elif sub not in GH_REPO_SCOPED or (sub == "repo" and re.search(
+                    r"\s[\w.-]+/[\w.-]+(?:\s|$)", args)):
+                continue
+            found.append(f"gh {sub}{args}".strip()[:80])
+    return found
+
+
 def check(roadmap: str, authority: str, docs: dict[str, set[str]],
           mobile_roadmap: str | None = None, authority_copy: str | None = None,
-          handoffs: Iterable[str] = (), history: str | None = None) -> list[str]:
-    """The six rules over already-read inputs. None for a mobile input means
+          handoffs: Iterable[str] = (), history: str | None = None,
+          pastes: dict[str, str] | None = None) -> list[str]:
+    """The eight rules over already-read inputs. None for a mobile input means
     the mobile repo is not present: its half of R2 and R3, and R5, are not run.
-    `handoffs` is the file names in docs/handoffs/; `history` is implementation.md."""
+    `handoffs` is the file names in docs/handoffs/; `history` is implementation.md;
+    `pastes` is {path: text} for the documents R8 reads."""
     fails: list[str] = []
     rngs = ranges(authority)
     own = rows(roadmap)
@@ -184,11 +230,28 @@ def check(roadmap: str, authority: str, docs: dict[str, set[str]],
         elif target[0] != DONE or not CLOSED.search(target[1]):
             fails.append(f"R7 phase {n} is folded into {into}, whose row is not {DONE} with a "
                          "CLOSED date")
+    for path, text in sorted((pastes or {}).items()):
+        fails += [f"R8 {path}: an operator paste block runs `{call}` with no repository "
+                  "(add -R Kubanjaze/moto-diag, or cd into the repository first)"
+                  for call in unnamed_gh(text)]
     return fails
 
 
+def paste_documents(root: pathlib.Path) -> dict[str, str]:
+    """R8's scope: every .md under docs/handoffs/ and docs/phases/."""
+    docs = root / "docs"
+    found = {}
+    for sub in ("handoffs", "phases"):
+        d = docs / sub
+        for p in sorted(d.rglob("*.md")) if d.is_dir() else []:
+            text = p.read_text(encoding="utf-8", errors="replace")
+            if "ALL GOOD" in text:
+                found[str(p.relative_to(root))] = text
+    return found
+
+
 def check_tree(root: pathlib.Path = ROOT, sibling: pathlib.Path | None = SIBLING) -> list[str]:
-    """The six rules over a repo on disk and, if present, its mobile sibling."""
+    """The eight rules over a repo on disk and, if present, its mobile sibling."""
     def read(p: pathlib.Path) -> str | None:
         return p.read_text(encoding="utf-8") if p.is_file() else None
 
@@ -201,7 +264,7 @@ def check_tree(root: pathlib.Path = ROOT, sibling: pathlib.Path | None = SIBLING
                  read(sib / "docs" / "ROADMAP.md") if sib else None,
                  read(sib / "ROADMAP_AUTHORITY.md") if sib else None,
                  handoffs=sorted(p.name for p in handoffs.glob("*.md")) if handoffs.is_dir() else [],
-                 history=read(root / "implementation.md"))
+                 history=read(root / "implementation.md"), pastes=paste_documents(root))
 
 
 def self_test() -> int:
@@ -214,7 +277,7 @@ def self_test() -> int:
         return 1
     bad = check_tree(HERE / "fixtures" / "roadmap_bad", HERE / "fixtures" / "roadmap_bad" / "sibling")
     ok = True
-    for rule in ("R1", "R2", "R3", "R4", "R5", "R6", "R7"):
+    for rule in ("R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8"):
         fired = any(f.startswith(rule) for f in bad)
         ok &= fired
         print(f"  {rule} fires on the known-bad tree: {fired}")

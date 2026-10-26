@@ -1,4 +1,4 @@
-"""The ROADMAP stays true while phases are worked (roadmap_check.py R1-R6).
+"""The ROADMAP stays true while phases are worked (roadmap_check.py R1-R8).
 
 The guarantee behind the CLAUDE.md rule "a phase gets its row before Step 0,
 and the row changes with the work": it runs with every suite, and the push
@@ -57,6 +57,14 @@ class TestEachRuleFiresOnTheKnownBadTree:
         ("R7 phase 266 is folded into 299, which has no row", "a fold into nothing"),
         ("R7 phase 267 is folded into 258", "a fold into a phase still open"),
         ("R7 phase 268 is folded into 256", "a fold into a ✅ row with no CLOSED date"),
+        ("R8 docs/handoffs/2026-09-27_270_after_merge.md: an operator paste block runs `gh issue edit 14",
+         "390's real block, as first written (F222)"),
+        ("R8 docs/handoffs/2026-09-27_270_after_merge.md: an operator paste block runs `gh pr view 3",
+         "a cd that is not into the repository"),
+        ("R8 docs/handoffs/2026-09-27_270_after_merge.md: an operator paste block runs `gh api 'repos/{owner}",
+         "an api path gh fills from the working directory"),
+        ("R8 docs/phases/completed/259_phase_log.md: an operator paste block runs `gh label list",
+         "a paste block in a phase document"),
     ])
     def test_it_fires(self, fails, rule, case):
         assert any(f.startswith(rule) for f in fails), (case, fails)
@@ -150,6 +158,31 @@ class TestR7OnTheRealLedger:
 class TestTheGoodTreePasses:
     def test_every_allowed_case_passes(self):
         assert R.check_tree(GOOD, GOOD / "sibling") == []
+
+
+class TestR8OnTheRealRecord:
+    """F222: a gh call in an operator paste block that names no repository
+    fails in a fresh terminal, which is not inside a clone."""
+
+    def test_390s_block_as_first_written_is_seen(self):
+        import subprocess
+        old = subprocess.run(["git", "-C", str(ROOT), "show",
+                              "edd286c:docs/handoffs/2026-10-26_390_closed.md"],
+                             capture_output=True, text=True, check=True).stdout
+        assert R.unnamed_gh(old) == ["gh issue edit 14 --remove-label needs-admiral </dev/null >/dev/null"]
+
+    def test_389s_block_naming_the_repository_in_its_api_paths_is_not(self):
+        """The exclusion's control: `gh api repos/Kubanjaze/moto-diag/...` and
+        `gh api user` take no repository from the working directory."""
+        text = (ROOT / "docs/phases/completed/389_operator_steps.md").read_text(encoding="utf-8")
+        assert "gh api" in text and "ALL GOOD" in text
+        assert R.unnamed_gh(text) == []
+
+    def test_the_scope_is_handoffs_and_phase_documents(self):
+        scope = R.paste_documents(ROOT)
+        assert "docs/handoffs/2026-10-26_390_closed.md" in scope
+        assert "docs/phases/completed/389_operator_steps.md" in scope
+        assert all(p.startswith(("docs/handoffs/", "docs/phases/")) for p in scope)
 
 
 class TestThePushGuardCallsIt:
