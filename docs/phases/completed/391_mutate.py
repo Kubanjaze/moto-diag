@@ -1,6 +1,6 @@
 """Phase 391's mutations: each breaks one thing the phase built, and a test must go red.
 
-Run from the repository root: `.venv/bin/python docs/phases/in_progress/391_mutate.py`
+Run from the repository root: `.venv/bin/python docs/phases/completed/391_mutate.py`
 (ROOT is three levels up from in_progress/ or completed/). 390's harness:
 exact strings (each must occur once), the tests run after clearing
 `__pycache__`, every file restored whatever happens. Exits 1 if any mutation

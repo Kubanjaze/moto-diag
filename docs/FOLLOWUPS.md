@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F222** (this file). The
+At the time of writing the highest assigned is **F224** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4134,5 +4134,45 @@ Closed by:
   names the repository. It runs with every suite and on every push.
 - **390's block corrected in place**, with a dated note under it.
 - Tests: `tests/test_roadmap_continuity.py` (four planted cases, the real
-  block as first written at `edd286c`, and 389's block as the control).
+  block as first written at `48e7d2c` and still there at `edd286c`, and 389's block as the control).
+
+### F223
+
+**The fleet's ranks read each other's markers from whoever wrote them, so a comment can stand in for a rank**
+
+Found 2026-10-26 in Phase 391, writing the Quartermaster's trials. Every
+rank since 389 decides on the issue's comments by their first line alone:
+`<!-- fleet-red-team: verdict=clear …`, `<!-- fleet-captain:
+recommendation=merge …` (`dispatcher.py` `_RED`, `newest`;
+`quartermaster.py` `issue_checks`). None reads the comment's author. Any
+account that can comment on the repository's issues can write a line the
+fleet reads as a Red Team clear or a Captain's merge. Phase 391's trials do
+exactly that, on purpose, under the operator's login, each said to be
+planted.
+
+What it affects today: in shadow, nothing ships on a verdict, and the
+operator merges by hand. On promotion, Q2 and Q3 would be the gate.
+
+What would close it: a rank's marker counts only when its author is the
+fleet's account (`fleet_git.identity`'s login), or the operator's on an
+issue carrying the trial marker (the push identity's own rule), for every
+rank's reads, with a planted marker from a third login as the known-bad
+case. Before the Quartermaster is promoted.
+
+### F224
+
+**Two code files name `edd286c` as where 390's paste block was first written; it was `48e7d2c`**
+
+Found 2026-10-26 by Phase 391's refute, round 2: a wording defect left
+open under K9. `.claude/skills/closeout/CHANGELOG.md` (the 2026-10-26 R8
+entry: "as first written (`edd286c`)") and `tests/test_roadmap_continuity.py`
+(`test_390s_block_as_first_written_is_seen`, which reads the block at
+`edd286c`) name the commit the block was read at. It was first written at
+`48e7d2c`, 390's close-out; the text is identical at both (compared by the
+refuter). F222's own entry says it right.
+
+Left open because both paths are code for verify_phase.sh's check 2
+(`code_after_regression.py`): changing them after 391's regression of
+record (`ac1dc6b`) would void it. What would close it: name `48e7d2c` in
+both, in any later phase that runs its own regression.
 
