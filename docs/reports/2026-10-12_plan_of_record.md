@@ -25,6 +25,15 @@ The operator's words:
   - **The operator's words:** "add device_tokens.last_seen_at to the list as its own phase".
   - **What stays open:** F210's general rule is still needed before onboarding (330).
   - **The prompt** is `docs/prompts/385_the_push_tokens_own_write.txt`.
+- **2026-10-22 to 2026-10-25: the fleet went before the first shop.** Phases 386 to 389 closed, and 390 is open, under `docs/reports/2026-10-22_fleet_proposal.md`.
+  - **None of the ten first-shop rows has started:** 345, 343, 303, 348, 371, 372, 330, 334, 344 and 210.
+  - **385 has no row.** It is the fleet's trial job (issue #14).
+  - **The operator, 2026-10-25:** "how far are we from getting back on track. I feel sidetracked as hell getting this to work", then "yes add the line to the plan of record".
+  - **When shop work resumes:** after 390 closes and the trial's last steps are done.
+  - **The advisor's recommendation, for the operator to confirm:**
+    - The next phase is a first-shop row, run through the fleet: staff logins with roles and the activity log (303 and 348), which need no outside account. That was the proposal's own step 6.
+    - The proposal's last two steps, the Quartermaster in shadow and the end-to-end run, ride along inside those phases rather than taking phases of their own.
+    - New fleet work waits, unless it blocks a first-shop phase.
 
 ## Where the ledger stands
 
