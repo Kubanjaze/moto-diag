@@ -184,9 +184,11 @@ def world(tmp_path, origin):
     fence = tmp_path / "fence.sh"
     host = Host(clock, fence)
     lines: list[str] = []
+    # No fleet account, planted: the default is the desktop's real file, which
+    # the operator created on 2026-10-25 at 22:25 (Phase 390, bug fix #1).
     fleet = D.Fleet(state=tmp_path / "state", token=TOKEN, host=host, fence=fence,
                     workspace_docs=tmp_path / "wsd", repo_url=str(origin), now=clock,
-                    out=lines.append)
+                    out=lines.append, identity_file=tmp_path / "no-identity.env")
     fleet.save({"last_digest": "2026-10-21"})      # T0's digest is done: cycles at T0 run none
     return fleet, host, clock, lines
 

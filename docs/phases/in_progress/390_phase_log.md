@@ -462,3 +462,37 @@ while a fleet model-free run is going."
   - `390_mutate.py F`: 16/16 red.
 - `COLLECTED_TEST_FLOOR` 11500 → 11520 (pre-approval (b)): 11520 collected
   against 11500 at `ea1f8d1`, +20 -0, all in `test_phase390_space.py`.
+
+### 2026-10-25 22:3x — the push guard blocked the push of 6b1d7f7; Bug fix #1
+
+- **Guard block (recorded, guard unchanged):** `git push origin
+  phase-390-resume` was refused by `pre_push_guard.sh`. Fast mode failed on
+  two tests, `test_phase388_dispatcher.py::TestOneCycle::test_once_per_application_of_the_label`
+  (IndexError, a model call with no stand-in reply: the Captain ran) and
+  `TestTheRateLimitPauses::test_recorded_commented_paused_then_resumed`
+  (the Engineer's session started). Both had passed at 22:0x, and
+  `wholetree.sh` had passed before the commit. Re-run five times, they
+  failed every time: deterministic.
+
+**Bug fix #1 — 2026-10-25**
+- Issue: two 388 dispatcher tests fail on the home desktop from 22:25.
+- Root cause: 388's `world` fixture builds its `Fleet` without
+  `identity_file`, so it reads the real default,
+  `~/.config/motodiag/fleet-github.env`. The operator created that file at
+  22:25:23 (the fleet's machine user; its contents not read here). The
+  tests' "no fleet account" became false, and the Captain and the Engineer
+  ran where the tests expect `needs-hands`. A test read real host state.
+  389's fixture and the kill driver already planted a missing file.
+- Fix: the fixture passes `identity_file=tmp_path / "no-identity.env"`.
+- Files: `tests/test_phase388_dispatcher.py`.
+- Verified: the 388, 389 and 390 fleet test files, `-n 8`: 346 passed
+  (2 failed before the fix, 5 runs of 5).
+- Commit: (this one, separate from 6b1d7f7's).
+- **The machine user now exists.** Pre-approval (a) ("planted missions push
+  under the operator's login until the machine user exists") has ended
+  its term. The remaining planted missions push under the machine user's
+  identity, as the dispatcher reads it from that file.
+  `fleet_git.identity` reads the file before the trial marker, and it
+  parses as login `kubanjazefleet` with a token (only those two facts
+  printed). From now on every fleet push goes out as `kubanjazefleet`,
+  #14's included.
