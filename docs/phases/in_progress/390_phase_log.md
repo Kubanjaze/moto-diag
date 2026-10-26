@@ -496,3 +496,37 @@ while a fleet model-free run is going."
   parses as login `kubanjazefleet` with a token (only those two facts
   printed). From now on every fleet push goes out as `kubanjazefleet`,
   #14's included.
+
+### 2026-10-25 22:40–22:55 — two PC restarts for 388's restart test (the operator)
+
+- The operator ran 388's restart test (its step 4) between 22:40 and 22:55:
+  the PC restarted twice, and this session was cut off (its last commit
+  `b62e447`, 22:33, pushed). The operator reports round 1 printed SOMETHING IS
+  OFF as expected, round 2 ALL GOOD, round 3 (the server's startup back on)
+  ALL GOOD. The advisor confirmed from the Mac at 22:55 that the server
+  (schema 87) and the door both answer.
+- Checked here after the restarts:
+  - the working tree is clean, and `b62e447` is on the remote and in the
+    service clone: nothing unsaved;
+  - Ubuntu started 22:48:26; the fleet and the API are both active; the
+    fleet unit has `NRestarts=0`, active since 22:48:29;
+  - dispatcher.log has "the search on start: nothing to resume" at
+    22:46:12 and 22:48:30, one per boot, the summary line on a start with
+    nothing open;
+  - `journal.unfinished` and `journal.unreadable` over `runs/` are both
+    empty; #14's `held.json` is still there.
+- **The free-space code's first live run** (22:46:16, the boot between
+  the two restarts): "reclaim (the 3-hour timer): C: 187.0 -> 187.0 GB
+  free; Ubuntu 973.1 -> 973.1 GB free; fstrim: failed (exit 1): sudo:
+  interactive authentication is required". This is as designed: a failed
+  trim is said, not raised. The operator's sparse block has not been run
+  yet: the image is not sparse, `/etc/sudoers.d` has no fstrim rule, and
+  there is no database copy on C:. C: has 173.8 GB free at 22:5x.
+- **Decided:** a failed trim still sets `last_reclaim`, so the timer next
+  runs at 01:46, not every cycle. A trim that cannot run would otherwise
+  fail and log every five minutes. The floor's own reclaim is not
+  affected: it runs whenever a disk is below its floor.
+- **Guard block (recorded, guard unchanged):** a `git commit … ; git push`
+  in one command was refused by the push guard ("Run `git commit` and `git
+  push` as separate commands"). Nothing ran. The same miss happened earlier
+  in this phase. They were then run separately.
