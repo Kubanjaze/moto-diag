@@ -1,5 +1,38 @@
 # fleet — changelog
 
+## 2026-10-26 — the Quartermaster, in shadow (Phase 391)
+
+Step 8 of `docs/reports/2026-10-22_fleet_proposal.md`. The prompt is
+`docs/prompts/391_quartermaster.txt`; Step 0 is `391_step0.md`.
+
+- **`quartermaster.py`**: Q1–Q9 and one fresh read-only Opus call. Scripts
+  run the checks: `wholetree.sh --full`, `regression.sh` and
+  `verify_phase.sh` in the fence with no model; the module reads
+  `verify_phase.sh` section by section (V1–V14), never by its exit code,
+  and adds what the fourteen miss for a fleet-built PR: the scope, the
+  Captain's word and the Red Team's clear, the counts, the commit claims,
+  the stub rule over v1.1, the handoff (and R1–R8 on the branch), and a
+  clean merge onto master. The script composes the verdict: a scripted
+  failure refuses whatever the model says, and a model refusal must name a
+  listed check.
+- **`stage_quartermaster`** in the dispatcher, on `merge:needs-review`,
+  journaled and resumable, under the free-space floor. Its verdict goes on
+  the PR, on the issue (`<!-- fleet-quartermaster: verdict=… -->`) and in
+  `quartermaster.jsonl`. It merges nothing and moves no label.
+- **`quartermaster_since`** in `state.json`: only a label applied after the
+  Quartermaster first came up on the machine is judged.
+- **The digest** gains "The Quartermaster (shadow)": each verdict beside
+  what became of its PR.
+- **`Check.out`**: a command run keeps its whole output, in the journal too.
+- **Fixtures**: `fixtures/quartermaster/pr20/`, the Step 0 dry run on PR
+  #20 (the fence's `verify_phase.sh` output, the context, the model's
+  answer, the brief as drafted); `fixtures/resume/kill_points.json` gains
+  the stage's four kill points.
+
+Measured at Step 0: one call on PR #20 read 61,300 tokens and wrote 1,093,
+in 3 turns and 11 s ($0.28 at list price). Its verdict was refuse, as the
+operator ruled, but it named checks of its own; the brief now lists them.
+
 ## 2026-10-25 — a stage a restart cuts off is resumed (Phase 390)
 
 Closes F219. The prompt is `docs/prompts/390_resume.txt`; Step 0 is

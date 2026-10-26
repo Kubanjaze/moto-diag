@@ -264,6 +264,12 @@ _STUB = re.compile(r"^(?:[-*+]\s+|\d+\.\s+|\[[ x]\]\s+)*[*_]*(?:TBD|TODO|to be w
 REQUIRED_SECTIONS = ("Goal", "Logic")
 
 
+def classification(step0: str) -> str | None:
+    """P4's word: the step-0 report's `Classification:`, lower-cased."""
+    m = re.search(r"^\W*Classification\W*\s*(\w+)", step0, re.M | re.I)
+    return m.group(1).lower() if m else None
+
+
 def unfilled(plan: str) -> list[str]:
     bad = []
     secs = sections(plan)
@@ -421,8 +427,7 @@ def check(phase: str, root: pathlib.Path = ROOT, rev: str | None = None,
         rep.skipped.setdefault("P4", "no step-0 report to read")
     else:
         fail("P3", [f"a count with no query shown: {c}" for c in unshown_counts(step0)])
-        m = re.search(r"^\W*Classification\W*\s*(\w+)", step0, re.M | re.I)
-        word = m.group(1).lower() if m else None
+        word = classification(step0)
         if word is None:
             fail("P4", ["the step-0 report has no 'Classification:' line"])
         elif word == "reshape":

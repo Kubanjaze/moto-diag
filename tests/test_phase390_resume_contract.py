@@ -28,7 +28,12 @@ sys.path.insert(0, str(ROOT / "tests"))
 import dispatcher as D  # noqa: E402
 import journal as J  # noqa: E402
 import test_phase390_resume as R  # noqa: E402
+import test_phase391_dispatcher as R391  # noqa: E402
 from test_phase390_resume import ledger, w  # noqa: E402
+
+#: Where a kill point's test may live: 390's file, and since Phase 391 the
+#: Quartermaster's, which is a stage 390 did not have.
+MODULES = (R, R391)
 
 assert w and ledger  # the fixtures, imported for their names
 
@@ -44,13 +49,13 @@ def test_every_stage_and_the_pause_has_a_kill_point():
 @pytest.mark.parametrize("name", sorted({t for s, pts in POINTS.items() if s != "_what"
                                          for t in pts.values()}))
 def test_every_named_kill_point_has_its_test(name):
-    assert callable(getattr(R, name, None)), f"no test {name}"
+    assert any(callable(getattr(m, name, None)) for m in MODULES), f"no test {name}"
 
 
 def test_the_list_names_every_kill_point_test():
     """A kill-point test cuts a stage (`_cut_` in its name), or is the pause's."""
     named = {t for s, pts in POINTS.items() if s != "_what" for t in pts.values()}
-    cuts = {n for n in dir(R) if n.startswith("test_") and "_cut_" in n}
+    cuts = {n for m in MODULES for n in dir(m) if n.startswith("test_") and "_cut_" in n}
     assert cuts <= named, cuts - named
     assert named - cuts == {"test_a_pause_is_kept_until_its_resumed_stage_ends"}
 
@@ -92,7 +97,10 @@ def test_skill_md_documents_the_resume():
 
 
 def test_the_changelog_has_390():
-    assert "(Phase 390)" in (SKILL / "CHANGELOG.md").read_text().split("\n## ", 2)[1]
+    # Any entry's heading: a later phase's entry goes above 390's (Phase 391).
+    headings = [ln for ln in (SKILL / "CHANGELOG.md").read_text().splitlines()
+                if ln.startswith("## ")]
+    assert any("(Phase 390" in h for h in headings), headings
 
 
 def test_f219_is_closed():

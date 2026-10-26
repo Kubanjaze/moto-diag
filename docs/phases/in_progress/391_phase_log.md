@@ -76,3 +76,41 @@ from the session's scratch folder; its paths are that folder's).
     the new rank off #14 and PR #15, as the operator asked, and off older
     issues; applying the label again is the way in, as for every rank.
   - **An unchanged v1.0 section is not a stub** (S0-1's measurement).
+
+## 2026-10-26 — v1.0, then the build
+
+- **v1.0 committed** (`d2947f5`), after `plan_check.py 391` passed P1–P8
+  (its first run failed P3 four times, counts in Step 0 with no command
+  beside them, and P5 on the plan's own `data/` in Goal and Logic; both
+  reworded). Pushed as a separate command: the push guard refused
+  `git commit … && git push` in one ("This command runs `git commit` before
+  `git push`"), as it should.
+- **`quartermaster.py`, Q1–Q9 and the call**, tried on the real record
+  before any test: 390 at its close-out (`48e7d2c`) passes Q1, Q6, Q7, Q9
+  and **fails Q8 on R8**: its handoff's paste block, the one that failed
+  for the operator today. So the Quartermaster would have refused 390's
+  handoff as it shipped. PR #20's fence output fails V12 alone.
+- **One shared reader**: `plan_check.classification`, P4's parse, now used
+  by P4 and Q1.
+- **The dispatcher**: `stage_quartermaster`, `quartermaster_due`,
+  `quartermaster_since` (set by the first cycle), `Check.out`, the
+  `resume()` branch, `STAGE_RANK`, `RANK_PREFIXES`, the sweep's text, the
+  digest's verdicts. `yeoman.shadow` writes the digest's section.
+- **389's and 390's tests carried on**: 389's walk-through now meets the
+  Quartermaster after `merge:needs-review` (a refusal, no label moved);
+  390's contract finds kill-point tests in 391's file too, and reads the
+  CHANGELOG's 390 entry wherever it stands (it read only the newest).
+- **A bug before any commit**: `_text` raised on a missing file (389's
+  walk-through has no `implementation.md` at the root). Fixed in place;
+  not a bug-fix entry, as no commit held it.
+- **Guard blocks, three more, each kept as it is:**
+  - the edit guard refused a Python script writing
+    `tests/test_phase391_dispatcher.py` ("a Python script body writes
+    tests/…"); done with Edit;
+  - the edit guard refused a Python script writing `SKILL.md` because its
+    text named `tests/`; done with Edit;
+  - 244G's meta-guard (a test, in `wholetree.sh`) refused the contract
+    test's raw-source asserts; they read `code_of` now.
+- Tests: `test_phase391_quartermaster.py` 49, `test_phase391_dispatcher.py`
+  15, `test_phase391_contract.py` 8; with 387–390's and the ledger's, 549
+  passed. `wholetree.sh` exit 0 (2271 passed, 10 skipped).
