@@ -113,6 +113,8 @@ MUTATIONS = [
     ("U8 a failed resume not said", [(DI,
      'self.say_stopped(n, rank, f"the resumed stage failed',
      '(lambda *a: None)(n, rank, f"the resumed stage failed')], T_390),
+    ("U9 the digest's resume line names `issue None` (bug fix #2)", [(DI,
+     'whose = f" (issue {n})" if n is not None else ""', 'whose = f" (issue {n})"')], T_390),
     # the held run and the recheck
     ("H1 a model-free-only failure not held", [(DI,
      "again = not check.ok and not engineer.verify(",

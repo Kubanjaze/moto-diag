@@ -564,7 +564,8 @@ def test_digest_cut_in_its_model_call(w):
     w.kill.at(model, cut=True)
     killed(w)
     assert w.fleet.load()["last_digest"] == "2026-10-20"
-    restart(w, DIGEST)
+    (line,) = restart(w, DIGEST)
+    assert line.startswith("resume digest from ") and "issue" not in line   # bug fix #2
     assert calls(w)[-1][:3] == ["claude", "--resume", CUT]
     assert w.fleet.load()["last_digest"] == "2026-10-21"
     no_unfinished(w)

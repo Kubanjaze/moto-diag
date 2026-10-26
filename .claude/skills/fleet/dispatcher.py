@@ -1703,12 +1703,13 @@ class Fleet:
         for j in journal.unfinished(self.runs):
             rec, n = j.record, j.record.get("issue")
             rank, where = STAGE_RANK[rec["stage"]], f"{rec['stage']} from {j.run.name}"
+            whose = f" (issue {n})" if n is not None else ""      # the digest has none
             if str(j.run) == paused:
                 act(f"leave {where}: paused, it resumes after its reset")
                 continue
             why = self.not_resumable(j, issues, rows)
             if why:
-                act(f"not resume {where} (issue {n}): {why}")
+                act(f"not resume {where}{whose}: {why}")
                 if not dry_run:
                     if n in issues:
                         self.comment(n, f"stopped rank={rank} run={j.run.name}",
@@ -1718,7 +1719,7 @@ class Fleet:
                     j.end(f"abandoned: {why}", self.now())
                 continue
             cut = [c for c in j.data["calls"] if not c.get("done")]
-            act(f"resume {where} (issue {n}), after {', '.join(j.data['steps']) or 'nothing'}"
+            act(f"resume {where}{whose}, after {', '.join(j.data['steps']) or 'nothing'}"
                 + (f", session {cut_session(cut[0], j.run / 'run') or 'fresh'}" if cut else ""))
             if not dry_run:
                 self.run_stage(n, rank, lambda r=rec: self.resume(r), recovering=True)

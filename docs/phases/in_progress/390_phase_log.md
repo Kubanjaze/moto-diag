@@ -530,3 +530,128 @@ while a fleet model-free run is going."
   in one command was refused by the push guard ("Run `git commit` and `git
   push` as separate commands"). Nothing ran. The same miss happened earlier
   in this phase. They were then run separately.
+
+### 2026-10-25 23:0x — proof 5: the Red Team (#21)
+
+- **A mistake, caught at once:** while meaning to check how the proof
+  script takes its arguments, I started it for real (`nohup
+  390_proof.py red_team 0 --close`, in the background). Killed within
+  seconds (`pkill -f`; `ps` shows no proof script). It could not have acted:
+  no Red Team run existed for it to find, so it was still in its waiting
+  loop. The service was never signalled: the same process, active since
+  22:48:29. From here on, a proof script is started only through the
+  session's own background tasks, with the planted issue's real number.
+- `390_proof.py red_team 21 --close` armed first. Then #21 was opened with
+  `mission` and `review:open`, the trial marker, branch
+  `phase-390A-quartermaster-row`, whose PR is #20.
+- **Proof 5's first cut, 23:03:** "cut point reached in
+  20261025_230348_red_team_390A (model)"; SIGTERM to PID 203; back as PID
+  105713 at 23:04:31: "resume red_team from 20261025_230348_red_team_390A
+  (issue 21), after started, clone, session
+  1d64392b-32a6-4964-81d8-0e2de0bbcb65". #21 was closed at 23:04:33.
+  - The resumed call finished: one transcript, the same session, `done`,
+    rc 0. Its answer was `back` with 2 findings, but `red_team`'s
+    checklist refused the refute table: "C7 row 7 … leaves a wording
+    defect open with no finding; C7 row 22 … leaves a wording defect open
+    with no finding". The stage stopped with one comment and the label
+    unchanged (`review:open`), at 23:06:23. Nothing was posted on PR #20.
+  - The resume worked, and the stop was said. **But the stage did not
+    reach its next label**, so the proof is not met by this run.
+  - The resumed call sends the original prompt again into the same session
+    (389's resume, S0-5), so the transcript holds the prompt twice.
+- **A control with no restart (#22):** the same Red Team on the same PR,
+  planted at 23:0x. Run at 23:09:45, with this session cut off by the
+  operator's sparse-block restart in between. It ended 23:12:30 "back,
+  round 1", which passes the checklist. My wait that was to close #22 at
+  once died with the session. #22 sat on `build:open` until I closed it at
+  23:14 (`gh issue view 22`: CLOSED); the next cycle was due about 23:17,
+  and no Engineer stage started on it.
+- **One cut run failed C7 and one uncut run passed: one sample each, which
+  does not tell whether the restart (or the repeated prompt) caused the C7
+  miss.** Decided: cut the Red Team a second time on a new planted issue.
+  If that run also fails C7 while uncut runs pass, the resumed call's
+  repeated prompt is a defect to fix in 390. If it passes, the first was
+  the model's own miss.
+
+### 2026-10-25 23:10 — the operator's sparse block ran
+
+- The operator reports: before 196.6 GB free on C:, after 225 GB
+  (28.4 GB back); sparse True; the sudoers rule OK; "/: 923 GiB trimmed";
+  both services active. The last line said SOMETHING IS OFF only because
+  the block waited for the fleet's own reclaim.
+- **A miss in the block's check, not the fleet's.** The fleet's first
+  reclaim had already run at 22:46 (and failed, with no rule yet). A
+  failed trim sets `last_reclaim` (decided at 22:5x), so the timer is next
+  due at about 01:46. The block waited two minutes for a line that could
+  not come. The block should have checked the rule with a trim it ran
+  itself, which it did ("923 GiB trimmed"), and not the fleet's timer.
+- The fleet's own reclaim is proven by its timer line at about 01:46, to
+  be read from dispatcher.log and recorded here, with no code changed.
+
+### 2026-10-25 23:17 — proof 5 done: the Red Team, second cut (#23)
+
+- `390_proof.py red_team 23 --close`: "cut point reached in
+  20261025_231739_red_team_390A (model)" at 23:17:49; SIGTERM to PID 202;
+  back as PID 2570 at 23:18:21: "resume red_team from
+  20261025_231739_red_team_390A (issue 23), after started, clone, session
+  918979f9-9099-40dd-a649-94d5c536a470". #23 was closed at 23:18:23.
+- 23:19:52 "issue 23: back, round 1". On GitHub:
+  - #23: labels `mission`, `build:open`; one started marker, the close,
+    and one `fleet-red-team: verdict=back round=1`;
+  - PR #20: one comment for this run, next to #22's control.
+- **The resumed Red Team reached its next label with no hand on it: proof 5
+  holds.** Across the three runs, two resumed (#21 failed C7, #23 passed)
+  and one uncut (#22 passed). #21's C7 miss is taken as the model's own,
+  not the restart's: the same resumed path, repeated prompt included,
+  passed on #23. Nothing changed in the code.
+
+### 2026-10-25 23:25 — proof 6 done: the Captain's recommendation (#24)
+
+- #24 was opened with `mission` and `review:clear` (planted).
+  `390_proof.py recommend 24 --close`: "cut point reached in
+  20261025_232502_recommend_390A (model)" at 23:25:09; SIGTERM to PID 2570;
+  back as PID 3955 at 23:25:41: "resume recommend from
+  20261025_232502_recommend_390A (issue 24), after started, clone, session
+  0e131a12-0528-4aca-9a19-7ec182747a86". #24 was closed at 23:25:43.
+- 23:26:54 "issue 24: recommendation: hold". On GitHub:
+  - #24: labels `mission`, `merge:needs-review`; one started marker, the
+    close, and one `fleet-captain: recommendation=hold`;
+  - PR #20: one `fleet-captain-pr: recommendation=hold`.
+- **It reached its next label with no hand on it: proof 6 holds.** "Hold"
+  is the Captain's reading of a PR the Red Team sent back; nothing was
+  merged.
+
+### 2026-10-25 23:32 — proof 7 done: the digest
+
+- A copy of the existing page, `digests/2026-10-24.md` (sha256
+  9d9ce1a48e271c57…), was kept as `2026-10-24.before-390-proof7.md`.
+- With no fleet process running (`pgrep -x bwrap`: none), `state.json`'s
+  `last_digest` was set back from 2026-10-24 to 2026-10-23, written to a
+  tmp file and then replaced (`last_reclaim` and the rest kept; no
+  `paused`).
+- `390_proof.py digest 0`: "cut point reached in 20261025_233202_digest
+  (model)" at 23:32:06; SIGTERM to PID 3955; back as PID 5159 at 23:32:37:
+  "resume digest from 20261025_233202_digest (issue None), after clone,
+  session b167bb84-6b96-4a5c-a541-0b055c71055b".
+- 23:32:41 "digest: written, …/digests/2026-10-24.md". `last_digest` is
+  2026-10-24 again; the journal ended with one call; one transcript.
+- **Proof 7 holds.** With it, every rank has been cut and resumed on the
+  live service:
+  - the scout (#16), the Captain's v1.0 (#17) and the XO (#18);
+  - the Engineer, in its session and in its model-free run (#19);
+  - the Red Team (#21 and #23);
+  - the Captain's recommendation (#24);
+  - the digest.
+
+**Bug fix #2 — 2026-10-25**
+- Issue: the resume line for the digest said "(issue None)".
+- Root cause: `recover()` formatted `(issue {n})` whatever `n` was, and
+  the digest's journal has no issue.
+- Fix: the issue is named only when there is one, in both the
+  "resume" and the "not resume" lines.
+- Files: `.claude/skills/fleet/dispatcher.py`,
+  `tests/test_phase390_resume.py` (the digest's kill-point test reads its
+  line), `390_mutate.py` (U9).
+- Verified: the 388, 389 and 390 fleet files, 346 passed; `390_mutate.py
+  U9` red.
+- Commit: this one.
