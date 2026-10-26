@@ -1,6 +1,12 @@
 # Phase 390 — The fleet resumes where it left off
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-25
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-25 (v1.0 `ea1f057`)
+
+v1.1 updates every section to what shipped (each change marked "As
+built"), ticks the planned items, and adds Deviations and Results. Two
+pieces of scope were added by the operator during the build: the held run
+and its recheck (section 10), and free space phase to phase, which closes
+F221 (section 11).
 
 ---
 
@@ -27,6 +33,15 @@ such a kill point). After this phase:
    (its session, its model-free run, its push and its pull request), the
    Red Team, and the digest.
 5. **`prune_runs` never deletes an unfinished run.**
+
+As built, two more, both the operator's:
+
+6. **An Engineer stop whose only failure is the model-free run is held**,
+   and taking `needs-admiral` off runs that run again on the same commit
+   (section 10; the operator after F220).
+7. **Free space is part of the method**: a reclaim on a timer, at each
+   merge and at each close-out, and a floor below which no new stage
+   starts (section 11; F221, closed).
 
 The prompt is `docs/prompts/390_resume.txt`. Step 0 is `390_step0.md`
 (classification: extension). The Quartermaster moves to the next phase.
@@ -73,6 +88,12 @@ A resumed stage calls its rank's function again from the top (`scout`,
 - **A call whose command differs from the saved one** (a prompt that
   changed between the two runs) ends the replay: that call and every later
   one run fresh, and the log line says so.
+  *As built:* the key (`journal.call_key`) is the command without its
+  prompt and without `--resume`. The scout's second prompt holds a census
+  that changes once its own Step 0 is committed, so a prompt-keyed replay
+  would never match. A changed command (another model, schema or tool
+  list) still ends the replay. A resumed call sends its original prompt
+  again into the resumed session.
 - A resumed stage is not new: the 70% gates do not apply to it (389's
   `gate_model` rule, unchanged).
 - **The Engineer's session** is one call: a finished session is not
@@ -110,6 +131,12 @@ rank posts `<!-- fleet-dispatcher: started rank=<rank> run=<run> -->`
 with one plain sentence ("Science Officer, phase N: started"), as the
 journal's first GitHub step. The digest has no issue and posts none.
 
+*As built:* the marker is `<!-- fleet-started: rank=<rank> run=<run> -->`,
+with its own prefix (`STARTED_M`). With the dispatcher's prefix, the XO's
+due rule read it as a rank's comment, and six 389 tests failed. No due
+rule reads the new prefix, so a stage's start never makes its own label
+look handled.
+
 ### 5. The search on start (`Fleet.recover`)
 
 Called by `run` and `once` after the lock and before the first cycle,
@@ -142,6 +169,13 @@ after the mirror is updated.
    T was cut off and left nothing to resume from; label unchanged; apply
    `<label>` again to run it fresh." That comment ends the marker, so it
    is said once.
+   *As built:* an open marker with nothing to resume gets the stop comment
+   only when the issue is **stalled**, meaning no stage is due on it
+   (`Fleet.stalled`, `next_stage` is None). The flow-label rule above
+   failed on #14's real history: at 15:50 the operator applied
+   `review:open` again, a label the Engineer also sets, so the rule read
+   it as the Engineer's own work. Under the stall rule, a label applied
+   by hand makes a stage due, the cycle runs it, and nothing needs saying.
 3. **A stage that cannot be resumed** (its resume raises `Stop`, or any
    other error) gets the same stop comment with the reason, its journal is
    ended `stopped`, and the label stays. An error with no issue (the
@@ -150,6 +184,11 @@ after the mirror is updated.
 `dispatcher.py recover --dry-run` prints what the search would do and
 writes nothing: no lock, no comment, no label, no journal. It is run on
 the live state before the code goes live (the fleet's rule since 389).
+
+*As built:* every search ends with one summary line in dispatcher.log,
+"the search on start: nothing to resume" or "the search on start: N
+stage(s) acted on". Before that, a start with nothing to do logged
+nothing, and could not be told apart from a start that never searched.
 
 ### 6. The pause, kept until its stage ends
 
@@ -218,6 +257,59 @@ resume line) ending ALL GOOD or SOMETHING IS OFF, given only when no #14
 stage is running, timed for the middle of a planted stage (the Engineer's
 model-free run is the longest).
 
+### 10. A held run and its recheck (as built; the operator after F220)
+
+The operator, 2026-10-25, after F220 (my test runs overlapping #14's
+model-free run made it time out): "Make #14 the real-artefact proof: once
+390 is merged and live, the operator taking needs-admiral off an Engineer
+stop whose only failure was the model-free run should rerun that run on
+the same commit, then push and go on to Red Team round 3."
+
+- `engineer_finish` is the shared tail of a `pr-ready`: the model-free run
+  on HEAD, the push, the PR, `review:open`.
+- When the model-free run is the only failure (`engineer.verify` with the
+  Engineer's own regression line passes), the run is held:
+  `journal.hold` writes `held.json` (issue, phase, round, commit). The
+  stop then says "take `needs-admiral` off to run it again on the same
+  commit".
+- `held_for` finds the held run once `needs-admiral` is off and that
+  stop is still the issue's last rank comment. `stage_recheck` checks
+  the held clone is at the held commit, then runs `engineer_finish` on
+  it. `prune_runs` keeps held runs.
+- #14's run (`runs/20261025_160200_engineer_389A`, commit `e15b462`) was
+  given its `held.json` by hand, so that the operator's step after the
+  merge is this path.
+
+### 11. Free space, phase to phase (as built; the operator, F221)
+
+The operator, 2026-10-25: "it's just something that needs to be done
+frequently to free up the claimed space, now it just needs to be written
+into the method itself. as a part of the overall process phase to phase".
+Their numbers: "50 GB on each", "every 3 hours".
+
+- **The one-time switch, the operator's** (`390_compact_vhdx.ps1`, run
+  23:10): the disk image made sparse (`wsl --manage --set-sparse true`),
+  and `ops/desktop/install_fstrim_sudoers.sh`, which allows lilcu
+  `fstrim -v /` and nothing else, with no password. bubblewrap sets
+  `no_new_privs`, so no model can use it.
+- **`Fleet.reclaim`** runs fstrim through that line. It runs on the
+  3-hour timer, at each merge (a row 🚧 on master at the last cycle and ✅
+  now) and at each close-out (after the Engineer's model-free run passes,
+  with its line in the PR). It logs `reclaim (<why>): C: a -> b GB free;
+  Ubuntu c -> d GB free; fstrim: <its line>`. A failed trim is said, not
+  raised.
+- **The floor** (`SPACE_FLOOR_GB`, 50 GB on C: and in Ubuntu): no new
+  model stage, and no model-free run, below it, or when a disk cannot be
+  read. Below a floor it reclaims first. If it is still below, it holds
+  the stage: the label stays, a `<!-- fleet-space:` comment says why, and
+  `needs-hands` is added. No due rule reads that comment, so taking
+  `needs-hands` off lets the held stage run. An Engineer held before its
+  model-free run keeps its run (`why: space`), and that run goes again on
+  the same commit, as section 10's does.
+- **`dispatcher.py reclaim`** prints the line a hand close-out's handoff
+  records (closeout skill, step 9). Only `main` gives a `Fleet` its disks
+  and the trim, so no test reads a real disk or runs sudo.
+
 ## The change log's three newest entries
 
 - **2026-10-22, `fleet` joins the procedure folders.** The check it named
@@ -243,6 +335,15 @@ model-free run is the longest).
 - **A threshold or a rule's definition:** none; `KEEP_RUNS`, the 70%
   gates and the sweep stay as they are.
 - **A fork:** none seen at Step 0.
+
+*As built:* one stop, a threshold. The free-space floor and the reclaim
+timer were the operator's numbers to set; asked and answered ("50 GB on
+each", "every 3 hours"). Two pre-approvals were used, each as worded:
+(b), the test floor for this phase's own tests, three times; and (c), a
+service restart for a planted proof in a gap with no #14 stage running,
+for every cut. Pre-approval (a) ("until the machine user exists") ended
+at 22:25, when the operator created `kubanjazefleet`'s file. From then
+the dispatcher pushes as that account.
 
 ## Tests
 
@@ -274,6 +375,24 @@ model-free run is the longest).
   and every rank its `started` marker (the phase log lists each).
 - `390_mutate.py`: each mutation red.
 
+*As built:* 118 tests in five files.
+- **No `test_phase390_journal.py`.** The journal's tests sit in
+  `test_phase390_resume_contract.py` (39): the known-bad journals in
+  `fixtures/resume/bad/`, the kill-point list in
+  `fixtures/resume/kill_points.json` (each point names its tests), and the
+  journal outside the fence.
+- `test_phase390_resume.py` (38): every kill point; the held run and the
+  recheck; the pause; the prune with `KEEP_RUNS=1` and a control.
+- `test_phase390_search.py` (20): #14's real history at 15:34, 15:50 and
+  20:33, from `fixtures/resume/issue14_*_1633`; the held #14 recheck due;
+  the dry run; the abandon cases; the start order; the ledger; markers
+  named by run; the summary line.
+- `test_phase390_kill.py` (1), with `tests/support/fleet_kill_driver.py`:
+  a real SIGKILL, then a second process.
+- `test_phase390_space.py` (20): section 11.
+- 388's dispatcher tests: one built from a journal, and the fixture plants
+  a missing fleet identity (bug fix #1).
+
 ## Non-goals
 
 - The Quartermaster: the next phase (its row is the planted mission's
@@ -282,34 +401,88 @@ model-free run is the longest).
   deleted by hand: the stop comment says so instead.
 - F217 (a digest day skipped while the host was off) and the sweep.
 - Changing the unit file, `KillMode`, the restart method, or sudoers.
+  *As built:* sudoers gained one line, `fstrim -v /` (section 11). The
+  operator installed it, as part of the free space they added.
 - #14, PR #15, their labels and the 389A branch: not touched by hand.
 - Any path under the data folder, seed content, splits, eval protocols;
   anything under `src/`; live.
 
 ## Planned items
 
-- [ ] `journal.py`, and `new_run` writing it before the clone
-- [ ] the replay in the runner: calls, the Engineer's session, checks;
+- [x] `journal.py`, and `new_run` writing it before the clone
+- [x] the replay in the runner: calls, the Engineer's session, checks;
       `rank_call` skips the ledger for a replayed call
-- [ ] the steps' GitHub checks; ` run=` on every marker; the `started`
+- [x] the steps' GitHub checks; ` run=` on every marker; the `started`
       marker for every rank
-- [ ] `Fleet.recover` and `recover --dry-run`; `run` and `once` call it
+- [x] `Fleet.recover` and `recover --dry-run`; `run` and `once` call it
       first
-- [ ] the pause kept until its stage ends; `prune_runs` keeps unfinished
+- [x] the pause kept until its stage ends; `prune_runs` keeps unfinished
       runs
-- [ ] tests, fixtures (#14's captured history), 388/389 tests updated;
+- [x] tests, fixtures (#14's captured history), 388/389 tests updated;
       `COLLECTED_TEST_FLOOR` raised (pre-approval (b))
-- [ ] `SKILL.md`, `CHANGELOG.md`; F219 closed in `docs/FOLLOWUPS.md`
-- [ ] the mutation run
-- [ ] the dry run on the live state; the service on the new code
-- [ ] row 390A on `master`; the seven planted proofs; the operator's
+- [x] `SKILL.md`, `CHANGELOG.md`; F219 closed in `docs/FOLLOWUPS.md`
+- [x] the mutation run
+- [x] the dry run on the live state; the service on the new code
+- [x] row 390A on `master`; the seven planted proofs; the operator's
       whole-Ubuntu restart
-- [ ] close-out: `wholetree.sh --full`, the regression of record, the
+- [x] close-out: `wholetree.sh --full`, the regression of record, the
       handoff, row 390 to ✅
+- [x] *added:* the held run and its recheck (section 10); #14's
+      `held.json`
+- [x] *added:* free space (section 11): the reclaim, the floor, the
+      sudoers line, the operator's sparse block; F221 closed
 
 ## Deviations
 
-None at v1.0; v1.1 lists each.
+- **Scope added by the operator, twice.**
+  - The held run and its recheck (section 10), after F220.
+  - Free space phase to phase (section 11), which closes F221; the
+    operator: "now it just needs to be written into the method itself".
+    The floor and the timer are their numbers.
+- **The `started` marker has its own prefix** (section 4). With the
+  dispatcher's prefix, the XO's due rule read it.
+- **A call's journal key leaves the prompt out** (section 2). A prompt can
+  read what its own stage already wrote.
+- **A stop on an open marker only when no stage is due** (section 5).
+  #14's 15:50 history broke the flow-label rule.
+- **One summary line per search on start** (section 5).
+- **The restart is a SIGTERM to the unit's main process**, as section 8
+  planned, never a literal `systemctl restart`: lilcu has no password-free
+  systemctl for this unit.
+- **The whole-Ubuntu restart was not the planned paste block.** C: filled
+  at 19:02, and Ubuntu's disk went read-only until 19:55. The operator
+  freed 200 GB and ran the restart. The service came back by itself and
+  resumed #19's Engineer from its session; that stage reached
+  `review:open` at 21:56. The operator counted it as the proof. The check
+  script's first version (`390_ubuntu_check.py`) waited for a line that
+  comes only at the stage's end; it was fixed, and re-run with ALL GOOD.
+- **The Red Team was cut twice, with a control.** #21's resumed refute
+  stopped on the refute checklist (C7), and the label stayed. #22, with no
+  restart, passed. #23, resumed, passed and reached `build:open`. #21's
+  miss is taken as the model's own: the same path passed on #23.
+- **Planted issues** are #16 to #19 and #21 to #24 (PR #20 is the
+  Engineer's), not one issue per rank as written. #18 was reopened for
+  the revision round, so that #19 had an approved plan. #22 is the
+  control. Every one is closed.
+- **The service clone was moved forward to the branch tip** with each
+  pushed change that the proofs needed (`ea1f8d1`, `3ad9dc3`, `b62e447`,
+  `f681617`). A move took effect only at the next proof's restart.
+- **F220 filed** (my test runs overlapped #14's model-free run, and it
+  timed out). From then on, no test ran while a fleet model-free run was
+  going, per the operator's rule.
+- **Two bug fixes:** 388's fixture read the real fleet identity, and the
+  digest's resume line said "(issue None)".
+- **Guard blocks, all recorded in the log:** two commit-and-push
+  commands, two `sed -i` and one `>>` into tests, and the push guard's
+  fast run catching bug fix #1's two tests. No guard was changed.
+- **Two misses in my own steps, recorded:**
+  - a merge commit (`67735e2`) was made before its whole-tree run (it
+    passed right after);
+  - a proof script was started by mistake for issue 0 and killed within
+    seconds, before it could act.
+- **The sparse block's last check was wrong.** It waited for the fleet's
+  own timer reclaim, which is not due until about 01:46. The fleet's
+  reclaim is proven by that timer line instead (Results).
 
 ## Results
 

@@ -26,9 +26,27 @@ U5 a stop said when a stage is due: red
 U6 an open marker never said: red
 U7 the dry run writes: red
 U8 a failed resume not said: red
+U9 the digest's resume line names `issue None` (bug fix #2): red
 H1 a model-free-only failure not held: red
 H2 the recheck never due: red
 H3 the hold kept after the recheck: red
 H4 the recheck due while the operator's stop is not the last word: red
 K1 a real process's cut call not resumed: red
-33/33 red
+F1 the floor never read: red
+F2 no reclaim before a hold: red
+F3 a model-free run not gated: red
+F4 a new stage not gated: red
+F5 needs-hands not added: red
+F6 a space hold never due again: red
+F7 a space hold due after it was answered: red
+F8 no timer: red
+F9 a merge not seen: red
+F10 no close-out reclaim: red
+F11 the service not given the disks: red
+F12 a disk that cannot be read passes: red
+F13 the CLI writes the service's state: red
+F14 a low-space stop said as a plain stop: red
+F15 an Engineer held for space not kept for the same commit: red
+F16 a recheck held again releases its run: red
+50/50 red
+exit 0

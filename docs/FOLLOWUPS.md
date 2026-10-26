@@ -4014,7 +4014,7 @@ refuse, naming it); and an Engineer stop whose only failure is the
 model-free run can be sent back to rerun that run on the same commit
 (Phase 390 builds the second half, at the operator's word).
 
-### F221
+### F221 — CLOSED by Phase 390 (`6b1d7f7`)
 
 **The fleet has no disk-space guard: its run folders keep every test run's temporary files, the Ubuntu disk image grew until Windows' C: was full, and Ubuntu went read-only**
 
@@ -4071,3 +4071,28 @@ shut down) or by making it sparse. Sparse is experimental in this WSL
 release, and the live database is in this image, so choosing sparse is the
 operator's call. The floors are the operator's to set: a threshold,
 CLAUDE.md rule 1.
+
+Closed by Phase 390 (`6b1d7f7`, `.claude/skills/fleet/dispatcher.py`),
+in the method, as the operator decided: "it's just something that needs
+to be done frequently to free up the claimed space, now it just needs to
+be written into the method itself. as a part of the overall process phase
+to phase".
+- **The image is sparse** (the operator's paste block, 23:10: 28.4 GB back
+  on C:, "/: 923 GiB trimmed").
+- **The fleet reclaims** (`fstrim -v /`, its one sudoers line,
+  `ops/desktop/install_fstrim_sudoers.sh`) on a 3-hour timer, at each
+  merge and at each close-out, and logs the free space on C: and in Ubuntu
+  before and after.
+- **No new model stage or model-free run starts below 50 GB** on either
+  disk (the operator's numbers). Below it the fleet reclaims first; if
+  still below, the stage is held: label unchanged, a comment, and
+  `needs-hands`.
+- **The handoff carries the reclaim line** (closeout skill, step 9).
+- Tests: `tests/test_phase390_space.py`.
+
+**Not done**, and not in the operator's scope: a finished run's `run/tmp`
+is not removed when its stage ends. With the image sparse and Ubuntu's
+root mounted with `discard`, deleting a run (`prune_runs`, 20 kept)
+returns its space to Windows, and the floor stops new work before C:
+runs low. If the kept runs alone come near the floor, removing `run/tmp`
+at a stage's end is the next step.

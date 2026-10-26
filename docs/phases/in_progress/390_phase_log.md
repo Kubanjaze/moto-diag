@@ -655,3 +655,13 @@ while a fleet model-free run is going."
 - Verified: the 388, 389 and 390 fleet files, 346 passed; `390_mutate.py
   U9` red.
 - Commit: this one.
+
+### 2026-10-25 23:4x — close-out begins
+
+- `390_mutate.py`, all of it, on the final code (`f681617` plus nothing
+  but docs): **50/50 red**, exit 0 (`390_mutate.out`). These are 33 from
+  the build, 16 for free space (F1–F16) and U9 for bug fix #2.
+- v1.1 written: every section's "As built", the planned items ticked, and
+  Deviations. Results follow the regression.
+- F221 closed in `docs/FOLLOWUPS.md`, with what was not done (a finished
+  run's `run/tmp` is not removed) said plainly.
