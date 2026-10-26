@@ -4,7 +4,7 @@ $key = Get-ChildItem "HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss" | ? 
 $vhd = Join-Path (Get-ItemProperty $key.PSPath).BasePath "ext4.vhdx"
 $free0 = [math]::Round((Get-PSDrive C).Free/1GB,1)
 "before: C: free $free0 GB"
-$busy = foreach ($w in "pytest","bwrap","regression.sh") { wsl -d $d -u root -- pgrep -fa $w }
+$busy = foreach ($w in "bwrap","regression.sh") { wsl -d $d -u root -- pgrep -x $w }
 if ($busy) { "SOMETHING IS OFF: the fleet is working right now, nothing was changed. Wait for Claude to say it is safe."; return }
 wsl -d $d -u root -- sh /home/lilcu/Projects/moto-diag/ops/desktop/install_fstrim_sudoers.sh
 $rules = (wsl -d $d -u lilcu -- sudo -n -l) -join " "
@@ -26,6 +26,8 @@ Start-ScheduledTask -TaskPath "\motodiag\" -TaskName "fleet-boot"; Start-Sleep 6
 if ($sparse) { wsl -d $d -u lilcu -- sudo -n /usr/sbin/fstrim -v / }
 $svc = (wsl -d $d -- systemctl is-active motodiag-fleet.service motodiag-api.service) -join " "
 if ($svc -ne "active active") { $ok = $false; $why += "the services are '$svc', not 'active active'" }
+$rec = $null; foreach ($i in 1..24) { $rec = (wsl -d $d -- tail -n 200 /home/lilcu/.local/state/motodiag/fleet/dispatcher.log) | Select-String "reclaim \(.*fstrim: /" | Select-Object -Last 1; if ($rec) { break }; Start-Sleep 5 }
+if ($rec) { "the fleet's own reclaim: $rec" } else { $ok = $false; $why += "the fleet did not log a reclaim of its own" }
 $free1 = [math]::Round((Get-PSDrive C).Free/1GB,1)
 "after:  C: free $free1 GB (got back $([math]::Round($free1-$free0,1)) GB); disk image sparse: $sparse"
 if ($free1 -le $free0) { $ok = $false; $why += "C: did not get any space back" }
