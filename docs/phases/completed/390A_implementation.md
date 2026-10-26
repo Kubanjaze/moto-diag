@@ -1,6 +1,9 @@
 # Phase 390A — The Quartermaster's ROADMAP row
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-25
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-25 (v1.0 `4123dfa`, revised `e274426`)
+
+v1.1 updates every section to what shipped (each change marked "As
+built"), ticks the planned items, and adds Deviations and Results.
 
 Written by the Captain from `390A_step0.md` (classification: greenfield),
 ROADMAP row 390A and the mission prompt
@@ -36,6 +39,10 @@ under `src/` is a KTM owner's manual filename quoted in a source citation in
 routing note in `.claude/skills/fleet/dispatcher.py` ("not built yet") and a
 label description in `.claude/skills/fleet/labels.py`; both stay as they
 are until Phase 391 builds the rank.
+
+**As built:** row 391 and the close-out records shipped, docs only, and
+F220 was filed; nothing under `src/`, `tests/` or `.claude/` changed. The
+Engineer built it on this branch.
 
 ## Logic
 
@@ -74,6 +81,10 @@ changed by this step. The row is a ledger entry: the only way a reader
 reaches it is by reading the ROADMAP, and the reach for each verb in it
 belongs to Phase 391.
 
+**As built:** the wording above, unchanged, inserted after row 390A in
+`95a127b`. `roadmap_words.py 391 --check` printed 91, exit 0;
+`roadmap_check.py` passed.
+
 ### 2. `docs/ROADMAP.md`: row 390A at close-out
 
 Row 390A goes from 🚧 to ✅ in the close-out commit, with
@@ -81,6 +92,10 @@ Row 390A goes from 🚧 to ✅ in the close-out commit, with
 only), and the regression line as `regression.sh` printed it. Finish line:
 the body cell within the cap by `roadmap_words.py 390A --check`, and
 `roadmap_check.py` passing with the phase's documents in `completed/`.
+
+**As built:** row 390A ✅ in the close-out commit, with the sentence and the
+regression line; one more clause names F220, the finding the regression
+turned up (Deviations).
 
 ### 3. `docs/phases/in_progress/390A_phase_log.md`, new
 
@@ -93,11 +108,18 @@ fix happens; a docs row is expected to need none. Its status line reads
 Complete at close-out (A2). Finish line: `closeout_check.py . 390A` reports
 nothing.
 
+**As built:** as planned, with no bug fix. It also records the two
+regression runs that did not count (one cut off when the session stopped,
+one red on F220), the decision to run the same tree again (Deviations), and
+one edit-guard block.
+
 ### 4. `docs/phases/in_progress/390A_implementation.md`, this document
 
 v1.1 at close-out: every section updated to what shipped, the planned items
 ticked, Deviations and Results added (A3). Finish line: the plan as built
 differs from v1.0 only where Deviations says so.
+
+**As built:** this version.
 
 ### 5. The close-out records
 
@@ -140,6 +162,11 @@ Finish line, in two parts, as Phase 389 ran it:
   (`verify_phase.sh 389 2754a01 7ca42e0`). Its result goes in the handoff's
   `## After the merge` section, with the merge's outcome.
 
+**As built:** the count on the close-out tree gave 410 rows, 370 numbered
+phases and 40 letter follow-ons, the figures expected; the command is in
+the phase log. The handoff, the root `phase_log.md` section and the history
+row are written; the three documents are in `completed/`.
+
 ### 6. The order of work
 
 Each commit on its own, with `.claude/skills/closeout/wholetree.sh` run on
@@ -149,6 +176,11 @@ commit (steps 2, 4, 5). The push gate in `.claude/skills/fleet/fleet_git.py`
 lets the Engineer add a ROADMAP row and change its own phase's row, and
 refuses a change to any other phase's row; nothing in this plan touches
 another phase's row.
+
+**As built:** in that order, four commits: the row (`95a127b`), the phase
+log (`44f846d`), the regression of record with F220 (`ab40626`), and the
+close-out commit. F220 had to be filed before any document cited it (rule
+6), so it went in with the regression's log entry.
 
 ## The change log's three newest entries
 
@@ -189,6 +221,11 @@ another phase's row.
   row cannot have caused, that is this stop, put to the operator in plain
   English with the failing test's output, as 389A's was.
 
+**As built:** no stop. One regression run went red on a test the row
+cannot have caused, and the cause made it green on a run inside one UTC
+day without a change, so it was run again rather than stopped (Deviations
+1).
+
 ## Tests
 
 No new test file. A 🔲 row is a ledger entry, not a capability with an
@@ -219,6 +256,10 @@ already exist and are run on it:
 - `COLLECTED_TEST_FLOOR` does not move: no test is added or removed, and
   the floor test is expected to pass unchanged.
 
+**As built:** all run as listed, with their outputs in the phase log; the
+floor did not move, and the regression of record passed 11297, as at Phase
+389's. `verify_phase.sh` stays the operator's, after the merge.
+
 ## Non-goals
 
 - Building the Quartermaster: `verify_phase.sh` run by a rank, a merge
@@ -242,24 +283,68 @@ already exist and are run on it:
 
 ## Planned items
 
-- [ ] 1. Row 391 in `docs/ROADMAP.md` after row 390A, 🔲, the wording in
+- [x] 1. Row 391 in `docs/ROADMAP.md` after row 390A, 🔲, the wording in
       Logic 1; `roadmap_words.py 391 --check` exit 0; `roadmap_check.py`
-      passing; one commit after `wholetree.sh`
-- [ ] 2. `roadmap_check.py --self-test` run once, its known-bad cases red,
+      passing; one commit after `wholetree.sh` (`95a127b`)
+- [x] 2. `roadmap_check.py --self-test` run once, its known-bad cases red,
       the output in the phase log
-- [ ] 3. `390A_phase_log.md`: dated entries from Step 0 on, the "No refute
+- [x] 3. `390A_phase_log.md`: dated entries from Step 0 on, the "No refute
       pass ran" line, the regression line
-- [ ] 4. `wholetree.sh --full`, then `regression.sh`; the line recorded
-- [ ] 5. v1.1 of this plan: every section as built, Deviations, Results
-- [ ] 6. Row 390A to ✅ with the CLOSED date and the regression line; the
+- [x] 4. `wholetree.sh --full`, then `regression.sh`; the line recorded
+- [x] 5. v1.1 of this plan: every section as built, Deviations, Results
+- [x] 6. Row 390A to ✅ with the CLOSED date and the regression line; the
       handoff `docs/handoffs/YYYY-MM-DD_390A_closed.md` with its
       `## After the merge` section left for the operator; the root
       `phase_log.md` section; `implementation.md`'s header, history row and
       Roadmap count line re-measured with row 391 in the ledger (expected
       410 rows, 370 numbered and 40 letter follow-ons, written as counted,
       with the close-out date); the three documents to `completed/`
-- [ ] 7. Before the PR: `closeout_check.py . 390A` reporting nothing and
+- [x] 7. Before the PR: `closeout_check.py . 390A` reporting nothing and
       the push gate passing; the PR naming issue #16, the regression line
       and the model-free run. After the merge, the operator runs
       `verify_phase.sh 390A <regression hash> <merge commit>` and its
-      result goes in the handoff's `## After the merge` section
+      result goes in the handoff's `## After the merge` section. As built:
+      `closeout_check.py . 390A` prints nothing; the push gate, the
+      model-free run and the PR are the dispatcher's, after this session,
+      and the after-the-merge check is left in the handoff for the operator
+
+## Deviations
+
+1. **A red regression did not stop the phase.** "Rule-1 stops anticipated"
+   says a red regression inside the fence on something the row cannot have
+   caused is a stop for the operator. The second `regression.sh` run at
+   `44f846d` failed one test,
+   `test_phase274_quotes_variance.py::TestTheQuoteRecord::test_queuing_an_estimate_records_the_quote`
+   (`'2026-10-26' == '2026-10-25'`). The cause was on the failure's face:
+   the test reads its day at import (line 23); the run was collected at
+   23:55 UTC and reached the test after midnight UTC. Rule 1 stops for a
+   test that cannot be made green, and this one is green on any run inside
+   one UTC day, with no change. So the same tree was run again unchanged at
+   00:28 UTC and passed, 11297 to 0. The decision and the reason are in the
+   phase log.
+2. **F220 filed, and not fixed.** The test's defect is recorded in
+   `docs/FOLLOWUPS.md` as F220, with what would close it, and the header's
+   highest number moved to F220. Fixing it is a change under `tests/`,
+   which this plan's Non-goals exclude. Row 390A names it in one clause.
+3. **One regression run lost.** The first `regression.sh` run was cut off
+   when the session stopped, before it printed anything; it counts for
+   nothing, and the log says so.
+
+Nothing else differs from v1.0: row 391's wording is v1.0's, no file under
+`src/`, `tests/` or `.claude/` changed, and `COLLECTED_TEST_FLOOR` did not
+move.
+
+## Results
+
+- Row 391, "The Quartermaster", 🔲, after row 390A: 91 words by
+  `roadmap_words.py`; `roadmap_check.py` passes, and its `--self-test`
+  goes red on every rule's known-bad tree (R1–R7) and passes the good one.
+- The ledger with row 391: 410 rows, 370 numbered phases and 40 letter
+  follow-ons, on 2026-10-25.
+- `wholetree.sh --full` at `44f846d`: exit 0, 4530 passed, 36 skipped.
+- The regression of record, as `regression.sh` printed it (its 105 skips,
+  by file and reason, are below the same line in the phase log):
+
+Regression of record: 11297 passed, 0 failed, 105 skipped, 0 errors at `44f846d` (31 min 33 s wall, `python -m pytest -n auto --dist load`, exit 0) (run inside the fleet's fence)
+
+- F220 filed. No bug fix, no migration, nothing on live, no refute pass.

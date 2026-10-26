@@ -3862,3 +3862,8 @@ Write-up: [`388_implementation.md`](docs/phases/completed/388_implementation.md)
 
 Log: [`docs/phases/completed/389_phase_log.md`](docs/phases/completed/389_phase_log.md).
 Write-up: [`389_implementation.md`](docs/phases/completed/389_implementation.md).
+
+## Phase 390A — The Quartermaster's ROADMAP row — CLOSED 2026-10-25
+
+Log: [`docs/phases/completed/390A_phase_log.md`](docs/phases/completed/390A_phase_log.md).
+Write-up: [`390A_implementation.md`](docs/phases/completed/390A_implementation.md).

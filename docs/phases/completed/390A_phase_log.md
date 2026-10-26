@@ -1,6 +1,6 @@
 # Phase 390A — The Quartermaster's ROADMAP row — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-10-25)
 **Branch:** `phase-390A-quartermaster-row` (the Chief Engineer, in a fenced clone on the home desktop, the only writer)
 
 No refute pass ran.
@@ -177,3 +177,32 @@ Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:1
 
 `COLLECTED_TEST_FLOOR` not moved: no test added or removed (11297 passed
 plus 105 skipped, as at Phase 389's regression of record).
+
+### 2026-10-25 — Close-out (planned items 5 to 7)
+
+- **A guard block, recorded and not loosened.** Writing v1.1 with one
+  `python3 -` script whose path was a variable and whose text names `src/`
+  and `tests/` was blocked by the edit guard: "a Python script body writes
+  to a path the edit guard cannot resolve, and the body names src/ or
+  tests/; it blocks what it cannot resolve." Done instead with the Edit
+  tool, one edit at a time. The guard blocked once.
+- **The ledger count** for the root `implementation.md`, on the close-out
+  tree, with the row pattern `roadmap_check.py` reads:
+
+  ```
+  python3 -c "
+  import re;t=open('docs/ROADMAP.md',encoding='utf-8').read()
+  r=re.findall(r'^\| (\d{2,3}[A-Z]?) \| [^|]* \| ([^|]*) \|',t,re.M)
+  print(len(r),sum(1 for p,_ in r if p[-1].isdigit()),sum(1 for p,_ in r if not p[-1].isdigit()))"
+  410 370 40
+  ```
+
+  410 rows, 370 numbered phases and 40 letter follow-ons, as v1.0
+  expected; written into the Roadmap line with the date 2026-10-25.
+- v1.1 written; row 390A ✅ with `**CLOSED 2026-10-25.**` and the
+  regression line; the root `implementation.md`'s header, history row and
+  count line; the root `phase_log.md` section; the handoff
+  `docs/handoffs/2026-10-25_390A_closed.md`; the three documents moved to
+  `completed/` with `git mv`.
+- No bug fix in this phase, so no register. `clock_check.sh` not run: it is
+  for a month's last evening, and 2026-10-25 is not one.
