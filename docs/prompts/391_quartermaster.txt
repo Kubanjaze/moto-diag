@@ -1,0 +1,19 @@
+Two things first, then a new phase.
+
+1. Row 390A is still 🚧 on master. It was 390's planted-missions row; PR #20 was closed unmerged on the Captain's "hold" and the Red Team's findings. Close the row honestly per the ledger rule (what it proved, that it did not ship), with its handoff.
+
+2. The handoff's "After the merge" block for 390 failed on 2026-10-26: run from a fresh Ubuntu window, `gh issue edit 14` had no repository ("fatal: not a git repository ... could not take the hold off issue 14"). Every gh call in an operator paste block must carry -R Kubanjaze/moto-diag or cd into the repo first. Make that a check (a close-out or fixture rule over handoffs' paste blocks), fix 390's handoff block in place, and file it as a finding.
+
+New phase: the Quartermaster in shadow, step 8 of docs/reports/2026-10-22_fleet_proposal.md. Next free ROADMAP number (391 unless the ledger says otherwise), row 🚧 first, branch phase-<N>-quartermaster, prompt to docs/prompts/<N>_quartermaster.txt. Stops only for CLAUDE.md rule 1.
+
+What ships, under .claude/skills/fleet/ with CHANGELOG, fixtures, contract tests and mutations:
+- quartermaster.py: on merge:needs-review (after the Captain's recommendation), a fresh fenced Opus call, never the builder's session. It runs verify_phase.sh, regression.sh and wholetree.sh --full, confirms every claimed commit in git log, diffs v1.0 against v1.1 for stubs, and checks the handoff exists. It writes its merge verdict (merge, or refuse naming the failed check) on the PR and in the digest. In shadow it never merges: I still merge by hand. Scope per the proposal's decision: extension or greenfield only, no migration, no data/, no live apply; anything else it refuses as out of scope.
+- The dispatcher wired to it, journaled and resumable like every 390 stage, under the 50 GB free-space floor.
+- Proofs: at least two planted bad PRs (a v1.1 with a stub section; a missing handoff), each refused with the right check named, plus one green PR where its verdict matches mine. Five green matches prove nothing; the refusals are the proof. Promotion out of shadow is not in this phase: it is my decision afterwards, recorded in both CLAUDE.md files with the date.
+- The fleet pushes as kubanjazefleet now; planted trials may still use my login, as before.
+
+Rules while you build: #14's model-free run started 13:05:48 and runs about 40 minutes, then its push and Red Team round 3. Do not touch #14, PR #15 or their labels. Before any whole-tree, regression or large test run, check dispatcher.log and pgrep -x bwrap for a fleet run in progress, and wait for a gap. Never restart the service or Ubuntu while a #14 stage runs.
+
+Scoped pre-approvals, apply literally: (a) planted missions and PRs under my login, closed unmerged after their proof; (b) raising COLLECTED_TEST_FLOOR for this phase's own tests is not a stop; (c) restarting motodiag-fleet.service for a planted proof, in a gap with no #14 stage running, is not a stop.
+
+Step 0 first, and report before v1.0: what verify_phase.sh's fourteen checks cover and miss for a fleet-built PR; which 389/390 code the Quartermaster reuses; how it reads the Captain's recommendation and the Red Team's clear; the token cost of one call from a dry run. Then v1.0, plan commit pushed, build, close out, handoff, row to ✅. Merge stays mine.
