@@ -41,6 +41,12 @@ The operator's words:
   4. **No new fleet-only phase** unless it unblocks a first-shop phase, which its row names.
   - **Where things stood:** 390 and 390A closed. None of the ten first-shop rows had started.
   - **This confirms the 2026-10-25 recommendation with one change:** the Quartermaster took a phase of its own (391), which was already under way.
+- **2026-10-26, later: 392 goes between 391 and 303/348.** In 392 the fleet follows the plan of record. The operator's decision is K44.
+  - **What was found:** no rank reads the plan of record or docs/decisions.md. A mission starts only when someone opens its issue by hand. The ranks trust a marker comment from any author (F223, on a public repository).
+  - **The operator's words:** "well the fleet should be reading the plan of record, how tf is that missed!?", "isnt that the whole point!?", "its supposed to replace what ive been doing. so bridge that gap however it must, thats priority, so we can continue on track".
+  - **What it unblocks:** 303 and 348, which its row names (K43).
+  - **Its proof:** the fleet starts 303 and 348 from this plan by itself.
+  - **The prompt** is `docs/prompts/392_the_fleet_follows_the_plan.txt`.
 
 ## Where the ledger stands
 
