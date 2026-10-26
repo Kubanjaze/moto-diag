@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F219** (this file). The
+At the time of writing the highest assigned is **F220** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3958,3 +3958,29 @@ before it starts (the same record a pause writes), clears it when the
 stage ends, and on start, a record still there is resumed: the same run
 directory, `--resume` for a session that was cut, the model-free run
 rerun. A test kills a stage half way and restarts the dispatcher.
+
+### F220
+
+**`test_phase274_quotes_variance.py` reads its day once, at import, so a regression that crosses midnight UTC fails it**
+
+Found 2026-10-25 by Phase 390A's regression of record inside the fleet's
+fence. Line 23 sets `NOW = datetime.now(timezone.utc)` when the module is
+imported, at collection; line 106 compares `NOW`'s day with the day of the
+`quoted_at` the code writes when the test runs. The run at `44f846d`
+started at 19:55 EDT (23:55 UTC, 2026-10-25) and reached the test after
+00:00 UTC: `assert '2026-10-26' == '2026-10-25'`, 1 failed and 11296
+passed (log `44f846d_parallel_20261025_195537.log`). Run again unchanged at
+20:28 EDT, inside one UTC day, it passed: 11297 passed, 0 failed.
+
+What it affects: one test, and only a run whose collection and that test
+fall either side of 00:00 UTC, which is 20:00 EDT (19:00 EST); a parallel
+regression now takes about 32 minutes, so any regression started after
+about 19:25 EDT is at risk. F196's clock census lists this line
+(`test_phase274_quotes_variance.py:106`, "the `NOW` of line 23 as a day")
+and its libfaketime proof fixed the whole process's clock, so the clock
+never moved between import and the test, and the crossing could not show.
+
+To close: the test reads the clock when it runs (a `datetime.now(timezone.utc)`
+taken inside the test, before and after the call, and the day of
+`quoted_at` is either one's day), and a test with the clock moved past
+midnight between collection and the call goes red on today's line.
