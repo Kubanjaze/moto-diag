@@ -20,6 +20,11 @@ script, in 257's census/candidates shape
 5. `write`: the report, `docs/phases/in_progress/<N>_step0.md`, and the
    issue's body saved as the phase's prompt when it has none yet.
 
+**The plan of record** (Phase 392, K44): `assess` reads what bears on the
+phase (`plan_order.brief_block`), and the report's "The plan of record"
+section is the script's: its cite line, and the record's words verbatim
+in a fenced block, so P3 reads none of its dates or numbers as counts.
+
 The dispatcher commits, tests, gates and pushes; this module never does.
 """
 from __future__ import annotations
@@ -33,6 +38,7 @@ import sys
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import plan_check  # noqa: E402
+import plan_order  # noqa: E402
 import rank_call  # noqa: E402
 from rank_call import HAIKU, NO_TOOLS, Runner, Stop  # noqa: E402
 
@@ -156,11 +162,13 @@ def candidates(clone: pathlib.Path, found: list[str]) -> list[dict]:
 
 # ----------------------------------------------------------------- assess
 def assess(mission: str, row: str, table: str, excerpts: list[dict], context: str, *,
-           cwd: pathlib.Path, run: Runner, model: str = HAIKU) -> tuple[dict, list[rank_call.Call]]:
+           cwd: pathlib.Path, run: Runner, model: str = HAIKU, record: str = ""
+           ) -> tuple[dict, list[rank_call.Call]]:
     shown = "\n\n".join(f"--- {e['where']} ({e['term']})\n{e['text']}" for e in excerpts)
     prompt = (f"{ASSESS_BRIEF}\n=== the ROADMAP row ===\n{row}\n\n=== the mission ===\n{mission}\n\n"
               f"=== the census ===\n{table}\n\n=== excerpts ===\n{shown or '(no hits)'}\n\n"
-              f"=== context: the ROADMAP rows around it, the newest handoff ===\n{context}")
+              f"=== context: the ROADMAP rows around it, the newest handoff ===\n{context}"
+              + (f"\n\n{record}" if record else ""))
     calls = []
     for attempt in range(2):
         c = rank_call.call("scout", prompt, model, ASSESS_SCHEMA, cwd=cwd, run=run, tools=NO_TOOLS)
@@ -195,8 +203,15 @@ def slug(title: str) -> str:
     return "_".join(s.split("_")[:6]) or "mission"
 
 
+def record_section(phase: str, cite: str, record: str) -> str:
+    """The report's "The plan of record": the script's, never the model's."""
+    return (f"## The plan of record\n\nFrom `python3 .claude/skills/fleet/plan_order.py "
+            f"bearing {phase}`. {cite}\n\n```\n{record}\n```\n")
+
+
 def render(phase: str, title: str, issue: int, base: str, v: dict, table: str,
-           excerpts: list[dict], calls: list[rank_call.Call], today: dt.date) -> str:
+           excerpts: list[dict], calls: list[rank_call.Call], today: dt.date,
+           record: str = "") -> str:
     where = ", ".join(f"`{w}`" for w in sorted({e["where"] for e in excerpts})) or "none"
     return f"""# Phase {phase} — Step 0: {title}
 
@@ -224,6 +239,7 @@ The excerpts the judgement was given (`scout.candidates`): {where}.
 
 {v['risks_and_stops'].strip()}
 
+{record}
 ## The calls
 
 """ + "\n".join(f"- {c.line()} (`claude -p … --output-format json`)" for c in calls) + "\n"
@@ -239,11 +255,14 @@ def run_scout(phase: str, title: str, issue: int, mission: str, row: str, *,
     rows = census(clone, found, mobile)
     table = census_table(rows)
     excerpts = candidates(clone, found)
-    v, calls = assess(mission, row, table, excerpts, context, cwd=clone, run=run, model=model)
+    record = plan_order.brief_block(clone, phase)
+    v, calls = assess(mission, row, table, excerpts, context, cwd=clone, run=run, model=model,
+                      record=record)
     base = subprocess.run(["git", "-C", str(clone), "rev-parse", "HEAD"], capture_output=True,
                           text=True).stdout.strip()
     text = render(phase, title, issue, base, v, table, excerpts, [c1, *calls],
-                  today or dt.date.today())
+                  today or dt.date.today(),
+                  record_section(phase, plan_order.cite_line(clone, phase), record))
     left = plan_check.unshown_counts(text)
     if left:
         raise Stop(f"the report counts something with no query shown: {left[0]}")

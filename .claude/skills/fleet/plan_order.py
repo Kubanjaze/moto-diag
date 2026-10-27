@@ -57,7 +57,9 @@ BUILT_BY = ("fleet", "builder")
 #: What an entry may need from the operator, and the label the fleet asks with.
 NEEDS = {"an outside account": "needs-hands", "an outside person": "needs-hands",
          "a credential": "needs-hands", "a fork": "needs-admiral",
-         "a live change": "needs-admiral"}
+         "a live change": "needs-admiral",
+         # A threshold or a rule's definition (rule 1; K52: F210's rule before 330).
+         "a rule change": "needs-admiral"}
 #: CLAUDE.md rule 1's five kinds, as the Engineer names them: never answered (K50).
 RULE1_KINDS = ("fork", "threshold-or-rule", "test-cannot-be-green", "login-or-credential",
                "live-database-change")
@@ -303,10 +305,10 @@ class Bearing:
 
     def cites(self) -> list[str]:
         """Each dated entry and K-id that bears on the phase, once, in order."""
-        out = []
-        for c in ([f"the plan of record's 'Next, in order' #{self.entry.n}"] if self.entry else []) \
-                + [f"the plan of record, {d}" for d, _, _ in self.changes] \
-                + (self.entry.kids if self.entry else []) + [d.kid for d in self.decisions]:
+        listed = [f"the plan of record's 'Next, in order' #{self.entry.n}"] if self.entry else []
+        out: list[str] = []
+        for c in [*listed, *(f"the plan of record, {d}" for d, _, _ in self.changes),
+                  *(self.entry.kids if self.entry else []), *(d.kid for d in self.decisions)]:
             if c not in out:
                 out.append(c)
         return out

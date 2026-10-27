@@ -91,6 +91,7 @@ import closeout_check  # noqa: E402
 import engineer  # noqa: E402
 import fleet_git  # noqa: E402
 import journal  # noqa: E402
+import plan_order  # noqa: E402
 import quartermaster  # noqa: E402
 import red_team  # noqa: E402
 import roadmap_check  # noqa: E402
@@ -746,7 +747,33 @@ class Fleet:
         return [json.loads(ln) for ln in out.splitlines() if ln.strip()]
 
     def comments(self, issue: int) -> list[dict]:
-        return json.loads(self.gh("issue", "view", str(issue), "--json", "comments"))["comments"]
+        """The issue's comments a rank may read (Phase 392, F223): the fleet's
+        account's, and the operator's on a trial issue. Every due rule, round
+        count, marker search and model brief reads through this."""
+        data = json.loads(self.gh("issue", "view", str(issue), "--json", "comments,body"))
+        return fleet_git.from_trusted(data["comments"],
+                                      fleet_git.trusted_authors(data.get("body", ""),
+                                                                self.identity_file))
+
+    def own_logins(self) -> set[str]:
+        """Whose comment on a pull request is one of ours: the fleet's and the
+        operator's (in whose name the fleet comments without an account)."""
+        return fleet_git.trusted_authors(fleet_git.TRIAL_MARKER, self.identity_file)
+
+    def issues_open(self) -> list[dict]:
+        """The open issues a rank may work: opened by the fleet's account or
+        the operator (F223); a third account's is logged once and left."""
+        out = []
+        for i in json.loads(self.gh("issue", "list", "--state", "open", "--limit", "200",
+                                    "--json", "number,title,body,labels,author")):
+            if fleet_git.opened_by_trusted(i, self.identity_file):
+                out.append(i)
+            elif (i["number"], "author") not in self._skipped:
+                self._skipped.add((i["number"], "author"))
+                who = (i.get("author") or {}).get("login", "?")
+                self.log(f"issue {i['number']}: opened by {who}, not the fleet or the operator: "
+                         "no stage")
+        return out
 
     @staticmethod
     def last_applied(events: list[dict], label: str) -> str | None:
@@ -880,7 +907,9 @@ class Fleet:
         return any(c.get("body", "").lstrip().startswith(marker) for c in self.comments(issue))
 
     def pr_has_comment(self, pr: int, marker: str) -> bool:
-        bodies = json.loads(self.gh("pr", "view", str(pr), "--json", "comments"))["comments"]
+        bodies = fleet_git.from_trusted(json.loads(self.gh("pr", "view", str(pr), "--json",
+                                                           "comments"))["comments"],
+                                        self.own_logins())
         return any(marker in c.get("body", "") for c in bodies)
 
     def stage_clone(self, run: pathlib.Path, branch: str, *, new_branch: str | None = None
@@ -1068,7 +1097,8 @@ class Fleet:
                           lambda: lab in self.labels_of(issue))
                 return "verdict applied"
         try:
-            code = xo.review(phase, issue, repo=clone, run=runner, out=self.log)
+            code = xo.review(phase, issue, repo=clone, run=runner, out=self.log,
+                             identity_file=self.identity_file)
         except RateLimited as e:
             self.pause(j, e, runner)
             return "rate-limited"
@@ -1343,15 +1373,17 @@ class Fleet:
         except RateLimited as e:
             self.pause(j, e, runner)
             return "rate-limited"
+        cite = plan_order.cite_line(clone, phase)
         pr_marker = self.tag(f"<!-- fleet-red-team-pr: verdict={v['verdict']} round={rnd} -->")
         self.step("pr-comment", lambda: self.gh(
             "pr", "comment", str(pr["number"]), "--body",
             f"{pr_marker}\n**Red Team, round {rnd}: {v['verdict']}**\n\nFindings:\n"
-            f"{red_team.findings_text(v)}\n\n{v['refuter_pass'].strip()}\n\n{call.line()}"),
+            f"{red_team.findings_text(v)}\n\n{v['refuter_pass'].strip()}\n\n{cite}\n\n"
+            f"{call.line()}"),
                   lambda: self.pr_has_comment(pr["number"], pr_marker))
         self.say_once(issue, f"{RED_M} verdict={v['verdict']} round={rnd} -->",
                       f"**Red Team, phase {phase}, round {rnd}: {v['verdict']}** "
-                      f"(PR #{pr['number']}).\n\n{red_team.findings_text(v)}")
+                      f"(PR #{pr['number']}).\n\n{red_team.findings_text(v)}\n\n{cite}")
         if v["verdict"] == red_team.BACK:
             if rnd >= red_team.MAX_ROUNDS:
                 self.escalate(issue, "red-team", "needs-admiral",
@@ -1399,15 +1431,16 @@ class Fleet:
             self.pause(j, e, runner)
             return "rate-limited"
         lines = "\n".join(v["lines"])
+        cite = plan_order.cite_line(clone, phase)
         pr_marker = self.tag(f"<!-- fleet-captain-pr: recommendation={v['decision']} -->")
         self.step("pr-comment", lambda: self.gh(
             "pr", "comment", str(pr["number"]), "--body",
             f"{pr_marker}\n**The Captain's recommendation: {v['decision']}**\n\n{lines}\n\n"
-            f"{call.line()}"),
+            f"{cite}\n\n{call.line()}"),
                   lambda: self.pr_has_comment(pr["number"], pr_marker))
         self.say_once(issue, f"{CAPTAIN_M} recommendation={v['decision']} -->",
                       f"**Captain, phase {phase}: recommends {v['decision']}** "
-                      f"(PR #{pr['number']}).\n\n{lines}\n\nThe operator merges.")
+                      f"(PR #{pr['number']}).\n\n{lines}\n\n{cite}\n\nThe operator merges.")
         self.label_once(issue, "merge:needs-review")
         return f"recommendation: {v['decision']}"
 
@@ -1465,7 +1498,8 @@ class Fleet:
             summary = judged["summary"]
         verdict, failed, note = quartermaster.compose(found, judged)
         text = quartermaster.verdict_text(phase, verdict, failed, summary, note,
-                                          call.line() if call else "")
+                                          call.line() if call else "",
+                                          plan_order.cite_line(clone, phase))
         checks = " ".join(c for c, _ in failed) or "none"
         pr_marker = self.tag(f"{QM_PR_M} verdict={verdict} -->")
         self.step("pr-comment", lambda: self.gh("pr", "comment", str(pr["number"]), "--body",
@@ -1789,9 +1823,7 @@ class Fleet:
         if not dry_run:
             self.update_mirror()
         rows = self.master_rows()
-        issues = {i["number"]: i for i in json.loads(self.gh(
-            "issue", "list", "--state", "open", "--limit", "200", "--json",
-            "number,title,body,labels"))}
+        issues = {i["number"]: i for i in self.issues_open()}
         paused = (self.load().get("paused") or {}).get("run")
         for p in journal.unreadable(self.runs):
             act(f"leave {p.name}: its journal cannot be read, so its stage is not resumed; "
@@ -1893,9 +1925,7 @@ class Fleet:
             if state.get("paused"):
                 return
         rows = self.master_rows()
-        issues = json.loads(self.gh("issue", "list", "--state", "open", "--limit", "200",
-                                    "--json", "number,title,body,labels"))
-        for issue in issues:
+        for issue in self.issues_open():
             if self.load().get("paused"):
                 return
             n, labels = issue["number"], {x["name"] for x in issue.get("labels", [])}

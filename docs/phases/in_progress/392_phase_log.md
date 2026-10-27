@@ -70,3 +70,55 @@ run on `f1763df` with each process's open files sampled from outside), in
     and the body names src/ or tests/"); done with the Edit tool;
   - the edit guard refused a command with a stray `sed -i` I had left at
     its end; the two fixture files were written with the Write tool.
+
+## 2026-10-27 — the ranks read and cite (Logic 3)
+
+- The Science Officer's `assess` reads `plan_order.brief_block`; its
+  report's "## The plan of record" is the script's (`scout.record_section`:
+  the cite line beside the command that makes it, the record's words in a
+  fenced block, so P3 reads none of its dates as counts).
+- The Captain's v1.0 brief asks for "The plan of record" and, for a
+  fleet-only phase, an "Unblocks:" line; P9 and P10 hold it through the
+  existing one-more-call rule. Its recommendation reads the record.
+- The XO's, the Red Team's and the Quartermaster's briefs carry the
+  record; each brief says what in it is a finding (the Quartermaster's
+  under Q1). Every comment those ranks and the Captain's recommendation
+  post ends with `plan_order.cite_line`, written by script.
+- `tests/test_phase392_ranks_cite.py`: each brief, each comment, and on
+  389's walk-through the XO's, the Red Team's and the Captain's comments.
+
+## 2026-10-27 — F223 (Logic 7)
+
+- `fleet_git.trusted_authors`, `from_trusted`, `opened_by_trusted`;
+  `Fleet.comments` (every due rule, round count, marker search and brief
+  reads through it), `Fleet.issues_open` (the cycle and the search on
+  start), `pr_has_comment`, `xo.prior_rounds` (and `xo.review` now takes
+  the identity file, so no test reads `~/.config`).
+- Measured before relying on it: #14 was opened by `Kubanjaze` and its
+  body carries `<!-- fleet-trial -->`; its comments are 22 by `Kubanjaze`
+  and 9 by `kubanjazefleet` (`gh issue view 14 --json comments`). So #14's
+  history still counts after the merge.
+- The stand-ins learned authors: `gh issue comment` posts as
+  `Host.commenter` (the operator unless a test says), a planted comment
+  with none is the operator's, as #14's fixture history was. Tests whose
+  issues modelled the fleet working under the operator's login gained the
+  trial marker, as #14 has; one that modelled a non-trial issue with no
+  fleet account now says what F223 makes of it: the fleet's own verdict,
+  in the operator's name, is not a marker, so nothing follows it.
+- Known-bad, `tests/test_phase392_authors.py`: a third login's Red Team
+  clear, back, Captain merge (Q2 and Q3 both fail, and the model's texts
+  are "(none)"), XO verdict and XO rounds; its mission issue; and with the
+  fleet's account, the operator's marker on a non-trial issue.
+
+## 2026-10-27 — K52: two corrections to the list, before it merged
+
+The operator, relaying the advisor (verbatim in `docs/decisions.md`, K52):
+row 6 (371) needs Stripe's live account as well as the webhook fork; row 8
+(330) needs F210's general rule first, which changes the set-aside list's
+definition, the operator's call. Applied as the list's rule asks: a
+sub-bullet under the 2026-10-27 dated entry, the "As of" line moved to
+K52, the two rows' needs rewritten with the record's own words quoted.
+A need for a rule's definition had no kind in the list, so `NEEDS` gained
+"a rule change", asked with `needs-admiral` (rule 1's threshold-or-rule).
+One row may carry one kind, so 371's is "a fork" with the account named in
+the same cell; both are asked in one plain-English comment.

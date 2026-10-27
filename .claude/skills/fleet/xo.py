@@ -13,8 +13,11 @@
    recommend-to-admiral → needs-admiral. A third back-to-captain on one
    plan becomes needs-admiral: two rounds at most.
 4. The verdict is a comment on the mission issue, opening with a marker
-   line. The rounds are counted from those markers, so the state lives on
-   GitHub beside the label, not in a file on one machine.
+   line, and ending with what the plan of record says on the phase (the
+   script's `plan_order.cite_line`; Phase 392). The call's brief carries
+   the record's words on the phase (`plan_order.brief_block`). The rounds
+   are counted from those markers, so the state lives on GitHub beside the
+   label, not in a file on one machine.
 
 **A stage that cannot finish leaves the label where it found it** and
 comments why (the fleet proposal's one new rule). Exit 0 a verdict applied,
@@ -32,7 +35,9 @@ import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+import fleet_git  # noqa: E402
 import plan_check  # noqa: E402
+import plan_order  # noqa: E402
 import rank_call  # noqa: E402
 from rank_call import FABLE, Runner, Stop, gh  # noqa: E402
 
@@ -79,12 +84,19 @@ threshold or rule's definition, a test that cannot be made green, a login
 or credential, a live-database change that alters or deletes rows. If the
 plan quietly decides one of those itself, that is back-to-captain, or
 recommend-to-admiral when the plan cannot be fixed without the operator.
+
+The plan of record's words on this phase are below, with docs/decisions.md's
+(Read both files too). A plan that contradicts them, or decides what a
+K-id already decided differently, is back-to-captain; cite the dated entry
+or the K-id in the item.
 """
 
 
-def build_prompt(phase: str, plan: str, step0: str, report: plan_check.Report) -> str:
+def build_prompt(phase: str, plan: str, step0: str, report: plan_check.Report,
+                 record: str = "") -> str:
     return (f"{BRIEF}\n=== the checklist: plan_check {phase} ===\n" + "\n".join(report.lines())
-            + f"\n\n=== {phase}_implementation.md ===\n{plan}\n=== {phase}_step0.md ===\n{step0}")
+            + f"\n\n=== {phase}_implementation.md ===\n{plan}\n=== {phase}_step0.md ===\n{step0}"
+            + (f"\n\n{record}" if record else ""))
 
 
 def check_verdict(v: dict) -> dict:
@@ -103,14 +115,18 @@ def check_verdict(v: dict) -> dict:
     return v
 
 
-def prior_rounds(issue: int | None, run: Runner) -> int:
-    """How many back-to-captain verdicts this rank has already given here."""
+def prior_rounds(issue: int | None, run: Runner,
+                 identity_file: pathlib.Path = fleet_git.IDENTITY_FILE) -> int:
+    """How many back-to-captain verdicts this rank has already given here,
+    read from the fleet's own comments only (Phase 392, F223)."""
     if issue is None:
         return 0
-    r = gh(["issue", "view", str(issue), "--json", "comments"], run=run)
+    r = gh(["issue", "view", str(issue), "--json", "comments,body"], run=run)
     if r.returncode != 0:
         raise Stop(f"gh could not read issue {issue}: {r.stderr.strip()[:200]}")
-    bodies = [c.get("body", "") for c in json.loads(r.stdout).get("comments", [])]
+    data = json.loads(r.stdout)
+    bodies = [c.get("body", "") for c in fleet_git.from_trusted(
+        data.get("comments", []), fleet_git.trusted_authors(data.get("body", ""), identity_file))]
     return sum(1 for b in bodies for v, _ in _MARKER.findall(b) if v == BACK)
 
 
@@ -133,7 +149,7 @@ def decide(verdict: dict, rounds_before: int) -> tuple[str, str, int]:
 
 
 def comment_body(phase: str, applied: str, given: str, rnd: int, verdict: dict,
-                 call: rank_call.Call | None) -> str:
+                 call: rank_call.Call | None, cite: str = "") -> str:
     lines = [f"{MARKER} {given} round={rnd} applied={applied} phase={phase} -->",
              f"**Executive Officer, phase {phase}: {applied}** (label `{LABEL[applied]}`)", ""]
     if applied != given:
@@ -143,6 +159,8 @@ def comment_body(phase: str, applied: str, given: str, rnd: int, verdict: dict,
         lines += [verdict["reason"], ""]
     lines += [f"- {i}" for i in verdict.get("items", [])]
     lines += ["", call.line() if call else "No model call: the written checklist failed."]
+    if cite:
+        lines += ["", cite]
     return "\n".join(lines)
 
 
@@ -159,7 +177,7 @@ def set_label(issue: int, label: str, run: Runner) -> None:
 
 def review(phase: str, issue: int | None, *, repo: pathlib.Path = plan_check.ROOT,
            label: bool = True, run: Runner = subprocess.run, model: str = FABLE,
-           out=print) -> int:
+           out=print, identity_file: pathlib.Path = fleet_git.IDENTITY_FILE) -> int:
     def stop(why: str) -> int:
         out(f"STOP: {why}. The label is left where it was.")
         if label and issue is not None:
@@ -173,7 +191,7 @@ def review(phase: str, issue: int | None, *, repo: pathlib.Path = plan_check.ROO
         stop("the plan cannot be read")
         return 2
     try:
-        before = prior_rounds(issue, run)
+        before = prior_rounds(issue, run, identity_file)
         call = None
         if not report.ok:
             verdict = {"verdict": BACK, "reason": "The written checklist failed.",
@@ -182,10 +200,12 @@ def review(phase: str, issue: int | None, *, repo: pathlib.Path = plan_check.ROO
             impl, step0 = plan_check.plan_paths(phase)
             src = plan_check.Source(repo)
             call = rank_call.call("xo", build_prompt(phase, src.read(impl), src.read(step0) or "",
-                                                     report), model, SCHEMA, cwd=repo, run=run)
+                                                     report, plan_order.brief_block(repo, phase)),
+                                  model, SCHEMA, cwd=repo, run=run)
             verdict = check_verdict(call.structured)
         applied, lab, rnd = decide(verdict, before)
-        body = comment_body(phase, applied, verdict["verdict"], rnd, verdict, call)
+        body = comment_body(phase, applied, verdict["verdict"], rnd, verdict, call,
+                            plan_order.cite_line(repo, phase))
         out(body)
         if label and issue is not None:
             r = gh(["issue", "comment", str(issue), "--body", body], run=run)

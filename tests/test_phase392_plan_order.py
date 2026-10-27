@@ -43,7 +43,7 @@ class TestTheRealRecord:
         order = P.parse_order((ROOT / P.PLAN).read_text(encoding="utf-8"))
         assert [e.phase for e in order.entries] == ["392", "303", "348", "345", "343", "371",
                                                       "372", "330", "334", "344", "210"]
-        assert order.as_of == ("2026-10-27", "K48")
+        assert order.as_of == ("2026-10-27", "K52")
 
     def test_392_is_a_builders_and_303_348_need_nothing(self):
         e = {x.phase: x for x in P.parse_order((ROOT / P.PLAN).read_text()).entries}
@@ -51,6 +51,10 @@ class TestTheRealRecord:
         assert e["303"].need is None and e["348"].need is None
         assert e["345"].need == "an outside account" and e["371"].need == "a fork"
         assert e["334"].need == "an outside person"
+        # K52: 371 needs the Stripe account too; 330 waits on F210's rule.
+        assert "Stripe's live account" in e["371"].needs
+        assert e["330"].need == "a rule change" and "F210" in e["330"].needs
+        assert P.NEEDS[e["330"].need] == "needs-admiral"
 
     def test_every_decision_has_a_covers_line(self):
         rows = P.decisions((ROOT / P.DECISIONS).read_text())
@@ -65,18 +69,18 @@ class TestTheRealRecord:
 class TestCheckRefuses:
     @pytest.mark.parametrize("rel,old,new,why", [
         (P.PLAN, "## Next, in order\n", "## The order\n", "has no '## Next, in order'"),
-        (P.PLAN, "As of 2026-10-27, K48.", "As of now.", "no 'As of"),
-        (P.PLAN, "As of 2026-10-27, K48.", "As of 2026-10-28, K48.", "no entry under"),
-        (P.PLAN, "As of 2026-10-27, K48.", "As of 2026-10-27, K99.", "K99, which does not"),
-        (P.PLAN, "As of 2026-10-27, K48.", "As of 2026-10-27, K47.", "does not cite K47"),
+        (P.PLAN, "As of 2026-10-27, K52.", "As of now.", "no 'As of"),
+        (P.PLAN, "As of 2026-10-27, K52.", "As of 2026-10-28, K52.", "no entry under"),
+        (P.PLAN, "As of 2026-10-27, K52.", "As of 2026-10-27, K99.", "K99, which does not"),
+        (P.PLAN, "As of 2026-10-27, K52.", "As of 2026-10-27, K47.", "does not cite K47"),
         (P.PLAN, "| 2 | 303 | shop | fleet | nothing |", "| 2 | 303 | shop | robots | nothing |",
          "its builder 'robots'"),
         (P.PLAN, "| 3 | 348 | shop | fleet | nothing |", "| 3 | 348 | store | fleet | nothing |",
          "its kind 'store'"),
-        (P.PLAN, "| 8 | 330 | shop | fleet | nothing |", "| 8 | 330 | shop | fleet | a favour |",
+        (P.PLAN, "| 10 | 344 | shop | fleet | nothing |", "| 10 | 344 | shop | fleet | a favour |",
          "its need 'a favour'"),
-        (P.PLAN, "| 8 | 330 | shop | fleet | nothing |",
-         "| 8 | 330 | shop | fleet | an outside account |", "its need"),
+        (P.PLAN, "| 10 | 344 | shop | fleet | nothing |",
+         "| 10 | 344 | shop | fleet | an outside account |", "its need"),
         (P.PLAN, "| 11 | 210 | shop | fleet | nothing | Wave 1, item 6 · K48 |",
          "| 11 | 210 | shop | fleet | nothing | Wave 1, item 6 |", "cites no K-id"),
         (P.PLAN, "| 11 | 210 |", "| 11 | 999 |", "phase 999 has no ROADMAP row"),

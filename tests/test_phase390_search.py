@@ -54,7 +54,10 @@ def plant14(w, until: str, labels14: list[str]) -> None:
     w.fleet.update_mirror()
     w.host.issues.clear()
     w.host.issues[14] = {
-        "title": ISSUE14["title"], "body": "planted trial", "labels": list(labels14),
+        # #14's body carries the trial marker (measured in Phase 392), so the
+        # operator's markers in its history count (F223).
+        "title": ISSUE14["title"], "body": f"planted trial {D.fleet_git.TRIAL_MARKER}",
+        "labels": list(labels14),
         "comments": [c for c in ISSUE14["comments"] if at(c["createdAt"]) <= at(until)],
         "events": [{"label": e["label"], "at": e["at"]} for e in EVENTS14
                    if e["event"] == "labeled" and at(e["at"]) <= at(until)]}

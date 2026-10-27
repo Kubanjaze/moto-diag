@@ -180,6 +180,43 @@ def identity(issue_body: str, path: pathlib.Path = IDENTITY_FILE) -> Identity:
                      "planted trial: the operator's step 1 in 389_operator_steps.md comes first")
 
 
+#: The operator's GitHub login: the repository's owner.
+OPERATOR_LOGIN = "Kubanjaze"
+
+
+def trusted_authors(issue_body: str, path: pathlib.Path = IDENTITY_FILE) -> set[str]:
+    """Whose comments on this issue a rank may read as a marker (Phase 392,
+    F223): the fleet's account, and the operator's only on an issue planted
+    as a trial, the push identity's own rule. The repository is public, so
+    anyone can comment; nobody else's words are a rank's."""
+    try:
+        fleet = read_identity_file(path)
+    except NeedsHands:
+        fleet = None
+    out = {fleet.login} if fleet is not None else set()
+    if TRIAL_MARKER in (issue_body or ""):
+        out.add(OPERATOR_LOGIN)
+    return out
+
+
+def from_trusted(comments: list[dict], authors: set[str]) -> list[dict]:
+    """The comments whose author is one of `authors`; GitHub's login case is
+    not significant."""
+    want = {a.lower() for a in authors}
+    return [c for c in comments if str((c.get("author") or {}).get("login", "")).lower() in want]
+
+
+def opened_by_trusted(issue: dict, path: pathlib.Path = IDENTITY_FILE) -> bool:
+    """An issue a rank may work: opened by the fleet's account or the
+    operator. A third account's `Phase <N>: …` issue is never a mission."""
+    try:
+        fleet = read_identity_file(path)
+    except NeedsHands:
+        fleet = None
+    login = str((issue.get("author") or {}).get("login", "")).lower()
+    return login in {OPERATOR_LOGIN.lower(), *([fleet.login.lower()] if fleet else [])}
+
+
 def push_argv(clone: pathlib.Path, branch: str, ident: Identity, url: str = REPO_URL) -> list[str]:
     """The one command that pushes. For the fleet's account the credential
     helpers are reset (`-c credential.helper=`), so the operator's `gh`

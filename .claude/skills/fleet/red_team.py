@@ -9,7 +9,9 @@ script gathers what no model should be trusted to produce:
   fence by the caller (it imports the clone's code);
 - the plan as approved (at its plan commit) and as it stands, and their
   diff: v1.1's Deviations are checked against what changed;
-- the branch's diff from `master`, by file.
+- the branch's diff from `master`, by file;
+- what the plan of record and `docs/decisions.md` say on the phase
+  (`plan_order.brief_block`, Phase 392).
 
 The model returns `clear` or `back`, its findings, and a `## Refuter pass`
 table, which must pass `refute_check.check` (C1–C7) or the stage stops.
@@ -29,6 +31,7 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "closeout"))
 sys.path.insert(0, str(HERE.parent / "refute"))
 import closeout_check  # noqa: E402
+import plan_order  # noqa: E402
 import rank_call  # noqa: E402
 import refute_check  # noqa: E402
 from rank_call import OPUS, Runner, Stop  # noqa: E402
@@ -73,6 +76,9 @@ Refute, in this order:
    docs/patterns/f9-mock-vs-runtime-drift.md against the tests the phase
    added (a mock or a fixture that cannot drift from what runs).
 4. A1–A8: the close-out check's output below; anything it reports.
+5. The plan of record's and docs/decisions.md's words on this phase, at
+   the end: a claim that contradicts them, a K-id or dated entry cited for
+   what it does not say, or work no entry puts in order, is a finding.
 
 Return:
 - verdict: "back" if any finding is factual, a citation, or code;
@@ -125,7 +131,8 @@ def gather(clone: pathlib.Path, phase: str, f9_output: str, base: str = "origin/
             + f"\n\n=== the branch's diff from master, by file ===\n{diff_names.strip()}"
             + f"\n\n=== v1.0 as approved ({(pc or 'not found')[:12]}) ===\n{v10}"
             + f"\n\n=== the diff of v1.0 to v1.1 ===\n{plan_diff}"
-            + f"\n\n=== v1.1 as it stands ===\n{v11}")
+            + f"\n\n=== v1.1 as it stands ===\n{v11}"
+            + f"\n\n{plan_order.brief_block(clone, phase)}")
 
 
 def review(phase: str, rnd: int, context: str, *, clone: pathlib.Path, run: Runner,
