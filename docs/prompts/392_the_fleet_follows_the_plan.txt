@@ -1,0 +1,62 @@
+Do this: start Phase 392, the fleet follows the plan of record (row 392, new: add it to docs/ROADMAP.md as 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out.
+- **The row names the first-shop phase it unblocks:** 303 and 348, the next phase in the plan (K43).
+- **Start from master after 391 is merged.**
+- **You are at ~/Projects/moto-diag on the PC**, where the fleet's code is tested. Its fence tests run only on Linux.
+
+Why this phase: the fleet was built to take my place as the message bus. Its proposal (docs/reports/2026-10-22_fleet_proposal.md) names three jobs to take over: answering questions already answered in the plan of record, approving plans that already pass the written rules, and carrying state between windows by hand. It never reads the plan of record. My words, 2026-10-26:
+- "well the fleet should be reading the plan of record, how tf is that missed!?"
+- "isnt that the whole point!?"
+- "its supposed to replace what ive been doing. so bridge that gap however it must, thats priority, so we can continue on track"
+
+The measured facts, taken 2026-10-26 on master at `7a3aeca`. Re-verify each at Step 0.
+- **No rank reads the plan of record.** `git grep -c -i -E 'plan_of_record|plan of record' -- .claude/skills/fleet/*.py` finds no file.
+- **The decisions file is written, not read.** docs/decisions.md is named only by yeoman.py, which writes it, and by fence_probe.py.
+- **The ranks that plan or judge could read both files, but nothing tells them to, and no check holds them to it.** They run with Read, Grep and Glob:
+  - scout.py (Step 0);
+  - captain.py (v1.0, its revisions, the merge recommendation);
+  - xo.py, with plan_check.py;
+  - red_team.py;
+  - 391's quartermaster.py.
+- **How a mission starts today:** only when someone opens a "Phase <N>: …" issue whose ROADMAP row on master is 🚧.
+- **The fleet cannot put a row on master by itself:**
+  - master is protected by the ruleset "project master" (update, deletion, force-push; only an admin bypasses);
+  - the fleet pushes as kubanjazefleet, which has write but is not an admin;
+  - the push gate's G1 refuses master.
+- **The plan of record (docs/reports/2026-10-12_plan_of_record.md) is prose:** dated entries under "Changes to the order", with my words quoted. The newest entry and K43 say the next phase is 303 and 348, through the fleet.
+- **F223:** every rank since 389 decides on an issue's comments by their first line alone (`dispatcher.py` `_RED` and `newest`; `quartermaster.py` `issue_checks`), and none reads the comment's author.
+  - The repository is public, so any GitHub account can comment on its issues.
+  - A comment can stand in for a Red Team clear or a Captain's merge recommendation.
+  - A comment's text can reach a model's brief.
+- **The fleet cannot build this phase.** The push gate's G3 lets no rank change .claude/skills/fleet/, so a builder session builds it.
+
+What to build:
+- **Every rank that plans or judges reads the plan of record and docs/decisions.md.** What it writes cites the dated entry or the K-id that bears on the phase.
+- **A check holds it.** plan_check gains an item that fails a v1.0 naming no plan-of-record entry or K-id that puts the phase in order. For a fleet-only phase it also fails when the v1.0 names no first-shop phase that it unblocks (K43). A known-bad fixture for each, seen red.
+- **The next mission comes from the plan.**
+  - The order I set is written where the fleet reads it exactly, not guessed from prose.
+  - When a phase merges, the fleet starts the next one.
+  - Where the next entry needs me (an outside account, a fork, a credential, a live change), it asks me in plain English, with the plan's entry quoted.
+- **A stop the record already answers is answered from it.** The rank cites the K-id and applies my words literally (rule 1: a pre-approval is my scoped wording, applied literally). Only what the record does not answer comes to me.
+- **F223 is closed.**
+  - A rank's marker counts only when its author is the fleet's account, or mine on an issue carrying the trial marker.
+  - A comment from any other account never reaches a model's brief as an instruction.
+  - The known-bad case is a planted marker from a third login.
+- **The proof:** after the merge, the fleet starts 303 and 348 from the plan, with no step by me except what the plan says needs me.
+
+At Step 0, stop and give me the options, with what each would ship and your recommendation:
+1. **Where the order lives** so the fleet reads it exactly (a list in the plan of record, a file beside it, or another way), and who keeps it current when I change the order.
+2. **How a new mission's row reaches master,** given that only I can update master. For example: the fleet opens a one-row pull request and I merge it with one click. Or another way.
+3. **Which stops the record may answer,** and how a K-id's scope is matched to a stop.
+
+Any other real fork, the same. Otherwise decide, write the reason in the log, and carry on.
+
+No migration and no change to live are expected. If one turns out to be needed, it is a rule-1 stop.
+
+Report, at the end:
+- what each rank now reads and cites;
+- the check and its fixtures;
+- F223's known-bad case;
+- the next-mission step and its proof;
+- the regression line;
+- verify_phase.sh's result;
+- the next step, my call.

@@ -385,8 +385,24 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: the two measured dry runs (engineer 1, captain 1). Measured: 11401.
 #: Then +1 against 46023c5: bug fix #4, the planted known-bad test under a
 #: loopback proxy, in test_phase281_network_guard.py. Measured: 11402.
+#: Phase 390 (a stage a restart cuts off is resumed, F219): +97 against
+#: master at 6f32013 (11402 → 11499, +97 -0), all in the four new files:
+#: test_phase390_resume.py (38), test_phase390_search.py (19),
+#: test_phase390_resume_contract.py (39), test_phase390_kill.py (1);
+#: test_phase388_dispatcher.py's count unchanged (one test reworded).
+#: Measured: 11499.
+#: Then +1 against 67735e2: the search on start says one line when it has
+#: nothing to resume (test_phase390_search.py). Measured: 11500.
+#: Then +20 against ea1f8d1 (+20 -0), all in test_phase390_space.py: free
+#: space phase to phase (F221, scope the operator added). Measured: 11520.
+#: Phase 391 (the Quartermaster), by a diff of collected ids against master
+#: at 133dc26 (11527: R8's 7 in test_roadmap_continuity.py, F222, landed
+#: before 391 with no floor change): +78 -0: test_phase391_quartermaster.py
+#: (49), test_phase391_dispatcher.py (17), test_phase391_contract.py (8),
+#: test_phase390_resume_contract.py (4, the Quartermaster's kill points).
+#: Measured: 11605.
 #:
-COLLECTED_TEST_FLOOR = 11402
+COLLECTED_TEST_FLOOR = 11605
 
 
 def _collected_count() -> int:

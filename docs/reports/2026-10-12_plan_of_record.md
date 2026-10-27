@@ -25,6 +25,28 @@ The operator's words:
   - **The operator's words:** "add device_tokens.last_seen_at to the list as its own phase".
   - **What stays open:** F210's general rule is still needed before onboarding (330).
   - **The prompt** is `docs/prompts/385_the_push_tokens_own_write.txt`.
+- **2026-10-22 to 2026-10-25: the fleet went before the first shop.** Phases 386 to 389 closed, and 390 is open, under `docs/reports/2026-10-22_fleet_proposal.md`.
+  - **None of the ten first-shop rows has started:** 345, 343, 303, 348, 371, 372, 330, 334, 344 and 210.
+  - **385 has no row.** It is the fleet's trial job (issue #14).
+  - **The operator, 2026-10-25:** "how far are we from getting back on track. I feel sidetracked as hell getting this to work", then "yes add the line to the plan of record".
+  - **When shop work resumes:** after 390 closes and the trial's last steps are done.
+  - **The advisor's recommendation, for the operator to confirm:**
+    - The next phase is a first-shop row, run through the fleet: staff logins with roles and the activity log (303 and 348), which need no outside account. That was the proposal's own step 6.
+    - The proposal's last two steps, the Quartermaster in shadow and the end-to-end run, ride along inside those phases rather than taking phases of their own.
+    - New fleet work waits, unless it blocks a first-shop phase.
+- **2026-10-26: shop work comes next, after 391.** The operator's decision is K43 in `docs/decisions.md`. Asked "Want me to write that rule into the plan of record, so the fleet and every builder sees it?", they answered "yes write it into the plan". The rule they approved:
+  1. **391 is the last fleet-only phase.** 391 is the Quartermaster, in shadow, already under way. It finishes.
+  2. **The trial is wrapped** when its builder asks: 389A, 385's row, issue #14.
+  3. **The next phase is first-shop work, run through the fleet:** staff logins with roles and the activity log (303 and 348). It is also the fleet's end-to-end run, the proposal's step 9, done on real work.
+  4. **No new fleet-only phase** unless it unblocks a first-shop phase, which its row names.
+  - **Where things stood:** 390 and 390A closed. None of the ten first-shop rows had started.
+  - **This confirms the 2026-10-25 recommendation with one change:** the Quartermaster took a phase of its own (391), which was already under way.
+- **2026-10-26, later: 392 goes between 391 and 303/348.** In 392 the fleet follows the plan of record. The operator's decision is K44.
+  - **What was found:** no rank reads the plan of record or docs/decisions.md. A mission starts only when someone opens its issue by hand. The ranks trust a marker comment from any author (F223, on a public repository).
+  - **The operator's words:** "well the fleet should be reading the plan of record, how tf is that missed!?", "isnt that the whole point!?", "its supposed to replace what ive been doing. so bridge that gap however it must, thats priority, so we can continue on track".
+  - **What it unblocks:** 303 and 348, which its row names (K43).
+  - **Its proof:** the fleet starts 303 and 348 from this plan by itself.
+  - **The prompt** is `docs/prompts/392_the_fleet_follows_the_plan.txt`.
 
 ## Where the ledger stands
 

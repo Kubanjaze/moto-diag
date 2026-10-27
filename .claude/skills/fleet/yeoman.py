@@ -169,7 +169,28 @@ def section(text: str, title: str) -> str:
     return ""
 
 
-def facts(root: pathlib.Path, day: dt.date, run: Runner) -> str:
+def shadow(verdicts: list[dict], run: Runner) -> list[str]:
+    """The Quartermaster's verdicts beside what became of each PR (Phase 391):
+    in shadow the operator still merges, so the two can disagree."""
+    out = ["## The Quartermaster (shadow)", "", f"Verdicts in the window: {len(verdicts)}."]
+    for v in verdicts:
+        r = gh(["pr", "view", str(v["pr"]), "--json", "state"], run=run)
+        try:
+            state = str(json.loads(r.stdout).get("state")).lower() if r.returncode == 0 else ""
+        except (ValueError, AttributeError):
+            state = ""                                 # gh's answer unreadable: said so below
+        now = {"merged": "merged", "closed": "closed unmerged", "open": "open"}.get(state, "unknown")
+        agree = ("not yet" if now == "open" else "unknown" if now not in ("merged", "closed unmerged")
+                 else "yes" if (v["verdict"] == "merge") == (now == "merged") else "NO")
+        named = ", ".join(v.get("failed") or []) or "none"
+        out.append(f"- PR #{v['pr']} (phase {v['phase']}, head `{v['head'][:7]}`): "
+                   f"{v['verdict']}, checks named: {named}. The PR now: {now}. "
+                   f"Agrees with the operator: {agree}.")
+    return out + [""]
+
+
+def facts(root: pathlib.Path, day: dt.date, run: Runner,
+          verdicts: list[dict] | None = None) -> str:
     tz = dt.datetime.now().astimezone().tzinfo
     start = dt.datetime.combine(day, dt.time(), tz)
     end = start + dt.timedelta(days=1)
@@ -216,6 +237,8 @@ def facts(root: pathlib.Path, day: dt.date, run: Runner) -> str:
     out += [f"- #{i['number']} [{i['state'].lower()}] {i['title']} ({', '.join(i['labels'])}) "
             f"{i['url']}" for i in shown] or ["None open, and none updated in the window."]
     out += [f"- PROBLEM: {p}" for p in problems]
+    if verdicts is not None:
+        out += [""] + shadow(verdicts, run)
     return "\n".join(out).rstrip() + "\n"
 
 
@@ -244,8 +267,8 @@ def unsupported(summary: str, facts_text: str) -> list[str]:
 
 
 def digest(day: dt.date, *, root: pathlib.Path = ROOT, run: Runner = subprocess.run,
-           out=print) -> int:
-    body = facts(root, day, run)
+           out=print, verdicts: list[dict] | None = None) -> int:
+    body = facts(root, day, run, verdicts)
     try:
         call = rank_call.call("yeoman", f"{SUMMARY_BRIEF}\n=== the facts ===\n{body}", HAIKU,
                               SUMMARY_SCHEMA, cwd=root, run=run)

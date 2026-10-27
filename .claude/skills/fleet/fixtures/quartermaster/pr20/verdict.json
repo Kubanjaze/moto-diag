@@ -1,0 +1,18 @@
+{
+  "verdict": "refuse",
+  "failed": [
+    {
+      "check": "Q3 the Captain's recommendation",
+      "why": "The Captain recommends hold, because there is no record anywhere that the Red Team cleared this pull request."
+    },
+    {
+      "check": "Q3 the Red Team's clear",
+      "why": "The Red Team's last word is 'back' (round 1), with two factual findings still open and no later round clearing them."
+    },
+    {
+      "check": "V1.1 diff",
+      "why": "v1.1's Tests section says every listed check ran with its output in the phase log, but the log has output for only two whole-tree runs and none for the 390A word-cap check, plan_check.py or closeout_check.py, so it claims results that are not shown."
+    }
+  ],
+  "summary": "Hold this one: the Captain says hold, the Red Team sent it back, and the updated plan says checks were run and logged when the phase log shows only some of them."
+}

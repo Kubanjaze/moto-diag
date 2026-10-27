@@ -538,9 +538,12 @@ class TestRegression:
     def test_phase147_gate_6_still_passes(self):
         """Subprocess re-run of Gate 6's hardware workflow."""
         test_file = Path(__file__).parent / "test_phase147_gate_6.py"
+        # 120 s until Phase 390 (bug fix #3, the operator's word): in the
+        # fleet's fence the nested gates ran past their limits. A limit here
+        # only stops a hung run.
         result = subprocess.run(
             [sys.executable, "-m", "pytest", str(test_file), "-q", "-p", "no:xdist"],
-            capture_output=True, text=True, timeout=120,
+            capture_output=True, text=True, timeout=300,
         )
         assert result.returncode == 0, (
             f"Gate 6 failed after Track F:\n"
@@ -551,9 +554,10 @@ class TestRegression:
     def test_phase133_gate_5_still_passes(self):
         """Subprocess re-run of Gate 5's mechanic workflow."""
         test_file = Path(__file__).parent / "test_phase133_gate_5.py"
+        # 60 s until Phase 390 (bug fix #3): see the gate 6 re-run above.
         result = subprocess.run(
             [sys.executable, "-m", "pytest", str(test_file), "-q", "-p", "no:xdist"],
-            capture_output=True, text=True, timeout=60,
+            capture_output=True, text=True, timeout=300,
         )
         assert result.returncode == 0, (
             f"Gate 5 failed after Track F:\n"

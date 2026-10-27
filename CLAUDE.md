@@ -50,8 +50,9 @@ the end:**
 number, a phase with documents but no row, a row whose status disagrees with
 where its documents are, a number no authority range covers, the two
 copies of the authority contract drifting apart, a phase closed with no
-handoff (R6), and a row "Folded into" a phase that is not ✅ with a CLOSED
-date (R7).
+handoff (R6), a row "Folded into" a phase that is not ✅ with a CLOSED
+date (R7), and a `gh` call in an operator paste block that names no
+repository (R8).
 `tests/test_roadmap_continuity.py` runs it with every suite, and the push
 guard refuses any `git push` while it fails.
 
@@ -209,6 +210,22 @@ reads its prompt from there.
 ---
 
 ## Change log
+
+### 2026-10-26 — R8: an operator paste block's `gh` names its repository (before Phase 391, F222)
+
+The operator, in Phase 391's prompt: "Every gh call in an operator paste
+block must carry -R Kubanjaze/moto-diag or cd into the repo first. Make
+that a check (a close-out or fixture rule over handoffs' paste blocks), fix
+390's handoff block in place, and file it as a finding." 390's "After the
+merge" block had failed that day from a fresh Ubuntu window.
+
+`.claude/skills/closeout/roadmap_check.py` gained R8, and the sentence
+above on what it holds names it. It reads every `.md` under
+`docs/handoffs/` and `docs/phases/`, and runs where R1–R7 run: with every
+suite (`tests/test_roadmap_continuity.py`) and on every push. Rule 6's
+paste-block bullet is unchanged; R8 is the check behind it for `gh`.
+
+An operator request made before Phase 391's Step 0; not a phase.
 
 ### 2026-10-22 — `fleet` joins the procedure folders (after Phase 387)
 

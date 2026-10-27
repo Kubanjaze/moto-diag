@@ -85,7 +85,12 @@ uncommitted.
    shipped, what is open, what is next, and the live outcome. Write it in
    the close-out commit, before the merge: `roadmap_check.py` R6 refuses
    any push while a closed row has no handoff. Add the merge's outcome
-   after step 10.
+   after step 10. It also carries **the reclaim line** (Phase 390, F221):
+   the free space on C: and in Ubuntu before and after handing Ubuntu's
+   freed space back to Windows. On the home desktop, run
+   `python3 .claude/skills/fleet/dispatcher.py reclaim` and copy the line
+   it prints. A fleet build's PR already carries the dispatcher's own
+   close-out reclaim line, so copy that one instead.
 10. **Merge.** `git merge` takes `-m` or `-F <file>`. `-F -` exits 129
     ("could not read file '-'") and `master` does not move; that happened
     twice on 2026-09-24.
@@ -110,7 +115,7 @@ check.
 | `regression.sh` | the regression of record: `-n auto --dist load`, or `--serial`; prints the line with counts, hash, wall time and command |
 | `code_after_regression.py` | check 2's scope: every path is code unless positively documentation (F137); `deploy.py apply-live` uses it too (K18) |
 | `clock_check.sh` | the tests that turn the real clock into a day or month (`tests/support/clock_census.py`), run under libfaketime at 375's four moments, with its own control (Phase 378, K19) |
-| `roadmap_check.py` | the ROADMAP ledger holds: R1–R7 (a reused number, documents with no row, a status that disagrees with where the documents are, a number no authority range covers, the authority copies drifting, a close with no handoff, a fold into a phase that is not closed); run with every suite and on every push |
+| `roadmap_check.py` | the ROADMAP ledger holds: R1–R8 (a reused number, documents with no row, a status that disagrees with where the documents are, a number no authority range covers, the authority copies drifting, a close with no handoff, a fold into a phase that is not closed, a `gh` call in an operator paste block that names no repository); run with every suite and on every push |
 | `wholetree.sh` / `wholetree.py` | the whole-tree command (rule 3): fast mode, or `--full`; members found by rule; a pass on a clean tree writes a signed record bound to commit, tree and script |
 | `pre_push_guard.sh` / `_pre_push_guard.py` | the push guard: the ROADMAP check and the whole-tree command on every push (a valid record, else fast mode under its own limit; fails closed), `--full` on a commit to seed data or migrations, close-out on a push to `master` |
 | `edit_guard.sh` / `_edit_guard.py` | the edit guard (Phase 360): blocks `sed -i`, `perl -i`, and redirects, `tee`, `cp`, `mv`, `patch` and heredoc or `-c` script bodies that write into `src/` or `tests/`; fails closed, under its own 5 s clock; known limits in `CHANGELOG.md` |

@@ -3867,3 +3867,13 @@ Write-up: [`389_implementation.md`](docs/phases/completed/389_implementation.md)
 
 Log: [`docs/phases/completed/389A_phase_log.md`](docs/phases/completed/389A_phase_log.md).
 Write-up: [`389A_implementation.md`](docs/phases/completed/389A_implementation.md).
+
+## Phase 390 — The fleet resumes where it left off — CLOSED 2026-10-26
+
+Log: [`docs/phases/completed/390_phase_log.md`](docs/phases/completed/390_phase_log.md).
+Write-up: [`390_implementation.md`](docs/phases/completed/390_implementation.md).
+
+## Phase 391 — The Quartermaster, in shadow — CLOSED 2026-10-26
+
+Log: [`docs/phases/completed/391_phase_log.md`](docs/phases/completed/391_phase_log.md).
+Write-up: [`391_implementation.md`](docs/phases/completed/391_implementation.md).
