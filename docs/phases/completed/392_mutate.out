@@ -1,0 +1,54 @@
+O1 an unknown builder passes: red
+O2 a need with no what passes: red
+O3 the as-of date is not checked: red
+O4 the dated entry need not cite the as-of K-id: red
+O5 a phase with no row passes: red
+O6 a closed phase is next: red
+O7 a number inside another names it: red
+A1 a rule-1 stop is answered (both guards): red
+A2 two covering K-ids answer: red
+A3 the same stop is answered twice: red
+A4 the answer never reaches the Engineer: red
+A5 the answered Engineer is never due: red
+P9 any plan puts its phase in order: red
+P10a no phase is fleet-only: red
+P10b a closed first-shop phase counts: red
+P11 the pin is wider than needed: red
+C1 the XO's verdict cites nothing: red
+C2 the Red Team's issue comment cites nothing: red
+C3 the Captain's plan brief lacks the record: red
+C4 the Science Officer's report lacks its section: red
+C5 the Quartermaster's context lacks the record: red
+C6 the Red Team's context lacks the record: red
+C7 the Captain's recommendation cites nothing: red
+F1 every author's comment counts: red
+F2 the operator counts on any issue: red
+F3 any account's issue is a mission: red
+F4 the XO counts a third login's rounds: red
+T1 the worker-loss files are deleted: red
+T2 a finished stage keeps its tmp: red
+T3 a held stage loses its tmp: red
+T4 a paused stage ends: red
+T5 prune cleans an unfinished run: red
+T6 prune cleans a held run: red
+T7 a check run keeps its tmp: red
+T8 the reclaim line never says nothing came back: red
+L1 the time-out escapes the stage: red
+L2 only the direct child is killed: red
+L3 the limit is not the operator's: red
+U1 the unit sets no open-file limit: red
+R1 C7 is not set aside on an early back: red
+R2 round 3's back files nothing: red
+R3 the number is not written into the rows: red
+R4 the brief does not state C7: red
+R5 the record may remove from FOLLOWUPS: red
+N1 a builder's phase is not waited for: red
+N2 the operator's label is not waited for (both guards): red
+N3 the row's edit changes more than its status: red
+N4 the row rank's line rule is off: red
+N5 the row rank may touch any file: red
+N6 the issue is opened again: red
+N7 a list that does not read exactly still starts: red
+N8 without the account the stage goes on: red
+Y1 decide takes any Covers: red
+53/53 red

@@ -7,8 +7,10 @@
 **decide** appends one row to `docs/decisions.md`: the next K-id, the date,
 the operator's words verbatim, and the check they became. It refuses a
 `--kid` that is not the next one, any K-id cited in the words or the check
-that does not resolve, and a backticked path in the check that does not
-exist. No model: the words are the operator's, and a model in that path
+that does not resolve, a backticked path in the check that does not
+exist, and a `--covers` that `plan_order.covers_problem` refuses (Phase
+392, K50: the stop the decision answers, or `no stop`; never a rule-1
+stop). No model: the words are the operator's, and a model in that path
 could only change them.
 
 A K-id resolves when it is defined in one of three places (Phase 387 Step 0,
@@ -39,6 +41,7 @@ import sys
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "closeout"))
+import plan_order  # noqa: E402
 import rank_call  # noqa: E402
 from plan_check import sections  # noqa: E402
 from rank_call import HAIKU, Runner, Stop, gh  # noqa: E402
@@ -70,7 +73,7 @@ def defined_kids(root: pathlib.Path = ROOT) -> set[int]:
 
 
 def decide(words: str, check: str, *, root: pathlib.Path = ROOT, date: str | None = None,
-           kid: str | None = None, out=print) -> int:
+           kid: str | None = None, covers: str = plan_order.NO_STOP, out=print) -> int:
     path = root / DECISIONS
     if not path.is_file():
         out(f"REFUSED: {DECISIONS} does not exist")
@@ -91,6 +94,9 @@ def decide(words: str, check: str, *, root: pathlib.Path = ROOT, date: str | Non
                if ("/" in p or re.search(r"\.\w{1,4}$", p)) and not (root / p.split("::")[0]).exists()]
     if missing:
         why.append("the check names paths that do not exist: " + ", ".join(missing))
+    bad_cover = plan_order.covers_problem(covers)
+    if bad_cover:
+        why.append(bad_cover)
     day = date or dt.date.today().isoformat()
     if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", day):
         why.append(f"the date {day!r} is not YYYY-MM-DD")
@@ -99,7 +105,7 @@ def decide(words: str, check: str, *, root: pathlib.Path = ROOT, date: str | Non
             out(f"REFUSED: {w}")
         return 1
     cell = lambda s: s.replace("|", "\\|")  # noqa: E731
-    row = f'| K{nxt} | {day} | "{cell(words)}" | {cell(check)} |'
+    row = f'| K{nxt} | {day} | "{cell(words)}" | {cell(check)} | {covers} |'
     text = path.read_text(encoding="utf-8")
     path.write_text(text.rstrip("\n") + "\n" + row + "\n", encoding="utf-8")
     out(row)
@@ -306,11 +312,14 @@ def main(argv: list[str]) -> int:
     d.add_argument("--check", required=True)
     d.add_argument("--date")
     d.add_argument("--kid")
+    d.add_argument("--covers", required=True,
+                   help=f"the stop it answers (Phase 392, K50): '{plan_order.NO_STOP}' or "
+                        "'stop=<kind> subject=<phase>[,<phase>]'")
     g = sub.add_parser("digest")
     g.add_argument("--date", type=dt.date.fromisoformat, default=dt.date.today())
     a = ap.parse_args(argv)
     if a.cmd == "decide":
-        return decide(a.words, a.check, date=a.date, kid=a.kid)
+        return decide(a.words, a.check, date=a.date, kid=a.kid, covers=a.covers)
     return digest(a.date)
 
 

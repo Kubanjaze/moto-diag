@@ -39,9 +39,9 @@ REPORT_B = """# Triage two
 """
 DECISIONS = """# Decisions
 
-| K-id | Date | The operator's words | The check it became |
-|---|---|---|---|
-| K4 | 2026-10-08 | "first" | No check. |
+| K-id | Date | The operator's words | The check it became | Covers |
+|---|---|---|---|---|
+| K4 | 2026-10-08 | "first" | No check. | no stop |
 """
 
 
@@ -72,8 +72,14 @@ class TestDecide:
                            date="2026-10-22", out=lambda s: None)
         assert rc == 0
         assert rows(repo)[-1] == ('| K5 | 2026-10-22 | "keep it \\| simple, as K3 says" | '
-                                  '`tests/test_real.py` |')
+                                  '`tests/test_real.py` | no stop |')
         assert len(rows(repo)) == 2
+
+    def test_a_covers_line_is_written_as_given(self, repo):
+        rc = yeoman.decide("go past the third", "No check.", root=repo, date="2026-10-27",
+                           covers="stop=third-bug-fix subject=303", out=lambda s: None)
+        assert rc == 0
+        assert rows(repo)[-1].endswith("| No check. | stop=third-bug-fix subject=303 |")
 
     @pytest.mark.parametrize("kwargs,why", [
         ({"words": "as K75 said", "check": "No check."}, "do not resolve: K75"),
@@ -83,8 +89,13 @@ class TestDecide:
         ({"words": "fine", "check": "`tests/no_such.py`"}, "do not exist: tests/no_such.py"),
         ({"words": " ", "check": "No check."}, "both the words"),
         ({"words": "fine", "check": "No check.", "date": "22/10/2026"}, "not YYYY-MM-DD"),
+        # Phase 392 (K50): a Covers line is a lookup, and never a rule-1 stop.
+        ({"words": "fine", "check": "No check.", "covers": "stop=fork subject=303"},
+         "a rule-1 stop"),
+        ({"words": "fine", "check": "No check.", "covers": "whenever it seems right"},
+         "is not 'no stop'"),
     ], ids=["unresolved-in-words", "unresolved-in-check", "wrong-kid", "newline", "missing-path",
-            "no-words", "bad-date"])
+            "no-words", "bad-date", "covers-rule-1", "covers-malformed"])
     def test_refusals_write_nothing(self, repo, kwargs, why):
         seen: list[str] = []
         before = (repo / yeoman.DECISIONS).read_text()

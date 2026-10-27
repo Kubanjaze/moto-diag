@@ -67,7 +67,8 @@ class Hub(GitHub):
         if cmd[1:3] == ["pr", "view"] and cmd[cmd.index("--json") + 1] == "comments":
             pr = next(p for p in self.prs.values() if p["number"] == int(cmd[3]))
             return subprocess.CompletedProcess(
-                cmd, 0, json.dumps({"comments": [{"body": b} for b in pr["comments"]]}), "")
+                cmd, 0, json.dumps({"comments": [{"body": b, "author": {"login": self.commenter}}
+                                                 for b in pr["comments"]]}), "")
         return super().gh(cmd)
 
 

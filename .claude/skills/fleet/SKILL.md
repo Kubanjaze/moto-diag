@@ -1,6 +1,6 @@
 ---
 name: fleet
-description: The fleet's ranks — the Executive Officer's plan checklist and verdict (plan_check.py, xo.py), the Yeoman's decisions file and daily digest (yeoman.py), the GitHub labels that carry a phase's state (labels.py), and since Phase 389 the ranks that write — the Science Officer's Step 0 (scout.py), the Captain's v1.0 and merge recommendation (captain.py), the Chief Engineer's build to a PR (engineer.py), the Red Team's refute (red_team.py) — and since Phase 391 the Quartermaster in shadow (quartermaster.py), the last check before a merge, which merges nothing — with the push gate and identity they push through (fleet_git.py); on the home desktop, the bubblewrap fence every model call runs in (fence.sh) and the dispatcher that polls the labels (dispatcher.py, its systemd unit), with since Phase 390 each stage's journal (journal.py) and the search on start that resumes a stage a restart cut off. Use when reviewing a phase's v1.0, recording an operator decision as a K-id, writing the digest, checking the labels, opening a mission for the fleet, running, checking or changing the fence, the push gate, a rank or the dispatcher, or restarting the fleet's service and checking what it resumed.
+description: The fleet's ranks — the Executive Officer's plan checklist and verdict (plan_check.py, xo.py), the Yeoman's decisions file and daily digest (yeoman.py), the GitHub labels that carry a phase's state (labels.py), and since Phase 389 the ranks that write — the Science Officer's Step 0 (scout.py), the Captain's v1.0 and merge recommendation (captain.py), the Chief Engineer's build to a PR (engineer.py), the Red Team's refute (red_team.py) — and since Phase 391 the Quartermaster in shadow (quartermaster.py), the last check before a merge, which merges nothing — with the push gate and identity they push through (fleet_git.py); on the home desktop, the bubblewrap fence every model call runs in (fence.sh) and the dispatcher that polls the labels (dispatcher.py, its systemd unit), with since Phase 390 each stage's journal (journal.py) and the search on start that resumes a stage a restart cut off; and since Phase 392 the plan of record, read exactly (plan_order.py: the "Next, in order" list, what bears on a phase, the stops a K-id answers), and the next mission the dispatcher opens from it. Use when reviewing a phase's v1.0, recording an operator decision as a K-id, writing the digest, checking the labels, opening a mission for the fleet, running, checking or changing the fence, the push gate, a rank or the dispatcher, restarting the fleet's service and checking what it resumed, or reading or changing the order the fleet follows.
 ---
 
 # fleet — the ranks, the fence and the dispatcher
@@ -43,6 +43,8 @@ cannot read the ROADMAP, `CLAUDE.md` or the plan.
 | P6 | every section filled, no stub line; Goal and Logic present |
 | P7 | the three newest `CLAUDE.md` change-log entries cited, each with a backticked path that exists, or "no check" for an entry that says it is text only |
 | P8 | a section listing the rule-1 stops, each one of the five kinds, or "none" |
+| P9 | a K-id whose `docs/decisions.md` row names the phase, a dated "Changes to the order" entry naming it (by its date), or its "Next, in order" row's K-id (Phase 392) |
+| P10 | a fleet-only phase names, on a line saying "unblocks", a Wave 1 phase whose row is not ✅ (K43) |
 
 **P3, the count rule, is strict on purpose.** A count is a number
 followed within two words (no preposition, article or verb between) by a
@@ -57,6 +59,8 @@ are not read.
 
 **The pin.** `WRITTEN_BEFORE`: 384 and 386's v1.0 predate P4, P7 and P8
 (the operator, 2026-10-22, K41: "Pin them (Recommended)"). Equality-tested.
+`BEFORE_THE_RECORD` (Phase 392): 384 and 386 fail P9, 387 fails P9 and
+P10, at their v1.0; equality-tested the same way.
 
 ## The Executive Officer — `xo.py`
 
@@ -78,12 +82,13 @@ python3 .claude/skills/fleet/xo.py review <phase> --no-label
 ## The Yeoman — `yeoman.py`
 
 ```
-python3 .claude/skills/fleet/yeoman.py decide --words "…" --check "…" [--kid K42]
+python3 .claude/skills/fleet/yeoman.py decide --words "…" --check "…" --covers "no stop" [--kid K42]
 python3 .claude/skills/fleet/yeoman.py digest [--date YYYY-MM-DD]
 ```
 
 - **decide**: one row in `docs/decisions.md`, the next K-id, the words
-  verbatim. Refuses an unresolved K-id (defined only by the two triage
+  verbatim, and the stop it answers (`--covers`: `no stop`, or
+  `stop=<kind> subject=<phase>[,<phase>]`; never a rule-1 kind; Phase 392). Refuses an unresolved K-id (defined only by the two triage
   reports and the file itself: K75 is a BMW), a wrong `--kid`, a path
   that does not exist, a newline. No model.
 - **digest**: `docs/fleet/digests/<date>.md`, one local day by time window:
@@ -257,6 +262,20 @@ ROADMAP rows but change only its own); G4 no credential in an added line;
 G5 `roadmap_check`; G6 a model-free run passed. Whole-tree records written
 inside a fence are not trusted: their key is the run's own.
 
+**The model-free run's limit** (Phase 392, F225): `CHECK_TIMEOUT_S` 5400 s
+(K51). The run has its own process group (`run_group`); past the limit the
+group is killed and the run is a failed check with the limit named, so the
+stage stops the usual way, once, and is not started again until the
+operator acts. **The service's open-file limit** (F227): `LimitNOFILE=1048576`
+in the unit (K51); a fenced worker peaked at 793 at 392's Step 0, against
+systemd's default 1024.
+
+**An open wording defect** (Phase 392, F228): the Red Team's brief says to
+leave it "open" with no F-number; on a clear, or a back in round 3, the
+dispatcher files the one finding they go to (K9) and writes its number in
+each row, committed as `red-team-record`, which may add to
+`docs/FOLLOWUPS.md` and nothing more.
+
 **The push identity** (`fleet_git.identity`): the fleet's machine user from
 `~/.config/motodiag/fleet-github.env` (mode 600), named on the one push
 command with the operator's credential helper reset; without it, the
@@ -327,6 +346,54 @@ resumed stage ends. `prune_runs` keeps every unfinished run.
 `recover --dry-run` says what a start would do and writes nothing (no lock,
 no mirror update): run it beside the live service before new code goes live.
 
+## The plan of record — `plan_order.py` (Phase 392)
+
+```
+python3 .claude/skills/fleet/plan_order.py check | next | bearing <phase>
+.claude/skills/fleet/dispatcher.py next --dry-run      # what the next cycle would do
+```
+
+The fleet was built to answer what the plan of record already answers
+(the fleet proposal); until 392 no rank read it. Now:
+
+- **The order** is the "Next, in order" table at the top of
+  `docs/reports/2026-10-12_plan_of_record.md`, read exactly (the operator,
+  K48: "it changes only by a dated entry with a K-id, written on my
+  word"). A row: number, phase, kind (`shop`, `fleet`), built by
+  (`fleet`, `builder`), what it needs from the operator (`nothing`, or
+  `an outside account`, `an outside person`, `a credential`, `a fork`,
+  `a live change`, `a rule change`, a colon and what), and its entry with a
+  K-id. Its "As of <date>, <K-id>." names a dated change that cites it.
+- **Every rank that plans or judges** gets `brief_block` (the entry, each
+  dated change and each K-id row naming the phase, verbatim) and ends what
+  it writes with `cite_line`, by script. P9 and P10 hold the v1.0.
+- **The next mission** (`stage_next`, each cycle, journaled): the first
+  entry whose row is not ✅. A builder's is waited for. Otherwise its
+  issue, in the fleet's name, `mission`, naming the work branch; when the
+  plan says the phase needs the operator, one plain-English question
+  quoting the entry, with `needs-hands` (an account, a person, a
+  credential) or `needs-admiral` (a fork, a live change, a rule change),
+  and nothing more until the operator takes the label off; then branch
+  `phase-<N>-row` from master with the row's status alone set to 🚧, the
+  push gate's rank `row` (G3: that one line, its status only), and a pull
+  request the operator merges by hand (K49). The merge makes the row 🚧,
+  and the cycle's rule starts the Science Officer. Without the fleet's
+  account nothing is opened; a list that does not read exactly starts
+  nothing.
+- **A stop the record answers** (K50): only the Engineer's `third-bug-fix`
+  and `guard-blocked-twice`, and only when one K-id's Covers names that
+  kind and the phase. Its words go on the issue verbatim
+  (`<!-- fleet-answered: … -->`) and into the Engineer's next brief, to
+  apply literally; the same K-id and stop again, and every rule-1 stop,
+  goes to the operator.
+
+**Whose words count** (F223, Phase 392): the repository is public, so a
+rank reads a comment as a marker only when the fleet's account wrote it,
+or the operator on an issue carrying `<!-- fleet-trial -->`
+(`fleet_git.trusted_authors`); the dispatcher works only issues the fleet
+or the operator opened. Every due rule, round count, marker search and
+model brief reads through `Fleet.comments`.
+
 ## Free space, phase to phase (Phase 390, F221)
 
 The operator, 2026-10-25: "it's just something that needs to be done
@@ -353,6 +420,17 @@ into the method itself. as a part of the overall process phase to phase".
   taking `needs-hands` off lets the held stage run. An Engineer held before
   its model-free run keeps its run (`held.json`, `why: space`), and that
   run goes again on the same commit.
+- **What replaced the shrink** (Phase 392, F226; the operator's K45: "go
+  with your pick, delete each run's temp files"). The disk image has not
+  been sparse since 2026-10-26, so `fstrim` frees blocks inside Ubuntu and
+  gives Windows nothing; the image grows to the fleet's peak and keeps that
+  size. So the peak is kept down instead: when a stage ends, its `run/tmp`
+  (pytest's folders, about 9 GB a full run) is deleted (`clean_tmp`), but
+  the `motodiag_worker_loss_*` folders rule 6 reads after a lost worker; a
+  check run's, once it has written its result; a held run's, when it is
+  released; `prune_runs` cleans any it keeps that have ended. A held, a
+  paused and an unfinished run keep theirs until they end. The reclaim
+  line says "(nothing came back to Windows …)" when C: did not move.
 - **By hand:** `dispatcher.py reclaim` prints the line a handoff records.
   It runs beside the service and writes no state.
 - **Only `main` sets the disks up.** A `Fleet` built without `disks`
@@ -424,4 +502,11 @@ the reclaim on the timer, at a merge and at a close-out; the service's
 wiring; the one sudoers line); `tests/test_phase391_quartermaster.py` (each
 check on its own known-bad case, against 390's real close-out as the good
 tree), `test_phase391_dispatcher.py` (the stage, its kill points, the
-digest's section), `test_phase391_contract.py`.
+digest's section), `test_phase391_contract.py`; Phase 392's
+`tests/test_phase392_plan_order.py` (the list, the Covers column, each
+refusal on its own copy), `test_phase392_ranks_cite.py`,
+`test_phase392_next_mission.py` (the issue, the ask, the row PR, its gate,
+its kill point), `test_phase392_answers.py`, `test_phase392_authors.py`
+(F223's third login), `test_phase392_tmp.py` (F226), `test_phase392_check_limit.py`
+(F225), `test_phase392_open_files.py` (F227), `test_phase392_red_team_c7.py`
+(F228, #14's round 3).

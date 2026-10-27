@@ -29,8 +29,8 @@ SKILL = ROOT / ".claude" / "skills" / "fleet"
 sys.path.insert(0, str(SKILL))
 
 import plan_check  # noqa: E402
-from plan_check import (FIXTURE_PHASE, GOOD, ITEM_IDS, WRITTEN_BEFORE,  # noqa: E402
-                        apply_case, bad_cases, check)
+from plan_check import (BEFORE_THE_RECORD, FIXTURE_PHASE, GOOD, ITEM_IDS,  # noqa: E402
+                        WRITTEN_BEFORE, apply_case, bad_cases, check)
 
 #: The v1.0 commits the prompt names as known-good, and this phase's own.
 V10 = {"384": "b6ffcb6", "386": "5d0a687", "387": "ea6fed8"}
@@ -65,23 +65,36 @@ class TestTheKnownGoodPlans:
     def test_the_named_v1_0_passes_at_its_commit(self, phase):
         rep = check(phase, ROOT, rev=V10[phase])
         assert rep.ok, rep.lines()
-        assert set(rep.skipped) == set(WRITTEN_BEFORE.get(phase, ())), rep.lines()
+        assert set(rep.skipped) == (set(WRITTEN_BEFORE.get(phase, ()))
+                                    | set(BEFORE_THE_RECORD.get(phase, ()))), rep.lines()
 
     def test_387_needs_no_pin(self):
-        """The positive control for P4, P7 and P8 on a real plan."""
+        """The positive control for P4, P7 and P8 on a real plan. P9 and P10
+        came in Phase 392, after it (BEFORE_THE_RECORD)."""
         assert "387" not in WRITTEN_BEFORE
         rep = check("387", ROOT, rev=V10["387"], pin=False)
-        assert rep.ok, rep.lines()
+        assert set(rep.failed) == set(BEFORE_THE_RECORD["387"]), rep.lines()
 
 
 class TestThePinIsExactlyWhatIsNeeded:
     @pytest.mark.parametrize("phase", sorted(WRITTEN_BEFORE))
     def test_without_the_pin_it_fails_on_exactly_its_pinned_items(self, phase):
         rep = check(phase, ROOT, rev=V10[phase], pin=False)
-        assert set(rep.failed) == set(WRITTEN_BEFORE[phase]), rep.lines()
+        assert set(rep.failed) == (set(WRITTEN_BEFORE[phase])
+                                   | set(BEFORE_THE_RECORD.get(phase, ()))), rep.lines()
 
     def test_the_pin_holds_the_two_plans_the_operator_named(self):
         assert set(WRITTEN_BEFORE) == {"384", "386"}
+
+    @pytest.mark.parametrize("phase", sorted(BEFORE_THE_RECORD))
+    def test_before_the_record_each_fails_on_exactly_p9_and_p10_items_pinned(self, phase):
+        """Phase 392: without either pin, P9 and P10's failures are exactly
+        BEFORE_THE_RECORD's (the rest are WRITTEN_BEFORE's)."""
+        rep = check(phase, ROOT, rev=V10[phase], pin=False)
+        assert set(rep.failed) - set(WRITTEN_BEFORE.get(phase, ())) == set(BEFORE_THE_RECORD[phase])
+
+    def test_before_the_record_holds_the_plans_the_tests_read(self):
+        assert set(BEFORE_THE_RECORD) == set(V10)
 
 
 class TestExitCodes:

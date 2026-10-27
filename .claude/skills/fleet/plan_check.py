@@ -17,11 +17,26 @@ known-bad fixture can require that each one fires on its own case:
   P7  the plan cites the three newest CLAUDE.md change-log entries, each
       with the check it became
   P8  the plan lists the rule-1 stops it anticipates
+  P9  the plan names a plan-of-record entry or a K-id that puts the phase
+      in order (Phase 392, K44): a K-id whose `docs/decisions.md` row names
+      the phase, a dated entry under "Changes to the order" that names it
+      (cited by its date), or the K-id of the phase's "Next, in order" row
+  P10 a fleet-only phase names the first-shop phase it unblocks (K43): a
+      line saying "unblocks" with a Wave 1 phase whose row is not ✅.
+      Fleet-only is the "Next, in order" row's kind; a phase not listed is
+      fleet-only when its plan names `.claude/skills/fleet/` and, outside
+      Non-goals, nothing under `src/`
 
 **Reused, not copied (Phase 387 Step 0, S0-4).** P1 reads the ROADMAP with
 `roadmap_check.rows()` and `ACTIVE`; P5's knowledge-content path is
 `wholetree.CONTENT_PATHS`, the one the push guard already treats as content.
 Nothing else the checklist needs existed.
+
+**Before the record (Phase 392).** P9 and P10 read the plan of record and
+`docs/decisions.md` through `plan_order.py`. The v1.0 plans the tests read
+at their commits were written before either item: `BEFORE_THE_RECORD`
+pins each to exactly the items it fails, equality-tested like the pin
+below.
 
 **Written before (the operator, 2026-10-22: "Pin them (Recommended)").**
 384's and 386's v1.0 were written before P4, P7 and P8 existed. Those items
@@ -51,16 +66,26 @@ from dataclasses import dataclass, field
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 sys.path.insert(0, str(HERE.parent / "closeout"))
-from roadmap_check import ACTIVE, rows  # noqa: E402
+from roadmap_check import ACTIVE, DONE, rows  # noqa: E402
 from wholetree import CONTENT_PATHS  # noqa: E402
 
-ITEM_IDS = ("P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8")
+sys.path.insert(0, str(HERE))
+import plan_order  # noqa: E402
+
+ITEM_IDS = ("P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10")
 
 #: The plans written before P4, P7 and P8 existed, and the items each one
 #: predates. The operator's pick, 2026-10-22. Equality-tested.
 WRITTEN_BEFORE: dict[str, frozenset[str]] = {
     "384": frozenset({"P4", "P7", "P8"}),
     "386": frozenset({"P7", "P8"}),
+}
+#: The plans the tests read at their v1.0 commits, written before P9 and
+#: P10 existed (Phase 392), and the items each fails. Equality-tested.
+BEFORE_THE_RECORD: dict[str, frozenset[str]] = {
+    "384": frozenset({"P9"}),
+    "386": frozenset({"P9"}),
+    "387": frozenset({"P9", "P10"}),
 }
 
 
@@ -368,6 +393,47 @@ def stop_gaps(plan: str) -> list[str]:
                                         for k in _KINDS.values())]
 
 
+_KID = re.compile(r"\bK(\d{1,3})\b")
+_DATE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
+
+
+def record_gaps(phase: str, plan: str, src: Source) -> list[str]:
+    """P9: what in the plan puts the phase in order, by the record's own
+    words; [] when something does."""
+    por, dec = src.read(plan_order.PLAN), src.read(plan_order.DECISIONS)
+    if por is None or dec is None:
+        return [f"cannot read {plan_order.PLAN if por is None else plan_order.DECISIONS}"]
+    kids = {f"K{n}" for n in _KID.findall(plan)}
+    days = set(_DATE.findall(plan))
+    entry = next((e for e in plan_order.parse_order(por).entries if e.phase == phase), None)
+    if (any(d.kid in kids and plan_order.names(f"{d.words} {d.check}", phase)
+            for d in plan_order.decisions(dec))
+            or any(day[:10] in days and plan_order.names(body, phase)
+                   for day, _, body in plan_order.changes(por))
+            or (entry is not None and kids & set(entry.kids))):
+        return []
+    return [f"the plan names no plan-of-record entry or K-id that puts phase {phase} in order: "
+            f"cite a K-id from {plan_order.DECISIONS} whose row names it, the date of an entry "
+            f"under 'Changes to the order' that names it, or its 'Next, in order' row's K-id"]
+
+
+def unblocks_gaps(phase: str, plan: str, src: Source, status: dict[str, str]) -> list[str]:
+    """P10: a fleet-only phase names the first-shop phase it unblocks (K43)."""
+    por = src.read(plan_order.PLAN) or ""
+    entry = next((e for e in plan_order.parse_order(por).entries if e.phase == phase), None)
+    fleet_only = (entry.kind == "fleet" if entry is not None else
+                  ".claude/skills/fleet/" in plan
+                  and "src/" not in without_sections(plan, _NON_GOALS))
+    if not fleet_only:
+        return []
+    shop = [p for p in plan_order.first_shop(por) if status.get(p) != DONE]
+    said = [ln for ln in plan.splitlines() if re.search(r"\bunblock", ln, re.I)]
+    if any(plan_order.names(ln, p) for ln in said for p in shop):
+        return []
+    return [f"a fleet-only phase names no first-shop phase it unblocks (K43): a line saying "
+            f"'Unblocks' with one of {', '.join(shop) or '(none open)'}"]
+
+
 # ------------------------------------------------------------------ the run
 @dataclass
 class Report:
@@ -405,7 +471,8 @@ def check(phase: str, root: pathlib.Path = ROOT, rev: str | None = None,
     if rep.unreadable:
         return rep
     step0 = src.read(step0_path)
-    pinned = WRITTEN_BEFORE.get(phase, frozenset()) if pin else frozenset()
+    pinned = (WRITTEN_BEFORE.get(phase, frozenset()) | BEFORE_THE_RECORD.get(phase, frozenset())
+              if pin else frozenset())
 
     def fail(item: str, whys: list[str]) -> None:
         if not whys:
@@ -439,6 +506,8 @@ def check(phase: str, root: pathlib.Path = ROOT, rev: str | None = None,
     fail("P6", unfilled(plan))
     fail("P7", changelog_gaps(plan, claude_md, src))
     fail("P8", stop_gaps(plan))
+    fail("P9", record_gaps(phase, plan, src))
+    fail("P10", unblocks_gaps(phase, plan, src, status))
     if pin:
         for item in pinned - set(rep.skipped):
             rep.skipped[item] = "written before plan_check (pinned); passes anyway"

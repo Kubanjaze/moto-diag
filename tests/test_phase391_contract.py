@@ -59,9 +59,10 @@ def test_skill_md_documents_the_quartermaster():
 
 
 def test_the_changelogs_newest_entry_is_391():
-    first = next(ln for ln in (SKILL / "CHANGELOG.md").read_text().splitlines()
-                 if ln.startswith("## "))
-    assert "(Phase 391)" in first
+    """391's entry is there; since Phase 392 it is no longer the newest."""
+    heads = [ln for ln in (SKILL / "CHANGELOG.md").read_text().splitlines()
+             if ln.startswith("## ")]
+    assert any("(Phase 391)" in h for h in heads)
 
 
 def test_the_dry_runs_artefacts_are_kept():

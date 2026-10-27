@@ -2,6 +2,26 @@
 
 Written 2026-10-12 by the advisor session that verified Phases 373–381. This copy in the repository is the canonical one.
 
+## Next, in order
+
+The fleet reads this table exactly (`.claude/skills/fleet/plan_order.py`): the first row whose ROADMAP row is not ✅ is the next mission. A row built by a builder session is waited for. A row that needs the operator is asked first, in plain English. Otherwise the fleet opens the mission's issue and a one-row pull request that marks its row 🚧, and the operator merges it by hand (K49). The list changes only by a dated entry under "Changes to the order" with a K-id, written on the operator's word (K48).
+
+As of 2026-10-27, K52.
+
+| # | phase | kind | built by | needs the operator | entry |
+|---|---|---|---|---|---|
+| 1 | 392 | fleet | builder | nothing | 2026-10-26, later · K44 |
+| 2 | 303 | shop | fleet | nothing | 2026-10-26 · K43 |
+| 3 | 348 | shop | fleet | nothing | 2026-10-26 · K43 |
+| 4 | 345 | shop | fleet | an outside account: the offsite backup's service account, which the operator opens | Wave 1, item 2 · K48 |
+| 5 | 343 | shop | fleet | an outside account: crash reports (Sentry), which the operator opens | Wave 1, item 2 · K48 |
+| 6 | 371 | shop | fleet | a fork: Stripe's production webhooks need an endpoint Stripe can reach, and the backend is tailnet-only (the operator's decision 3 of 2026-09-28); and an outside account, Stripe's live account ("Stripe: the live account, for 371 and 372") | Wave 1, item 4 · K48, K52 |
+| 7 | 372 | shop | fleet | an outside account: Stripe's live account | Wave 1, item 4 · K48 |
+| 8 | 330 | shop | fleet | a rule change: F210's general rule comes first ("F210's general rule is still needed before onboarding (330)", 2026-10-21); it changes the set-aside list's definition, which is the operator's call | Wave 1, item 5 · K48, K52 |
+| 9 | 334 | shop | fleet | an outside person: a lawyer, for the terms a shop signs | Wave 1, item 5 · K48 |
+| 10 | 344 | shop | fleet | nothing | Wave 1, item 5 · K48 |
+| 11 | 210 | shop | fleet | nothing | Wave 1, item 6 · K48 |
+
 The ROADMAP stays the ledger: this file records the order of the open rows, and why. A Step 0 that measures something new can change the order. Any change is recorded here, dated.
 
 The operator's words:
@@ -55,6 +75,12 @@ The operator's words:
     - **The two numbers are the operator's,** asked at 392's Step 0.
   - **F228 rides along too (K47).** A Red Team round that leaves a small wording issue open always stops, because nothing tells the rank that the issue needs a finding number, and it cannot file one. #14 stopped on it and is parked until 392 merges. Then its label is re-applied once, and that run is the fix's proof.
     - **The operator's words:** "yes go ahead".
+- **2026-10-27: the order is a list the fleet reads exactly (K48).** At 392's Step 0 the operator answered: "The plan of record stays the single source; add a short "Next, in order" list at its top that the fleet reads exactly; it changes only by a dated entry with a K-id, written on my word."
+  - **The list is "Next, in order", at the top of this file.** It transcribes the order already here: 392, then 303 and 348 (K43), then Wave 1's own numbering. No row's place changed.
+  - **303 and 348 are two missions, 303 first.** The ledger has two rows and a mission is one row; 348's log records which staff login did what, which 303 makes (392's Step 0, S0-5).
+  - **What each row needs from the operator** is taken from Wave 1 and "The operator's steps outside the code" below.
+  - **How a row reaches master (K49):** "The fleet opens a one-row PR (the 🚧 row and the issue) and I merge it by hand; the fleet never pushes to master."
+  - **Corrected the same day, before the list merged (K52),** from the advisor at the operator's word: row 6 (371) needs Stripe's live account as well as the webhook fork; row 8 (330) needs F210's general rule first, which changes the set-aside list's definition, the operator's call. The list's needs gained "a rule change" for that.
 
 ## Where the ledger stands
 

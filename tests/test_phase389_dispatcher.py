@@ -38,7 +38,8 @@ PHASE = "902"
 TITLE = f"Phase {PHASE}: the trial"
 BRANCH = f"phase-{PHASE}-the-trial"
 TRIAL = f"Add row 385.\n\n{fleet_git.TRIAL_MARKER}"
-PLAN = (GOOD / "docs/phases/in_progress/900_implementation.md").read_text()
+# 900's plan, citing K92, the good tree's decision for 902 (plan_check P9, Phase 392).
+PLAN = (GOOD / "docs/phases/in_progress/900_implementation.md").read_text().replace("K90", "K92")
 LINE = ("Regression of record: 1234 passed, 0 failed, 0 skipped, 0 errors at `ccccccc` "
         "(12 min 0 s wall, `python -m pytest -n auto --dist load`, exit 0)")
 TERMS = json.loads((FIX / "scout" / "terms_good.json").read_text())
@@ -400,16 +401,19 @@ def planted_pr(world, number=7):
 
 def test_the_red_team_runs_without_a_push_identity_and_the_fix_round_does_not(world):
     """The planted-bug proof's shape: no trial marker, so the Red Team
-    comments (as 387's and 388's ranks do) and sends it back, and the
-    Engineer's fix round, which would push, waits for the operator."""
+    comments (as 387's and 388's ranks do) and sends it back. Since Phase
+    392 (F223) its verdict, said in the operator's name on an issue that is
+    not a trial, is not a marker any rank reads: the fix round is never
+    due, and nothing would push."""
     fleet, host, clock, origin, engineer, *_ = world
     planted = planted_pr(world)
     step(clock, fleet, host, claude_json({"verdict": "back", "findings": [FINDING],
                                           "refuter_pass": TABLE}, model=rank_call.OPUS))
     assert labels(host, 32) == ["build:open", "mission"]
     assert "F213" in host.prs[planted]["comments"][-1]
+    assert fleet.newest(32, D.RED_M) is None
     step(clock, fleet, host)
-    assert "needs-hands" in labels(host, 32) and engineer.runs == 0
+    assert labels(host, 32) == ["build:open", "mission"] and engineer.runs == 0
 
 
 def test_a_clear_with_no_push_identity_waits_for_one(world):

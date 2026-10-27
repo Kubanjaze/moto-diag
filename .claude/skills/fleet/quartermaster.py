@@ -46,6 +46,7 @@ sys.path.insert(0, str(HERE.parent / "closeout"))
 import closeout_check  # noqa: E402
 import engineer  # noqa: E402
 import plan_check  # noqa: E402
+import plan_order  # noqa: E402
 import rank_call  # noqa: E402
 import red_team  # noqa: E402
 import roadmap_check  # noqa: E402
@@ -346,6 +347,10 @@ refuses this merge; you cannot overturn it. Judge only what a script cannot:
    section left unchanged is not a stub by itself: some sections stay true.
 3. The Captain's and the Red Team's words, as given: a reason they give to
    hold that the checks did not catch refuses, under Q2 or Q3.
+4. The plan of record's and docs/decisions.md's words on this phase, at the
+   end (Phase 392): a pull request that ships what no entry puts in order,
+   or what a K-id reserves for the operator, refuses, under Q1. Cite the
+   dated entry or the K-id in "why".
 
 Name each refusal by one of these ids, exactly, and no other:
 {IDS}
@@ -392,7 +397,8 @@ def gather(clone: pathlib.Path, phase: str, found: list[Finding], extra: dict[st
             + f"\n\n=== the Captain's newest recommendation ===\n{extra['captain']}"
             + f"\n\n=== the Red Team's newest verdict ===\n{extra['red_team']}"
             + f"\n\n=== the pull request's body ===\n{pr_body.strip()}"
-            + f"\n\n=== the diff of v1.0 ({(pc or 'not found')[:12]}) to v1.1 ===\n{plan_diff}")
+            + f"\n\n=== the diff of v1.0 ({(pc or 'not found')[:12]}) to v1.1 ===\n{plan_diff}"
+            + f"\n\n{plan_order.brief_block(clone, phase)}")
 
 
 def judge(phase: str, context: str, *, clone: pathlib.Path, run: Runner, model: str = OPUS
@@ -432,7 +438,7 @@ def compose(found: list[Finding], judged: dict | None) -> tuple[str, list[tuple[
 
 
 def verdict_text(phase: str, verdict: str, failed: list[tuple[str, str]], summary: str,
-                 note: str = "", call_line: str = "") -> str:
+                 note: str = "", call_line: str = "", cite: str = "") -> str:
     lines = [f"**The Quartermaster, phase {phase} (shadow): {verdict}**", "",
              summary.strip() or ("Every check passed." if verdict == MERGE else ""), ""]
     if failed:
@@ -440,6 +446,8 @@ def verdict_text(phase: str, verdict: str, failed: list[tuple[str, str]], summar
     if note:
         lines += [note, ""]
     lines.append("In shadow: nothing is merged and no label is moved. The operator merges.")
+    if cite:
+        lines += ["", cite]
     if call_line:
         lines += ["", call_line]
     return "\n".join(lines)

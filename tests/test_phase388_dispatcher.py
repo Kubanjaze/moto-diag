@@ -81,6 +81,7 @@ class Host:
         self.fenced: list[tuple[list[str], dict]] = []
         self.usage_reads: list[tuple[list[str], dict]] = []   # outside the fence, since 389
         self.gh_calls: list[tuple[list[str], dict]] = []
+        self.commenter = D.fleet_git.OPERATOR_LOGIN    # who `gh issue comment` posts as
 
     def issue(self, n: int, title: str, body: str = "", labels: dict[str, dt.datetime] | None = None):
         self.issues[n] = {"title": title, "body": body, "comments": [], "events": [],
@@ -125,6 +126,7 @@ class Host:
         if cmd[1:3] == ["issue", "list"]:
             want = cmd[cmd.index("--label") + 1] if "--label" in cmd else None
             rows = [{"number": n, "title": i["title"], "body": i["body"], "state": "OPEN",
+                     "author": {"login": i.get("author", D.fleet_git.OPERATOR_LOGIN)},
                      "url": f"https://github.com/{D.REPO}/issues/{n}",
                      "updatedAt": iso(self.clock()),
                      "labels": [{"name": lab} for lab in i["labels"]]}
@@ -138,12 +140,18 @@ class Host:
         i = self.issues[n]
         if cmd[1:3] == ["issue", "view"]:
             field = cmd[cmd.index("--json") + 1]
-            if field == "comments":
-                return ok(json.dumps({"comments": i["comments"]}))
+            if field in ("comments", "comments,body"):
+                # A comment a test planted with no author is the operator's, as
+                # #14's history (fixtures/resume) was before the fleet's account.
+                said = [{"author": {"login": D.fleet_git.OPERATOR_LOGIN}, **c} for c in i["comments"]]
+                return ok(json.dumps({"comments": said, "body": i["body"]}))
             return ok(json.dumps({"labels": [{"name": lab} for lab in i["labels"]]}))
         if cmd[1:3] == ["issue", "comment"]:
+            # GitHub names each comment's author (Phase 392, F223): here, whoever
+            # this stand-in says is commenting, the operator unless a test says.
             i["comments"].append({"body": cmd[cmd.index("--body") + 1],
-                                  "createdAt": iso(self.clock())})
+                                  "createdAt": iso(self.clock()),
+                                  "author": {"login": self.commenter}})
             return ok()
         if cmd[1:3] == ["issue", "edit"]:
             for k, a in enumerate(cmd):
@@ -194,8 +202,11 @@ def world(tmp_path, origin):
 
 
 def mission(host, n=21, labels=None, body=None):
+    # A planted trial (Phase 392, F223): with no account of its own, the
+    # fleet comments as the operator, whose markers count only on a trial.
     host.issue(n, f"Phase {FIXTURE_PHASE}: the fixture",
-               f"Mission issue, branch `{BRANCH}`." if body is None else body,
+               f"Mission issue, branch `{BRANCH}`. {D.fleet_git.TRIAL_MARKER}" if body is None
+               else body,
                labels if labels is not None else {"mission": T0 - dt.timedelta(minutes=5),
                                                   "plan:needs-review": T0 - dt.timedelta(minutes=5)})
 
@@ -462,17 +473,19 @@ class TestOneCycle:
         fleet.cycle()
         assert host.issues[21]["labels"].count("plan:needs-review") == 1
         clock.t = T0 + dt.timedelta(minutes=5)
+        # Since 389 the Captain's revision is next. The issue is a planted trial
+        # (Phase 392, F223), so it runs; both its plans fail the checklist, so it
+        # stops, label unchanged, and nothing is pushed.
+        host.replies = [claude_json({"implementation_md": "# no plan"})] * 2
         fleet.cycle()
-        assert len(host.model_calls()) == 1, "a back-to-captain was reviewed again unasked"
-        # Since 389 the Captain's revision is next; with no fleet account and
-        # no trial marker that is the operator's step (needs-hands).
-        assert "needs-hands" in host.issues[21]["labels"]
-        host.issues[21]["labels"].remove("needs-hands")
+        verdicts = lambda: [c for c in host.comments(21) if c.startswith(xo.MARKER)]  # noqa: E731
+        assert len(verdicts()) == 1, "a back-to-captain was reviewed again unasked"
+        assert host.comments(21)[-1].startswith(f"{D.MARKER} stopped rank=captain")
         clock.t = T0 + dt.timedelta(minutes=10)
         host.label(21, "plan:needs-review")
         host.replies = [claude_json(V_APPROVE)]
         fleet.cycle()
-        assert len(host.model_calls()) == 2 and "plan:approved" in host.issues[21]["labels"]
+        assert len(verdicts()) == 2 and "plan:approved" in host.issues[21]["labels"]
 
     def test_a_ranks_stop_leaves_the_label(self, world):
         fleet, host, clock, _ = world
@@ -520,7 +533,9 @@ class TestOneCycle:
 class TestTheRateLimitPauses:
     def test_recorded_commented_paused_then_resumed(self, world):
         fleet, host, clock, _ = world
-        mission(host)
+        # Not a trial: once approved, the Engineer waits for the operator
+        # (no account, no trial marker), so the resumed XO is the last model call.
+        mission(host, body=f"Mission issue, branch `{BRANCH}`.")
         host.usage_after = USAGE_LIMITED      # the call finds the limit; the gate did not
         host.replies = [LIMITED]
         fleet.cycle()
@@ -573,8 +588,10 @@ class TestTheRateLimitPauses:
 class TestTheSweep:
     def test_one_comment_for_a_label_older_than_24_hours(self, world):
         fleet, host, _, _ = world
-        host.issue(9, "Phase 387: the XO", "", {"mission": T0 - dt.timedelta(hours=100),
-                                                "plan:approved": T0 - dt.timedelta(hours=25)})
+        # A trial: the sweep's own marker, said as the operator, counts (F223).
+        host.issue(9, "Phase 387: the XO", D.fleet_git.TRIAL_MARKER,
+                   {"mission": T0 - dt.timedelta(hours=100),
+                    "plan:approved": T0 - dt.timedelta(hours=25)})
         assert fleet.sweep() == 1
         body = host.comments(9)[-1]
         assert body.startswith(f"{D.SWEEP_MARKER} label=plan:approved applied=")

@@ -26,6 +26,11 @@ ExecStart=/usr/bin/python3 /home/lilcu/motodiag/fleet/code/.claude/skills/fleet/
 Restart=always
 RestartSec=30
 RestartPreventExitStatus=4
+# The open-file limit (Phase 392, F227): systemd's default soft limit is 1024,
+# and a test worker in the fence peaked at 793 (392's probe); in 391's
+# trial one ran out. The operator's number, K51: "LimitNOFILE=1048576 for
+# the fleet service (the shell's measured limit; 1024 is what failed in F227)".
+LimitNOFILE=1048576
 
 [Install]
 WantedBy=multi-user.target

@@ -401,8 +401,20 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: (49), test_phase391_dispatcher.py (17), test_phase391_contract.py (8),
 #: test_phase390_resume_contract.py (4, the Quartermaster's kill points).
 #: Measured: 11605.
+#: Phase 392 (the fleet follows the plan of record), by a diff of collected
+#: ids against master at f1763df (11605): +132 -0: test_phase392_plan_order.py
+#: (45), test_phase392_tmp.py (16), test_phase392_authors.py (13),
+#: test_phase392_next_mission.py (12), test_phase392_ranks_cite.py (10),
+#: test_phase392_red_team_c7.py (10), test_phase387_fleet_contract.py (10,
+#: P9, P10 and their pin), test_phase392_answers.py (4),
+#: test_phase392_check_limit.py (4), test_phase387_yeoman.py (3, Covers),
+#: test_phase388_service_contract.py (2, the open-file limit),
+#: test_phase392_open_files.py (2), test_phase390_resume_contract.py (1, the
+#: next mission's kill point). Measured: 11737.
+#: Then +1, bug fix #1 (F227's leak): test_phase392_init_db_closes.py.
+#: Measured: 11738.
 #:
-COLLECTED_TEST_FLOOR = 11605
+COLLECTED_TEST_FLOOR = 11738
 
 
 def _collected_count() -> int:

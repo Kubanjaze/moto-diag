@@ -9,7 +9,9 @@ script gathers what no model should be trusted to produce:
   fence by the caller (it imports the clone's code);
 - the plan as approved (at its plan commit) and as it stands, and their
   diff: v1.1's Deviations are checked against what changed;
-- the branch's diff from `master`, by file.
+- the branch's diff from `master`, by file;
+- what the plan of record and `docs/decisions.md` say on the phase
+  (`plan_order.brief_block`, Phase 392).
 
 The model returns `clear` or `back`, its findings, and a `## Refuter pass`
 table, which must pass `refute_check.check` (C1–C7) or the stage stops.
@@ -17,6 +19,17 @@ table, which must pass `refute_check.check` (C1–C7) or the stage stops.
 (`docs/FOLLOWUPS.md p. 3677` is line 3677): C4 asks every row for a page,
 and a text file has none (decided in Phase 389's log).
 Three rounds at most (K9); the caller counts them.
+
+**An open wording defect** (Phase 392, F228). C7 asks each one to cite the
+one finding open wording defects go to (K9: "after round 3, remaining
+wording defects go to one finding"); this rank is read-only and cannot
+file it. So the brief says so in its own words: leave such a row `open`
+with no F-number. On a back before the last round the table does not ship
+and the Engineer may still fix the wording, so C7 is set aside there, as
+C6 is. On a clear, or a back in the last round, `review` checks the table
+as it will be written (`with_finding`), and the dispatcher files the
+finding (`wording_entry`, the next number over both repositories) and
+writes its number into each row.
 """
 from __future__ import annotations
 
@@ -29,6 +42,7 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "closeout"))
 sys.path.insert(0, str(HERE.parent / "refute"))
 import closeout_check  # noqa: E402
+import plan_order  # noqa: E402
 import rank_call  # noqa: E402
 import refute_check  # noqa: E402
 from rank_call import OPUS, Runner, Stop  # noqa: E402
@@ -73,6 +87,9 @@ Refute, in this order:
    docs/patterns/f9-mock-vs-runtime-drift.md against the tests the phase
    added (a mock or a fixture that cannot drift from what runs).
 4. A1–A8: the close-out check's output below; anything it reports.
+5. The plan of record's and docs/decisions.md's words on this phase, at
+   the end: a claim that contradicts them, a K-id or dated entry cited for
+   what it does not say, or work no entry puts in order, is a finding.
 
 Return:
 - verdict: "back" if any finding is factual, a citation, or code;
@@ -90,6 +107,14 @@ For a repository file the page is its line number ("docs/FOLLOWUPS.md p.
 3677" means line 3677). Every row has a verdict, a quote in quotation
 marks, a source with a page, and the last column. A killed row's outcome
 is open until the Engineer fixes it.
+
+A wording defect you leave open is written "open" with no F-number after
+it. You cannot file a finding (you are read-only), and you never write an
+F-number of your own choosing. The rule the checker holds (K9): every
+wording defect left open goes to one finding, whose number each such row
+must cite. After your round, a script outside you files that one finding
+and writes its number into each of those rows. A factual or citation
+defect is never left for a finding: it is "back".
 """
 
 
@@ -125,7 +150,8 @@ def gather(clone: pathlib.Path, phase: str, f9_output: str, base: str = "origin/
             + f"\n\n=== the branch's diff from master, by file ===\n{diff_names.strip()}"
             + f"\n\n=== v1.0 as approved ({(pc or 'not found')[:12]}) ===\n{v10}"
             + f"\n\n=== the diff of v1.0 to v1.1 ===\n{plan_diff}"
-            + f"\n\n=== v1.1 as it stands ===\n{v11}")
+            + f"\n\n=== v1.1 as it stands ===\n{v11}"
+            + f"\n\n{plan_order.brief_block(clone, phase)}")
 
 
 def review(phase: str, rnd: int, context: str, *, clone: pathlib.Path, run: Runner,
@@ -145,15 +171,73 @@ def review(phase: str, rnd: int, context: str, *, clone: pathlib.Path, run: Runn
     if v["verdict"] == BACK and not findings:
         raise Stop("back, with no findings")
     table = str(v.get("refuter_pass", ""))
+    return check_table(v, table, rnd), c
+
+
+def check_table(v: dict, table: str, rnd: int) -> dict:
+    """The table against C1–C7, as it will stand; `v` gains `wording_open`,
+    the rows the dispatcher files one finding for (F228)."""
     # C6 ("no factual or citation defect is still open: the row does not
     # ship") holds a table that ships, the one a clear commits. On a back the
     # killed rows are open by definition: the Engineer has not fixed them yet
-    # (Phase 389, bug fix #2: the planted-bug proof's first round).
-    bad = [f for f in refute_check.check(table)
-           if not (v["verdict"] == BACK and f.startswith("C6 "))]
+    # (Phase 389, bug fix #2: the planted-bug proof's first round). C7 the
+    # same before the last round: the wording may still be fixed (F228).
+    back = v["verdict"] == BACK
+    files = not back or rnd >= MAX_ROUNDS
+    rows = open_wording(table) if files else []
+    shown = with_finding(table, PLACEHOLDER) if rows else table
+    bad = [f for f in refute_check.check(shown)
+           if not (back and f.startswith("C6 ")) and not (not files and f.startswith("C7 "))]
     if bad:
         raise Stop("the refute table fails the checklist: " + "; ".join(bad)[:400])
-    return v, c
+    return {**v, "wording_open": rows}
+
+
+#: Stands in for the finding's number while the table is checked; the
+#: dispatcher writes the real one. Four digits, so C7's pattern reads it.
+PLACEHOLDER = "F9999"
+
+
+def _cells(line: str) -> list[str]:
+    return [c.strip() for c in line.strip().strip("|").split("|")]
+
+
+def open_wording(table: str) -> list[dict]:
+    """Each row whose outcome leaves a wording defect open with no F-number."""
+    out = []
+    block = table[refute_check.find_block(table).end():] if refute_check.find_block(table) else ""
+    for line in block.split("\n## ", 1)[0].splitlines():
+        m = refute_check._ROW.match(line)
+        if not m or not m.group("rko"):
+            continue
+        k = refute_check._RKO.match(m.group("rko"))
+        if k and k.group(2).lower() == "wording" and k.group(3).lower() == "open" and not k.group(4):
+            out.append({"line": line, "claim": m.group("claim").strip(),
+                        "quote": m.group("quote").strip(), "source": m.group("source").strip()})
+    return out
+
+
+def with_finding(table: str, fnum: str) -> str:
+    """The table with `fnum` after each open wording outcome that has none."""
+    out = []
+    for line in table.splitlines():
+        m = refute_check._ROW.match(line)
+        k = refute_check._RKO.match(m.group("rko")) if m and m.group("rko") else None
+        if k and k.group(2).lower() == "wording" and k.group(3).lower() == "open" and not k.group(4):
+            line = line[:m.start("rko")] + m.group("rko").rstrip() + f" {fnum} " + line[m.end("rko"):]
+        out.append(line)
+    return "\n".join(out) + ("\n" if table.endswith("\n") else "")
+
+
+def wording_entry(fnum: str, phase: str, rnd: int, rows: list[dict], where: str) -> str:
+    """The finding open wording defects go to, as `docs/FOLLOWUPS.md` holds it."""
+    listed = "\n".join(f"- {r['claim']}: {r['quote']} ({r['source']})" for r in rows)
+    return (f"### {fnum}\n\n**Wording the Red Team left open on phase {phase}, round {rnd}**\n\n"
+            f"Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase "
+            f"392, F228). K9: \"after round 3, remaining wording defects go to one finding\". "
+            f"The rows, from the refute table in {where}:\n\n{listed}\n\nWhat would close it: "
+            f"a later phase that touches these documents fixes the wording, deleting a sentence "
+            f"rather than rewriting it where it can (K9).\n")
 
 
 def findings_text(v: dict) -> str:

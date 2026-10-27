@@ -54,8 +54,11 @@ class Stand:
             return subprocess.CompletedProcess(cmd, 1, "", f"{self.gh_fails} refused")
         if sub == ["issue", "view"]:
             field = cmd[cmd.index("--json") + 1]
-            if field == "comments":
-                return ok(json.dumps({"comments": [{"body": b} for b in self.comments]}))
+            if field == "comments,body":
+                # A planted trial, its comments the operator's (Phase 392, F223).
+                return ok(json.dumps({"body": xo.fleet_git.TRIAL_MARKER, "comments": [
+                    {"body": b, "author": {"login": xo.fleet_git.OPERATOR_LOGIN}}
+                    for b in self.comments]}))
             return ok(json.dumps({"labels": [{"name": n} for n in self.labels]}))
         if sub == ["issue", "comment"]:
             self.comments.append(cmd[cmd.index("--body") + 1])
@@ -82,7 +85,8 @@ def ledger(tmp_path, monkeypatch):
 
 def review(stand, repo=GOOD, issue=7, label=True):
     lines: list[str] = []
-    rc = xo.review(FIXTURE_PHASE, issue, repo=repo, label=label, run=stand, out=lines.append)
+    rc = xo.review(FIXTURE_PHASE, issue, repo=repo, label=label, run=stand, out=lines.append,
+                   identity_file=pathlib.Path("/nonexistent/fleet-github.env"))
     return rc, "\n".join(lines)
 
 

@@ -107,7 +107,10 @@ def test_a_planted_low_reading_stops_a_new_stage(s):
     (hold,) = holds(s)
     assert "C: has 10.0 GB free (floor 50 GB)" in hold and "take `needs-hands` off" in hold
     assert s.disk.trims == 1, "no reclaim before the hold"
-    assert logged(s, "reclaim (below the floor): C: 10.0 -> 10.0 GB free; Ubuntu 900.0 -> 900.0")
+    # Since Phase 392 (F226) a flat C: is said as such, not read as a reclaim.
+    assert logged(s, "reclaim (below the floor): C: 10.0 -> 10.0 GB free (nothing came back to "
+                     "Windows: the disk image is not sparse, so the trim freed space inside Ubuntu "
+                     "only); Ubuntu 900.0 -> 900.0")
     n = len(s.host.comments(N))
     advance(s)                                           # the operator has not answered
     assert len(s.host.comments(N)) == n and s.sessions == []
@@ -258,7 +261,9 @@ def test_the_close_out_reclaims_and_the_pr_carries_the_line(s):
     to_pr(s)
     body = s.host.prs[BRANCH]["body"]
     assert "Free space after the close-out's reclaim:" in body
-    assert "C: 200.0 -> 200.0 GB free; Ubuntu 900.0 -> 900.0 GB free; fstrim: /: 12 GiB" in body
+    assert ("C: 200.0 -> 200.0 GB free (nothing came back to Windows: the disk image is not "
+            "sparse, so the trim freed space inside Ubuntu only); Ubuntu 900.0 -> 900.0 GB free; "
+            "fstrim: /: 12 GiB") in body
     assert logged(s, f"reclaim (phase {PHASE}'s close-out)")
 
 
