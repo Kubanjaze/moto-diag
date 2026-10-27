@@ -556,7 +556,7 @@ Multi-user auth, voice-first mode, printing, barcode scanning, photo annotation,
 
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
-| 303 | Multi-user auth with roles | 🔲 | Owner/tech/service writer/apprentice, permission gating, session management |
+| 303 | Multi-user auth with roles | 🚧 | Owner/tech/service writer/apprentice, permission gating, session management |
 | 304 | Voice-first mode (expand Phase 183) | 🔲 | Hands-free wrenching, voice commands, continuous listening mode |
 | 305 | Print + label support | 🔲 | Service tags, work order printouts, parts labels, Brother/Dymo printer integration |
 | 306 | Barcode / QR scanning | 🔲 | Parts inventory scanning, bike check-in via VIN barcode, mobile camera or USB scanner |
