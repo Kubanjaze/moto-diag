@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F227** (this file). The
+At the time of writing the highest assigned is **F229** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4281,3 +4281,14 @@ as Q4.
 What would close it: the peak handle count of one xdist worker measured in
 the fence, the leak (if any) found, and a `LimitNOFILE` in the unit chosen
 by the operator; a planted run under a small limit as the known-bad case.
+
+### F229
+
+**Wording the Red Team left open on phase 389A, round 3**
+
+Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 392, F228). K9: "after round 3, remaining wording defects go to one finding". The rows, from the refute table in the Red Team's round 3 on phase 389A:
+
+- v1.1 real-fork bullet: no Red Team could run on this branch: "A Red\nTeam did run on the pull request (#15) and sent it back" (docs/phases/completed/389A_implementation.md p. 1)
+- v1.1 section 5: the dispatcher's stage list: "def stage_quartermaster" (.claude/skills/fleet/dispatcher.py p. 1426)
+
+What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).
