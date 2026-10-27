@@ -325,3 +325,87 @@ skipped … (78.2 s wall)", exit 0, record `c9fde2a4…` on `ac1dc6b`; then once
 more after this line was written, below in the commit's own message.
 `closeout_check.py . 391`, `refute_check.py` and `roadmap_check.py`: all
 exit 0. Q1, Q6, Q7 and Q8 run on this tree by hand: all pass.
+
+## 2026-10-26 — the trials
+
+- **A missing handoff cannot be pushed** from either path. On a branch at
+  `79a06da` with `docs/handoffs/2026-10-26_391_closed.md` deleted, row 391 ✅
+  fails R6; `tests/test_roadmap_continuity.py` is a fast whole-tree member
+  (`wholetree.members("fast")` lists it); the push guard accepts a pushed
+  commit only with a signed whole-tree record for its tree
+  (`_pre_push_guard.wholetree_gate`), and the fleet's push gate runs
+  `roadmap_check` (G5). So no such commit was made or pushed, and the
+  guard was not tried. Asked the operator how to plant that trial; their
+  answer: "Handoff with no content (Recommended)": the handoff keeps its
+  name, so R6 passes, and holds only its title line.
+- **A stub v1.1 passes every check before the Quartermaster.** The stub
+  branch (`bd3e8ea`: v1.1's Results replaced by "To be written after the
+  merge.") passed `wholetree.sh`, exit 0 (2271 passed, 61.2 s), record
+  `c36b9f43…`, and was pushed through the guard.
+- **The service on this phase's code**, for the trials (as 390's ran on
+  its branch): `~/motodiag/fleet/code` at `79a06da`, then a SIGTERM to the
+  unit's main process (pre-approval (c): no fence running, #14 held under
+  `needs-admiral`). dispatcher.log: "16:03:38 the search on start: nothing
+  to resume", then "16:03:43 the Quartermaster judges merge:needs-review
+  applied after 2026-10-26T16:03:43-04:00".
+- **The stub trial**: PR #25, issue #26, opened under the operator's login
+  (pre-approval (a)) by `qm_trial.sh`, a scratch driver: the PR, the issue
+  with the trial marker, a Red Team clear and a Captain's merge each
+  planted as a comment that says it is planted, then `merge:needs-review`.
+  "16:08:52 issue 26: the Quartermaster on phase 391, bd3e8ea4484b".
+- **The emptied-handoff branch** (`0836ed4`), made from `79a06da`; local
+  Q8: "2026-10-26_391_closed.md has no '## What is open'; … no '## What is
+  next'". Its whole-tree run waits for the fleet's run to end (F220).
+- **The restart, mid-stage** (pre-approval (c), #14 still held): at
+  16:58:24 a SIGTERM to the unit's main process, while #26's full
+  model-free run had been going 49 minutes; its journal held only
+  `started` and `clone`, no check. dispatcher.log, on the new start:
+  "16:58:57 resume quartermaster from 20261026_160850_quartermaster_391
+  (issue 26), after started, clone", then "issue 26: the Quartermaster on
+  phase 391, bd3e8ea4484b": the cut run made again on the same commit, in
+  the same run directory.
+- **The stub trial's verdict**, "17:52:40 issue 26: verdict: refuse (Q7
+  Q7)": Q7 named by the script ("section 'Results' has a stub: 'To be
+  written after the merge.'") and again by the model; no other check
+  failed. The model read check 4's two hits as prose ("just sentences
+  describing the stub rule"). Its call: 50,464 tokens read, 603 written,
+  3 turns, 8 s, $0.22 at list price. The comment is the fleet's
+  (`kubanjazefleet`); #26's label stayed `merge:needs-review`. The same
+  search on start logged "1 stage(s) acted on" once the stage ended.
+  Cosmetic: the log line repeats an id the script and the model both named.
+- **The emptied-handoff trial**: `0836ed4` passed `wholetree.sh`, exit 0
+  (2271 passed, 58.9 s), record `8196941b…`, pushed; PR #27, issue #28.
+- **#28's first run did not finish.** "18:58:44 cycle failed:" with
+  `subprocess.TimeoutExpired` from `check_run` (its fenced run past
+  `CHECK_TIMEOUT_S`, 3600 s), then "19:03:55 issue 28: the Quartermaster on
+  phase 391, 0836ed4ba381", a new stage from the start: F225.
+- **At 19:40 Ubuntu's disk went read-only** (the operator's account: write
+  I/O errors on the sparse `ext4.vhdx`, C: not full). The operator moved
+  Ubuntu to a fresh non-sparse image (`C:\WSL\Ubuntu-26.04`) by export and
+  import. Lost: every fleet run folder but #14's two; the mirror rebuilt.
+  This checkout, its branch and this log's uncommitted lines survived. The
+  import left `runs/` owned by root: every cycle from 21:40 fails with
+  `PermissionError` making a run folder. Filed as F226, with the reclaim
+  that no longer shrinks the image (21:45:28: "C: 499.2 -> 499.2 GB free
+  … 991.7 GiB trimmed").
+- **The operator's order after the move**, verbatim: "(1) File two
+  findings: the uncaught check-run timeout that crashes a cycle and
+  restarts the stage; and the sparse-vhdx disk failures of 2026-10-25 and
+  10-26 (sparse is now off; F221's reclaim must work without it: fstrim
+  still runs but no longer shrinks the file, so record what replaces it).
+  (2) Re-run the emptied-handoff trial (#28) and the green trial, record
+  both, close the planted PRs/issues. (3) Merge 391: phase-391-quartermaster
+  into master --no-ff, with origin/master (cadaa37: the 392 prompt, a plan
+  entry, K43/K44) merged in first, whole-tree first; verify_phase.sh 391;
+  push. (4) A dated correction in 391's log: line 50's claim about #14 is
+  wrong; the failing call is inside test_phase147_gate_6.py, timeout=60 at
+  lines 835 and 854 on e15b462, master 300. (5) #14, as 389 did, under my
+  login: push e15b462 (from runs/20261025_160200_engineer_389A/clone) to
+  phase-389A-385s-roadmap-row, merge origin/master into it (whole-tree
+  first), push, take needs-admiral off #14 (gh with -R), re-apply
+  plan:approved for a fresh Engineer round. Run no tests of yours while its
+  model-free run goes. Comment on #14 what you did. Report after (3) and
+  after (5)."
+- **What replaces the shrink is not decided here.** F226 lists what was
+  measured (compacting with Ubuntu shut down; bounding what the fleet
+  keeps); choosing is the operator's.
