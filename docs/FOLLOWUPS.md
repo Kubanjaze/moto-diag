@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F227** (this file). The
+At the time of writing the highest assigned is **F228** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4281,3 +4281,42 @@ as Q4.
 What would close it: the peak handle count of one xdist worker measured in
 the fence, the leak (if any) found, and a `LimitNOFILE` in the unit chosen
 by the operator; a planted run under a small limit as the known-bad case.
+
+### F228
+
+**The Red Team's brief never states C7, and a read-only rank cannot meet it, so a round that leaves a wording defect open always stops**
+
+Found 2026-10-27 by the advisor session, in #14's (Phase 389A) Red Team
+round 3, which ran twice:
+- **09:35**, run `20261027_093511_red_team_389A`: stopped on C4, a row
+  citing `docs/phases/completed/389A_implementation.md` with no line
+  number. The brief states that rule; this one was the model's slip.
+- **10:07**, after the operator re-applied `review:open`, run
+  `20261027_100734_red_team_389A`: stopped at 10:09 on C7. Row 15, a
+  wording defect in a Results bullet about wholetree, was left open with
+  no finding (the dispatcher's comment on #14). The label is unchanged,
+  and no due rule runs the Red Team again until it is re-applied.
+
+What is wrong, measured on master at `63af29d`:
+- `.claude/skills/refute/refute_check.py` C7 (line 30, held at lines
+  126–129): an open wording defect cites the one F-number it goes to. That
+  is K9: "after round 3, remaining wording defects go to one finding"
+  (`.claude/skills/refute/SKILL.md` line 55).
+- `.claude/skills/fleet/red_team.py`'s `BRIEF` (line 56) says "clear" when
+  the findings are none or only wording (line 79). It offers "kept, fixed,
+  deleted or open" as a row's outcome (line 87), and says a killed row's
+  outcome is open until the Engineer fixes it (line 91). It never says
+  that an open wording row needs an F-number. The fleet skill asks for the
+  opposite: where a check and a brief could disagree, the brief states the
+  check's rule (`.claude/skills/fleet/SKILL.md` line 275).
+- The Red Team runs read-only (`rank_call.py` `FENCE`, line 52: Read,
+  Grep and Glob), so it cannot file the finding C7 asks it to cite.
+- `review` exempts only C6 on a back (lines 152–153). So any round, clear
+  or back, whose table leaves a wording defect open ends the stage.
+
+What it affects: every mission's Red Team, in every round. #14 is parked
+on it.
+
+What would close it: the brief and the check agree, and the one finding
+open wording defects go to is filed outside the model, with #14's round-3
+table as the known-bad case. The operator folded it into Phase 392 (K47).

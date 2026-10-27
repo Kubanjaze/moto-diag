@@ -53,6 +53,8 @@ The operator's words:
   - **F225 and F227 ride along too (K46).** A fleet check that runs past its time limit stops and says so, instead of silently starting over. The fleet service's open-file limit is measured, then set. Either could trip 392's own proof.
     - **The operator's words:** "yes add both to 392".
     - **The two numbers are the operator's,** asked at 392's Step 0.
+  - **F228 rides along too (K47).** A Red Team round that leaves a small wording issue open always stops, because nothing tells the rank that the issue needs a finding number, and it cannot file one. #14 stopped on it and is parked until 392 merges. Then its label is re-applied once, and that run is the fix's proof.
+    - **The operator's words:** "yes go ahead".
 
 ## Where the ledger stands
 

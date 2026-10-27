@@ -39,6 +39,11 @@ The measured facts, taken 2026-10-26 on master at `7a3aeca`. Re-verify each at S
   - So a run past the limit ends its stage as failed, and the next cycle starts it again from nothing, with nothing said on the issue. That happened in 391's emptied-handoff trial (F225).
   - `ops/desktop/motodiag-fleet.service` sets no open-file limit, so the service runs at systemd's default: 1024 soft, 1048576 hard (F227, from `/proc/<pid>/limits`). A shell there has 1048576.
   - In the same trial a test worker raised "Too many open files" and the run ended about 940 tests short. Its 328 tests, run serially under a 1024 limit, passed: not reproduced (F227).
+- **The Red Team's brief and C7 (F228)**, taken 2026-10-27 on master at `63af29d`:
+  - `refute_check.py` C7 (line 30): an open wording defect cites the one F-number it goes to (K9).
+  - `red_team.py`'s brief says "clear" when the findings are none or only wording (line 79), and that a killed row's outcome is open until the Engineer fixes it (line 91). It never mentions C7's F-number. The rank is read-only (`rank_call.py` line 52), so it cannot file one.
+  - `review` exempts only C6 on a back (lines 152–153), so any round whose table leaves a wording defect open stops.
+  - #14's round 3 stopped this way at 10:09 on 2026-10-27 (run `20261027_100734_red_team_389A`), after a first try stopped on a missing line number (C4). #14 is parked with `review:open` on it.
 
 What to build:
 - **Every rank that plans or judges reads the plan of record and docs/decisions.md.** What it writes cites the dated entry or the K-id that bears on the phase.
@@ -64,6 +69,11 @@ What to build:
   - **F227:** one test worker's peak open files, measured in the fence; the leak, if there is one, found; and an open-file limit set in the unit. The known-bad case is a planted run under a small limit.
   - **Both numbers are mine:** the open-file limit, and whether one hour stays. Measure first, then ask me at Step 0 (item 4 below).
   - **Installing the changed unit needs my password**, so that step comes to me as one paste block.
+- **F228 is closed: a Red Team round that leaves a wording defect open can finish.** My decision, 2026-10-27 (K47): "yes go ahead", to the advisor's recommendation: fix it here, park #14 until this phase merges, start this phase now.
+  - The brief states C7's rule in its own words, as the fleet skill asks where a check and a brief could disagree.
+  - The one finding that open wording defects go to is filed outside the model, never by the rank.
+  - The known-bad case is #14's round-3 table, from its run folder, kept as a fixture.
+  - The live proof comes after the merge: I re-apply #14's `review:open` once, and its Red Team finishes. Give me that step as one paste block.
 - **The proof:** after the merge, the fleet starts 303 and 348 from the plan, with no step by me except what the plan says needs me.
 
 At Step 0, stop and give me the options, with what each would ship and your recommendation:
@@ -82,6 +92,7 @@ Report, at the end:
 - F223's known-bad case;
 - F226: what is deleted, what is kept, and C: and the image's size before and after;
 - F225 and F227: the two numbers chosen, the known-bad cases, and the limit the installed unit runs with;
+- F228: what the brief now says, who files the finding, and #14's table as the known-bad case;
 - the next-mission step and its proof;
 - the regression line;
 - verify_phase.sh's result;
