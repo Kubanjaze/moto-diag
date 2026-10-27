@@ -55,6 +55,7 @@ NEVER = ("CLAUDE.md", ".claude/settings.json", ".claude/settings.local.json",
          ".claude/skills/closeout/pre_push_guard.sh", ".claude/skills/closeout/_pre_push_guard.py",
          ".claude/skills/fleet/")
 ROADMAP = "docs/ROADMAP.md"
+FOLLOWUPS = "docs/FOLLOWUPS.md"
 
 #: A credential in an added line. Long enough that a test's fake token
 #: ("sk-ant-oat01-test-token") is not one; a real OAuth token runs to about
@@ -81,9 +82,31 @@ def may_touch(rank: str, phase: str, path: str) -> bool:
     if rank == "captain":
         return path == f"docs/phases/in_progress/{phase}_implementation.md"
     if rank == "red-team-record":
+        # The phase log's table, and (Phase 392, F228) the one finding the
+        # wording it left open goes to: an entry added, nothing removed (G3).
         return path in (f"docs/phases/in_progress/{phase}_phase_log.md",
-                        f"docs/phases/completed/{phase}_phase_log.md")
+                        f"docs/phases/completed/{phase}_phase_log.md", FOLLOWUPS)
+    if rank == "row":
+        # The next mission's one-row pull request (Phase 392, K49): the
+        # ROADMAP only, and in it only the phase's status (G3, below).
+        return path == ROADMAP
     return rank == "engineer"
+
+
+def row_status_only(diff: str, phase: str) -> list[str]:
+    """Why a `row` push's ROADMAP diff is more than the phase's row going 🚧."""
+    minus = [ln[1:] for ln in diff.splitlines() if ln.startswith("-") and not ln.startswith("---")]
+    plus = [ln[1:] for ln in diff.splitlines() if ln.startswith("+") and not ln.startswith("+++")]
+    if len(minus) != 1 or len(plus) != 1:
+        return [f"G3 the row may change one line, phase {phase}'s row, not "
+                f"{len(minus)} removed and {len(plus)} added"]
+    if not re.match(rf"\| {re.escape(phase)} \|", minus[0]):
+        return [f"G3 the row may change only phase {phase}'s row, not {minus[0][:40]!r}"]
+    cells = minus[0].split("|")
+    cells[3] = f" {roadmap_check.ACTIVE} "
+    if plus[0] != "|".join(cells):
+        return [f"G3 the row may change only phase {phase}'s status, to {roadmap_check.ACTIVE}"]
+    return []
 
 
 def roadmap_rows_removed(diff: str) -> list[str]:
@@ -120,6 +143,15 @@ def gate(clone: pathlib.Path, *, rank: str, phase: str, branch: str, base: str,
         others = [r for r in roadmap_rows_removed(_git(clone, "diff", f"{base}..{head}", "--",
                                                        ROADMAP).stdout) if not own.match(r)]
         fails += [f"G3 the engineer may not change another phase's row: {r[:60]!r}" for r in others]
+    if rank == "row" and ROADMAP in names:
+        fails += row_status_only(_git(clone, "diff", f"{base}..{head}", "--", ROADMAP).stdout,
+                                 phase)
+    if rank == "red-team-record" and FOLLOWUPS in names:
+        gone = [ln for ln in _git(clone, "diff", f"{base}..{head}", "--", FOLLOWUPS).stdout
+                .splitlines() if ln.startswith("-") and not ln.startswith("---")
+                and "highest assigned is **F" not in ln]
+        fails += [f"G3 the {rank} may only add to {FOLLOWUPS}, not change {ln[1:61]!r}"
+                  for ln in gone]
     added = [ln[1:] for ln in _git(clone, "diff", f"{base}..{head}").stdout.splitlines()
              if ln.startswith("+") and not ln.startswith("+++")]
     if any(SECRET.search(ln) for ln in added):

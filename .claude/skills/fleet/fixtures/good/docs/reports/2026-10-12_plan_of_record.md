@@ -6,7 +6,7 @@ As of 2026-10-05, K91.
 
 | # | phase | kind | built by | needs the operator | entry |
 |---|---|---|---|---|---|
-| 1 | 900 | fleet | fleet | nothing | 2026-10-05 · K90 |
+| 1 | 900 | fleet | builder | nothing | 2026-10-05 · K90 |
 | 2 | 901 | shop | fleet | nothing | Wave 1, item 1 · K91 |
 
 ## Changes to the order

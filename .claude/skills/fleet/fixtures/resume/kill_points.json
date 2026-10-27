@@ -1,58 +1,61 @@
 {
-  "_what": "Phase 390: every kill point in 390_step0.md's tables (S0-2), hand-written, each with the test in tests/test_phase390_resume.py that kills a stage there and resumes it. tests/test_phase390_resume_contract.py holds every stage to at least one, and every name to a test that exists. Since Phase 391 a stage's tests may also live in tests/test_phase391_dispatcher.py (the Quartermaster's).",
-  "scout": {
-    "the model call (a finished call before it)": "test_scout_cut_in_its_second_model_call",
-    "the model call, before its first answer": "test_scout_cut_before_its_first_answer_runs_fresh_in_the_same_run",
-    "the push gate's fast check": "test_scout_cut_in_the_push_gates_model_free_run",
-    "after the push, before the marker": "test_scout_cut_after_its_push",
-    "after the marker, before step0:done": "test_scout_cut_after_its_marker"
-  },
-  "captain": {
-    "the Fable call": "test_captain_cut_in_its_model_call",
-    "after the push, before the marker": "test_captain_cut_after_its_push",
-    "after the marker, before the label": "test_captain_cut_after_its_marker_then_the_xo_is_due",
-    "a revision, between the label off and the label on": "test_captains_revision_cut_between_taking_the_label_off_and_putting_it_back"
-  },
-  "xo": {
-    "the Fable call": "test_xo_cut_in_its_model_call",
-    "after the verdict comment, before the label": "test_xo_cut_after_its_verdict_before_its_label"
-  },
-  "engineer": {
-    "between the started marker and build:open": "test_engineer_cut_between_its_started_marker_and_build_open",
-    "the session": "test_engineer_cut_in_its_session_goes_on_with_continue",
-    "the model-free run (F219)": "test_engineer_cut_in_its_model_free_run_f219",
-    "after the session ended, before the journal knew": "test_engineer_cut_after_its_session_ended_before_the_journal_knew",
-    "after the push, before the PR": "test_engineer_cut_after_its_push_before_the_pr",
-    "after the PR, before pr-ready": "test_engineer_cut_after_opening_the_pr",
-    "after pr-ready, before review:open": "test_engineer_cut_after_pr_ready_before_its_label",
-    "a fix round, after its PR comment": "test_engineers_fix_round_cut_after_its_pr_comment",
-    "an escalation, between its comment and its label": "test_engineers_escalation_cut_between_its_comment_and_its_label"
-  },
-  "recheck": {
-    "the model-free run, again on the held commit": "test_the_recheck_cut_in_its_model_free_run"
-  },
-  "red_team": {
-    "the F9 run": "test_red_team_cut_in_its_f9_run",
-    "the Opus call": "test_red_team_cut_in_its_model_call",
-    "after the PR comment, before the issue marker": "test_red_team_cut_after_its_pr_comment",
-    "after the verdict marker, before its label": "test_red_team_cut_after_its_verdict_before_its_label",
-    "a clear, after the refute table's push": "test_red_team_clear_cut_after_its_push_before_review_clear"
-  },
-  "recommend": {
-    "the Fable call": "test_recommendation_cut_in_its_model_call",
-    "after the PR comment": "test_recommendation_cut_after_its_pr_comment",
-    "after the issue marker, before merge:needs-review": "test_recommendation_cut_after_its_marker"
-  },
-  "digest": {
-    "the Haiku call": "test_digest_cut_in_its_model_call"
-  },
-  "pause": {
-    "a resumed stage, after its reset": "test_a_pause_is_kept_until_its_resumed_stage_ends"
-  },
-  "quartermaster": {
-    "the Opus call": "test_quartermaster_cut_in_its_model_call",
-    "the full model-free run": "test_quartermaster_cut_in_its_full_model_free_run",
-    "after the PR comment, before the issue marker": "test_quartermaster_cut_after_its_pr_comment",
-    "after the issue marker, before the record": "test_quartermaster_cut_after_its_issue_marker"
-  }
+ "_what": "Phase 390: every kill point in 390_step0.md's tables (S0-2), hand-written, each with the test in tests/test_phase390_resume.py that kills a stage there and resumes it. tests/test_phase390_resume_contract.py holds every stage to at least one, and every name to a test that exists. Since Phase 391 a stage's tests may also live in tests/test_phase391_dispatcher.py (the Quartermaster's). Since Phase 392 the next mission's (`next`) is in tests/test_phase392_next_mission.py.",
+ "scout": {
+  "the model call (a finished call before it)": "test_scout_cut_in_its_second_model_call",
+  "the model call, before its first answer": "test_scout_cut_before_its_first_answer_runs_fresh_in_the_same_run",
+  "the push gate's fast check": "test_scout_cut_in_the_push_gates_model_free_run",
+  "after the push, before the marker": "test_scout_cut_after_its_push",
+  "after the marker, before step0:done": "test_scout_cut_after_its_marker"
+ },
+ "captain": {
+  "the Fable call": "test_captain_cut_in_its_model_call",
+  "after the push, before the marker": "test_captain_cut_after_its_push",
+  "after the marker, before the label": "test_captain_cut_after_its_marker_then_the_xo_is_due",
+  "a revision, between the label off and the label on": "test_captains_revision_cut_between_taking_the_label_off_and_putting_it_back"
+ },
+ "xo": {
+  "the Fable call": "test_xo_cut_in_its_model_call",
+  "after the verdict comment, before the label": "test_xo_cut_after_its_verdict_before_its_label"
+ },
+ "engineer": {
+  "between the started marker and build:open": "test_engineer_cut_between_its_started_marker_and_build_open",
+  "the session": "test_engineer_cut_in_its_session_goes_on_with_continue",
+  "the model-free run (F219)": "test_engineer_cut_in_its_model_free_run_f219",
+  "after the session ended, before the journal knew": "test_engineer_cut_after_its_session_ended_before_the_journal_knew",
+  "after the push, before the PR": "test_engineer_cut_after_its_push_before_the_pr",
+  "after the PR, before pr-ready": "test_engineer_cut_after_opening_the_pr",
+  "after pr-ready, before review:open": "test_engineer_cut_after_pr_ready_before_its_label",
+  "a fix round, after its PR comment": "test_engineers_fix_round_cut_after_its_pr_comment",
+  "an escalation, between its comment and its label": "test_engineers_escalation_cut_between_its_comment_and_its_label"
+ },
+ "recheck": {
+  "the model-free run, again on the held commit": "test_the_recheck_cut_in_its_model_free_run"
+ },
+ "red_team": {
+  "the F9 run": "test_red_team_cut_in_its_f9_run",
+  "the Opus call": "test_red_team_cut_in_its_model_call",
+  "after the PR comment, before the issue marker": "test_red_team_cut_after_its_pr_comment",
+  "after the verdict marker, before its label": "test_red_team_cut_after_its_verdict_before_its_label",
+  "a clear, after the refute table's push": "test_red_team_clear_cut_after_its_push_before_review_clear"
+ },
+ "recommend": {
+  "the Fable call": "test_recommendation_cut_in_its_model_call",
+  "after the PR comment": "test_recommendation_cut_after_its_pr_comment",
+  "after the issue marker, before merge:needs-review": "test_recommendation_cut_after_its_marker"
+ },
+ "digest": {
+  "the Haiku call": "test_digest_cut_in_its_model_call"
+ },
+ "pause": {
+  "a resumed stage, after its reset": "test_a_pause_is_kept_until_its_resumed_stage_ends"
+ },
+ "quartermaster": {
+  "the Opus call": "test_quartermaster_cut_in_its_model_call",
+  "the full model-free run": "test_quartermaster_cut_in_its_full_model_free_run",
+  "after the PR comment, before the issue marker": "test_quartermaster_cut_after_its_pr_comment",
+  "after the issue marker, before the record": "test_quartermaster_cut_after_its_issue_marker"
+ },
+ "next": {
+  "after its issue, before its row's pull request": "test_next_cut_after_its_issue_resumes_with_no_second_issue"
+ }
 }

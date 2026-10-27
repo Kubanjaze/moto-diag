@@ -29,11 +29,13 @@ import dispatcher as D  # noqa: E402
 import journal as J  # noqa: E402
 import test_phase390_resume as R  # noqa: E402
 import test_phase391_dispatcher as R391  # noqa: E402
+import test_phase392_next_mission as R392  # noqa: E402
 from test_phase390_resume import ledger, w  # noqa: E402
 
-#: Where a kill point's test may live: 390's file, and since Phase 391 the
-#: Quartermaster's, which is a stage 390 did not have.
-MODULES = (R, R391)
+#: Where a kill point's test may live: 390's file, since Phase 391 the
+#: Quartermaster's, and since Phase 392 the next mission's: stages 390 did
+#: not have.
+MODULES = (R, R391, R392)
 
 assert w and ledger  # the fixtures, imported for their names
 

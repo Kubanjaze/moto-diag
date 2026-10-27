@@ -75,6 +75,7 @@ import os
 import pathlib
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -86,8 +87,10 @@ from zoneinfo import ZoneInfo
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "closeout"))
+sys.path.insert(0, str(HERE.parent / "finding"))
 import captain  # noqa: E402
 import closeout_check  # noqa: E402
+import finding_check  # noqa: E402
 import engineer  # noqa: E402
 import fleet_git  # noqa: E402
 import journal  # noqa: E402
@@ -102,6 +105,7 @@ from labels import LABELS  # noqa: E402
 from rank_call import FABLE, OPUS, Runner, Stop  # noqa: E402
 
 REPO = "Kubanjaze/moto-diag"
+FOLLOWUPS = "docs/FOLLOWUPS.md"
 REPO_URL = f"https://github.com/{REPO}.git"
 FENCE = HERE / "fence.sh"
 STATE = pathlib.Path(os.environ.get("FLEET_STATE")
@@ -120,7 +124,13 @@ SWEEP_HOURS = 24.0
 DIGEST_HOUR = 7
 RESET_UNKNOWN = dt.timedelta(hours=1)
 KEEP_RUNS = 20
-CHECK_TIMEOUT_S = 3600
+#: The model-free run's limit. The operator's number, 2026-10-27 (K51):
+#: "CHECK_TIMEOUT_S=5400 (measured regressions 24-38 min; #28 hit 3600 under load)".
+CHECK_TIMEOUT_S = 5400
+#: What a stage's `run/tmp` keeps when it is deleted (Phase 392, F226):
+#: `tests/support/worker_loss.py`'s folders, which rule 6 reads first after
+#: a lost worker.
+WORKER_LOSS_PREFIX = "motodiag_worker_loss_"
 #: Free space (Phase 390, F221): no new model stage or model-free run below
 #: either floor, in GB, after a reclaim. The operator's numbers, 2026-10-25:
 #: "50 GB on each", "every 3 hours".
@@ -165,6 +175,11 @@ STARTED_M = "<!-- fleet-started:"
 #: A hold for free space. Its own prefix, read by no due rule: once the
 #: operator takes `needs-hands` off, the stage it held is due again.
 SPACE_M = "<!-- fleet-space:"
+#: A stop the record answered (Phase 392, K50): read by the Engineer's due rule.
+ANSWER_M = "<!-- fleet-answered:"
+#: The next mission's own marks (Phase 392, K48, K49): on the issue it opens,
+#: and its question to the operator when the plan says the phase needs them.
+NEXT_M = "<!-- fleet-next:"
 #: Every rank's comment: one stage runs at a time, so a later one ends an earlier stage.
 RANK_PREFIXES = (STARTED_M, SCOUT_M, CAPTAIN_M, ENGINEER_M, RED_M, QM_M, *RANK_COMMENT)
 _STARTED = re.compile(r"^<!-- fleet-started: rank=(\S+) run=(\S+) -->")
@@ -174,7 +189,7 @@ _ENG_STARTED = re.compile(r"^<!-- fleet-engineer: started round=\d+(?: run=(\S+)
 STAGE_RANK = {"scout": "scout", "captain": "captain", "xo": "xo", "engineer": "engineer",
               "recheck": "engineer",
               "red_team": "red-team", "recommend": "captain", "quartermaster": "quartermaster",
-              "digest": "digest"}
+              "digest": "digest", "next": "next"}
 _RED = re.compile(r"^<!-- fleet-red-team: verdict=(\w+) round=(\d+)", re.M)
 _XO = re.compile(r"^<!-- xo-verdict: \S+ round=\d+ applied=(\S+)", re.M)
 
@@ -502,6 +517,104 @@ def transcripts(run_dir: pathlib.Path) -> list[pathlib.Path]:
                   key=lambda p: p.stat().st_mtime)
 
 
+def nothing_back(disk: str, before: float | None, after: float | None, trimmed: str) -> str:
+    """Said plainly when a reclaim gave Windows nothing (Phase 392, F226): the
+    disk image is not sparse since 2026-10-26, so a trim frees space inside
+    Ubuntu only, and "C: X -> X" beside a large trim is not a reclaim."""
+    if disk != "C:" or before is None or after is None or trimmed.startswith(("failed", "not")):
+        return ""
+    return (" (nothing came back to Windows: the disk image is not sparse, so the trim freed "
+            "space inside Ubuntu only)") if after - before < 0.1 else ""
+
+
+def row_branch(phase: str) -> str:
+    """The next mission's row branch: its own, so the work branch the issue
+    names is made from master after the merge (the push gate's G1 shape)."""
+    return f"phase-{phase}-row"
+
+
+def mark_row_active(clone: pathlib.Path, phase: str) -> str:
+    """The phase's ROADMAP row with its status cell 🚧 and nothing else changed."""
+    path = clone / fleet_git.ROADMAP
+    lines = path.read_text(encoding="utf-8").split("\n")
+    hits = [k for k, ln in enumerate(lines) if re.match(rf"\| {re.escape(phase)} \|", ln)]
+    if len(hits) != 1:
+        raise Stop(f"phase {phase} has {len(hits)} ROADMAP rows, not one")
+    cells = lines[hits[0]].split("|")
+    cells[3] = f" {roadmap_check.ACTIVE} "
+    lines[hits[0]] = "|".join(cells)
+    path.write_text("\n".join(lines), encoding="utf-8")
+    return fleet_git.ROADMAP
+
+
+def mission_body(e: plan_order.Entry, work: str, cite: str) -> str:
+    """The next mission's issue: what the Science Officer saves as the prompt."""
+    return (f"**The plan of record's next mission**, opened by the fleet (Phase 392).\n\n"
+            f"The plan of record puts phase {e.phase} next ('Next, in order' #{e.n}): "
+            f"{e.line()}\n\n{cite}\n\nThe work branch is `{work}`: the Science Officer makes "
+            f"it from master once this phase's row is 🚧 there, which the row's pull request "
+            f"does when the operator merges it.\n\n{NEXT_M} phase={e.phase} -->")
+
+
+def ask_text(e: plan_order.Entry, label: str) -> str:
+    """The operator's question, plain English, the plan's entry quoted."""
+    return (f"**Phase {e.phase} is next in the plan, and the plan says it needs you first.**\n\n"
+            f"What it needs, in the plan of record's words: {e.needs}\n\n"
+            f"The plan's entry: {e.line()}\n\n"
+            f"When that is done, take the `{label}` label off this issue. The fleet then opens "
+            f"one pull request that starts the phase, for you to merge.")
+
+
+def row_pr_body(e: plan_order.Entry, issue: int, title: str, cite: str) -> str:
+    """The row PR's body: plain English, one click or one paste block."""
+    return (f"**Merging this starts {title}.** The plan of record puts it next "
+            f"('Next, in order' #{e.n}), and the fleet's mission is #{issue}.\n\n"
+            f"It changes one line, the phase's row in `docs/ROADMAP.md`: its status becomes "
+            f"🚧. Nothing else.\n\n{cite}\n\n"
+            f"To start it, merge this pull request on GitHub (the master rule lets your "
+            f"account through). Or, in a terminal on any computer where `gh` is signed in as "
+            f"you, paste:\n\n```\ngh pr merge {row_branch(e.phase)} -R {REPO} --merge --admin && "
+            f"echo ALL GOOD || echo SOMETHING IS OFF\n```\n\n"
+            f"After the merge the fleet begins Step 0 by itself at its next cycle.")
+
+
+def clean_tmp(run: pathlib.Path) -> list[str]:
+    """Delete a finished run's temporary files (Phase 392, F226; the operator's
+    K45: "delete each run's temp files"): everything in `run/tmp` but the
+    worker-loss folders. Returns what was kept."""
+    tmp = run / "run" / "tmp"
+    if not tmp.is_dir():
+        return []
+    kept = []
+    for p in tmp.iterdir():
+        if p.name.startswith(WORKER_LOSS_PREFIX):
+            kept.append(p.name)
+        elif p.is_dir() and not p.is_symlink():
+            shutil.rmtree(p, ignore_errors=True)
+        else:
+            p.unlink(missing_ok=True)
+    return kept
+
+
+def run_group(argv: list[str], *, timeout: float, **kw) -> subprocess.CompletedProcess:
+    """`subprocess.run`, in a session of its own: a run past `timeout` has its
+    whole process group killed, then `TimeoutExpired` is raised with what it
+    printed (Phase 392, F225: before, only the direct child was killed)."""
+    kw.pop("capture_output", None)
+    with subprocess.Popen(argv, start_new_session=True, stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE, **kw) as p:
+        try:
+            out, err = p.communicate(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            try:
+                os.killpg(p.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            out, err = p.communicate()
+            raise subprocess.TimeoutExpired(argv, timeout, out, err) from None
+        return subprocess.CompletedProcess(argv, p.returncode, out, err)
+
+
 def cut_session(entry: dict, run_dir: pathlib.Path) -> str | None:
     """The session of a call that did not end: the journal's, or the newest
     transcript that was not there when the call began (`--resume` keeps the
@@ -545,7 +658,8 @@ class Fleet:
                  popen: Callable[..., subprocess.Popen] = subprocess.Popen,
                  check: Callable[..., Check] | None = None, sleep: Callable[[float], None] = time.sleep,
                  disks: dict[str, pathlib.Path] | None = None, trim: list[str] | None = None,
-                 disk_usage: Callable[[pathlib.Path], tuple] = shutil.disk_usage):
+                 disk_usage: Callable[[pathlib.Path], tuple] = shutil.disk_usage,
+                 group_run: Callable[..., subprocess.CompletedProcess] = run_group):
         self.state_dir, self.token, self.host, self.fence = state, token, host, fence
         self.workspace_docs, self.repo_url, self.sweep_hours = workspace_docs, repo_url, sweep_hours
         self.now = now or (lambda: dt.datetime.now().astimezone())
@@ -557,6 +671,7 @@ class Fleet:
         self.identity_file, self.push_url = identity_file, push_url or repo_url
         self.popen, self.sleep = popen, sleep
         self.check = check or self.check_run
+        self.group_run = group_run
         #: Free space is watched only where `main` names the disks (the desktop).
         self.disks, self.trim, self.disk_usage = disks or {}, trim, disk_usage
         self._skipped: set[tuple[int, str]] = set()
@@ -616,6 +731,7 @@ class Fleet:
                 trimmed = f"failed: {e}"
         after = self.free_gb()
         line = "; ".join(f"{name} {before[name]} -> {after[name]} GB free"
+                         + nothing_back(name, before[name], after[name], trimmed)
                          for name in self.disks) + f"; fstrim: {trimmed}"
         self.log(f"reclaim ({why}): {line}")
         if not record:
@@ -877,6 +993,8 @@ class Fleet:
         j, self.journal = self.journal, None
         if j is not None and outcome != "rate-limited":
             j.end(outcome, self.now())
+            if not (j.run / journal.HELD).is_file():
+                clean_tmp(j.run)       # F226; a held run keeps its own until released
 
     def step(self, name: str, do: Callable[[], object],
              done: Callable[[], object] | None = None):
@@ -1001,6 +1119,17 @@ class Fleet:
                 continue                      # held for the operator (F220)
             if str(p) not in keep_also and not (j and j.unfinished):
                 shutil.rmtree(p, ignore_errors=True)
+        # The kept runs' temporary files, once each has ended (F226): a stage
+        # with an ended journal, or a check run that wrote its result. Held,
+        # paused and unfinished runs keep theirs; so does an unreadable one.
+        for p in sorted(p for p in self.runs.iterdir() if p.is_dir()):
+            if str(p) in keep_also or (p / journal.HELD).is_file():
+                continue
+            j = journal.Journal.load(p)
+            if j is not None and not j.unfinished:
+                clean_tmp(p)
+            elif not (p / journal.FILE).exists() and (p / "run" / "check.txt").is_file():
+                clean_tmp(p)
 
     # ---- commits, checks, pushes
     def author(self, clone: pathlib.Path, rank: str, ident: fleet_git.Identity | None) -> None:
@@ -1010,7 +1139,9 @@ class Fleet:
 
     def commit(self, clone: pathlib.Path, paths: list[str], subject: str, rank: str) -> str:
         self.git("-C", str(clone), "add", "--", *paths)
-        msg = f"{subject}\n\nCo-Authored-By: {CO_AUTHOR[rank]} <noreply@anthropic.com>\n"
+        # A model's work names the model; the next mission's row is the script's.
+        msg = (f"{subject}\n\nCo-Authored-By: {CO_AUTHOR[rank]} <noreply@anthropic.com>\n"
+               if rank in CO_AUTHOR else f"{subject}\n")
         r = self.git("-C", str(clone), "commit", "-q", "-m", msg)
         if r.returncode != 0:
             raise Stop(f"the commit failed: {(r.stderr or r.stdout).strip()[:200]}")
@@ -1031,12 +1162,25 @@ class Fleet:
         script = (" ".join(command) if command else
                   f"{wt} --full && .claude/skills/closeout/regression.sh" if full else wt)
         runner = FencedRunner(self, target, run / "run")
-        r = self.host(runner.fence_argv(["/bin/bash", "-c", script], net="none", token=False),
-                      capture_output=True, text=True, cwd=target,
-                      env={"PATH": os.environ.get("PATH", "/usr/bin:/bin")},
-                      timeout=CHECK_TIMEOUT_S, stdin=subprocess.DEVNULL)
+        try:
+            r = self.group_run(runner.fence_argv(["/bin/bash", "-c", script], net="none",
+                                                 token=False),
+                               text=True, cwd=target,
+                               env={"PATH": os.environ.get("PATH", "/usr/bin:/bin")},
+                               timeout=CHECK_TIMEOUT_S, stdin=subprocess.DEVNULL)
+        except subprocess.TimeoutExpired as e:
+            # F225: a failed run, said through the stage's usual stop, never an
+            # exception the cycle would end the stage on and start it again from.
+            said = "".join(x.decode(errors="replace") if isinstance(x, bytes) else (x or "")
+                           for x in (e.stdout, e.stderr))
+            why = (f"the run with no model passed its time limit of {CHECK_TIMEOUT_S} s "
+                   f"({CHECK_TIMEOUT_S // 60} min) and was stopped, so it has no result")
+            (run / "run" / "check.txt").write_text(f"{said}\n{why}\n", encoding="utf-8")
+            clean_tmp(run)
+            return Check(False, commit, why=why, out=said)
         text = (r.stdout or "") + (r.stderr or "")
         (run / "run" / "check.txt").write_text(text, encoding="utf-8")
+        clean_tmp(run)                 # F226: the run has ended; its result is written
         if command:
             return Check(r.returncode == 0, commit, why=text[-2000:], out=text)
         if not full:
@@ -1207,22 +1351,26 @@ class Fleet:
         return bool(said and applied and _time(applied) >= said[0])
 
     def stage_engineer(self, issue: int, phase: str, body: str, branch: str, *,
-                       findings: str | None = None, rnd: int = 0, resume: dict | None = None) -> str:
+                       findings: str | None = None, rnd: int = 0, resume: dict | None = None,
+                       answer: str | None = None) -> str:
         ident = self.identity_for(issue, body, "engineer")
         if ident is None:
             return "needs hands"
+        answer = (resume or {}).get("answer", answer)
         run, j = self.begin(f"engineer_{phase}", {"stage": "engineer", "issue": issue,
                                                   "phase": phase, "body": body, "branch": branch,
-                                                  "findings": findings, "rnd": rnd}, resume)
+                                                  "findings": findings, "rnd": rnd,
+                                                  "answer": answer}, resume)
         self.say_once(issue, f"{ENGINEER_M} started round={rnd} -->",
                       f"**Chief Engineer, phase {phase}: building**"
                       + (f", fix round {rnd} for the Red Team's findings" if findings else "")
+                      + (", again, with the record's answer to its stop" if answer else "")
                       + f", in a fenced clone of `{branch}`.", step="started")
         clone = self.stage_clone(run, branch)
         self.author(clone, "engineer", ident if ident.is_fleet else None)
         self.label_once(issue, "build:open", step="label-build")
         runner = FencedRunner(self, clone, run / "run", journal=j)
-        argv = engineer.session_argv(phase, issue, findings=findings, rnd=rnd)
+        argv = engineer.session_argv(phase, issue, findings=findings, rnd=rnd, answer=answer)
         self.log(f"issue {issue}: the Chief Engineer on phase {phase}, round {rnd}, {clone}")
         try:
             r, reason = runner.session(argv, watch=lambda: engineer.watch(clone, run / "run", phase))
@@ -1230,16 +1378,42 @@ class Fleet:
             self.pause(j, e, runner)
             return "rate-limited"
         if reason:
+            if self.answer_stop(issue, phase, reason.split(":", 1)[0], clone):
+                return "stopped, answered from the record"
             self.escalate(issue, "engineer", "needs-admiral",
                           f"Chief Engineer, phase {phase}: stopped. {reason}")
             return f"stopped: {reason[:80]}"
         result = engineer.read_result(run / "run")
         if result["outcome"] == "stop":
+            if self.answer_stop(issue, phase, result["kind"], clone):
+                return "stopped, answered from the record"
             self.escalate(issue, "engineer", "needs-admiral",
                           f"Chief Engineer, phase {phase}: stopped ({result['kind']}). "
                           f"{result['question']}")
             return f"stopped: {result['kind']}"
         return self.engineer_finish(issue, phase, branch, ident, run, result, rnd)
+
+    def answer_stop(self, issue: int, phase: str, kind: str, clone: pathlib.Path) -> bool:
+        """A stop the record answers (Phase 392, the operator's K50): one K-id
+        whose Covers line names this kind of stop and this phase, never a
+        rule-1 kind. Its words are said on the issue verbatim, and the
+        Engineer runs again with them (`next_stage`). One answer per K-id and
+        stop on an issue: the same stop again goes to the operator."""
+        d = plan_order.answer(clone, kind, phase)
+        if d is None:
+            return False
+        mark = f"{ANSWER_M} kid={d.kid} stop={kind}"
+        if self.has_comment(issue, mark):
+            self.log(f"issue {issue}: {d.kid} already answered {kind} here: to the operator")
+            return False
+        self.say_once(issue, f"{mark} -->",
+                      f"**Answered from the record, not by the operator.** The Chief Engineer "
+                      f"stopped on phase {phase} ({kind}). {d.kid}, dated {d.date}, covers this "
+                      f"stop on this phase. The operator's words, verbatim:\n\n> {d.words}\n\n"
+                      "The Engineer runs again with those words, applied literally. If the same "
+                      "thing stops it again, that comes to the operator.", step="answered")
+        self.log(f"issue {issue}: {kind} answered from the record by {d.kid}")
+        return True
 
     def engineer_finish(self, issue: int, phase: str, branch: str, ident: fleet_git.Identity,
                         run: pathlib.Path, result: dict, rnd: int) -> str:
@@ -1336,6 +1510,7 @@ class Fleet:
                                    engineer.read_result(held / "run"), info["rnd"])
         if out.startswith("PR "):
             self.step("release", lambda: journal.release(held))
+            clean_tmp(held)            # F226: released, the held run has ended
         return out
 
     def gh_as(self, ident: fleet_git.Identity, *args: str) -> str:
@@ -1368,28 +1543,48 @@ class Fleet:
         runner = FencedRunner(self, clone, run / "run", journal=j)
         self.log(f"issue {issue}: the Red Team on phase {phase}, round {rnd}")
         try:
-            v, call = red_team.review(phase, rnd, red_team.gather(clone, phase, f9.why), clone=clone,
-                                      run=runner)
+            v, call = red_team.review(phase, rnd, red_team.gather(clone, phase, f9.why),
+                                      clone=clone, run=runner)
         except RateLimited as e:
             self.pause(j, e, runner)
             return "rate-limited"
         cite = plan_order.cite_line(clone, phase)
+        # F228: the one finding open wording defects go to, filed here, outside
+        # the model; its number chosen once (journaled) and written into each row.
+        rows = v.get("wording_open") or []
+        fnum = self.step("finding-number", lambda: self.next_f(clone)) if rows else None
+        table = red_team.with_finding(v["refuter_pass"], fnum) if fnum else v["refuter_pass"]
+        filed = (f"\n\nThe wording left open goes to {fnum}, one finding, filed by the "
+                 f"dispatcher (K9)." if fnum else "")
         pr_marker = self.tag(f"<!-- fleet-red-team-pr: verdict={v['verdict']} round={rnd} -->")
         self.step("pr-comment", lambda: self.gh(
             "pr", "comment", str(pr["number"]), "--body",
             f"{pr_marker}\n**Red Team, round {rnd}: {v['verdict']}**\n\nFindings:\n"
-            f"{red_team.findings_text(v)}\n\n{v['refuter_pass'].strip()}\n\n{cite}\n\n"
+            f"{red_team.findings_text(v)}\n\n{table.strip()}{filed}\n\n{cite}\n\n"
             f"{call.line()}"),
                   lambda: self.pr_has_comment(pr["number"], pr_marker))
         self.say_once(issue, f"{RED_M} verdict={v['verdict']} round={rnd} -->",
                       f"**Red Team, phase {phase}, round {rnd}: {v['verdict']}** "
-                      f"(PR #{pr['number']}).\n\n{red_team.findings_text(v)}\n\n{cite}")
+                      f"(PR #{pr['number']}).\n\n{red_team.findings_text(v)}{filed}\n\n{cite}")
         if v["verdict"] == red_team.BACK:
             if rnd >= red_team.MAX_ROUNDS:
+                unfiled = ""
+                if fnum:
+                    ident = self.identity_for(issue, body, "red-team")
+                    if ident is None:
+                        return "back, rounds exhausted; the wording finding waits for a push identity"
+                    self.author(clone, "red-team-record", ident if ident.is_fleet else None)
+                    head = self.commit_once(
+                        clone, lambda: self.write_finding(clone, fnum, phase, rnd, rows),
+                        f"Phase {phase}: the Red Team's round-{rnd} wording, filed as {fnum}",
+                        "red-team-record")
+                    self.push_once(clone, head, rank="red-team-record", phase=phase,
+                                   branch=branch, ident=ident, tested=self.fast(clone))
+                    unfiled = f" The wording it left open is filed as {fnum}, on the branch."
                 self.escalate(issue, "red-team", "needs-admiral",
                               f"Red Team, phase {phase}: round {rnd} of {red_team.MAX_ROUNDS} "
                               "still finds factual, citation or code defects; under K9 the "
-                              "phase does not ship as it stands. The operator decides.")
+                              "phase does not ship as it stands. The operator decides." + unfiled)
                 return "back, rounds exhausted"
             self.label_once(issue, "build:open")
             return f"back, round {rnd}"
@@ -1398,13 +1593,38 @@ class Fleet:
             return "clear; the refute table waits for a push identity"
         self.author(clone, "red-team-record", ident if ident.is_fleet else None)
         subject = f"Phase {phase}: the Red Team's refuter pass, round {rnd}"
-        new = self.commit_once(clone, lambda: [red_team.record_in_log(clone, phase,
-                                                                      v["refuter_pass"])],
+        new = self.commit_once(clone, lambda: [red_team.record_in_log(clone, phase, table),
+                                               *(self.write_finding(clone, fnum, phase, rnd, rows)
+                                                 if fnum else [])],
                                subject, "red-team-record")
         self.push_once(clone, new, rank="red-team-record", phase=phase, branch=branch,
                        ident=ident, tested=self.fast(clone))
         self.label_once(issue, "review:clear")
         return f"clear, round {rnd}"
+
+    def next_f(self, clone: pathlib.Path) -> str:
+        """The next free F-number: one sequence over the branch's, master's and
+        the mobile repository's `FOLLOWUPS.md` (the finding skill's rule)."""
+        texts = [(clone / FOLLOWUPS).read_text(encoding="utf-8"),
+                 self.git("-C", str(clone), "show", f"origin/master:{FOLLOWUPS}").stdout]
+        mobile = self.mobile / FOLLOWUPS
+        if mobile.is_file():
+            texts.append(mobile.read_text(encoding="utf-8"))
+        seen = {int(n) for text in texts for _, n in finding_check._ENTRY.findall(text)}
+        return f"F{max(seen, default=0) + 1}"
+
+    def write_finding(self, clone: pathlib.Path, fnum: str, phase: str, rnd: int,
+                      rows: list[dict]) -> list[str]:
+        """The wording finding appended to the branch's `FOLLOWUPS.md`, and its
+        header's highest number (B1); once, however often a resumed stage asks."""
+        path = clone / FOLLOWUPS
+        text = path.read_text(encoding="utf-8")
+        if not re.search(rf"^#{{2,3}}\s*{fnum}\b", text, re.M):
+            text = text.rstrip("\n") + "\n\n" + red_team.wording_entry(
+                fnum, phase, rnd, rows, f"the Red Team's round {rnd} on phase {phase}")
+        text = finding_check._HEADER.sub(f"highest assigned is **{fnum}**", text, count=1)
+        path.write_text(text, encoding="utf-8")
+        return [FOLLOWUPS]
 
     def stage_recommend(self, issue: int, phase: str, body: str, branch: str, *,
                         resume: dict | None = None) -> str:
@@ -1576,6 +1796,8 @@ class Fleet:
             return self.stage_xo(n, ph, resume=paused)
         if s == "digest":
             return self.stage_digest(dt.date.fromisoformat(paused["day"]), resume=paused)
+        if s == "next":
+            return self.stage_next(paused["entry"], resume=paused)
         if s == "scout":
             return self.stage_scout(n, ph, paused["title"], paused["body"], resume=paused)
         if s == "captain":
@@ -1585,7 +1807,7 @@ class Fleet:
         if s == "engineer":
             return self.stage_engineer(n, ph, paused["body"], paused["branch"],
                                        findings=paused.get("findings"), rnd=paused.get("rnd", 0),
-                                       resume=paused)
+                                       resume=paused, answer=paused.get("answer"))
         if s == "recheck":
             return self.stage_recheck(n, ph, paused["body"], paused["branch"],
                                       pathlib.Path(paused["held"]), resume=paused)
@@ -1594,6 +1816,131 @@ class Fleet:
         if s == "quartermaster":
             return self.stage_quartermaster(n, ph, paused["body"], paused["branch"], resume=paused)
         return self.stage_recommend(n, ph, paused["body"], paused["branch"], resume=paused)
+
+    # ---- the next mission, from the plan (Phase 392, K48, K49)
+    def master_text(self, rel: str) -> str:
+        r = self.git("-C", str(self.mirror), "show", f"master:{rel}")
+        return r.stdout if r.returncode == 0 else ""
+
+    def once(self, key: str, msg: str) -> None:
+        """A log line said once per run of the service, not every cycle."""
+        if ("once", key) not in self._skipped:
+            self._skipped.add(("once", key))
+            self.log(msg)
+
+    def mission_issue(self, phase: str) -> dict | None:
+        """The open issue for `phase`, opened by the fleet or the operator."""
+        return next((i for i in self.issues_open()
+                     if re.match(rf"Phase {re.escape(phase)}\b", i["title"])), None)
+
+    def next_due(self, rows: dict[str, str]) -> plan_order.Entry | None:
+        """The plan's next entry, when the fleet has something to do for it:
+        open its issue, ask the operator what the plan says it needs, or open
+        its row's pull request. None while it waits (for a builder's phase,
+        for the operator, for the row's merge) or when the list cannot be read."""
+        texts = {rel: self.master_text(rel) for rel in plan_order.FILES}
+        fails = plan_order.check_texts(texts)
+        if fails:
+            self.once("order:" + fails[0], "next: the plan's 'Next, in order' cannot be read "
+                      "exactly on master, so no mission is started: " + "; ".join(fails)[:300])
+            return None
+        e = plan_order.next_entry(plan_order.parse_order(texts[plan_order.PLAN]),
+                                  plan_order.rows_of(texts["docs/ROADMAP.md"]))
+        if e is None:
+            return None
+        if e.built_by != "fleet":
+            self.once(f"builder:{e.phase}", f"next: phase {e.phase} is a builder's (the plan's "
+                      f"#{e.n}); the fleet waits for it")
+            return None
+        issue = self.mission_issue(e.phase)
+        if issue is None:
+            return e
+        n, labels = issue["number"], {x["name"] for x in issue.get("labels", [])}
+        if labels & set(OPERATOR):
+            return None
+        if e.need and not self.has_comment(n, f"{NEXT_M} asked"):
+            return e
+        if rows.get(e.phase) == roadmap_check.ACTIVE:
+            return None
+        return e if self.pr_for(row_branch(e.phase)) is None else None
+
+    def stage_next(self, entry: dict, *, resume: dict | None = None) -> str:
+        """The next mission's issue, the operator's question when the plan
+        says the phase needs them, and the one-row pull request that marks its
+        row 🚧, which the operator merges by hand (K49). Never a push to master."""
+        e = plan_order.Entry(**{k: entry[k] for k in ("n", "phase", "kind", "built_by", "needs",
+                                                      "entry")})
+        run, j = self.begin(f"next_{e.phase}", {"stage": "next", "issue": None, "phase": e.phase,
+                                                "entry": entry}, resume)
+        ident = fleet_git.read_identity_file(self.identity_file)
+        if ident is None:
+            self.once("next-account", "next: the fleet has no GitHub account of its own, so it "
+                      "opens no mission")
+            return "no account"
+        title = f"Phase {e.phase}: {self.master_rows_titles().get(e.phase, 'the next mission')}"
+        work = f"phase-{e.phase}-{scout.slug(title).replace('_', '-')}"
+        cite = plan_order.cite_line(self.mirror_root(), e.phase)
+
+        def find() -> int | None:
+            i = self.mission_issue(e.phase)
+            return i["number"] if i else None
+        # The issue may be there from an earlier cycle (the operator's question
+        # asked and answered): found first, opened only when it is not.
+        n = self.step("issue", lambda: find() or self.open_mission(
+            ident, title, mission_body(e, work, cite)), find)
+        j.record["issue"] = n
+        if e.need:
+            label = plan_order.NEEDS[e.need]
+            if not self.has_comment(n, f"{NEXT_M} asked"):
+                self.say_once(n, f"{NEXT_M} asked need={label} -->", ask_text(e, label),
+                              step="ask")
+                self.step("ask-label", lambda: self.gh("issue", "edit", str(n), "--add-label",
+                                                       label),
+                          lambda: label in self.labels_of(n))
+                return f"asked the operator ({label})"
+            if label in self.labels_of(n):
+                return "waiting for the operator"
+        if self.master_rows().get(e.phase) == roadmap_check.ACTIVE:
+            return "the row is on master"
+        branch = row_branch(e.phase)
+        clone = self.stage_clone(run, "master", new_branch=branch)
+        self.author(clone, "row", ident)
+        head = self.commit_once(clone, lambda: [mark_row_active(clone, e.phase)],
+                                f"Phase {e.phase}: its row, in progress (the plan's next)", "row")
+        self.push_once(clone, head, rank="row", phase=e.phase, branch=branch, ident=ident,
+                       tested=self.fast(clone))
+        self.step("pr", lambda: self.gh_as(ident, "pr", "create", "--head", branch, "--base",
+                                           "master", "--title",
+                                           f"Phase {e.phase}: start it (its row, in progress)",
+                                           "--body", row_pr_body(e, n, title, cite)),
+                  lambda: self.pr_for(branch) is not None)
+        pr = self.pr_for(branch)
+        self.say_once(n, f"{NEXT_M} row-pr pr={pr and pr['number']} -->",
+                      f"**The fleet: phase {e.phase} is next in the plan.** Merging "
+                      f"{pr and pr['url']} starts it: the row becomes 🚧 on master, and the "
+                      "Science Officer begins Step 0 at the next cycle.", step="row-pr")
+        return f"row PR {pr and pr['number']} for phase {e.phase}"
+
+    def master_rows_titles(self) -> dict[str, str]:
+        return {p: title for p, (_, title) in
+                plan_order.rows_of(self.master_text("docs/ROADMAP.md")).items()}
+
+    def mirror_root(self) -> pathlib.Path:
+        """A folder holding master's record files, for `plan_order`'s readers."""
+        root = self.state_dir / "record"
+        for rel in plan_order.FILES:
+            (root / rel).parent.mkdir(parents=True, exist_ok=True)
+            (root / rel).write_text(self.master_text(rel), encoding="utf-8")
+        return root
+
+    def open_mission(self, ident: fleet_git.Identity, title: str, body: str) -> int:
+        url = self.gh_as(ident, "issue", "create", "--title", title, "--body", body,
+                         "--label", "mission").strip()
+        m = re.search(r"/issues/(\d+)\s*$", url)
+        if not m:
+            raise Stop(f"gh issue create printed no issue: {url[:200]}")
+        self.log(f"next: opened issue {m.group(1)}: {title}")
+        return int(m.group(1))
 
     # ---- the sweep
     def sweep(self) -> int:
@@ -1676,6 +2023,14 @@ class Fleet:
             back, mine = self.newest(n, f"{RED_M} verdict=back"), self.newest(n, ENGINEER_M)
             stop = self.newest(n, f"{MARKER} stopped rank=engineer")
             latest_mine = max([t for t in (mine, stop) if t], default=None)
+            said = self.newest(n, ANSWER_M)
+            # At least as new: the answer is said by the stage that stopped, in
+            # its own minute; the answered run's own start comes a cycle later.
+            if said and (latest_mine is None or said[0] >= latest_mine[0]):
+                rnd = sum(1 for v, _ in self.red_rounds(n) if v == "back")
+                return "engineer", lambda: self.stage_engineer(
+                    n, phase, body, branch(), findings=back[1] if back and rnd else None,
+                    rnd=rnd, answer=said[1])
             if back and (latest_mine is None or back[0] > latest_mine[0]):
                 rnd = sum(1 for v, _ in self.red_rounds(n) if v == "back")
                 return "engineer", lambda: self.stage_engineer(
@@ -1744,7 +2099,7 @@ class Fleet:
             self.log(f"the resumed stage failed:\n{traceback.format_exc()}")
             if n is not None:
                 self.say_stopped(n, rank, f"the resumed stage failed: {type(e).__name__}: {e}")
-        self.log(f"issue {n}: {out}" if n is not None else f"digest: {out}")
+        self.log(f"issue {n}: {out}" if n is not None else f"{rank}: {out}")
         self.finish(out)
         return out
 
@@ -1959,6 +2314,14 @@ class Fleet:
                     self.hold_for_space(n, chosen[0], f"no new stage: {why}")
                     continue
                 self.run_stage(n, *chosen)
+        if not self.load().get("paused"):
+            entry = self.next_due(rows)
+            if entry is not None:
+                why = self.space_refusal()
+                if why:
+                    self.log(f"next: phase {entry.phase} held, no new stage: {why}")
+                else:
+                    self.run_stage(None, "next", lambda: self.stage_next(dict(entry.__dict__)))
         day = None if self.load().get("paused") else self.digest_day()
         if day is not None:
             why = self.space_refusal()

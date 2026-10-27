@@ -244,23 +244,37 @@ def covers_problem(covers: str) -> str | None:
     return None
 
 
-def defined_kids(root: pathlib.Path) -> set[str]:
+#: Every file the record is read from, by its path in the repository.
+FILES = (PLAN, DECISIONS, "docs/ROADMAP.md", *TRIAGE_REPORTS)
+
+
+def texts_of(root: pathlib.Path) -> dict[str, str]:
+    return {rel: _read(root, rel) for rel in FILES}
+
+
+def defined_kids(texts: dict[str, str]) -> set[str]:
     found = {f"K{a or b}" for rel in TRIAGE_REPORTS
-             for a, b in _KID_DEF.findall(_read(root, rel))}
-    return found | {d.kid for d in decisions(_read(root, DECISIONS))}
+             for a, b in _KID_DEF.findall(texts.get(rel, ""))}
+    return found | {d.kid for d in decisions(texts.get(DECISIONS, ""))}
 
 
 # ------------------------------------------------------------------- checks
 def check(root: pathlib.Path = ROOT) -> list[str]:
     """Everything wrong with the list and the Covers column; [] when the
     fleet may read them."""
-    plan, roadmap = _read(root, PLAN), _read(root, "docs/ROADMAP.md")
+    return check_texts(texts_of(root))
+
+
+def check_texts(texts: dict[str, str]) -> list[str]:
+    """`check` on the files' texts: how the dispatcher reads master's copy
+    from its mirror."""
+    plan, roadmap = texts.get(PLAN, ""), texts.get("docs/ROADMAP.md", "")
     if not plan:
         return [f"{PLAN} cannot be read"]
     order = parse_order(plan)
     fails = list(order.problems)
     rows = rows_of(roadmap)
-    kids = defined_kids(root)
+    kids = defined_kids(texts)
     fails += [f"phase {e.phase} has no ROADMAP row" for e in order.entries if e.phase not in rows]
     fails += [f"phase {e.phase}'s entry cites {k}, which does not resolve"
               for e in order.entries for k in e.kids if k not in kids]
@@ -273,7 +287,7 @@ def check(root: pathlib.Path = ROOT) -> list[str]:
             fails.append(f"the list is as of {kid}, which does not resolve")
         elif not any(d[:10] == day and kid in body for d, _, body in changes(plan)):
             fails.append(f"the dated entry of {day} does not cite {kid}")
-    for d in decisions(_read(root, DECISIONS)):
+    for d in decisions(texts.get(DECISIONS, "")):
         why = covers_problem(d.covers)
         if why:
             fails.append(f"{d.kid}: {why}")

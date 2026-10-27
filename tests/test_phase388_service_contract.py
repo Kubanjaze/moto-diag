@@ -59,6 +59,8 @@ RULES = {
     "wanted": lambda u: values(u, "Install", "WantedBy") == ["multi-user.target"],
     "exec": lambda u: values(u, "Service", "ExecStart") == [
         f"/usr/bin/python3 {CODE}/.claude/skills/fleet/dispatcher.py run"],
+    # Phase 392, F227: the operator's number (K51), not systemd's default 1024.
+    "nofile": lambda u: values(u, "Service", "LimitNOFILE") == ["1048576"],
 }
 
 

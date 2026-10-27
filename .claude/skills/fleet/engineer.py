@@ -130,11 +130,26 @@ Then write /fleet/run/engineer.json as above. ===
 """
 
 
+#: Said when the record answered the Engineer's stop (Phase 392, K50): the
+#: K-id's words verbatim, as the dispatcher's comment carries them.
+ANSWERED = """
+=== Your last session stopped. The operator's record answers that stop, so
+it did not go to the operator; the dispatcher's comment, with the K-id's
+words verbatim, is below. Apply those words literally and to nothing
+beyond them (CLAUDE.md rule 1: a pre-approval is the operator's scoped
+wording, applied literally). Carry on from where the clone is. If the same
+thing stops you again, stop again: that time it goes to the operator. ===
+{ANSWER}
+"""
+
+
 def session_argv(phase: str, issue: int, *, findings: str | None = None, rnd: int = 0,
-                 model: str = OPUS) -> list[str]:
+                 model: str = OPUS, answer: str | None = None) -> list[str]:
     prompt = BRIEF.format(N=phase, ISSUE=issue, KINDS=", ".join(STOP_KINDS))
     if findings:
         prompt += FIX_ROUND.format(ROUND=rnd, FINDINGS=findings)
+    if answer:
+        prompt += ANSWERED.format(ANSWER=answer)
     return ["claude", "-p", prompt, "--model", model, "--permission-mode", "bypassPermissions",
             "--disallowedTools", "WebFetch,WebSearch", "--strict-mcp-config",
             "--output-format", "json"]

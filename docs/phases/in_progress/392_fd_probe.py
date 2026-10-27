@@ -23,6 +23,8 @@ import time
 REPO = pathlib.Path.home() / "Projects" / "moto-diag"
 FENCE = REPO / ".claude" / "skills" / "fleet" / "fence.sh"
 STATE = pathlib.Path.home() / ".local" / "state" / "motodiag" / "fleet"
+#: Bound as the dispatcher binds it (gate 11's snapshot and the finding contract read it).
+MOBILE = pathlib.Path.home() / "Projects" / "moto-diag-mobile"
 
 
 def children(root: int) -> set[int]:
@@ -97,7 +99,8 @@ def main(argv: list[str]) -> int:
         subprocess.run(["git", "-C", str(clone), "checkout", "-q", "--detach", commit], check=True)
     argv_f = [str(FENCE), "--clone", str(clone), "--run", str(run / "run"),
               "--workspace-docs", str(pathlib.Path.home() / "Projects" / "workspace-docs"),
-              "--net", "none", "--venv", str(STATE / "venv"), "--",
+              "--net", "none", "--venv", str(STATE / "venv"),
+              *(["--mobile", str(MOBILE)] if MOBILE.is_dir() else []), "--",
               ".venv/bin/python", "-m", "pytest", *pytest_args]
     if limit:
         argv_f = ["prlimit", f"--nofile={limit}:{limit}", "--", *argv_f]

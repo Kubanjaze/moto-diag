@@ -122,3 +122,111 @@ A need for a rule's definition had no kind in the list, so `NEEDS` gained
 "a rule change", asked with `needs-admiral` (rule 1's threshold-or-rule).
 One row may carry one kind, so 371's is "a fork" with the account named in
 the same cell; both are asked in one plain-English comment.
+
+## 2026-10-27 — F225, F226 (Logic 8, 9)
+
+- **F225.** `CHECK_TIMEOUT_S = 5400` (K51). `check_run` runs the fence
+  through `run_group`: its own session, and past the limit the whole
+  process group is killed (`subprocess.run` killed only the direct child)
+  and a failed `Check` names the limit. Known-bad: a planted fence that
+  outlives a 1 s limit and leaves a grandchild; through the Engineer's
+  stage it stops once, said on the issue, its run held, not started again
+  next cycle, no "cycle failed" (`tests/test_phase392_check_limit.py`).
+- **F226.** `clean_tmp(run)` removes `run/tmp` but its
+  `motodiag_worker_loss_*` folders: when a stage's journal ends (not a
+  pause, not a held run), when a check run has written its result (or hit
+  its limit), when a held run is released; `prune_runs` cleans every kept,
+  ended, unheld run, and a check run with a `check.txt`. `KEEP_RUNS`
+  unchanged. The reclaim line says "(nothing came back to Windows: the
+  disk image is not sparse, so the trim freed space inside Ubuntu only)"
+  when C: moved by less than 0.1 GB beside a trim that ran; two of 390's
+  space tests pinned the old line and now pin the new one. Known-bad, each
+  kept: a held run (and through prune), a paused one, an unfinished one, a
+  run prune is told to keep, a check run a restart cut off; the
+  worker-loss files survive every deletion (`tests/test_phase392_tmp.py`).
+
+## 2026-10-27 — F227 (Logic 10)
+
+- **The probe** (`392_fd_probe.py`), a fenced full run on `f1763df`, each
+  process's `/proc/<pid>/fd` counted once a second from outside: 2102 s,
+  449 processes. **Peak: 793 open files in one xdist worker** (gw15, in
+  `tests/test_pricing.py::TestRepairPlanCRUD::test_get_plan`, 1491 s in),
+  774 and 768 in two others within 20 s, 698 and 682 next. Against the
+  service's soft limit of 1024. Its 14 failures were the probe's own
+  set-up (the mobile repository not bound: gate 11's snapshot, the finding
+  contract), not a lost worker; no "Too many open files". The probe now
+  binds it, as the dispatcher does.
+- **The leak, looked for.** A per-test trace (a plugin counting this
+  process's open files after each test), the full suite with `-n auto` in
+  this checkout, 9 min: no worker ends with more than 56 open, and no test
+  file leaves more than 55 behind (`test_phase274_quotes_variance.py`,
+  `test_phase373_warranty_invoice.py`). Sampled every 2 ms inside the three
+  files the fence's peaks were in, run alone: at most 72. So outside the
+  fence there is no build-up between tests. A second fenced run with both
+  plugins inside is under way (`~/motodiag/p392/fd_fence2`).
+- **The unit:** `LimitNOFILE=1048576` (K51), with the reason beside it;
+  the service contract's new rule `nofile`, two known-bad cases (no limit,
+  1024). Known-bad run: a planted two-worker run holding 300 files each
+  under a soft limit of 256 runs out ("Too many open files"); the same
+  under 1048576 passes (`tests/test_phase392_open_files.py`). Not a fence
+  test: those skip on the Mac and inside the fence, and a new skip must be
+  pinned; the limit reaching the fence is read live after the install,
+  from the service's own `/proc/<pid>/limits`.
+
+## 2026-10-27 — F228 (Logic 11)
+
+- The brief states C7 in its own words: an open wording defect is written
+  "open" with no F-number; the rank never files one or writes a number of
+  its own; a script files the one finding and writes its number into each
+  row.
+- `red_team.check_table`: C7 set aside on a back before round 3, as C6 is;
+  on a clear or a back in round 3, the table is checked as it will be
+  written (`with_finding` with a stand-in number) and `wording_open` lists
+  the rows. The dispatcher picks the number once (journaled), over the
+  branch's, master's and the mobile repository's `FOLLOWUPS.md`, writes
+  the entry (`red_team.wording_entry`) and the header's highest number,
+  and commits it with the table (a clear) or alone (round 3's back) as
+  `red-team-record`. G3 lets that rank add to `docs/FOLLOWUPS.md` and
+  refuses any removed line but the header's count.
+- Known-bad: #14's round-3 output, kept from its run's `stage.json` as
+  `fixtures/red_team/14_round3.json`. As it came it fails C7 on its wording
+  row, and with 392's change set aside the round stops as it did at 10:09;
+  now it finishes with the one row to file; on the walk-through its round
+  3 files the stand-in's next free number, writes it into the table on
+  the PR and goes to the operator (`tests/test_phase392_red_team_c7.py`). Measured on the way:
+  one of its four factual rows quotes `\|` and is not a row
+  `refute_check` reads, so C6 counts three.
+
+## 2026-10-27 — the next mission, and answered stops (Logic 5, 6)
+
+- **The next mission** (`stage_next`, journaled, a kill point in
+  `fixtures/resume/kill_points.json`): each cycle reads master's record
+  from the mirror (`plan_order.check_texts`; a list that does not read
+  exactly starts nothing, logged once). The first entry not ✅: a
+  builder's is waited for (logged once); else its issue, opened in the
+  fleet's name with `mission` and the work branch named; if the plan says
+  it needs the operator, one plain-English question quoting the entry and
+  `needs-hands` or `needs-admiral`, then nothing until the label is off;
+  then branch `phase-<N>-row` from master, the row's status alone set to
+  🚧 (`mark_row_active`), pushed through the gate as the new rank `row`
+  (G3: the ROADMAP only, one line, its status only), and the pull request
+  whose body tells the operator, plainly, that merging starts the phase,
+  with a one-line paste block (`-R Kubanjaze/moto-diag`, ALL GOOD or
+  SOMETHING IS OFF). Without the fleet's account it opens nothing. G1 is
+  unchanged: it never pushes `master`.
+- **Caught by its own test before any commit:** on the cycle after the
+  operator took the label off, the stage opened a second issue (`step`
+  asks GitHub first only when resuming). The issue is now found before it
+  is opened. Not a bug fix in the register: the code had never been
+  committed.
+- **Answered stops** (`answer_stop`): an Engineer stop of kind
+  `third-bug-fix` or `guard-blocked-twice` asks `plan_order.answer`; one
+  covering K-id is said on the issue with the operator's words verbatim
+  (`<!-- fleet-answered: kid=… stop=… -->`), and the Engineer runs again
+  with them in its brief (`engineer.ANSWERED`: applied literally). The
+  same K-id and stop a second time goes to the operator; so does a rule-1
+  kind, which `answer` never matches. The due rule reads the answer when
+  at least as new as the Engineer's last word (the stand-in clock does not
+  move inside a cycle; on GitHub they are seconds apart).
+- In the good fixture tree, 900 is now a builder's row in the list, so no
+  walk-through starts a next mission it did not ask for.

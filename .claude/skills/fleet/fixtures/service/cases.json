@@ -1,22 +1,74 @@
 [
-  {"id": "runs-as-root", "rule": "user",
-   "old": "User=lilcu", "new": "User=root"},
-  {"id": "restarts-only-on-failure", "rule": "restart",
-   "old": "Restart=always", "new": "Restart=on-failure"},
-  {"id": "token-in-the-unit-environment", "rule": "no-envfile",
-   "old": "Environment=PATH=", "new": "EnvironmentFile=-/home/lilcu/.config/motodiag/anthropic.env\nEnvironment=PATH="},
-  {"id": "an-api-key-in-the-unit", "rule": "no-envfile",
-   "old": "Environment=PATH=", "new": "Environment=ANTHROPIC_API_KEY=sk-ant-api03-x\nEnvironment=PATH="},
-  {"id": "runs-from-the-operators-checkout", "rule": "own-clone",
-   "old": "WorkingDirectory=/home/lilcu/motodiag/fleet/code", "new": "WorkingDirectory=/home/lilcu/Projects/moto-diag"},
-  {"id": "starts-without-the-token", "rule": "condition",
-   "old": "ConditionPathExists=/home/lilcu/.config/motodiag/anthropic.env\n", "new": ""},
-  {"id": "no-claude-on-the-path", "rule": "path",
-   "old": "Environment=PATH=/home/lilcu/.local/bin:", "new": "Environment=PATH="},
-  {"id": "retries-a-refusal", "rule": "refusal",
-   "old": "RestartPreventExitStatus=4\n", "new": ""},
-  {"id": "not-started-at-boot", "rule": "wanted",
-   "old": "WantedBy=multi-user.target", "new": "WantedBy=default.target"},
-  {"id": "runs-one-cycle", "rule": "exec",
-   "old": "dispatcher.py run", "new": "dispatcher.py once"}
+ {
+  "id": "runs-as-root",
+  "rule": "user",
+  "old": "User=lilcu",
+  "new": "User=root"
+ },
+ {
+  "id": "restarts-only-on-failure",
+  "rule": "restart",
+  "old": "Restart=always",
+  "new": "Restart=on-failure"
+ },
+ {
+  "id": "token-in-the-unit-environment",
+  "rule": "no-envfile",
+  "old": "Environment=PATH=",
+  "new": "EnvironmentFile=-/home/lilcu/.config/motodiag/anthropic.env\nEnvironment=PATH="
+ },
+ {
+  "id": "an-api-key-in-the-unit",
+  "rule": "no-envfile",
+  "old": "Environment=PATH=",
+  "new": "Environment=ANTHROPIC_API_KEY=sk-ant-api03-x\nEnvironment=PATH="
+ },
+ {
+  "id": "runs-from-the-operators-checkout",
+  "rule": "own-clone",
+  "old": "WorkingDirectory=/home/lilcu/motodiag/fleet/code",
+  "new": "WorkingDirectory=/home/lilcu/Projects/moto-diag"
+ },
+ {
+  "id": "starts-without-the-token",
+  "rule": "condition",
+  "old": "ConditionPathExists=/home/lilcu/.config/motodiag/anthropic.env\n",
+  "new": ""
+ },
+ {
+  "id": "no-claude-on-the-path",
+  "rule": "path",
+  "old": "Environment=PATH=/home/lilcu/.local/bin:",
+  "new": "Environment=PATH="
+ },
+ {
+  "id": "retries-a-refusal",
+  "rule": "refusal",
+  "old": "RestartPreventExitStatus=4\n",
+  "new": ""
+ },
+ {
+  "id": "not-started-at-boot",
+  "rule": "wanted",
+  "old": "WantedBy=multi-user.target",
+  "new": "WantedBy=default.target"
+ },
+ {
+  "id": "runs-one-cycle",
+  "rule": "exec",
+  "old": "dispatcher.py run",
+  "new": "dispatcher.py once"
+ },
+ {
+  "id": "no-open-file-limit",
+  "rule": "nofile",
+  "old": "\nLimitNOFILE=1048576\n",
+  "new": "\n"
+ },
+ {
+  "id": "the-default-open-file-limit",
+  "rule": "nofile",
+  "old": "\nLimitNOFILE=1048576",
+  "new": "\nLimitNOFILE=1024"
+ }
 ]
