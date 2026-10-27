@@ -1,5 +1,51 @@
 # fleet — changelog
 
+## 2026-10-27 — the fleet follows the plan of record (Phase 392)
+
+The operator, 2026-10-26: "well the fleet should be reading the plan of
+record, how tf is that missed!?" (K44). The prompt is
+`docs/prompts/392_the_fleet_follows_the_plan.txt`; Step 0 is
+`392_step0.md`; the operator's Step 0 answers are K48–K51, and K52
+corrected the list before it merged.
+
+- **`plan_order.py`** (new): the plan of record's "Next, in order" list at
+  its top, read exactly (K48); its dated changes; `docs/decisions.md` with
+  its new `Covers` column (K50); `bearing`, `brief_block`, `cite_line` for
+  a phase; `answer` for a stop; `check` and `check_texts`.
+- **Every rank that plans or judges reads the record** (the Science
+  Officer, the Captain, the XO, the Red Team, the Quartermaster): its
+  brief carries `brief_block`, and what it writes ends with the script's
+  `cite_line`. The Science Officer's report has a scripted "The plan of
+  record" section.
+- **`plan_check` P9 and P10**: a v1.0 must name the entry or K-id that puts
+  its phase in order, and a fleet-only phase the first-shop phase it
+  unblocks (K43). `BEFORE_THE_RECORD` pins 384, 386 and 387 to what they
+  fail. Four known-bad cases.
+- **The next mission** (`stage_next`): the plan's next entry gets its
+  issue in the fleet's name, the operator's question when the plan says it
+  needs them, and a one-row pull request the operator merges by hand (K49:
+  "the fleet never pushes to master"). The push gate's new rank `row` may
+  change the phase's ROADMAP status and nothing else.
+  `dispatcher.py next --dry-run` says what the next cycle would do.
+- **Answered stops** (`answer_stop`): an Engineer stop of kind
+  `third-bug-fix` or `guard-blocked-twice` that one K-id's `Covers` names
+  for this phase is answered with that K-id's words, verbatim, once. A
+  rule-1 stop never is.
+- **F223**: a marker counts only from the fleet's account, or the
+  operator's on a trial issue; an issue only from those two
+  (`fleet_git.trusted_authors`, `from_trusted`, `opened_by_trusted`).
+- **F226**: a finished stage's `run/tmp` is deleted (`clean_tmp`), the
+  worker-loss folders kept; held, paused and unfinished runs keep theirs.
+  The reclaim line says when nothing came back to Windows (K45).
+- **F225**: `CHECK_TIMEOUT_S` 5400 (K51); a run past it has its process
+  group killed and is a failed check, one stop (`run_group`).
+- **F227**: the unit's `LimitNOFILE=1048576` (K51); the contract's `nofile`
+  rule.
+- **F228**: the Red Team's brief states C7; the dispatcher files the one
+  finding open wording defects go to, and G3 lets `red-team-record` add to
+  `docs/FOLLOWUPS.md` and nothing more. `fixtures/red_team/14_round3.json`
+  is #14's round-3 output, the known-bad case.
+
 ## 2026-10-26 — the Quartermaster, in shadow (Phase 391)
 
 Step 8 of `docs/reports/2026-10-22_fleet_proposal.md`. The prompt is

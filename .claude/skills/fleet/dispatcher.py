@@ -675,6 +675,8 @@ class Fleet:
         #: Free space is watched only where `main` names the disks (the desktop).
         self.disks, self.trim, self.disk_usage = disks or {}, trim, disk_usage
         self._skipped: set[tuple[int, str]] = set()
+        #: `next --dry-run`: what would be said is printed, not logged.
+        self.quiet = False
         #: The running stage's journal (one stage runs at a time).
         self.journal: journal.Journal | None = None
 
@@ -1826,7 +1828,7 @@ class Fleet:
         """A log line said once per run of the service, not every cycle."""
         if ("once", key) not in self._skipped:
             self._skipped.add(("once", key))
-            self.log(msg)
+            (self.out if self.quiet else self.log)(msg)
 
     def mission_issue(self, phase: str) -> dict | None:
         """The open issue for `phase`, opened by the fleet or the operator."""
@@ -2334,6 +2336,22 @@ class Fleet:
 
 
 # --------------------------------------------------------------- the CLI
+def next_said(fleet: Fleet, e: plan_order.Entry | None) -> str:
+    """`next --dry-run`'s one line: what the next cycle would do for the plan."""
+    if e is None:
+        return "next: nothing to do this cycle (see any line above)"
+    issue = fleet.mission_issue(e.phase)
+    if issue is None:
+        then = (f"then ask the operator ({plan_order.NEEDS[e.need]})" if e.need
+                else f"then open the row's pull request (`{row_branch(e.phase)}`)")
+        return f"next: would open the mission issue for phase {e.phase} (the plan's #{e.n}), {then}"
+    if e.need and not fleet.has_comment(issue["number"], f"{NEXT_M} asked"):
+        return (f"next: would ask the operator on issue {issue['number']} "
+                f"({plan_order.NEEDS[e.need]}): {e.needs}")
+    return (f"next: would open the row's pull request for phase {e.phase} "
+            f"(`{row_branch(e.phase)}`), issue {issue['number']}")
+
+
 def lock(state: pathlib.Path):
     state.mkdir(parents=True, exist_ok=True)
     f = (state / "dispatcher.lock").open("w")
@@ -2357,6 +2375,8 @@ def main(argv: list[str]) -> int:
     rc = sub.add_parser("recover")
     rc.add_argument("--dry-run", action="store_true", required=True,
                     help="print what the search on start would do; write nothing")
+    nx = sub.add_parser("next", help="what the next mission from the plan would do; writes nothing")
+    nx.add_argument("--dry-run", action="store_true", required=True)
     sub.add_parser("reclaim", help="hand Ubuntu's freed space back to Windows; print the line "
                                    "a handoff records")
     a = ap.parse_args(argv)
@@ -2364,6 +2384,13 @@ def main(argv: list[str]) -> int:
         # Read-only beside a running service: no lock, no token, no mirror update.
         said = Fleet(state=STATE, token="").recover(dry_run=True)
         print(f"{len(said)} stage(s) to act on" if said else "nothing to resume")
+        return 0
+    if a.cmd == "next":
+        # Read-only beside a running service: no lock, no mirror update, no write.
+        fleet = Fleet(state=STATE, token="")
+        fleet.quiet = True
+        e = fleet.next_due(fleet.master_rows())
+        print(next_said(fleet, e))
         return 0
     if a.cmd == "reclaim":
         # Beside a running service, which holds the lock: the log line only.

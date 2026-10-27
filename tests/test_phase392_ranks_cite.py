@@ -9,6 +9,7 @@ and on the 389 walk-through the Red Team's and the Captain's comments.
 """
 from __future__ import annotations
 
+import datetime as dt
 import pathlib
 import shutil
 import subprocess
@@ -77,6 +78,16 @@ def test_the_science_officers_section_is_scripted_and_passes_p3():
     s = scout.record_section(FIXTURE_PHASE, CITE, record)
     assert s.startswith("## The plan of record\n") and CITE in s and record in s
     assert plan_check.unshown_counts(s) == []
+
+
+def test_the_science_officers_report_carries_the_section():
+    """Not only built: rendered into the Step 0 report itself."""
+    s = scout.record_section(FIXTURE_PHASE, CITE, plan_order.brief_block(GOOD, FIXTURE_PHASE))
+    v = {"classification": "extension", "reason": "r", "what_exists": "e",
+         "what_the_row_promises": "p", "risks_and_stops": "None found."}
+    text = scout.render(FIXTURE_PHASE, "t", 1, "abcdef1", v, "table", [], [], dt.date(2026, 10, 27),
+                        s)
+    assert s in text and text.index("## Risks and stops") < text.index("## The plan of record")
 
 
 def test_the_science_officers_judgement_reads_the_record():

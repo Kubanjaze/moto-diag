@@ -230,3 +230,27 @@ the same cell; both are asked in one plain-English comment.
   move inside a cycle; on GitHub they are seconds apart).
 - In the good fixture tree, 900 is now a builder's row in the list, so no
   walk-through starts a next mission it did not ask for.
+
+## 2026-10-27 — the skill, the dry run, the mutations, the floor
+
+- `dispatcher.py next --dry-run`: what the next cycle would do, read-only
+  (no lock, no mirror update, printed, not logged). On today's master it
+  prints that the list cannot be read exactly there (it is not merged
+  yet). On a scratch mirror whose master is this branch with row 392 ✅
+  (`~/motodiag/p392/next_dry`, GitHub read live): "next: would open the
+  mission issue for phase 303 (the plan's #2), then open the row's pull
+  request (`phase-303-row`)".
+- SKILL.md: P9, P10 and their pin; `decide --covers`; "The plan of record
+  — `plan_order.py`"; whose words count (F223); the check's limit and the
+  open-file limit; the open wording defect; what replaced the shrink in
+  "Free space"; the tests. CHANGELOG's entry. 391's contract test pinned
+  its CHANGELOG entry as the newest; it now asks that the entry is there,
+  as 391 did to 390's.
+- FOLLOWUPS: F223, F225, F226, F228 closed with what closed them; F221's
+  method says what replaced the shrink. F227 waits for the leak.
+- `392_mutate.py`: 53 mutations. The first pass, 52/53: C4 (the Science
+  Officer's section left out of the rendered report) survived, as the test
+  read the section builder, not the report; a test on `scout.render` was
+  added. The pass of record, `392_mutate.out`: 53/53 red.
+- `COLLECTED_TEST_FLOOR` 11605 → 11737, by a diff of collected ids against
+  master at `f1763df`: +132 −0, each file named in the floor's comment.

@@ -4109,6 +4109,13 @@ returns its space to Windows, and the floor stops new work before C:
 runs low. If the kept runs alone come near the floor, removing `run/tmp`
 at a stage's end is the next step.
 
+
+**What replaced the shrink (Phase 392, F226).** The disk image has not been
+sparse since 2026-10-26, so the reclaim's `fstrim` gives Windows nothing;
+its line now says so. In its place, a finished stage's temporary files are
+deleted (the operator's K45: "delete each run's temp files"), so the image
+grows only to one stage's peak: `dispatcher.py` `clean_tmp`, and the fleet
+skill's "Free space" section.
 ### F222 — CLOSED by `roadmap_check.py` R8 (the operator's request before Phase 391)
 
 **An operator paste block called `gh` with no repository, so it failed in a fresh terminal**
@@ -4136,7 +4143,7 @@ Closed by:
 - Tests: `tests/test_roadmap_continuity.py` (four planted cases, the real
   block as first written at `48e7d2c` and still there at `edd286c`, and 389's block as the control).
 
-### F223
+### F223 — CLOSED by Phase 392
 
 **The fleet's ranks read each other's markers from whoever wrote them, so a comment can stand in for a rank**
 
@@ -4159,6 +4166,19 @@ issue carrying the trial marker (the push identity's own rule), for every
 rank's reads, with a planted marker from a third login as the known-bad
 case. Before the Quartermaster is promoted.
 
+**Closed by Phase 392** (`fleet_git.trusted_authors`, `from_trusted`,
+`opened_by_trusted`; `Fleet.comments`, `issues_open`, `pr_has_comment`;
+`xo.prior_rounds`). A rank reads a comment as a marker only when the fleet's
+account wrote it, or the operator on an issue carrying `<!-- fleet-trial
+-->`; the dispatcher works only issues the fleet or the operator opened. Every
+due rule, round count, marker search and model brief reads through
+`Fleet.comments`, and Q2 and Q3 read what it returns. The known-bad cases,
+each a marker or an issue from a third login (`mallory`), are in
+`tests/test_phase392_authors.py`; `392_mutate.py` F1–F4 break each rule and
+each goes red. Measured before relying on it: #14's body carries the trial
+marker, so its history (22 comments by `Kubanjaze`, 9 by `kubanjazefleet`)
+still counts.
+
 ### F224
 
 **Two code files name `edd286c` as where 390's paste block was first written; it was `48e7d2c`**
@@ -4177,7 +4197,7 @@ record (`ac1dc6b`) would void it. What would close it: name `48e7d2c` in
 both, in any later phase that runs its own regression.
 
 
-### F225
+### F225 — CLOSED by Phase 392
 
 **A model-free run that outlives `CHECK_TIMEOUT_S` raises out of the cycle, so the stage is ended as failed and started again from nothing**
 
@@ -4207,7 +4227,17 @@ whose reason names the limit, so the stage stops through its usual path
 until the operator acts), with a planted over-limit command as the test.
 Whether 3600 s stays is the operator's: a threshold.
 
-### F226
+**Closed by Phase 392** (`dispatcher.py` `run_group`, `check_run`). The
+fenced check runs in its own process group; past the limit the whole group
+is killed and `check_run` returns a failed `Check` naming the limit, so the
+stage stops the usual way: said on the issue, its journal ended once, its
+run held (an Engineer's), and not started again until the operator acts.
+The limit is the operator's (K51, 2026-10-27): 5400 s. The known-bad case,
+a planted fence that outlives a 1 s limit and leaves a grandchild, is in
+`tests/test_phase392_check_limit.py`, through the Engineer's stage;
+`392_mutate.py` L1–L3 go red.
+
+### F226 — CLOSED by Phase 392
 
 **Ubuntu's disk image failed twice in two days, and F221's reclaim relied on the image being sparse, which it no longer is**
 
@@ -4251,6 +4281,20 @@ line says which: a line reading "C: X -> X" beside a large trim is the
 non-sparse case, and should be said as such rather than read as a
 reclaim.
 
+**Closed by Phase 392**, the operator's choice (K45, 2026-10-26: "go with
+your pick, delete each run's temp files"). `dispatcher.py` `clean_tmp`
+deletes a finished run's `run/tmp`, keeping the `motodiag_worker_loss_*`
+folders rule 6 reads after a lost worker: when a stage's journal ends (not a
+pause, not a held run), when a check run has written its result, when a
+held run is released; `prune_runs` cleans every kept run that has ended.
+`KEEP_RUNS` is unchanged. The reclaim line now says "(nothing came back to
+Windows: the disk image is not sparse …)" when C: did not move. The fleet
+skill's "Free space" section and F221's method say what replaced the
+shrink. Known-bad cases (a held, a paused and an unfinished run keep their
+files; the worker-loss files survive) are in `tests/test_phase392_tmp.py`;
+`392_mutate.py` T1–T8 go red. The disk, before and after two stages, is
+in Phase 392's phase log.
+
 ### F227
 
 **A fleet regression lost a worker to the service's 1024 open-file limit; the shell's limit is 1048576, and the run cannot be of record**
@@ -4282,7 +4326,7 @@ What would close it: the peak handle count of one xdist worker measured in
 the fence, the leak (if any) found, and a `LimitNOFILE` in the unit chosen
 by the operator; a planted run under a small limit as the known-bad case.
 
-### F228
+### F228 — CLOSED by Phase 392
 
 **The Red Team's brief never states C7, and a read-only rank cannot meet it, so a round that leaves a wording defect open always stops**
 
@@ -4320,3 +4364,18 @@ on it.
 What would close it: the brief and the check agree, and the one finding
 open wording defects go to is filed outside the model, with #14's round-3
 table as the known-bad case. The operator folded it into Phase 392 (K47).
+
+**Closed by Phase 392** (`red_team.py` `BRIEF`, `check_table`,
+`with_finding`, `wording_entry`; `dispatcher.py` `next_f`,
+`write_finding`). The brief states C7 in its own words: a wording defect
+left open is written "open" with no F-number, and a script outside the
+rank files the one finding and writes its number into each row. C7 is set
+aside on a back before round 3, as C6 is; on a clear or a back in round 3
+the dispatcher files the finding (the next number over the branch's,
+master's and the mobile repository's `FOLLOWUPS.md`) and commits it as
+`red-team-record`, which G3 lets add to `docs/FOLLOWUPS.md` and nothing
+more. #14's round-3 output is kept as
+`.claude/skills/fleet/fixtures/red_team/14_round3.json`, the known-bad
+case (`tests/test_phase392_red_team_c7.py`); `392_mutate.py` R1–R5 go red.
+The live proof is #14's Red Team, re-run once after the merge (the
+operator's step in 392's handoff).
