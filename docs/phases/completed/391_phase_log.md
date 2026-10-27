@@ -470,3 +470,57 @@ supersedes it. Found by the operator.
 - The service's clone back on `master` at `861f8b8`; SIGTERM to its main
   process with no fence running and #14 held; "00:13:57 the search on
   start: nothing to resume".
+
+## 2026-10-27 — #14's maintenance (the operator's item 5), stopped before any push
+
+- `e15b462` fetched from `runs/20261025_160200_engineer_389A/clone` into a
+  worktree beside this checkout, `~/Projects/moto-diag-389A`, on branch
+  `phase-389A-385s-roadmap-row` (GitHub has it at `bdecabd`, `e15b462`'s
+  parent). A first worktree under the scratch folder failed four tests that
+  need `../moto-diag-mobile` beside the repository; it was removed.
+- **A guard block, mine**: the edit guard refused `echo "/.venv" >> $E`
+  ("cannot tell where the redirect `>>` `$E` writes"); nothing ran; redone
+  with the literal path `.git/info/exclude`. No guard changed.
+- **`e15b462` cannot be pushed through the push guard.** `wholetree.sh` on
+  it: "2 failed, 2083 passed": `test_phase388_dispatcher.py::TestOneCycle::test_once_per_application_of_the_label`
+  ("IndexError: pop from empty list") and
+  `TestTheRateLimitPauses::test_recorded_commented_paused_then_resumed`
+  (no `fence.sh`). Both, serially, in 0.9 s. On that commit they assume "no
+  fleet account" on the machine; `~/.config/motodiag/fleet-github.env` now
+  exists. In the Engineer's fence the same tree passed (`wt_r2c.txt`, 2085
+  passed). The guard needs a record for every commit a push sends
+  (`_pre_push_guard.wholetree_gate`), so no push was tried. A test I cannot
+  make green: a stop (rule 1).
+- **The merge is made, not pushed**: `bc50c4b`, `origin/master`
+  (`1867604`) into `e15b462`, three ledger conflicts resolved in phase order;
+  `roadmap_check` and `closeout_check . 389A` pass; `wholetree.sh` exit 0
+  (2271 passed), record for `bc50c4b`.
+- **A second question for the operator, found reading the dispatcher**:
+  with `build:open` still on #14 and the held run kept (`held.json`),
+  taking `needs-admiral` off makes the cycle choose the recheck on
+  `e15b462` (`next_stage`: `build:open` and `held_for` come before
+  `plan:approved`), not a fresh Engineer round. No label was moved.
+- **The operator's answers** (2026-10-27): to how #14's branch reaches
+  GitHub, "You push it (Recommended)" (a paste block from their own login,
+  outside this session's guard; `e15b462` and `bc50c4b` both kept); to the
+  labels, "Clear the old round (Recommended)" (`build:open` off too, and
+  the held run released, its `held.json` kept as `held.json.released`).
+- **The operator pushed** (2026-10-27, "ALL GOOD, the push is done");
+  `git ls-remote` reads `bc50c4b` on `phase-389A-385s-roadmap-row`.
+- **#14 handed back** (07:44, no `bwrap`, dispatcher idle): the held run's
+  `held.json` renamed `held.json.released`; `gh issue edit 14 -R
+  Kubanjaze/moto-diag --remove-label build:open --remove-label
+  needs-admiral --add-label plan:approved`; labels read `mission`,
+  `plan:approved`; master's 389A row is 🚧. Comment:
+  https://github.com/Kubanjaze/moto-diag/issues/14#issuecomment-6441060414
+- **The fresh round**: 07:45:21 "the Chief Engineer on phase 389A, round
+  0" (`20261027_074517_engineer_389A`); 08:40:26 "the model-free run on
+  ffcb6871711a"; its regression: "11500 passed, 0 failed, 105 skipped, 0
+  errors at `ffcb687` (32 min 58 s wall, `python -m pytest -n auto --dist
+  load`, exit 0)"; 09:29:55 the close-out reclaim "C: 396.4 -> 396.4 GB
+  free"; 09:29:58 pushed as `kubanjazefleet`; 09:30:04 "PR 15 ready",
+  labels `mission`, `review:open`. No test of mine ran from 07:44 to the
+  run's end. Merging PR 15 stays the operator's.
+- **Earlier the same morning**, one cycle failed "Could not resolve host:
+  github.com" while updating the mirror; later cycles ran. A transient
+  network failure, not filed.
