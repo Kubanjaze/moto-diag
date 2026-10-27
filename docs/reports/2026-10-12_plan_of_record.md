@@ -47,6 +47,9 @@ The operator's words:
   - **What it unblocks:** 303 and 348, which its row names (K43).
   - **Its proof:** the fleet starts 303 and 348 from this plan by itself.
   - **The prompt** is `docs/prompts/392_the_fleet_follows_the_plan.txt`.
+  - **F226 rides along (K45).** A finished fleet run's temporary files are deleted. That replaces the shrink the disk image no longer gives: it has not been sparse since 2026-10-26.
+    - **The operator's words:** "go with your pick, delete each run's temp files".
+    - **Why in 392:** 392 already changes the dispatcher.
 
 ## Where the ledger stands
 

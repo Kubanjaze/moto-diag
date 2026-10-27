@@ -28,6 +28,12 @@ The measured facts, taken 2026-10-26 on master at `7a3aeca`. Re-verify each at S
   - A comment can stand in for a Red Team clear or a Captain's merge recommendation.
   - A comment's text can reach a model's brief.
 - **The fleet cannot build this phase.** The push gate's G3 lets no rank change .claude/skills/fleet/, so a builder session builds it.
+- **Where a fleet run's temporary files go (F226)**, taken 2026-10-27 on master at `7587ed3`:
+  - `fence.sh` line 145 sets `TMPDIR` to `/fleet/run/tmp`, inside the run folder. pytest's temporary folders land there.
+  - So do `tests/support/worker_loss.py`'s raw files (line 51, `tempfile.mkdtemp`), which rule 6 says to read first after a lost worker. Their summary reaches the run's output only when xdist reports the worker down. In 391's lost worker (F227) it did not, and the raw files were what was read.
+  - `dispatcher.py`: `KEEP_RUNS = 20` (line 121). `prune_runs` (line 961) keeps the newest 20 and every held, paused or unfinished run, and removes the others whole. Nothing removes `run/tmp` when a stage ends.
+  - F221 measured about 20 GB a stage, almost all of it pytest's temporary folders.
+  - The disk image is no longer sparse (F226), so nothing gives that space back to Windows. C: free since the new image: 465 GB after the import (F226), 428.4 GB at 391's merge (00:14 on 2026-10-27, 391's handoff), 396.4 GB at #14's close-out (09:29:55, 391's log).
 
 What to build:
 - **Every rank that plans or judges reads the plan of record and docs/decisions.md.** What it writes cites the dated entry or the K-id that bears on the phase.
@@ -41,6 +47,13 @@ What to build:
   - A rank's marker counts only when its author is the fleet's account, or mine on an issue carrying the trial marker.
   - A comment from any other account never reaches a model's brief as an instruction.
   - The known-bad case is a planted marker from a third login.
+- **F226 is closed: a finished stage's temporary files are deleted.** My decision, 2026-10-26 (K45): "go with your pick, delete each run's temp files". It replaces the shrink F221's reclaim relied on.
+  - When a stage ends, its `run/tmp` is removed. A held, paused or unfinished run keeps its own until it ends. `KEEP_RUNS` is unchanged.
+  - What rule 6 reads after a lost worker is kept: `worker_loss.py`'s files survive the deletion.
+  - The reclaim line says plainly when nothing came back to Windows, rather than reading as a reclaim.
+  - The fleet skill's "Free space" section and F221's method say what replaced the shrink.
+  - A known-bad case for each run that must keep its files (held, paused, unfinished), and one for the worker-loss files, each seen red.
+  - The proof: C: free and the disk image's size, read before and after at least two stages. If the image still grows with each stage once the files are deleted, that is a stop for me, with the numbers.
 - **The proof:** after the merge, the fleet starts 303 and 348 from the plan, with no step by me except what the plan says needs me.
 
 At Step 0, stop and give me the options, with what each would ship and your recommendation:
@@ -56,6 +69,7 @@ Report, at the end:
 - what each rank now reads and cites;
 - the check and its fixtures;
 - F223's known-bad case;
+- F226: what is deleted, what is kept, and C: and the image's size before and after;
 - the next-mission step and its proof;
 - the regression line;
 - verify_phase.sh's result;
