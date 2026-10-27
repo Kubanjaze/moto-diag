@@ -3872,3 +3872,8 @@ Write-up: [`390_implementation.md`](docs/phases/completed/390_implementation.md)
 
 Log: [`docs/phases/completed/391_phase_log.md`](docs/phases/completed/391_phase_log.md).
 Write-up: [`391_implementation.md`](docs/phases/completed/391_implementation.md).
+
+## Phase 392 — The fleet follows the plan of record — CLOSED 2026-10-27
+
+Log: [`docs/phases/completed/392_phase_log.md`](docs/phases/completed/392_phase_log.md).
+Write-up: [`392_implementation.md`](docs/phases/completed/392_implementation.md).

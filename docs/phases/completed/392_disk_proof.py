@@ -42,7 +42,11 @@ def main(argv: list[str]) -> int:
     clone = state / "source"
     if not clone.exists():
         subprocess.run(["git", "clone", "-q", "--no-hardlinks", str(ROOT), str(clone)], check=True)
-    subprocess.run(["git", "-C", str(clone), "fetch", "-q", str(ROOT), commit], check=True)
+    # The branches, then the commit on a local branch: `check_run` clones this
+    # clone again, and a clone carries only local branches.
+    subprocess.run(["git", "-C", str(clone), "fetch", "-q", str(ROOT),
+                    "+refs/heads/*:refs/remotes/origin/*"], check=True)
+    subprocess.run(["git", "-C", str(clone), "branch", "-f", "proof", commit], check=True)
     fleet = D.Fleet(state=state, token="", venv=D.STATE / "venv", out=lambda s: None)
     before = disk()
     c = fleet.check_run(clone, commit, full=full)

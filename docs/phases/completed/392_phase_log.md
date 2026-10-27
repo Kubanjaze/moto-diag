@@ -1,6 +1,6 @@
 # Phase 392 — phase log: the fleet follows the plan of record
 
-**Status:** In progress
+**Status:** Complete
 **Branch:** `phase-392-the-fleet-follows-the-plan`
 **Prompt:** `docs/prompts/392_the_fleet_follows_the_plan.txt`
 
@@ -288,8 +288,167 @@ the same cell; both are asked in one plain-English comment.
 - **Verified.** The test failed first on the unfixed code ("1 of 132
   connections left open"), then passed. The recorder over the three
   leaking files after the fix: no connection left open, 123 passed.
-- **Commit.** This entry's commit.
+
+**Commit.** `98083c3`.
+
 - **Guard block, kept as it is:** the edit guard refused `cp` of the
   test back from the scratch folder into `tests/` (it had been set aside
   so the previous commit carried no part of this fix); written with the
   Write tool.
+
+## 2026-10-27 — the regression of record, and the disk (stage 1)
+
+`392_disk_proof.py ~/motodiag/p392/state 98083c3 --full`: this branch's
+`Fleet.check_run`, a fresh clone in the fence, no model, no token
+(`~/motodiag/p392/state/runs/20261027_134217_check`). The first try exited
+at once: the driver fetched a short commit id, which `git fetch` refuses,
+and the check's own clone would not have carried the commit; it now
+fetches the branches and pins the commit to a local branch.
+`dispatcher.log` showed no fleet stage running (F220).
+
+    wholetree full: PASSED — 4788 passed, 36 skipped, 32 warnings in 992.56s (0:16:32) (995.5 s wall)
+
+Regression of record: 11633 passed, 0 failed, 105 skipped, 0 errors at `98083c3` (35 min 12 s wall, `python -m pytest -n auto --dist load`, exit 0) (run inside the fleet's fence)
+Skipped in the regression of record: [1] tests/test_phase191b_ffmpeg.py:249: real ffmpeg binary or fixture mp4 not available
+Skipped in the regression of record: [1] tests/test_phase191b_ffmpeg.py:264: real ffmpeg binary or fixture mp4 not available
+Skipped in the regression of record: [1] tests/test_phase191b_ffmpeg.py:269: real ffmpeg binary or fixture mp4 not available
+Skipped in the regression of record: [1] tests/test_phase191b_ffmpeg.py:277: real ffmpeg binary or fixture mp4 not available
+Skipped in the regression of record: [1] tests/test_phase191b_ffmpeg.py:283: real ffmpeg binary or fixture mp4 not available
+Skipped in the regression of record: [1] tests/test_phase244H_test_db_isolation.py:79: no production database on this machine
+Skipped in the regression of record: [1] tests/test_phase257_orchestrator_guards.py:85: inside the fleet's fence: no Subconscious login there (K42)
+Skipped in the regression of record: [2] tests/test_phase257_orchestrator_guards.py:149: inside the fleet's fence: osacompile is macOS-only
+Skipped in the regression of record: [4] tests/test_phase257_sandbox_boundary.py:72: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [7] tests/test_phase257_source_checks.py:211: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase257_source_checks.py:476: acquired/Yamaha/library_om_contents_pdf_10_5YR-F8199-15_02.pdf is not in this machine's library
+Skipped in the regression of record: [1] tests/test_phase257_source_checks.py:476: acquired/KTM/24_3214961_en_OM.pdf is not in this machine's library
+Skipped in the regression of record: [1] tests/test_phase257_source_checks.py:527: the KTM manual is not in this machine's library
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:80: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:87: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:93: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:106: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:112: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:119: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:125: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:131: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase204_gate10.py:47: inside the fleet's fence: no ffmpeg on the home desktop
+Skipped in the regression of record: [1] tests/test_phase257_manual_route_excerpts.py:147: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase257_manual_route_excerpts.py:352: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase257_manual_route_excerpts.py:358: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase257_manual_route_excerpts.py:364: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase257_manual_route_excerpts.py:367: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:104: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:121: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:137: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:145: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:153: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:162: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:175: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:185: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:218: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:223: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:248: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:259: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:272: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:292: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:306: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:321: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:333: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:340: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:438: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:445: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:464: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:61: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [4] tests/test_phase388_fence_boundary.py:96: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [3] tests/test_phase388_fence_boundary.py:105: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:113: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:120: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:125: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:131: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:139: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:148: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:159: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:164: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:170: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:177: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:186: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:198: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:210: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:216: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [7] tests/test_phase388_fence_boundary.py:221: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:235: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:244: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:280: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:287: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:291: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:295: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:303: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:316: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:325: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:330: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:338: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:344: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:350: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:354: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:360: inside the fleet's fence: its boundary is proven from the host, not from inside
+
+11633 + 105 = 11738, the floor. The 105 skips are those pinned since 389
+("Sandbox counts").
+
+**The disk, stage 1** (`/mnt/c` free, `C:\WSL\Ubuntu-26.04\ext4.vhdx`'s
+size, `/` free):
+
+| | at | C: free | image | Ubuntu free |
+|---|---|---|---|---|
+| Step 0 | 2026-10-27 ~11:00 | 396.35 GB | 119.00 GB | — |
+| before | 13:42:17 | 331.11 GB | 184.09 GB | 955.99 GB |
+| after | 14:34:25 | 295.60 GB | 219.26 GB | 955.88 GB |
+
+After the stage its `run/tmp` held only the eight
+`motodiag_worker_loss_*` folders. Inside Ubuntu the stage cost 0.11 GB;
+the image grew 35.17 GB and C: lost 35.51 GB. Between Step 0 and stage 1
+the image grew 65 GB: this phase's own probes and test runs, whose
+folders `clean_tmp` does not touch (they are not the fleet's stages).
+So deleting a stage's files frees space inside Ubuntu, and Ubuntu then
+writes the next stage to blocks the image has never held, growing it,
+rather than to the ones it freed. Stage 2 decides it, by the operator's
+rule: if the image still grows with each stage once the files are
+deleted, that is a stop for the operator, with the numbers.
+
+## 2026-10-27 — the disk, stage 2
+
+Before it, this phase's own probe folders' temporary files were deleted
+(`fd_full/run/tmp` and `fd_fence2/run/tmp`, 9.5 GB each by `du -sh`),
+the deletion the fleet now makes for its own stages. The same command
+again (`runs/20261027_143513_check`):
+
+Regression run (a second, not of record): 11633 passed, 0 failed, 105 skipped, 0 errors at `98083c3`, 34 min 39 s.
+
+| | at | C: free | image | Ubuntu free |
+|---|---|---|---|---|
+| before | 14:35:13 | 295.59 GB | 219.26 GB | 976.16 GB |
+| after | 15:27:04 | 295.61 GB | 219.26 GB | 976.05 GB |
+
+`ls -l` of the image afterwards: 219257241600 bytes, unchanged. The run's
+`run/tmp` held only its eight worker-loss folders.
+
+**Read together:** stage 1 grew the image 35.17 GB, when the space Ubuntu
+had freed was not yet where it wrote; stage 2, after stage 1's files and
+the probes' were deleted, wrote into freed space and the image did not
+grow. So the image grows to the fleet's peak and stays there; it does not
+grow with each stage once the files are deleted. The operator's stop ("if
+the image still grows with each stage once the files are deleted") is not
+met. Nothing comes back to Windows either: the 35 GB stage 1 took stays
+the image's until a compaction, which K45 chose against.
+
+## 2026-10-27 — close-out
+
+No refute pass ran.
+
+This phase builds the fleet's code, and no rank may push to
+`.claude/skills/fleet/` (G3), so no Red Team round ran on it; its claims
+are held by its tests, the 53 mutations, and the two full fenced runs.
+v1.1, the row ✅ (89 words by `roadmap_words.py 392 --check`),
+`implementation.md` 0.13.119 and its history row, the root `phase_log.md`
+pointer, the files moved to `completed/`, and the handoff
+`docs/handoffs/2026-10-27_392_closed.md`.
+
