@@ -442,3 +442,31 @@ exit 0. Q1, Q6, Q7 and Q8 run on this tree by hand: all pass.
   it agrees.
 - **Closed unmerged**: PRs #25, #27, #29 and issues #26, #28, #30, under
   the operator's login (pre-approval (a)). The trial branches are kept.
+
+## 2026-10-27 — correction to the 13:58:11 entry on #14 (the operator's)
+
+The entry "13:58:11, #14 failed its model-free run again" (under "start,
+and the operator's two items first") says: "The gates' time limits on
+`e15b462` equal master's (900 s and 1800 s), so it is not 390's bug fix
+#3 missing." **That is wrong.** The outer gates' limits do match, but the
+call that fails is inside `tests/test_phase147_gate_6.py`, which the
+nested gates run: on `e15b462`
+(`runs/20261025_160200_engineer_389A/clone`) it has `timeout=60` at lines
+835 and 854; on `master` the same two calls are `timeout=300` (lines 838
+and 858 now). So #14's branch lacks that raise, and its failure is
+consistent with it. The original entry is left as written; this one
+supersedes it. Found by the operator.
+
+## 2026-10-27 — the merge
+
+- `master` fast-forwarded to `cadaa37` (the 392 prompt, a plan entry,
+  K43/K44: documents only), then `phase-391-quartermaster` merged into it
+  `--no-ff`: `861f8b8`. `wholetree.sh` exit 0 on the staged merge (2271
+  passed, 66.6 s) and on the commit (record for `861f8b8`); pushed.
+  GitHub's reply carried "Cannot update this protected ref" as a rule the
+  operator's login bypasses; `git ls-remote` shows `master` at `861f8b8`.
+- `verify_phase.sh 391 ac1dc6b 861f8b8`: check 1 clean after the push,
+  check 2 "none (docs only)", check 10 74 passed, checks 11–14 pass.
+- The service's clone back on `master` at `861f8b8`; SIGTERM to its main
+  process with no fence running and #14 held; "00:13:57 the search on
+  start: nothing to resume".
