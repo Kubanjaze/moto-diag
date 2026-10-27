@@ -460,11 +460,22 @@ and of record. `plan_check.py 389A` against v1.1: Results.
   `2 insertions(+), 2 deletions(-)`, because this branch predates row 390;
   against the merge base, `7ca42e0`, the shape is still the planned one.
   The phase log has both.
+- **The regression was run again on 2026-10-27, after the operator merged
+  `master` into the branch** (`bc50c4b`). Issue #14's check had failed on
+  `e15b462` for want of `master`'s gate-6 time limit; the record now names
+  the merged tree. Nothing was built in that round.
 - No bug fixes; no guard blocked a command.
 
 ## Results
 
-Regression of record: 11297 passed, 0 failed, 105 skipped, 0 errors at `e69c6f6` (30 min 18 s wall, `python -m pytest -n auto --dist load`, exit 0) (run inside the fleet's fence)
+Regression of record: 11500 passed, 0 failed, 105 skipped, 0 errors at `bc50c4b` (33 min 39 s wall, `python -m pytest -n auto --dist load`, exit 0) (run inside the fleet's fence)
+
+Added 2026-10-27, on the merge of `master` into this branch (`bc50c4b`,
+the operator's): `wholetree.sh --full` 4716 passed, 36 skipped, exit 0,
+then the line above. 11500 + 105 = 11605, `COLLECTED_TEST_FLOOR` as
+`master` has it. It supersedes the close-out's run, kept below.
+
+The close-out's run, 2026-10-25: 11297 passed, 0 failed, 105 skipped, 0 errors at `e69c6f6` (30 min 18 s wall, `python -m pytest -n auto --dist load`, exit 0) (run inside the fleet's fence)
 
 11297 + 105 = 11402, `COLLECTED_TEST_FLOOR`, unchanged. The skip lines
 are in the phase log as printed.
