@@ -263,3 +263,14 @@ part of (Logic 5, Deviations).
 - **On the real record:** 390 as it shipped fails Q8 on R8 (the paste
   block of F222); PR #20's fence output fails V12, and its issue's markers
   fail Q2 and Q3.
+- **The stub trial** (PR #25, issue #26, `bd3e8ea`; cut once by a
+  restart, resumed): refuse, naming **Q7** ("section 'Results' has a
+  stub"), and nothing else. Not V4: the model read check 4's two hits as
+  prose describing the stub rule. $0.22.
+- **The emptied-handoff trial** (PR #27, issue #28, `0836ed4`): refuse,
+  naming **Q8** ("2026-10-26_391_closed.md has no '## What is open'; …
+  no '## What is next'"), and **Q4** as well: its full run in the fence
+  lost a worker to the service's open-file limit (10556 passed, 1 failed,
+  exit 3; F227), so that refusal is the machine's, not the branch's. Its
+  first run had been cut by the check's time limit (F225) and the disk
+  failure (F226). $0.23.

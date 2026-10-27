@@ -409,3 +409,26 @@ exit 0. Q1, Q6, Q7 and Q8 run on this tree by hand: all pass.
 - **What replaces the shrink is not decided here.** F226 lists what was
   measured (compacting with Ubuntu shut down; bounding what the fleet
   keeps); choosing is the operator's.
+- **22:1x, the operator's one command** (`sudo chown` on `runs/`, "ALL
+  GOOD"). "22:21:24 issue 28: the Quartermaster on phase 391,
+  0836ed4ba381": a fresh stage, run folder `20261026_222123_quartermaster_391`.
+- **The emptied-handoff trial's verdict**, "22:59:49 issue 28: verdict:
+  refuse (Q4 Q8 Q4 Q8)", by `kubanjazefleet` on PR #27; $0.23. Q8 is the
+  planted defect, named by the script and the model. Q4 is not: the full
+  run (`runs/20261026_222124_check`) ended "1 failed, 10556 passed, 105
+  skipped … exit 3". Worker gw9 failed
+  `test_f194_an_evening_invoice_carries_the_shops_day`, then raised
+  "OSError: [Errno 24] Too many open files" in `worker_loss.py` writing
+  `gw9.last`; xdist stopped on "assert not crashitem". Read first, as
+  rule 6 asks: the worker-loss files hold no signal and an empty
+  faulthandler dump for any worker; there is no "node down" block. The
+  service runs at a soft limit of 1024 open files (`/proc/<pid>/limits`),
+  the unit sets none, and it is the same unit as before the move. gw9's
+  328 tests, in its order, serially under `ulimit -Sn 1024` in this
+  checkout: 328 passed. Filed as F227; the unit is not changed here (its
+  limit is the operator's).
+- **Decided:** the trial stands as a refusal that names the right check.
+  Its extra Q4 is recorded as the machine's failure, not the branch's.
+  The green trial goes ahead on the next documents-only head; if its full
+  run fails the same way, that is a test the phase cannot make green, and
+  it stops.

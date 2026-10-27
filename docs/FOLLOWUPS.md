@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F226** (this file). The
+At the time of writing the highest assigned is **F227** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4250,3 +4250,34 @@ F221's "Not done", and fewer than 20 kept runs); or both. And the reclaim
 line says which: a line reading "C: X -> X" beside a large trim is the
 non-sparse case, and should be said as such rather than read as a
 reclaim.
+
+### F227
+
+**A fleet regression lost a worker to the service's 1024 open-file limit; the shell's limit is 1048576, and the run cannot be of record**
+
+Found 2026-10-26 in Phase 391's emptied-handoff trial (#28): its full run
+in the fence (`runs/20261026_222124_check`) ended "1 failed, 10556 passed,
+105 skipped" at `0836ed4`, exit 3, about 940 tests short. Worker gw9
+failed `test_phase376_settlement_export.py::TestTheRecord::test_f194_an_evening_invoice_carries_the_shops_day`
+(its reason is not printed: the run ended first), then raised in
+`tests/support/worker_loss.py` line 77, writing `gw9.last`: "OSError:
+[Errno 24] Too many open files", and xdist stopped on "assert not
+crashitem" with `TestMigration083::test_only_the_two_rebuilt_tables_change_and_no_row_moves`
+pending. No "node down" and no worker-loss block: the worker ended itself.
+
+Measured: `motodiag-fleet.service` runs with "Max open files 1024
+1048576" (soft, hard; `/proc/<pid>/limits`), systemd's default, since
+the unit (`ops/desktop/motodiag-fleet.service`, identical to the installed
+one) sets no `LimitNOFILE`; this shell has 1048576. So every fenced run
+since the unit was installed has had 1024 per worker, 391's regression of
+record among them. gw9's 328 tests, in its order, run serially under
+`ulimit -Sn 1024` in this checkout (the same code as `0836ed4`): 328
+passed, no `Errno 24`. Not reproduced.
+
+What it affects: any model-free run (Engineer, recheck, Quartermaster) can
+fail on a handle count rather than a test, and the Quartermaster names it
+as Q4.
+
+What would close it: the peak handle count of one xdist worker measured in
+the fence, the leak (if any) found, and a `LimitNOFILE` in the unit chosen
+by the operator; a planted run under a small limit as the known-bad case.
