@@ -20,7 +20,8 @@ that a check (a close-out or fixture rule over handoffs' paste blocks), fix
   operator steps, whose `gh api` paths name the repository. R8 fires on
   the first as first written (`edd286c`) and not on the second, its
   exclusion's control. Four planted cases in `fixtures/roadmap_bad` and
-  twelve controls in `fixtures/roadmap_good`.
+  twelve controls in `fixtures/roadmap_good` (thirteen since Phase 391's
+  mutations: a `gh` after a `;` inside a comment line).
 - 390's handoff block is corrected in place, with a dated note under it.
 
 Not a phase: the operator's request before Phase 391's Step 0.

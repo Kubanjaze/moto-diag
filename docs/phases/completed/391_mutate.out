@@ -1,0 +1,61 @@
+Q1a a reshape is in scope: red
+Q1b a migration is in scope: red
+Q1c content is in scope: red
+Q1d data/ is in scope: red
+Q1e a deploy is in scope: red
+Q2 a hold passes: red
+Q3a a back passes: red
+Q3b a pull request after the clear passes: red
+Q4a the counts not compared: red
+Q4b a failed run passes: red
+Q5-2 code after the hash passes: red
+Q5-3 in_progress not read: red
+Q5-4 a hit is a pass: red
+Q5-5 A4 not read: red
+Q5-6 the words not read: red
+Q5-10a no summary needed: red
+Q5-10b failures ignored: red
+Q5-11 the close-out not read: red
+Q5-12 no refuter block passes: red
+Q5-13 findings not read: red
+Q5-14 the command not read: red
+Q5-x a missing section passes: red
+Q6 claims not checked: red
+Q7a P6's rule dropped: red
+Q7b Deviations not needed: red
+Q7c an open box passes: red
+Q8a no handoff passes: red
+Q8c the sections not read: red
+Q8d roadmap_check not run: red
+Q9a a dirty clone passes: red
+Q9b a conflict passes: red
+M1 an unknown check accepted: red
+M2 a refusal naming none accepted: red
+M3 a merge naming failures accepted: red
+M4 the model overrides the scripts: red
+M5 the model's refusals dropped: red
+M6 the brief lists no ids: red
+D1 out of scope still runs: red
+D2 quartermaster_since not read: red
+D3 not once per application: red
+D4 quartermaster_since never set: red
+D5 no full run: red
+D6 verify_phase.sh not run: red
+D7 the PR comment made again on a resume: red
+D8 a command run's output not journaled: red
+D9 the stage not resumed: red
+D10 not a rank comment: red
+D11 a label moved: red
+D12 the digest gets no verdicts: red
+Y1 every verdict agrees: red
+Y2 no section: red
+R8a every fenced block read: red
+R8b issue and pr not repository-scoped: red
+R8c -R not read: red
+R8d a cd or GH_REPO first not read: red
+R8e a comment is a call: red
+R8f an api placeholder passes: red
+R8g phase documents not read: red
+R8h R8 not run on the tree: red
+59/59 red
+exit 0

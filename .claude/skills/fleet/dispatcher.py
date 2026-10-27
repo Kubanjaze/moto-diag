@@ -20,6 +20,8 @@ it runs the one stage the labels ask for (Phase 389's table):
   `review:open`             the Red Team (`red_team.py`)       → `review:clear` or `build:open`
   `build:open`, sent back   the Chief Engineer, a fix round    → `review:open`
   `review:clear`            the Captain's recommendation       → `merge:needs-review`
+  `merge:needs-review`      the Quartermaster (`quartermaster.py`), in shadow: its
+                            verdict on the PR and in the digest; no label moved
 
 and, as in 388: after 07:00 local, yesterday's digest (`yeoman.digest`);
 the sweep, one comment on any state label that has sat for more than 24
@@ -89,6 +91,7 @@ import closeout_check  # noqa: E402
 import engineer  # noqa: E402
 import fleet_git  # noqa: E402
 import journal  # noqa: E402
+import quartermaster  # noqa: E402
 import red_team  # noqa: E402
 import roadmap_check  # noqa: E402
 import scout  # noqa: E402
@@ -140,7 +143,8 @@ NEXT_RANK = {
     "step0:done": "the Captain", "plan:needs-review": "the Executive Officer",
     "plan:approved": "the Chief Engineer", "build:open": "the Chief Engineer",
     "review:open": "the Red Team", "review:clear": "the Captain",
-    "merge:needs-review": "the Admiral, who merges (the Quartermaster is not built yet)",
+    "merge:needs-review": "the Admiral, who merges (the Quartermaster, in shadow, gives its "
+                          "verdict first and merges nothing)",
     "needs-admiral": "the Admiral", "needs-hands": "the Admiral",
     "merged": "whoever merged, to close the issue",
 }
@@ -148,6 +152,8 @@ MARKER = "<!-- fleet-dispatcher:"
 SWEEP_MARKER = "<!-- fleet-sweep:"
 SCOUT_M, CAPTAIN_M = "<!-- fleet-scout:", "<!-- fleet-captain:"
 ENGINEER_M, RED_M = "<!-- fleet-engineer:", "<!-- fleet-red-team:"
+QM_M, QM_PR_M = "<!-- fleet-quartermaster:", "<!-- fleet-quartermaster-pr:"
+QM = "merge:needs-review"
 #: A comment by a rank on an issue: the XO's verdict, the XO's stop, ours (388).
 RANK_COMMENT = (xo.MARKER, "Executive Officer, phase", MARKER)
 #: The XO's own comments (`xo.py` writes them, with no ` run=`).
@@ -159,14 +165,15 @@ STARTED_M = "<!-- fleet-started:"
 #: operator takes `needs-hands` off, the stage it held is due again.
 SPACE_M = "<!-- fleet-space:"
 #: Every rank's comment: one stage runs at a time, so a later one ends an earlier stage.
-RANK_PREFIXES = (STARTED_M, SCOUT_M, CAPTAIN_M, ENGINEER_M, RED_M, *RANK_COMMENT)
+RANK_PREFIXES = (STARTED_M, SCOUT_M, CAPTAIN_M, ENGINEER_M, RED_M, QM_M, *RANK_COMMENT)
 _STARTED = re.compile(r"^<!-- fleet-started: rank=(\S+) run=(\S+) -->")
 #: The Engineer's own `started` marker; before Phase 390 it had no ` run=`.
 _ENG_STARTED = re.compile(r"^<!-- fleet-engineer: started round=\d+(?: run=(\S+))? -->")
 #: The rank each journal's stage is said as, in markers and stop comments.
 STAGE_RANK = {"scout": "scout", "captain": "captain", "xo": "xo", "engineer": "engineer",
               "recheck": "engineer",
-              "red_team": "red-team", "recommend": "captain", "digest": "digest"}
+              "red_team": "red-team", "recommend": "captain", "quartermaster": "quartermaster",
+              "digest": "digest"}
 _RED = re.compile(r"^<!-- fleet-red-team: verdict=(\w+) round=(\d+)", re.M)
 _XO = re.compile(r"^<!-- xo-verdict: \S+ round=\d+ applied=(\S+)", re.M)
 
@@ -519,6 +526,8 @@ class Check:
     commit: str
     line: str | None = None
     why: str = ""
+    #: A command run's whole output (Phase 391: `verify_phase.sh`, read section by section).
+    out: str = ""
 
 
 def _time(s: str) -> dt.datetime:
@@ -933,7 +942,7 @@ class Fleet:
         c = self.check(clone, commit, full=full, command=command)
         if self.journal is not None:
             self.journal.put_check(key, {"ok": c.ok, "commit": c.commit, "line": c.line,
-                                         "why": c.why})
+                                         "why": c.why, "out": c.out})
         return c
 
     def clone(self, run: pathlib.Path, branch: str) -> pathlib.Path:
@@ -1000,7 +1009,7 @@ class Fleet:
         text = (r.stdout or "") + (r.stderr or "")
         (run / "run" / "check.txt").write_text(text, encoding="utf-8")
         if command:
-            return Check(r.returncode == 0, commit, why=text[-2000:])
+            return Check(r.returncode == 0, commit, why=text[-2000:], out=text)
         if not full:
             return Check(r.returncode == 0, commit, why=text.strip().splitlines()[-1][:300]
                          if text.strip() else f"exit {r.returncode}")
@@ -1402,13 +1411,96 @@ class Fleet:
         self.label_once(issue, "merge:needs-review")
         return f"recommendation: {v['decision']}"
 
+    # ---- the Quartermaster, in shadow (Phase 391)
+    def quartermaster_due(self, n: int) -> bool:
+        """`merge:needs-review` applied after the Quartermaster's last word
+        here, and after it first came up on this machine."""
+        since = self.load().get("quartermaster_since")
+        applied = self.last_applied(self.label_events(n), QM)
+        return (since is not None and applied is not None and _time(applied) > _time(since)
+                and self.due_for(n, QM, self.markers(QM_M, "quartermaster")))
+
+    def verdicts(self) -> pathlib.Path:
+        return self.state_dir / "quartermaster.jsonl"
+
+    def stage_quartermaster(self, issue: int, phase: str, body: str, branch: str, *,
+                            resume: dict | None = None) -> str:
+        """The verdict on the PR, the issue and in `quartermaster.jsonl`. It
+        merges nothing and moves no label: the operator merges."""
+        pr = self.pr_for(branch)
+        if pr is None:
+            raise Stop(f"no open pull request for `{branch}`")
+        run, j = self.begin(f"quartermaster_{phase}", {"stage": "quartermaster", "issue": issue,
+                                                       "phase": phase, "body": body,
+                                                       "branch": branch}, resume)
+        self.started(issue, "quartermaster", f"**Quartermaster, phase {phase}: started**, in "
+                                             "shadow: a verdict, and nothing merged.")
+        clone = self.stage_clone(run, branch)
+        head = j.value("clone")["base"]
+        q1 = quartermaster.scope(clone, phase)
+        judged, call = None, None
+        if not q1.ok:
+            found = [q1]
+            summary = "Out of the Quartermaster's scope, so it ran nothing: the operator decides."
+            self.log(f"issue {issue}: the Quartermaster on phase {phase}: out of scope: {q1.why}")
+        else:
+            self.log(f"issue {issue}: the Quartermaster on phase {phase}, {head[:12]}")
+            full = self.checked(clone, head, full=True)
+            reg = quartermaster.regression_hash(clone, phase) or head
+            ver = self.checked(clone, head, full=False,
+                               command=[quartermaster.VERIFY, phase, reg, head])
+            found, extra = quartermaster.scripted(
+                clone, phase, head, self.comments(issue), full_ok=full.ok, full_line=full.line,
+                full_why=full.why, verify_text=ver.out, sibling=self.mobile)
+            found = [q1, *found]
+            pr_body = self.gh("pr", "view", str(pr["number"]), "--json", "body", "--jq", ".body")
+            runner = FencedRunner(self, clone, run / "run", journal=j)
+            try:
+                judged, call = quartermaster.judge(
+                    phase, quartermaster.gather(clone, phase, found, extra, ver.out, pr_body),
+                    clone=clone, run=runner)
+            except RateLimited as e:
+                self.pause(j, e, runner)
+                return "rate-limited"
+            summary = judged["summary"]
+        verdict, failed, note = quartermaster.compose(found, judged)
+        text = quartermaster.verdict_text(phase, verdict, failed, summary, note,
+                                          call.line() if call else "")
+        checks = " ".join(c for c, _ in failed) or "none"
+        pr_marker = self.tag(f"{QM_PR_M} verdict={verdict} -->")
+        self.step("pr-comment", lambda: self.gh("pr", "comment", str(pr["number"]), "--body",
+                                                f"{pr_marker}\n{text}"),
+                  lambda: self.pr_has_comment(pr["number"], pr_marker))
+        self.say_once(issue, f"{QM_M} verdict={verdict} failed={checks.replace(' ', ',')} -->",
+                      f"{text}\n\n(PR #{pr['number']}.)")
+        record = {"at": self.now().isoformat(timespec="seconds"), "issue": issue,
+                  "pr": pr["number"], "phase": phase, "head": head, "verdict": verdict,
+                  "failed": [c for c, _ in failed], "run": run.name}
+
+        def write() -> None:
+            with self.verdicts().open("a", encoding="utf-8") as f:
+                f.write(json.dumps(record) + "\n")
+        self.step("record", write, lambda: any(
+            json.loads(ln).get("run") == run.name for ln in self.verdicts().read_text(
+                encoding="utf-8").splitlines()) if self.verdicts().is_file() else False)
+        return f"verdict: {verdict} ({checks})"
+
+    def verdicts_on(self, day: dt.date) -> list[dict]:
+        """The Quartermaster's verdicts given on one local day."""
+        if not self.verdicts().is_file():
+            return []
+        rows = [json.loads(ln) for ln in self.verdicts().read_text(encoding="utf-8").splitlines()
+                if ln.strip()]
+        return [r for r in rows if _time(r["at"]).astimezone(self.now().tzinfo).date() == day]
+
     def stage_digest(self, day: dt.date, *, resume: dict | None = None) -> str:
         run, j = self.begin("digest", {"stage": "digest", "day": day.isoformat()}, resume)
         clone = self.stage_clone(run, "master")
         self.log(f"the digest for {day}, {clone}")
         runner = FencedRunner(self, clone, run / "run", journal=j)
         try:
-            code = yeoman.digest(day, root=clone, run=runner, out=self.log)
+            code = yeoman.digest(day, root=clone, run=runner, out=self.log,
+                                 verdicts=self.verdicts_on(day))
         except RateLimited as e:
             self.pause(j, e, runner)
             return "rate-limited"
@@ -1465,6 +1557,8 @@ class Fleet:
                                       pathlib.Path(paused["held"]), resume=paused)
         if s == "red_team":
             return self.stage_red_team(n, ph, paused["body"], paused["branch"], resume=paused)
+        if s == "quartermaster":
+            return self.stage_quartermaster(n, ph, paused["body"], paused["branch"], resume=paused)
         return self.stage_recommend(n, ph, paused["body"], paused["branch"], resume=paused)
 
     # ---- the sweep
@@ -1534,6 +1628,8 @@ class Fleet:
                 raise Stop(why)
             return b
 
+        if QM in labels and self.quartermaster_due(n):
+            return "quartermaster", lambda: self.stage_quartermaster(n, phase, body, branch())
         if "review:clear" in labels and self.due_for(n, "review:clear",
                                                      self.markers(CAPTAIN_M, "captain")):
             return "captain", lambda: self.stage_recommend(n, phase, body, branch())
@@ -1771,6 +1867,14 @@ class Fleet:
         self.sweep()
         self.reclaim_boundaries(self.master_rows())
         state = self.load()
+        if "quartermaster_since" not in state:
+            # The Quartermaster judges a `merge:needs-review` applied from now on
+            # (Phase 391): not #14's, nor any older issue's, until the operator
+            # applies the label again.
+            state["quartermaster_since"] = self.now().isoformat(timespec="seconds")
+            self.save(state)
+            self.log(f"the Quartermaster judges merge:needs-review applied after "
+                     f"{state['quartermaster_since']}")
         paused = state.get("paused")
         if paused:
             if self.now() < _time(paused["until"]):

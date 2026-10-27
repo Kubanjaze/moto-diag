@@ -1,0 +1,42 @@
+=== 1. master pushed, tree clean ===
+MISSING
+--- unpushed (empty) ---
+=== 2. no code after regression hash ===
+  none (docs only)
+=== 3. docs in completed ===
+390A_implementation.md
+390A_phase_log.md
+390A_step0.md
+--- in_progress (empty) ---
+=== 4. stubs ===
+none
+=== 5. deviations + bug-fix register ===
+311:## Deviations
+--- register contiguous from #1, each naming its commit ---
+  A4 ok
+=== 6. roadmap row (<=120 words, body cell, links count as one) ===
+100
+  within cap
+=== 7. findings header ===
+22:At the time of writing the highest assigned is **F220** (this file). The
+=== 8. schema + live db ===
+  CHECK 8 FAILED: live is not on this machine, and live-check through the way in exited 4
+=== 9. backup ===
+=== 10. targeted tests (parallel, as the regression runs since 355) ===
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================ 32 warnings in 32.98s =============================
+=== 11. closeout contract (all eight artefacts) ===
+  closeout complete
+=== 12. refuter checklist, if the phase ran one ===
+  no refuter block (the phase ran no pass, or did not record one)
+=== 13. findings resolve ===
+  every cited F-number resolves
+=== 14. the regression line names its command ===
+95:Regression of record: 11297 passed, 0 failed, 105 skipped, 0 errors at `44f846d` (31 min 33 s wall, `python -m pytest -n auto --dist load`, exit 0) (run inside the fleet's fence)
+fatal: ambiguous argument 'origin/master..master': unknown revision or path not in the working tree.
+Use '--' to separate paths from revisions, like this:
+'git <command> [<revision>...] -- [<file>...]'
+REFUSED: /fleet/run/home/.config/motodiag/live.json is missing: this machine has not been told where live is (Phase 382). Live is on the home desktop.
+REFUSED: /fleet/run/home/.config/motodiag/live.json is missing: no way in to live's machine
+REFUSED: /fleet/run/home/.config/motodiag/live.json is missing: no way in to live's machine

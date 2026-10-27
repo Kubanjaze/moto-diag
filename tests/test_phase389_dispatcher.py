@@ -221,6 +221,13 @@ def test_mission_to_merge_needs_review(world):
     assert labels(host) == ["merge:needs-review", "mission"]
     assert "The Captain's recommendation: merge" in pr["comments"][-1]
 
+    # the Quartermaster, in shadow (Phase 391): a verdict, and no label moved
+    step(clock, fleet, host, claude_json({"verdict": "refuse", "failed": [
+        {"check": "Q7", "why": "v1.1 is still the plan."}], "summary": "Not finished."},
+        model=rank_call.OPUS))
+    assert labels(host) == ["merge:needs-review", "mission"]
+    assert "The Quartermaster, phase 902 (shadow): refuse" in pr["comments"][-1]
+
     # nothing more until the operator merges; master never moved
     step(clock, fleet, host)
     assert git("rev-parse", "master", cwd=origin).stdout == master

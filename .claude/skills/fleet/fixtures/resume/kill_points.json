@@ -1,5 +1,5 @@
 {
-  "_what": "Phase 390: every kill point in 390_step0.md's tables (S0-2), hand-written, each with the test in tests/test_phase390_resume.py that kills a stage there and resumes it. tests/test_phase390_resume_contract.py holds every stage to at least one, and every name to a test that exists.",
+  "_what": "Phase 390: every kill point in 390_step0.md's tables (S0-2), hand-written, each with the test in tests/test_phase390_resume.py that kills a stage there and resumes it. tests/test_phase390_resume_contract.py holds every stage to at least one, and every name to a test that exists. Since Phase 391 a stage's tests may also live in tests/test_phase391_dispatcher.py (the Quartermaster's).",
   "scout": {
     "the model call (a finished call before it)": "test_scout_cut_in_its_second_model_call",
     "the model call, before its first answer": "test_scout_cut_before_its_first_answer_runs_fresh_in_the_same_run",
@@ -48,5 +48,11 @@
   },
   "pause": {
     "a resumed stage, after its reset": "test_a_pause_is_kept_until_its_resumed_stage_ends"
+  },
+  "quartermaster": {
+    "the Opus call": "test_quartermaster_cut_in_its_model_call",
+    "the full model-free run": "test_quartermaster_cut_in_its_full_model_free_run",
+    "after the PR comment, before the issue marker": "test_quartermaster_cut_after_its_pr_comment",
+    "after the issue marker, before the record": "test_quartermaster_cut_after_its_issue_marker"
   }
 }

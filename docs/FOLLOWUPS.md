@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F222** (this file). The
+At the time of writing the highest assigned is **F227** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4134,5 +4134,150 @@ Closed by:
   names the repository. It runs with every suite and on every push.
 - **390's block corrected in place**, with a dated note under it.
 - Tests: `tests/test_roadmap_continuity.py` (four planted cases, the real
-  block as first written at `edd286c`, and 389's block as the control).
+  block as first written at `48e7d2c` and still there at `edd286c`, and 389's block as the control).
 
+### F223
+
+**The fleet's ranks read each other's markers from whoever wrote them, so a comment can stand in for a rank**
+
+Found 2026-10-26 in Phase 391, writing the Quartermaster's trials. Every
+rank since 389 decides on the issue's comments by their first line alone:
+`<!-- fleet-red-team: verdict=clear …`, `<!-- fleet-captain:
+recommendation=merge …` (`dispatcher.py` `_RED`, `newest`;
+`quartermaster.py` `issue_checks`). None reads the comment's author. Any
+account that can comment on the repository's issues can write a line the
+fleet reads as a Red Team clear or a Captain's merge. Phase 391's trials do
+exactly that, on purpose, under the operator's login, each said to be
+planted.
+
+What it affects today: in shadow, nothing ships on a verdict, and the
+operator merges by hand. On promotion, Q2 and Q3 would be the gate.
+
+What would close it: a rank's marker counts only when its author is the
+fleet's account (`fleet_git.identity`'s login), or the operator's on an
+issue carrying the trial marker (the push identity's own rule), for every
+rank's reads, with a planted marker from a third login as the known-bad
+case. Before the Quartermaster is promoted.
+
+### F224
+
+**Two code files name `edd286c` as where 390's paste block was first written; it was `48e7d2c`**
+
+Found 2026-10-26 by Phase 391's refute, round 2: a wording defect left
+open under K9. `.claude/skills/closeout/CHANGELOG.md` (the 2026-10-26 R8
+entry: "as first written (`edd286c`)") and `tests/test_roadmap_continuity.py`
+(`test_390s_block_as_first_written_is_seen`, which reads the block at
+`edd286c`) name the commit the block was read at. It was first written at
+`48e7d2c`, 390's close-out; the text is identical at both (compared by the
+refuter). F222's own entry says it right.
+
+Left open because both paths are code for verify_phase.sh's check 2
+(`code_after_regression.py`): changing them after 391's regression of
+record (`ac1dc6b`) would void it. What would close it: name `48e7d2c` in
+both, in any later phase that runs its own regression.
+
+
+### F225
+
+**A model-free run that outlives `CHECK_TIMEOUT_S` raises out of the cycle, so the stage is ended as failed and started again from nothing**
+
+Found 2026-10-26 by the operator, in Phase 391's emptied-handoff trial
+(#28). `Fleet.check_run` (`.claude/skills/fleet/dispatcher.py`) runs the
+fenced check with `subprocess.run(..., timeout=CHECK_TIMEOUT_S)` (3600 s)
+and catches nothing. `run_stage` catches `LowSpace` and `Stop`; any other
+exception, in a cycle, ends the journal "failed" and re-raises, and
+`main` logs "cycle failed". `dispatcher.log`: "17:58:43 issue 28: the
+Quartermaster on phase 391, 0836ed4ba381", then "18:58:44 cycle failed:"
+with `subprocess.TimeoutExpired` from `check_run`, then "19:03:55 issue
+28: the Quartermaster on phase 391, 0836ed4ba381": the next cycle found
+the label still due and began a new stage, with a new clone and the full
+run from its start. Nothing was said on the issue. The same run on the
+stub trial took 54 minutes; this one did not finish in 60, on a disk
+that went read-only at 19:40 (F226).
+
+What it affects: every stage with a model-free run (the Engineer's
+`pr-ready`, the recheck, the Quartermaster). A run that always takes
+longer than the limit restarts every cycle, an hour of the machine each
+time, silently; a `TimeoutExpired` also leaves the fenced child to the
+kernel's cleanup.
+
+What would close it: a check run past its limit returns a failed `Check`
+whose reason names the limit, so the stage stops through its usual path
+(said on the issue, journal ended once, not retried by the next cycle
+until the operator acts), with a planted over-limit command as the test.
+Whether 3600 s stays is the operator's: a threshold.
+
+### F226
+
+**Ubuntu's disk image failed twice in two days, and F221's reclaim relied on the image being sparse, which it no longer is**
+
+Found 2026-10-26 by the operator. Two failures of the WSL disk image
+(`ext4.vhdx`) that holds Ubuntu, the fleet and the live database:
+- **2026-10-25, 19:02**: C: full, the image (not then sparse) could not
+  grow, and Ubuntu's root went read-only until 19:55 (recorded in F221).
+  The image was made sparse at 23:10 that night (`wsl --manage
+  --set-sparse true`, the operator's block in Phase 390).
+- **2026-10-26, 19:40** (the operator's account): write I/O errors on the
+  sparse image, C: not full, and Ubuntu read-only. It could not be
+  repaired in place. The operator exported the distribution and imported
+  it onto a fresh, non-sparse image at `C:\WSL\Ubuntu-26.04`. Lost: every
+  fleet run folder except #14's two (`20261025_160200_engineer_389A`,
+  `20261026_130547_recheck_389A`); the fleet's mirror was rebuilt. Measured
+  afterwards: the system journal of that boot (`journalctl -b -2`) ends at
+  17:53:18, at the close of the 3-hour reclaim's `fstrim` ("38.2 GiB
+  trimmed", `dispatcher.log` 17:53:18), while `dispatcher.log` itself goes
+  on to 19:03:55. That timing is an observation, not a shown cause.
+
+After the import (measured 21:5x): `ext4.vhdx` is 16.7 GB, "This file is
+NOT set as sparse" (`fsutil sparse queryflag`); C: 465 GB free; Ubuntu's
+root is mounted with `discard`. The import also left
+`~/.local/state/motodiag/fleet/runs` owned by root, so every cycle since
+21:40 fails with `PermissionError` making a run folder.
+
+What it affects: F221's close rested on the sparse image. `fstrim` still
+runs on the timer and at each merge and close-out, but on a non-sparse
+image it gives nothing back to Windows: the reclaim at 21:45:28 logged
+"C: 499.2 -> 499.2 GB free … 991.7 GiB trimmed". The image now grows to
+the fleet's peak use and keeps that size. The 50 GB floor on C: still
+stops new stages before C: is full; it no longer has a reclaim behind it.
+
+What would close it: the operator's choice of what replaces the shrink,
+recorded in the fleet skill and F221's method. The candidates measured so
+far: compact the image with Ubuntu shut down (`Optimize-VHD`, installed),
+on a schedule the operator sets; cap what the fleet keeps, so the peak
+stays bounded (remove a finished run's `run/tmp` when its stage ends,
+F221's "Not done", and fewer than 20 kept runs); or both. And the reclaim
+line says which: a line reading "C: X -> X" beside a large trim is the
+non-sparse case, and should be said as such rather than read as a
+reclaim.
+
+### F227
+
+**A fleet regression lost a worker to the service's 1024 open-file limit; the shell's limit is 1048576, and the run cannot be of record**
+
+Found 2026-10-26 in Phase 391's emptied-handoff trial (#28): its full run
+in the fence (`runs/20261026_222124_check`) ended "1 failed, 10556 passed,
+105 skipped" at `0836ed4`, exit 3, about 940 tests short. Worker gw9
+failed `test_phase376_settlement_export.py::TestTheRecord::test_f194_an_evening_invoice_carries_the_shops_day`
+(its reason is not printed: the run ended first), then raised in
+`tests/support/worker_loss.py` line 77, writing `gw9.last`: "OSError:
+[Errno 24] Too many open files", and xdist stopped on "assert not
+crashitem" with `TestMigration083::test_only_the_two_rebuilt_tables_change_and_no_row_moves`
+pending. No "node down" and no worker-loss block: the worker ended itself.
+
+Measured: `motodiag-fleet.service` runs with "Max open files 1024
+1048576" (soft, hard; `/proc/<pid>/limits`), systemd's default, since
+the unit (`ops/desktop/motodiag-fleet.service`, identical to the installed
+one) sets no `LimitNOFILE`; this shell has 1048576. So every fenced run
+since the unit was installed has had 1024 per worker, 391's regression of
+record among them. gw9's 328 tests, in its order, run serially under
+`ulimit -Sn 1024` in this checkout (the same code as `0836ed4`): 328
+passed, no `Errno 24`. Not reproduced.
+
+What it affects: any model-free run (Engineer, recheck, Quartermaster) can
+fail on a handle count rather than a test, and the Quartermaster names it
+as Q4.
+
+What would close it: the peak handle count of one xdist worker measured in
+the fence, the leak (if any) found, and a `LimitNOFILE` in the unit chosen
+by the operator; a planted run under a small limit as the known-bad case.
