@@ -432,3 +432,13 @@ exit 0. Q1, Q6, Q7 and Q8 run on this tree by hand: all pass.
   The green trial goes ahead on the next documents-only head; if its full
   run fails the same way, that is a test the phase cannot make green, and
   it stops.
+- **The green trial** (PR #29, issue #30, `phase-391-qmtrial-green` at
+  `7b96129`, opened 23:0x by a rewritten scratch driver: the reboot had
+  cleared `/tmp`). The real Captain: "23:11:00 issue 30: recommendation:
+  merge"; the Quartermaster: "00:05:47 issue 30: verdict: merge (none)",
+  $0.25. Its full run (`runs/20261026_231611_check`): `wholetree.sh --full`
+  4716 passed; then 11500 passed, 0 failed, 105 skipped at `7b96129`,
+  exit 0, 32 min 26 s. The operator's verdict is the merge ordered above:
+  it agrees.
+- **Closed unmerged**: PRs #25, #27, #29 and issues #26, #28, #30, under
+  the operator's login (pre-approval (a)). The trial branches are kept.
