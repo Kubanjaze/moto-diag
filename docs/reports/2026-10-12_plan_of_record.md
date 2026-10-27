@@ -50,6 +50,9 @@ The operator's words:
   - **F226 rides along (K45).** A finished fleet run's temporary files are deleted. That replaces the shrink the disk image no longer gives: it has not been sparse since 2026-10-26.
     - **The operator's words:** "go with your pick, delete each run's temp files".
     - **Why in 392:** 392 already changes the dispatcher.
+  - **F225 and F227 ride along too (K46).** A fleet check that runs past its time limit stops and says so, instead of silently starting over. The fleet service's open-file limit is measured, then set. Either could trip 392's own proof.
+    - **The operator's words:** "yes add both to 392".
+    - **The two numbers are the operator's,** asked at 392's Step 0.
 
 ## Where the ledger stands
 

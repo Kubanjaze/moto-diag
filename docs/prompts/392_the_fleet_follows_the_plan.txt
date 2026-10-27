@@ -34,6 +34,11 @@ The measured facts, taken 2026-10-26 on master at `7a3aeca`. Re-verify each at S
   - `dispatcher.py`: `KEEP_RUNS = 20` (line 121). `prune_runs` (line 961) keeps the newest 20 and every held, paused or unfinished run, and removes the others whole. Nothing removes `run/tmp` when a stage ends.
   - F221 measured about 20 GB a stage, almost all of it pytest's temporary folders.
   - The disk image is no longer sparse (F226), so nothing gives that space back to Windows. C: free since the new image: 465 GB after the import (F226), 428.4 GB at 391's merge (00:14 on 2026-10-27, 391's handoff), 396.4 GB at #14's close-out (09:29:55, 391's log).
+- **The check's time limit and the open-file limit (F225, F227)**, taken 2026-10-27 on master at `aff44c6`:
+  - `dispatcher.py`: `CHECK_TIMEOUT_S = 3600` (line 122). `check_run` (line 990) passes it to `subprocess.run` (line 1008) and catches nothing. `run_stage` catches `LowSpace` and `Stop`, and in a cycle re-raises anything else.
+  - So a run past the limit ends its stage as failed, and the next cycle starts it again from nothing, with nothing said on the issue. That happened in 391's emptied-handoff trial (F225).
+  - `ops/desktop/motodiag-fleet.service` sets no open-file limit, so the service runs at systemd's default: 1024 soft, 1048576 hard (F227, from `/proc/<pid>/limits`). A shell there has 1048576.
+  - In the same trial a test worker raised "Too many open files" and the run ended about 940 tests short. Its 328 tests, run serially under a 1024 limit, passed: not reproduced (F227).
 
 What to build:
 - **Every rank that plans or judges reads the plan of record and docs/decisions.md.** What it writes cites the dated entry or the K-id that bears on the phase.
@@ -54,12 +59,18 @@ What to build:
   - The fleet skill's "Free space" section and F221's method say what replaced the shrink.
   - A known-bad case for each run that must keep its files (held, paused, unfinished), and one for the worker-loss files, each seen red.
   - The proof: C: free and the disk image's size, read before and after at least two stages. If the image still grows with each stage once the files are deleted, that is a stop for me, with the numbers.
+- **F225 and F227 are closed.** My decision, 2026-10-27 (K46): "yes add both to 392". Either could trip this phase's own proof, the fleet running 303 and 348.
+  - **F225:** a model-free run past its limit stops its stage the usual way: said on the issue, its journal ended once, and not started again by the next cycle until I act. The known-bad case is a planted over-limit command.
+  - **F227:** one test worker's peak open files, measured in the fence; the leak, if there is one, found; and an open-file limit set in the unit. The known-bad case is a planted run under a small limit.
+  - **Both numbers are mine:** the open-file limit, and whether one hour stays. Measure first, then ask me at Step 0 (item 4 below).
+  - **Installing the changed unit needs my password**, so that step comes to me as one paste block.
 - **The proof:** after the merge, the fleet starts 303 and 348 from the plan, with no step by me except what the plan says needs me.
 
 At Step 0, stop and give me the options, with what each would ship and your recommendation:
 1. **Where the order lives** so the fleet reads it exactly (a list in the plan of record, a file beside it, or another way), and who keeps it current when I change the order.
 2. **How a new mission's row reaches master,** given that only I can update master. For example: the fleet opens a one-row pull request and I merge it with one click. Or another way.
 3. **Which stops the record may answer,** and how a K-id's scope is matched to a stop.
+4. **The two numbers:** the fleet service's open-file limit, and the model-free run's time limit (3600 s now), each with what was measured.
 
 Any other real fork, the same. Otherwise decide, write the reason in the log, and carry on.
 
@@ -70,6 +81,7 @@ Report, at the end:
 - the check and its fixtures;
 - F223's known-bad case;
 - F226: what is deleted, what is kept, and C: and the image's size before and after;
+- F225 and F227: the two numbers chosen, the known-bad cases, and the limit the installed unit runs with;
 - the next-mission step and its proof;
 - the regression line;
 - verify_phase.sh's result;
