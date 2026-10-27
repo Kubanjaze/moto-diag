@@ -38,7 +38,8 @@ PHASE = "902"
 TITLE = f"Phase {PHASE}: the trial"
 BRANCH = f"phase-{PHASE}-the-trial"
 TRIAL = f"Add row 385.\n\n{fleet_git.TRIAL_MARKER}"
-PLAN = (GOOD / "docs/phases/in_progress/900_implementation.md").read_text()
+# 900's plan, citing K92, the good tree's decision for 902 (plan_check P9, Phase 392).
+PLAN = (GOOD / "docs/phases/in_progress/900_implementation.md").read_text().replace("K90", "K92")
 LINE = ("Regression of record: 1234 passed, 0 failed, 0 skipped, 0 errors at `ccccccc` "
         "(12 min 0 s wall, `python -m pytest -n auto --dist load`, exit 0)")
 TERMS = json.loads((FIX / "scout" / "terms_good.json").read_text())

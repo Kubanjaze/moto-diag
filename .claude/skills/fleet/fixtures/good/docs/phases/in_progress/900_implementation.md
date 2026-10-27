@@ -8,6 +8,12 @@
 
 Add a widget check, as Step 0 (`900_step0.md`) found no such check.
 
+Unblocks: 901, the shop's first screen.
+
+## The plan of record
+
+- The operator's K90 puts this phase in order.
+
 ## Logic
 
 ### 1. The check
