@@ -411,8 +411,10 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: test_phase388_service_contract.py (2, the open-file limit),
 #: test_phase392_open_files.py (2), test_phase390_resume_contract.py (1, the
 #: next mission's kill point). Measured: 11737.
+#: Then +1, bug fix #1 (F227's leak): test_phase392_init_db_closes.py.
+#: Measured: 11738.
 #:
-COLLECTED_TEST_FLOOR = 11737
+COLLECTED_TEST_FLOOR = 11738
 
 
 def _collected_count() -> int:

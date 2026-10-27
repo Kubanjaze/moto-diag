@@ -254,3 +254,42 @@ the same cell; both are asked in one plain-English comment.
   added. The pass of record, `392_mutate.out`: 53/53 red.
 - `COLLECTED_TEST_FLOOR` 11605 → 11737, by a diff of collected ids against
   master at `f1763df`: +132 −0, each file named in the floor's comment.
+
+### Bug fix #1 — 2026-10-27 — `init_db` never closed its connection (F227's leak)
+
+- **Issue.** The second fenced probe (`~/motodiag/p392/fd_fence2`, `f1763df`,
+  a per-test trace and a 2 ms peak sampler inside each worker, the mobile
+  repository bound): one xdist worker (gw16) **ended** the suite holding
+  919 open files, 922 at its peak; another 802. Almost all SQLite handles:
+  `.db` 3308, `.db-wal` 1844, `.db-shm` 376 over the workers' last
+  readings. They built up in `test_phase373_warranty_invoice.py` (+872
+  across workers), `test_phase376_settlement_export.py` (+855) and
+  `test_phase375_deductibles.py` (+783), about 37 a test. Outside the
+  fence the same tests left them too (`test_phase376_settlement_export.py`
+  alone: 37 to 41 a test), and the garbage collector freed them later, so
+  the first trace's workers ended at 56 or fewer.
+- **Root cause.** `src/motodiag/core/database.py` line 202, `init_db`:
+  `with sqlite3.connect(path) as conn:`. sqlite3's own `with` commits or
+  rolls back and never closes. Every CLI command runs `init_db`, so every
+  call left one connection, open until a garbage collection. A recorder of
+  where each unclosed connection was made (`sqlite3.connect` wrapped, every
+  connection still open at each test's end named by the frame that made
+  it) named this line for every one, over the three files and the two the
+  fence's first peaks were in: 260 and 16 (the settlement export file
+  alone), then 605, 84, 24 and 6. `git grep -n 'with sqlite3.connect' --
+  src`: this one line.
+- **Fix.** `with closing(sqlite3.connect(path)) as conn, conn:` (commit or
+  roll back, then close). A change under `src/`, which v1.0 did not plan:
+  in Deviations.
+- **Files.** `src/motodiag/core/database.py`;
+  `tests/test_phase392_init_db_closes.py` (new: every connection `init_db`
+  makes is closed when it returns, the garbage collector held off);
+  `tests/test_phase255B_collected_test_floor.py` (+1, 11738).
+- **Verified.** The test failed first on the unfixed code ("1 of 132
+  connections left open"), then passed. The recorder over the three
+  leaking files after the fix: no connection left open, 123 passed.
+- **Commit.** This entry's commit.
+- **Guard block, kept as it is:** the edit guard refused `cp` of the
+  test back from the scratch folder into `tests/` (it had been set aside
+  so the previous commit carried no part of this fix); written with the
+  Write tool.

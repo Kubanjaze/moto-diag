@@ -4295,7 +4295,7 @@ files; the worker-loss files survive) are in `tests/test_phase392_tmp.py`;
 `392_mutate.py` T1–T8 go red. The disk, before and after two stages, is
 in Phase 392's phase log.
 
-### F227
+### F227 — CLOSED by Phase 392
 
 **A fleet regression lost a worker to the service's 1024 open-file limit; the shell's limit is 1048576, and the run cannot be of record**
 
@@ -4325,6 +4325,21 @@ as Q4.
 What would close it: the peak handle count of one xdist worker measured in
 the fence, the leak (if any) found, and a `LimitNOFILE` in the unit chosen
 by the operator; a planted run under a small limit as the known-bad case.
+
+**Closed by Phase 392.** Measured in the fence (`392_fd_probe.py`): one
+xdist worker's peak was 793 open files on `f1763df`, then 922 in a second
+run, where one worker **ended** the suite holding 919. **The leak, found:**
+`init_db` (`src/motodiag/core/database.py`) opened its connection with
+sqlite3's own `with`, which commits and never closes, so every CLI command
+left a connection (`.db`, `-wal`, `-shm`) for the garbage collector; about
+37 a test in the settlement, warranty and deductible tests. Fixed (392's
+bug fix #1), held by `tests/test_phase392_init_db_closes.py`. **The limit:**
+`LimitNOFILE=1048576` in `ops/desktop/motodiag-fleet.service` (the
+operator's K51), held by `tests/test_phase388_service_contract.py`'s
+`nofile` rule; the planted run under a small limit is
+`tests/test_phase392_open_files.py`. The installed unit's limit takes
+effect when the operator installs it (392's handoff) and is read there
+from `/proc/<pid>/limits`.
 
 ### F228 — CLOSED by Phase 392
 

@@ -1,7 +1,7 @@
 """SQLite database connection and schema management."""
 
 import sqlite3
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 from pathlib import Path
 from typing import Generator
 
@@ -199,7 +199,9 @@ def init_db(db_path: str | None = None, apply_migrations: bool = True) -> None:
     path = db_path or get_db_path()
     Path(path).parent.mkdir(parents=True, exist_ok=True)
 
-    with sqlite3.connect(path) as conn:
+    # Phase 392 (F227): sqlite3's own `with` commits but never closes; every
+    # init_db left this connection's handles to the garbage collector.
+    with closing(sqlite3.connect(path)) as conn, conn:
         conn.executescript(SCHEMA_SQL)
         # Record baseline schema version if not present (BASELINE, not latest)
         cursor = conn.execute("SELECT COUNT(*) FROM schema_version")
