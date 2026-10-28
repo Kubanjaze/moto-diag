@@ -1,0 +1,84 @@
+Do this: start Phase 393, the code itself gets checked (row 393, added to docs/ROADMAP.md as 🔲 with this prompt; mark it 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out.
+- **Its place in the order:** row 3 of "Next, in order", after 303 and before 348 (K54). It is built by a builder session; the fleet waits for it.
+- **The row names the first-shop phases it protects:** 348 and everything after it. Each is built under the checks this phase adds.
+- **Start from master after 303 is merged.**
+- **You are at ~/Projects/moto-diag on the PC.** This phase changes .claude/skills/fleet/, which the push gate's G3 keeps from the fleet, so a builder session builds it.
+
+Why this phase: the rules for how a phase is built, recorded and closed are strong. Nothing checks how the code itself is written. The linter is configured and never run. The type hints are written and never checked. Nobody measures which lines the tests run. The Red Team and the Quartermaster check the plan, the documents and the test results, not the code. Assessment of 2026-10-27: https://claude.ai/artifact/8uRg5xkuDrJEzpnKBqRWgU
+My words, 2026-10-27: "how do i make sure and maintain the quality of code thats been written leading up to this point ?"
+
+The measured facts, taken 2026-10-27 22:28 from a copy of master after K53's row (ruff 0.16.9, mypy 2.3.1, radon 6.0.1). They came from a copy, not this checkout. **Re-measure each one at Step 0 on master after 303 with the tools this phase pins. The baseline is what Step 0 measures, not these numbers.**
+- **The linter is never run.** pyproject.toml selects E, F, I and W. `git grep -l ruff -- .claude tests scripts` finds no file: the push guard, wholetree.sh, regression.sh and the fleet never call it. `ruff check src --statistics`: 1,405 findings (1,093 E501, 192 I001, 94 F401, 16 E402, 8 F541, 2 F841), 294 of them safe automatic fixes.
+- **The type hints are never checked.** 2,558 of 2,720 functions (94%) have return annotations. mypy is not a dependency. `mypy src/motodiag --ignore-missing-imports`: 203 errors (66 return-value, 61 arg-type, 28 index, 15 union-attr, 10 attr-defined, the rest smaller).
+- **One of them is a real bug.** `src/motodiag/reporting/renderers.py` defines `_escape` at line 471 for reportlab's markup (&, <, >). Line 517, `from html import escape as _escape  # noqa: E402`, rebinds the name for the HTML renderer. `PdfReportRenderer.render` (lines 320–459) looks `_escape` up when it runs, so every PDF now goes through `html.escape`, which also turns quotes into `&quot;` and `&#x27;`. Whether reportlab renders those is untested.
+- **Coverage is never measured.** pytest-cov is in the dev extra; `git grep -e '--cov'` finds no caller.
+- **Code nothing reaches**, from `tests/support/integration_gaps_counts.py`: `UNREACHABLE_COUNT = 29` (about 7,066 lines), `MODULE_ISLAND_COUNT = 9`, `ORPHAN_COUNT = 118`. Tracked, and out of scope here.
+- **Money and time helpers are written again and again.** Seven `def _money`: six take cents (reporting/builders.py:72, accounting/export.py:154, inventory/warranty_claims.py:362, cli/shop_finance.py:29, cli/payments.py:38, cli/shop_inventory.py:23) and one takes float dollars (shop/notifications.py:174). They disagree on a missing amount ("—" against "not recorded"). Twelve `def _now` or `def _now_iso`.
+- **Complexity:** 25 functions over McCabe 20 (`ruff check src --select C901` with max-complexity 20). The worst two handle money: `render_claim_packet` (inventory/warranty_claims.py:370, radon 61) and `generate_invoice_for_wo` (shop/invoicing.py:525, radon 60).
+- **Large files:** core/migrations.py 573 KB, cli/shop.py 188 KB, cli/advanced.py 174 KB, cli/hardware.py 150 KB.
+- **Swallowed errors:** 185 `except Exception` in src/. Three are in `src/motodiag/memory/erase.py` (lines 84, 105 and 146), the customer-data erase. The one at line 146 is meant for "table absent" but catches everything. A locked database there means the erase reports success and leaves the customer's guidance questions in place.
+- **The Red Team's brief has no code checklist.** Its diff is refuted against the plan, the decisions and the documents.
+
+What to build:
+- **Pin the tools.** ruff and mypy at exact versions in the dev extra, plus whatever measures changed-line coverage (diff-cover, or your own script if it is smaller). All of them run in the fence with no network.
+- **Clean up first, with no product change:**
+  - Apply ruff's safe automatic fixes across src/, but not to `core/migrations.py` or the `core/migration_*_rows.py` files.
+  - Keep every import another module or a test imports by name. An `__init__.py` re-export stays, written so ruff sees it as intended.
+  - Removing an import can change the integration-gap counts, because an import counts as a reference. Move each pin with its reason in the count's history, the K2 way.
+  - Leave E501 alone. It becomes part of the baseline.
+- **Bug fix #1:** the PDF renderer gets its own escape function under its own name. A test builds a PDF from text holding `"`, `'`, `<`, `>` and `&`, and checks what comes out.
+- **Bug fix #2:** `erase.py`'s three handlers catch only the "no such table" error they were written for. Anything else reaches the caller. A test plants a locked database and sees the erase refuse, not report success.
+- **The baseline:** one pin per count, in `tests/support/quality_counts.py`, the way `integration_gaps_counts.py` holds its counts (one assertion each, every other test imports the constant). The counts:
+  - ruff findings;
+  - mypy errors;
+  - functions over McCabe 20;
+  - files in src/ over 100 KB;
+  - private `_money`-style and `_now`-style helpers;
+  - `except Exception` blocks whose body is only `pass`;
+  - total line coverage from the regression of record.
+- **The ratchet, held by tests that run with every suite:**
+  - A count may not go above its pin.
+  - A count below its pin also fails until the pin is lowered in the same commit, so a gain is locked in.
+  - Coverage works the other way: it may not fall below its pin.
+- **Every pull request, in the Quartermaster, run model-free in the fence:**
+  - Q10, lint and types: no file the PR touches has more ruff findings or mypy errors on the head than on master.
+  - Q11, coverage: lines the PR adds or changes in src/ are at least 85% covered by the full run on the head.
+  - Q12, size: no new or changed function over McCabe 20, and no file in src/ grows past 100 KB. The four files already over it may not grow.
+  - Each one: a failure means refuse, and the verdict names the file and the number. A known-bad fixture for each, seen red.
+- **The Red Team's code checklist.** The brief asks five questions of the diff, and each answer cites file and line:
+  1. Is every new public function reached from the CLI or the API, or listed on the integration-gap allowlist with its reason?
+  2. Does it write a new private money, time or constant helper where one module should own it?
+  3. Does any new handler swallow an error without naming the one it expects?
+  4. Do the new tests check behaviour, or only that some text exists?
+  5. If it touches auth/, payments/, billing/, api/uploads.py or memory/erase.py: what can a caller without the right role or tier now reach?
+  - A "no" with a file and line is a factual defect under K9.
+  - Its known-bad case is a planted diff with a swallowed `except Exception: pass` in payments/.
+- **The weekly page.**
+  - `.claude/skills/fleet/quality_report.py` measures the seven counts on master, model-free. It writes one page: each number, last week's, an arrow, and on the first line which ones went the wrong way two weeks running.
+  - The dispatcher runs it once a week, Monday 08:00 local. It posts the page as a comment on one pinned issue, "Code health, weekly", opened by the fleet's account, and adds one line to the digest.
+  - `quality_report.py --print` prints the page without posting it.
+- **Off this PC.** A GitHub Actions workflow runs on every pull request: the ratchet tests for lint and types, and `roadmap_check.py`. It runs no live-data path and holds no secret. The repository is public, so it costs nothing. If the ratchet tests cannot run there without the live config, say so in the log and run only what can.
+- **Documents:**
+  - CLAUDE.md rule 6 names the ratchet and the weekly page, with a dated change-log entry.
+  - The fleet skill's SKILL.md lists Q10–Q12 and the five questions.
+  - docs/FOLLOWUPS.md gets one finding for the remaining `except Exception` sites and one for consolidating money and time into single modules. Use the finding skill.
+
+The numbers are mine, 2026-10-27 (K54): 85% changed-line coverage, McCabe 20, 100 KB per file, the ratchet as above. If Step 0 measures one that cannot work, stop and tell me with the measurement:
+- the full run with coverage takes longer than 45 minutes, which leaves too little room under K51's 5400 s;
+- fast mode outgrows `FAST_LIMIT_S`. Never loosen the guard;
+- any count moves by more than 10% between two runs of the same commit.
+
+At Step 0, also stop if ruff's automatic fixes touch anything but imports and f-strings.
+
+Out of scope: wiring or deleting unreachable code; consolidating the money and time helpers; splitting the large files; any migration; any change to live. If one turns out to be needed, it is a rule-1 stop.
+
+Report, at the end:
+- the baseline: each count, measured twice, and the pins;
+- what the automatic fixes changed, and the integration-gap pins that moved;
+- bug fixes #1 and #2, with their tests;
+- Q10–Q12 and the five questions, each with its known-bad fixture seen red;
+- the weekly page as `--print` shows it on master;
+- the Actions workflow's first run, link and result;
+- the regression line, with the wall time with and without coverage;
+- verify_phase.sh's result;
+- the next step, my call.
