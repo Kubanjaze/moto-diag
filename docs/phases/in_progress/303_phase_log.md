@@ -36,7 +36,7 @@ Baseline: 11738 collected ids on `5313a5e`, kept at `/fleet/run/ids_before.txt` 
 - **Decision: the mutations reach past the plan's ten.** The plan's ten guards are P1, P2, S1–S3, S4 (the one-reason login), S5, D1, D2 (the tier rule, which breaks one function) and R1. The four K55 requirements are K1–K4 (K4 compares the date text, as K55 asks) and L1–L3. Ten more cover the other promises (S6, D3, D4, R2–R4, C1, and L1–L3's filter and socket).
 - `docs/guide/api.md`: "A staff login" and "An API key" under Authentication; the 401 text, the 401 table row and the tier sentence follow the code. The opening count is corrected to 88 routes over 111 operations (a deviation).
 - `docs/guide/shop-workflow.md` section 0 gains `motodiag user create` before `shop member add`, as run against a fresh database. Without a terminal, getpass printed "Can not control echo" warnings; the guide shows the prompts as a terminal prints them. Everything else is the output verbatim. `tests/test_phase208_docs.py`: 20 passed.
-- **Findings F229 and F230** filed with the `finding` skill (`next_f_number.sh`: F228 here, F181 in the mobile repo, next F229) before any document cited them. `finding_check.py` exit 0.
+- **Findings F229 and F230** filed with the `finding` skill (`next_f_number.sh`: F228 here, F181 in the mobile repo, next F229) before any document cited them. `finding_check.py` exit 0. (Renumbered F231 and F232 on 2026-10-28 after master took F229 and F230; see the last entry.)
 
 ## 2026-10-28: Stopped before the regression of record: a test this session cannot make green
 
@@ -52,3 +52,9 @@ Baseline: 11738 collected ids on `5313a5e`, kept at `/fleet/run/ids_before.txt` 
 Copied verbatim from the comment by Kubanjaze on issue #31:
 
 > My answer to the second stop (a test that cannot be green): option 1, and do not change the standing test. I pushed your three commits through 7cd219c to the branch. I refreshed the phone app's API snapshot (api-schema/openapi.json) from this branch: moto-diag-mobile commit 7489fd5, committed on the PC and not pushed; its generated types are regenerated on the Mac when it is pushed. Put in the handoff's after-the-merge step: push that app commit, then regenerate and push src/api-types.ts, only after 303 merges, because master's server does not serve the login addresses until then. Before the final run: master took F229 and F230 (c608169), so merge master into the branch and renumber your two findings to the next free numbers with the finding skill (the next two free numbers after F230), everywhere they are cited. Then run the final full check and close out.
+
+## 2026-10-28: Master merged; the two findings renumbered F231 and F232
+
+- `git merge origin/master` (`c608169`): one conflict, in `docs/FOLLOWUPS.md`, where master's F229 (reserved, closed) and F230 met this branch's two entries. Master's two are kept as they are.
+- With the `finding` skill's rule (both repositories' files, master's copy for this repository): highest F230 here, F181 in the mobile repository, next free F231. This branch's "no way back from an Engineer's rule-1 stop" is now **F231** and "a migration has no path through the fleet" **F232**; the header reads F232.
+- Cited elsewhere only in `303_implementation.md` (Results of item 10), now F231 and F232. The operator's words above, which name master's F229 and F230, are kept verbatim, as is the earlier entry with a note.
