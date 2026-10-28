@@ -3877,3 +3877,8 @@ Write-up: [`391_implementation.md`](docs/phases/completed/391_implementation.md)
 
 Log: [`docs/phases/completed/392_phase_log.md`](docs/phases/completed/392_phase_log.md).
 Write-up: [`392_implementation.md`](docs/phases/completed/392_implementation.md).
+
+## Phase 303 — Multi-user auth with roles — CLOSED 2026-10-28
+
+Log: [`docs/phases/completed/303_phase_log.md`](docs/phases/completed/303_phase_log.md).
+Write-up: [`303_implementation.md`](docs/phases/completed/303_implementation.md).

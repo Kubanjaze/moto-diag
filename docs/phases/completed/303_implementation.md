@@ -167,20 +167,22 @@ v1.1: all held. No migration, no lockout, no idle timeout, nothing added to `dep
 
 ## Planned items
 
-- [ ] The one stop, first: kind `fork`, the four-part question with the Captain's recommendations and the operator's way back as one paste block; the operator's words land in `docs/phases/in_progress/303_phase_log.md` and the Engineer's second session reads them
-- [ ] `auth/passwords.py`, scrypt from the standard library, the decision logged
-- [ ] `auth/sessions_repo.py` and `ApiKey.kind`, with the row-for-row control
-- [ ] `auth/deps.py`: `resolve_credential`, `resolve_tier`, `AuthedUser.credential_kind`, `request.state.caller`
-- [ ] `api/routes/live.py`: the two calls, `_resolve_tier` removed
-- [ ] `api/middleware.py`: the limiter knows a session
-- [ ] `api/routes/auth.py`, `app.py`, `openapi.py`, `errors.py`
-- [ ] `shop/rbac.py`: `list_member_permissions`
-- [ ] `cli/user.py`, its registration, and the two `apikey` filters
-- [ ] `core/config.py`: `session_lifetime_days`
-- [ ] The operator's four requirements (K55), each with its test: the reset refuses an owner or a member of another shop, the dummy-hash check on both failing paths, no "mds_" in the logs with the socket on the subprotocol only, expiry compared as UTC times at 30 days ± a minute
-- [ ] Tests, the wiring tests, the live-socket tests, the mutation script, the floor
-- [ ] `docs/guide/api.md`, `docs/guide/shop-workflow.md`; the two findings filed
-- [ ] Regression of record, the close-out commit, the handoff with the operator's steps (pull, restart, first user, first login), the merge by the operator's hand, `verify_phase.sh`
+v1.1: all done. The merge and `verify_phase.sh` are the operator's, after the close-out commit.
+
+- [x] The one stop, first: kind `fork`, the four-part question with the Captain's recommendations and the operator's way back as one paste block; the operator's words land in `docs/phases/in_progress/303_phase_log.md` and the Engineer's second session reads them
+- [x] `auth/passwords.py`, scrypt from the standard library, the decision logged
+- [x] `auth/sessions_repo.py` and `ApiKey.kind`, with the row-for-row control
+- [x] `auth/deps.py`: `resolve_credential`, `resolve_tier`, `AuthedUser.credential_kind`, `request.state.caller`
+- [x] `api/routes/live.py`: the two calls, `_resolve_tier` removed
+- [x] `api/middleware.py`: the limiter knows a session
+- [x] `api/routes/auth.py`, `app.py`, `openapi.py`, `errors.py`
+- [x] `shop/rbac.py`: `list_member_permissions`
+- [x] `cli/user.py`, its registration, and the two `apikey` filters
+- [x] `core/config.py`: `session_lifetime_days`
+- [x] The operator's four requirements (K55), each with its test: the reset refuses an owner or a member of another shop, the dummy-hash check on both failing paths, no "mds_" in the logs with the socket on the subprotocol only, expiry compared as UTC times at 30 days ± a minute
+- [x] Tests, the wiring tests, the live-socket tests, the mutation script, the floor
+- [x] `docs/guide/api.md`, `docs/guide/shop-workflow.md`; the two findings filed
+- [x] Regression of record, the close-out commit, the handoff with the operator's steps (pull, restart, first user, first login); the merge by the operator's hand and `verify_phase.sh` follow it, after this document closes
 
 ## Deviations
 
@@ -193,4 +195,15 @@ v1.1: all held. No migration, no lockout, no idle timeout, nothing added to `dep
 - **Allowlists and count pins moved**, which the plan did not list. `motodiag user` is the first caller of `create_user`, `deactivate_user` and `list_users`, so their entries left `tests/support/integration_gaps_allowlist.py`. `ORPHAN_COUNT` went 118 → 115, 244X's own pin 50 → 47, and 244X's known-callerless control lost `create_user`.
 - **`docs/guide/api.md`'s opening count** said 80 routes over 103 operations, one stale before this phase. It now says 88 over 111, as `create_app().openapi()` counts them.
 - **Shared test helpers** in `tests/support/phase303.py`, and 24 mutations where the plan named ten guards (Tests).
+- **Master merged before the regression, and the two findings renumbered.** Master took F229 and F230 (`c608169`) while this branch held its own F229 and F230. As the operator asked, master was merged in (`d0f31ca`) and this branch's two became F231 and F232, the next free numbers by the `finding` skill.
+- **The mobile snapshot was refreshed by the operator**, not in this phase (moto-diag-mobile `7489fd5`, unpushed), after the stop at Gate 11; no test changed. Pushing it and regenerating the app's types wait for the merge (the handoff's steps 3 and 4).
 - **No bug fixes**: nothing committed was found wrong. Two of my own tests were corrected before their first commit (the 244G raw-source guard; the allowlists), as logged.
+
+## Results
+
+- **Built:** items 2 to 10 of Logic, as the "Built:" lines say: staff users with passwords from the CLI, sessions as `mds_` rows of `api_keys`, the seven `/v1/auth/*` operations, one credential and one tier function for every route and the live socket, the owner's reset under `manage_users` and K55's refusals, the redaction filter on uvicorn's loggers, `request.state.caller` for 348. No migration; nothing changed on live.
+- **Tests:** 141 in nine files; the floor 11738 → 11872 (+141 −7, by a diff of collected ids). `ORPHAN_COUNT` 118 → 115.
+- **Mutations:** 24/24 red (`303_mutate.out`).
+- **Stops:** two. The fork at Step 0 (answered: "go with your picks, plus K55"), and Gate 11's mobile snapshot, a test this session could not make green (answered: the operator refreshed the snapshot in the mobile repository, `7489fd5`, and asked for master merged in and the findings renumbered).
+- **Findings:** F231 (an Engineer's rule-1 stop has no way back into the fleet) and F232 (a migration has no path through the fleet).
+- **Regression of record** (inside the fence, after `wholetree.sh --full` 4781 passed): Regression of record: 11767 passed, 0 failed, 105 skipped, 0 errors at `d0f31ca` (34 min 32 s wall, `python -m pytest -n auto --dist load`, exit 0) (run inside the fleet's fence)
