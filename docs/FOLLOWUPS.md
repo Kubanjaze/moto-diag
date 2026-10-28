@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F228** (this file). The
+At the time of writing the highest assigned is **F230** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4394,3 +4394,63 @@ more. #14's round-3 output is kept as
 case (`tests/test_phase392_red_team_c7.py`); `392_mutate.py` R1–R5 go red.
 The live proof is #14's Red Team, re-run once after the merge (the
 operator's step in 392's handoff).
+
+### F229 — CLOSED by PR #15 closing unmerged (K9): what it names never reached master
+
+**Wording the Red Team left open on phase 389A, round 3, filed only on that phase's branch**
+
+Filed 2026-10-27 at 17:13 by the fleet's dispatcher, not by the Red Team
+(Phase 392, F228), on branch `phase-389A-385s-roadmap-row` (commit
+`791765b`, PR #15). Its two rows are wording that the Red Team's round 3
+left open in 389A's v1.1: the real-fork bullet, and section 5 on the
+dispatcher's stage list. That round (run `20261027_171124_red_team_389A`,
+after the operator re-applied `review:open` once 392 had merged) was the
+live proof of F228's fix: it finished, went back on factual defects, and
+the dispatcher filed this finding.
+
+Under K9 a round 3 that goes back means the phase does not ship. PR #15
+was closed unmerged at 22:20 ("Trial wrapped: PR #15 closed unmerged under
+K9 (round 3 of 3).", the comment on #14). 389A's documents never reached
+master (`git ls-tree -r --name-only cde6d0b docs/ | grep -c 389A` prints
+0), so nothing here is left to fix. The full entry stays on the branch and
+in PR #15.
+
+It is on master to reserve the number. Until it was, master's header read
+F228 and `.claude/skills/finding/next_f_number.sh` printed "next free:
+F229", so the number would have gone to a second finding (F230).
+
+### F230
+
+**A finding filed on one branch is invisible to every other branch's numbering, so its number can be given out twice**
+
+Found 2026-10-27 by the advisor session, on F229: the fleet's dispatcher
+filed F229 only on branch `phase-389A-385s-roadmap-row`, PR #15 was closed
+unmerged, and on master at `cde6d0b`
+`.claude/skills/finding/next_f_number.sh` printed "next free: F229".
+
+What is wrong, measured on master at `cde6d0b`:
+- `next_f_number.sh` reads two files in the working tree: this
+  repository's `docs/FOLLOWUPS.md` and the mobile repository's (lines
+  13–14).
+- `.claude/skills/fleet/dispatcher.py` `next_f` (line 1607) reads three:
+  the branch's, `origin/master`'s and the mobile repository's. Since Phase
+  392 the dispatcher files the finding that open wording defects go to on
+  the phase's branch (F228).
+- Neither reads any other branch. So a number filed on a branch that is
+  closed unmerged is given out again (F229), and so is a number filed on a
+  branch not yet merged when another writer allocates one. On 2026-10-27
+  the fleet was working on 303's branch while another session committed
+  to master (`cde6d0b`, 23:06).
+
+What it affects: any F-number given out while a branch holds a finding
+that master does not. The number then names two findings, and a comment
+or pull request that cites it points at both. F229 is reserved on master,
+closed, to end this instance.
+
+What would close it: a number filed on any branch is never given out
+again, whether or not that branch merges, with PR #15's branch (F229
+there, not on master) as the known-bad case. It goes to the next phase
+that changes the fleet's code or the finding skill; none is in the order
+yet. The operator, 2026-10-27: "yes go ahead", to the advisor's
+recommendation to reserve F229 and log this gap so that the fleet's next
+code change fixes it.
