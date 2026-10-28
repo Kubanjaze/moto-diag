@@ -1,6 +1,6 @@
 # HTTP API
 
-80 routes over 103 operations. The iOS app runs on this; so can anything
+88 routes over 111 operations. The iOS app runs on this; so can anything
 else.
 
 ## Start it
@@ -39,8 +39,74 @@ curl -s localhost:8000/v1/version
 
 ## Authentication
 
-Every route except `/healthz`, `/v1/version`, the docs and the public
-share route needs an API key.
+Every route except `/healthz`, `/v1/version`, the docs, the public
+share route and the login needs an API key or a session token.
+
+### A staff login
+
+A person logs in with a username and password and gets a session token
+(`mds_...`). The user is made on the server, then given a role at a shop
+(see [the shop workflow](shop-workflow.md), section 0):
+
+```bash
+motodiag user create --username tess --full-name "Tess Ramirez"
+motodiag shop member add --shop 1 --user 2 --role tech
+```
+
+```bash
+curl -s localhost:8000/v1/auth/login -H "Content-Type: application/json" \
+  -d '{"username": "tess", "password": "...", "client": "shop iPad"}'
+```
+
+```json
+{
+  "token": "mds_...",
+  "expires_at": "2026-11-27T14:02:11+00:00",
+  "user": {"id": 2, "username": "tess", "full_name": "Tess Ramirez", "email": null},
+  "memberships": [
+    {"shop_id": 1, "shop_name": "Bandit Hero Cycles", "role": "tech",
+     "permissions": ["export_report", "read_garage", "read_repair_plan",
+                     "read_session", "run_diagnose", "write_garage",
+                     "write_repair_plan", "write_session"]}
+  ]
+}
+```
+
+The token is in that response and nowhere else; only its hash is
+stored. Send it exactly as a key is sent (`X-API-Key` or `Authorization:
+Bearer`), on every route that takes a key. The live socket takes it only
+as the `bearer.<token>` subprotocol, never in the `api_key` query
+string, because a query string is written to the server's log.
+
+Every failed login is the same 401 (`login-failed`), whether the name is
+unknown, the password wrong, or the user has no password or is
+deactivated. A login counts against the anonymous rate limit.
+
+A session lasts 30 days from login (`MOTODIAG_SESSION_LIFETIME_DAYS`).
+The expiry is worked out from when the session began, never stored, so
+changing the setting moves every open session's expiry at once.
+
+| Route | Does |
+|---|---|
+| `POST /v1/auth/login` | The token, once, with the user's shops, roles and permissions |
+| `GET /v1/auth/me` | The same user and shops, the credential in use and the tier |
+| `POST /v1/auth/logout` | Ends the calling session (204); a key gets 400 `not-a-session` |
+| `GET /v1/auth/sessions` | The caller's open sessions, and which one is this one |
+| `DELETE /v1/auth/sessions/{id}` | Ends one of the caller's own (204); anyone else's is 404 |
+| `POST /v1/auth/password` | Changes the caller's password; ends every other session |
+| `POST /v1/auth/shops/{shop_id}/members/{user_id}/password` | An owner sets a member's password (needs `manage_users`); ends their sessions |
+
+The owner's reset refuses a member who is an owner at any shop, or who
+also belongs to a shop where the caller has no `manage_users`. A staff
+member with no subscription of their own works at the tier of their
+shop owner's subscription.
+
+On the server, `motodiag user list`, `user sessions <user>`, `user
+logout <user>`, `user set-password <user>` and `user deactivate <user>`
+manage the same logins; deactivating a user or setting their password
+ends their sessions.
+
+### An API key
 
 ```bash
 motodiag apikey create --user 1 --name laptop
@@ -57,16 +123,17 @@ curl -s localhost:8000/v1/sessions -H "X-API-Key: mdk_live_..."
 
 Manage them with `motodiag apikey list --user 1`, `apikey show
 <prefix>`, and `apikey revoke <prefix>` — revocation takes effect on the
-next request.
+next request. Sessions are not listed there; `motodiag user sessions`
+lists them.
 
-Without one:
+Without either:
 
 ```json
 {
   "type": "https://motodiag.dev/problems/invalid-api-key",
   "title": "Invalid or missing API key",
   "status": 401,
-  "detail": "valid API key required (X-API-Key header or Authorization: Bearer <key>)",
+  "detail": "valid API key or session token required (X-API-Key header or Authorization: Bearer <key or token>)",
   "request_id": "a01f389d4ebc4b79bf5c2cb76a67b533",
   "instance": "/v1/sessions"
 }
@@ -85,7 +152,7 @@ report.
 
 | Status | Means |
 |---|---|
-| 401 | No key, or a revoked one |
+| 401 | No key or session, a revoked or expired one, or a failed login |
 | 402 | Your tier doesn't include this, or you're out of quota |
 | 403 | Authenticated, but not a member of that shop |
 | 404 | Not found — *or* not yours. The two are deliberately indistinguishable |
@@ -95,7 +162,9 @@ report.
 
 ## Tiers and limits
 
-Your key's tier comes from the owning user's subscription.
+Your key's tier comes from the owning user's subscription. A session's
+comes from the user's own subscription, else the highest of their shop
+owners'.
 
 | Tier | Per minute | Per day |
 |---|---|---|

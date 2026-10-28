@@ -1,0 +1,25 @@
+P1 the constant-time compare: red
+P2 the minimum length: red
+S1 the expiry check: red
+S2 the revoked check: red
+S3 the active-user check: red
+S4 the one-reason login (an inactive user is told so): red
+S5 the mds_ refusal in verify_api_key: red
+S6 the lists and revokes are confined to sessions: red
+D1 the prefix dispatch in resolve_credential: red
+D2 the session branch of resolve_tier (the tier rule): red
+D3 the caller is not left on the request: red
+D4 the limiter's tier is the user's own only: red
+R1 the manage_users gate: red
+R2 the reset leaves the member's sessions open: red
+R3 a password change ends the calling session too: red
+R4 logout takes a key: red
+L1 the socket takes a session from the query string: red
+L2 the redaction filter only on uvicorn.access: red
+L3 the redaction filter replaces nothing: red
+C1 apikey list shows sessions: red
+K1 the reset takes an owner at any shop: red
+K2 the reset takes a member of another shop: red
+K3 an unknown name skips the password check: red
+K4 expiry compared as date text: red
+24/24 red

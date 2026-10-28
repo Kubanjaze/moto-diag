@@ -29,3 +29,11 @@ Baseline: 11738 collected ids on `5313a5e`, kept at `/fleet/run/ids_before.txt` 
 - `tests/test_phase303_wiring.py` first read raw source; 244G's meta-guard refused it, and it now reads `code_of`. My own new test before any commit, so not a bug fix.
 - Floor: +141 −7 by a diff of collected ids, 11738 → 11872.
 - `wholetree.sh` passed, exit 0 (2336 passed, 10 skipped).
+
+## 2026-10-28: Mutations, the guides, the findings
+
+- `303_mutate.py`, 24 mutations after 392's harness: **24/24 red** (`303_mutate.out`). Afterwards `git status` showed `src/` and `tests/` exactly as committed. The edit guard did not block the script: it writes `src/` from a script file, not from a shell redirect.
+- **Decision: the mutations reach past the plan's ten.** The plan's ten guards are P1, P2, S1–S3, S4 (the one-reason login), S5, D1, D2 (the tier rule, which breaks one function) and R1. The four K55 requirements are K1–K4 (K4 compares the date text, as K55 asks) and L1–L3. Ten more cover the other promises (S6, D3, D4, R2–R4, C1, and L1–L3's filter and socket).
+- `docs/guide/api.md`: "A staff login" and "An API key" under Authentication; the 401 text, the 401 table row and the tier sentence follow the code. The opening count is corrected to 88 routes over 111 operations (a deviation).
+- `docs/guide/shop-workflow.md` section 0 gains `motodiag user create` before `shop member add`, as run against a fresh database. Without a terminal, getpass printed "Can not control echo" warnings; the guide shows the prompts as a terminal prints them. Everything else is the output verbatim. `tests/test_phase208_docs.py`: 20 passed.
+- **Findings F229 and F230** filed with the `finding` skill (`next_f_number.sh`: F228 here, F181 in the mobile repo, next F229) before any document cited them. `finding_check.py` exit 0.

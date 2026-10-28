@@ -22,6 +22,21 @@ Registered shop id=1.
 ╰──────────────────────────────────────────────────────────────────────────╯
 ```
 
+Each person who logs in gets a user of their own, with a password. It is
+asked twice and never shown:
+
+```bash
+motodiag user create --username tess --full-name "Tess Ramirez"
+```
+
+```
+Password: 
+Repeat for confirmation: 
+Created user #2 (tess).
+Give them a role at a shop with: motodiag shop member add --shop <shop> --user 2
+--role <owner|tech|service_writer|apprentice>
+```
+
 Mechanics get added as members with roles — `owner`, `tech`,
 `service_writer`, `apprentice` — which is what the permission checks
 key on:
@@ -29,6 +44,14 @@ key on:
 ```bash
 motodiag shop member add --shop 1 --user 2 --role tech
 ```
+
+```
+Added user id=2 as tech of shop 'Bandit Hero Cycles'.
+```
+
+Tess can now log in from the app or any client at `POST /v1/auth/login`
+([the API guide](api.md), "A staff login"). `motodiag user list` shows
+who has a password; `motodiag user deactivate tess` ends her access.
 
 ## 1. The customer
 
