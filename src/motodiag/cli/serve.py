@@ -21,11 +21,58 @@ Phase 175's choice that the app factory be side-effect-free for tests.
 
 from __future__ import annotations
 
+import copy
+import re
 from typing import Optional
 
 import logging
 
 import click
+
+
+# === Phase 303 (K55): a session token never lands in a log ===
+# uvicorn writes the request line with its query string on
+# `uvicorn.access`, and a WebSocket handshake's path with its query string
+# on `uvicorn.error`. The live socket refuses a session in the query
+# string, but the line is written before the route runs, so the filter
+# below is attached to both loggers. It is passed in `log_config` so that
+# every worker, where uvicorn runs its own `dictConfig`, installs it.
+SESSION_TOKEN_RE = re.compile(r"mds_[A-Za-z0-9_\-]*")
+REDACTED = "[session token redacted]"
+
+
+class RedactSessionTokens(logging.Filter):
+    """Replace any ``mds_`` token in a record's message and arguments."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if isinstance(record.msg, str):
+            record.msg = SESSION_TOKEN_RE.sub(REDACTED, record.msg)
+        if isinstance(record.args, tuple):
+            record.args = tuple(
+                SESSION_TOKEN_RE.sub(REDACTED, a) if isinstance(a, str) else a
+                for a in record.args
+            )
+        elif isinstance(record.args, dict):
+            record.args = {
+                k: SESSION_TOKEN_RE.sub(REDACTED, v) if isinstance(v, str) else v
+                for k, v in record.args.items()
+            }
+        return True
+
+
+def uvicorn_log_config() -> dict:
+    """uvicorn's default logging config plus the session-token filter on
+    ``uvicorn.access`` and ``uvicorn.error``."""
+    from uvicorn.config import LOGGING_CONFIG
+
+    config = copy.deepcopy(LOGGING_CONFIG)
+    config.setdefault("filters", {})["redact_session_tokens"] = {
+        "()": f"{__name__}.RedactSessionTokens",
+    }
+    for name in ("uvicorn.access", "uvicorn.error"):
+        logger_config = config["loggers"].setdefault(name, {})
+        logger_config.setdefault("filters", []).append("redact_session_tokens")
+    return config
 
 
 def register_serve(cli_group: click.Group) -> None:
@@ -190,6 +237,7 @@ def register_serve(cli_group: click.Group) -> None:
             port=effective_port,
             reload=reload,
             log_level=effective_level,
+            log_config=uvicorn_log_config(),
             workers=workers if not reload else 1,
             factory=True,
         )

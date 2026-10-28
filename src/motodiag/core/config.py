@@ -248,6 +248,11 @@ class Settings(BaseSettings):
     rate_limit_shop_per_day: int = 10000
     rate_limit_company_per_day: int = 50000
 
+    # Phase 303: a login's session lives this many days from its creation.
+    # The expiry is computed, never stored, so a change moves every open
+    # session's expiry at once.
+    session_lifetime_days: int = 30
+
     @field_validator("max_tokens")
     @classmethod
     def validate_max_tokens(cls, v: int) -> int:

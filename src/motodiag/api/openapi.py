@@ -220,6 +220,17 @@ TAG_CATALOG: list[dict[str, Any]] = [
         ),
     },
     {
+        "name": "auth",
+        "description": (
+            "Phase 303 — staff logins. `POST /auth/login` (public) "
+            "returns a session token once, with the user's shops, roles "
+            "and permissions; the token is sent like an API key. Also "
+            "the caller (`/auth/me`), logout, the caller's sessions, a "
+            "password change, and an owner's password reset for a shop "
+            "member (needs `manage_users`)."
+        ),
+    },
+    {
         "name": "voice-transcripts",
         "description": (
             "Voice symptom capture: upload a voice memo to a work "
@@ -242,6 +253,8 @@ PUBLIC_TAGS = {"meta"}
 # Paths that are explicitly public even if their tag isn't in PUBLIC_TAGS.
 PUBLIC_PATH_PREFIXES = (
     "/v1/billing/webhooks",
+    # Phase 303 — the login itself is what issues a credential.
+    "/v1/auth/login",
     # Phase 200 — customer share links. The token in the path IS the
     # authorization; a bike owner has no account to authenticate with.
     "/v1/share",
@@ -272,7 +285,9 @@ SECURITY_SCHEMES: dict[str, dict] = {
         "description": (
             "Same key as `apiKey`, supplied as `Authorization: "
             "Bearer <key>` instead of the dedicated header. Useful "
-            "for OpenAPI clients that only support HTTP Bearer."
+            "for OpenAPI clients that only support HTTP Bearer. A "
+            "session token (`mds_...`) from `POST /v1/auth/login` is "
+            "accepted here and in `X-API-Key` too."
         ),
     },
 }

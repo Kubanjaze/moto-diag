@@ -57,6 +57,11 @@ class ApiKey(BaseModel):
     created_at: str
     revoked_at: Optional[str] = None
 
+    @property
+    def kind(self) -> str:
+        """Phase 303: a login session is a row of this table too."""
+        return "session" if self.key_prefix.startswith("mds_") else "api_key"
+
 
 # ---------------------------------------------------------------------------
 # Key generation / hashing

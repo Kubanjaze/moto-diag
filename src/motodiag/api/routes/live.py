@@ -31,6 +31,11 @@ in any browser / EventSource-style tool) OR the
 for native WebSocket clients that can't set arbitrary headers). Both
 are accepted; query param wins on conflict.
 
+Phase 303: a login session token (``mds_...``) is accepted through the
+subprotocol only. A query string is written to the server's logs, so a
+query-string value beginning ``mds_`` is refused with 4401, as if no
+credential had been sent (the operator's K55).
+
 ## Client → server messages (JSON)
 
 - ``{"action": "pause"}`` — halt frame stream until ``resume``.
@@ -58,8 +63,8 @@ from typing import Optional
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from motodiag.api.deps import get_db_path
-from motodiag.auth.api_key_repo import verify_api_key
-from motodiag.auth.deps import tier_meets
+from motodiag.auth.deps import resolve_credential, resolve_tier, tier_meets
+from motodiag.auth.sessions_repo import SESSION_PREFIX
 from motodiag.core.session_repo import get_session_for_owner
 
 
@@ -269,6 +274,12 @@ def _extract_ws_key(websocket: WebSocket) -> Optional[str]:
     return None
 
 
+def _session_in_query(websocket: WebSocket) -> bool:
+    """A session token in the query string, which the logs record."""
+    value = websocket.query_params.get("api_key") or ""
+    return value.strip().startswith(SESSION_PREFIX)
+
+
 def _accept_with_subprotocol(
     websocket: WebSocket,
 ) -> Optional[str]:
@@ -307,12 +318,12 @@ async def live_session_ws(
 
     # --- 1. API key ---
     plaintext = _extract_ws_key(websocket)
-    if not plaintext:
+    if not plaintext or _session_in_query(websocket):
         await websocket.close(
             code=WS_CLOSE_INVALID_KEY, reason="missing API key",
         )
         return
-    api_key = verify_api_key(plaintext, db_path=db_path)
+    api_key = resolve_credential(plaintext, db_path=db_path)
     if api_key is None:
         await websocket.close(
             code=WS_CLOSE_INVALID_KEY, reason="invalid API key",
@@ -320,7 +331,7 @@ async def live_session_ws(
         return
 
     # --- 2. Subscription tier ---
-    sub_tier = _resolve_tier(api_key.user_id, db_path=db_path)
+    sub_tier = resolve_tier(api_key, db_path=db_path)
     if not tier_meets(sub_tier, "individual"):
         await websocket.close(
             code=WS_CLOSE_SUBSCRIPTION_REQUIRED,
@@ -452,11 +463,3 @@ def _resolve_db_path(websocket: WebSocket) -> str:
     if override is not None:
         return override()
     return get_db_path()
-
-
-def _resolve_tier(user_id: int, db_path: str) -> Optional[str]:
-    from motodiag.billing.subscription_repo import (
-        get_active_subscription,
-    )
-    sub = get_active_subscription(user_id, db_path=db_path)
-    return sub.tier if sub is not None else None

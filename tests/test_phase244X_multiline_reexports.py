@@ -123,7 +123,8 @@ class TestWhatTheRuleFindsNow:
         "feedback/feedback_repo.py::submit_feedback",
         "advanced/recall_repo.py::load_recalls_from_json",
         "memory/compile.py::compile_all",
-        "auth/users_repo.py::create_user",
+        # auth/users_repo.py::create_user left in Phase 303: `motodiag user
+        # create` calls it.
     ])
     def test_a_name_this_repo_already_knew_was_callerless_is_reported(self, name):
         """Each of these was established as callerless by some other means —
@@ -134,7 +135,7 @@ class TestWhatTheRuleFindsNow:
     def test_the_new_entries_match_the_tree_in_both_directions(self):
         """209B's stale/new tests hold the whole list; this holds the 57."""
         new = {k for k, (_, r) in ORPHANS.items() if "Phase 244X" in r}
-        assert len(new) == 50  # f9-noqa: → 52 (244Y deleted the four recall fns and recalculate_invoice_totals) → 51 (Phase 274 wired transfer_ownership) → 50 (Phase 281 wired get_resolutions_for_bike);: ssot-pin fixture-data: Phase 244X's finding — 57 names only a multi-line re-export ever mentioned, on 2026-09-18. The stale/new tests in test_phase209B_integration_gaps.py hold the tree to the list; this literal is the record.
+        assert len(new) == 47  # f9-noqa: → 52 (244Y deleted the four recall fns and recalculate_invoice_totals) → 51 (Phase 274 wired transfer_ownership) → 50 (Phase 281 wired get_resolutions_for_bike) → 47 (Phase 303 wired create_user, deactivate_user, list_users);: ssot-pin fixture-data: Phase 244X's finding — 57 names only a multi-line re-export ever mentioned, on 2026-09-18. The stale/new tests in test_phase209B_integration_gaps.py hold the tree to the list; this literal is the record.
         assert new <= _live_orphans(), sorted(new - _live_orphans())
 
     @pytest.mark.parametrize("name,entry", sorted(

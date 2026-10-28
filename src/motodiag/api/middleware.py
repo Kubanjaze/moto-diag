@@ -107,11 +107,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         return False
 
     async def _try_resolve_api_key(self, request: Request):
-        """Best-effort API key resolution. Doesn't 401 here — that's
-        the route's ``require_api_key`` dep's job."""
-        from motodiag.auth.api_key_repo import verify_api_key
+        """Best-effort API key or session resolution. Doesn't 401 here —
+        that's the route's ``require_api_key`` dep's job."""
         from motodiag.auth.deps import (
-            _extract_key_from_headers, API_KEY_HEADER,
+            _extract_key_from_headers, API_KEY_HEADER, resolve_credential,
         )
         header = request.headers.get(API_KEY_HEADER)
         authz = request.headers.get("Authorization")
@@ -127,7 +126,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 app = request.app
                 override = app.dependency_overrides.get(get_db_path)
                 db_path = override() if override else get_db_path()
-            return verify_api_key(plaintext, db_path=db_path)
+            return resolve_credential(plaintext, db_path=db_path)
         except Exception as e:
             logger.warning(
                 "rate-limit api key resolve failed: %s", e,
@@ -135,10 +134,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return None
 
     async def _caller_tier(self, request: Request) -> tuple[str, str]:
-        """Return (caller_key, tier)."""
-        from motodiag.billing.subscription_repo import (
-            get_active_subscription,
-        )
+        """Return (caller_key, tier). A credentialed caller whose
+        :func:`~motodiag.auth.deps.resolve_tier` is None is
+        ``'individual'``."""
+        from motodiag.auth.deps import resolve_tier
         key = await self._try_resolve_api_key(request)
         if key is None:
             ip = request.client.host if request.client else "unknown"
@@ -154,13 +153,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 app = request.app
                 override = app.dependency_overrides.get(get_db_path)
                 db_path = override() if override else get_db_path()
-            sub = get_active_subscription(
-                key.user_id, db_path=db_path,
-            )
+            tier = resolve_tier(key, db_path=db_path)
         except Exception:
-            sub = None
-        tier = sub.tier if sub is not None else "individual"
-        return f"key:{key.id}", tier
+            tier = None
+        return f"key:{key.id}", tier or "individual"
 
     async def dispatch(self, request: Request, call_next):
         if self._is_exempt(request.url.path):

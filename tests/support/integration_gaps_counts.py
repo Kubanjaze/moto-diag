@@ -60,5 +60,7 @@ MODULE_ISLAND_COUNT = 9
 #: `advanced recall list --bike` calls get_resolutions_for_bike) → 119 (Phase
 #: 380: update_known_issue_by_key, substrate for the content batch's
 #: migrations, and unassigned_models, test-infra for the 3A pin) → 118 (Phase
-#: 381: migration 086's content_086 calls update_known_issue_by_key).
-ORPHAN_COUNT = 118
+#: 381: migration 086's content_086 calls update_known_issue_by_key) → 115
+#: (Phase 303: `motodiag user` calls create_user, deactivate_user and
+#: list_users).
+ORPHAN_COUNT = 115
