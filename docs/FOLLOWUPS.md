@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F232** (this file). The
+At the time of writing the highest assigned is **F233** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4494,3 +4494,14 @@ operator's answer, part (a)). What would close it: a fleet deploy stage, or
 a stop kind that pauses the build at K18's point and resumes it after the
 operator's dry run and apply; a plan-of-record change, the operator's under
 K43 rule 4, naming the first-shop phase it unblocks.
+
+### F233
+
+**Wording the Red Team left open on phase 303, round 3**
+
+Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 392, F228). K9: "after round 3, remaining wording defects go to one finding". The rows, from the refute table in the Red Team's round 3 on phase 303:
+
+- The handoff lists what the user command shipped: "`motodiag user create / list / set-password /" (docs/handoffs/2026-10-28_303_closed.md p. 14)
+- The first stop was the fork at Step 0: "The fork at Step 0" (docs/phases/completed/303_implementation.md p. 208)
+
+What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).
