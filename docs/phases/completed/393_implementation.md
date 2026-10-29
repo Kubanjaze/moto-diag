@@ -1,6 +1,6 @@
 # Phase 393 — The code itself gets checked
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-29
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-29 (v1.0 `a9f1212`)
 
 ---
 
@@ -182,6 +182,10 @@ not ✅.
   holds no secret.
 - **A live-database change:** none; nothing here reads live.
 
+**As built:** no stop was reached. The fenced run with coverage measured
+35 min 33 s at Step 0; fast mode 64.6 s with the ratchet in it; the counts
+held twice on one commit.
+
 ## Tests
 
 - `tests/test_phase393_quality_ratchet.py`: the seven counts against their
@@ -215,19 +219,130 @@ not ✅.
 
 ## Planned items
 
-- [ ] the pins and the fleet venv
-- [ ] the safe fixes, and the integration-gap pins
-- [ ] bug fix #1 and bug fix #2
-- [ ] `scripts/code_quality.py`, the baseline and the ratchet
-- [ ] the coverage gate in `regression.sh`
-- [ ] Q10–Q12
-- [ ] the Red Team's five questions
-- [ ] the weekly page and its stage
-- [ ] the Actions workflow
-- [ ] the documents and the two findings
+- [x] the pins and the fleet venv (`a0bcabc`; the fleet's venv by hand, Step 0)
+- [x] the safe fixes, and the integration-gap pins (`a0bcabc`)
+- [x] bug fix #1 (`b0327b2`) and bug fix #2 (`f2149cb`)
+- [x] `scripts/code_quality.py`, the baseline and the ratchet (`a0bcabc`, `68aa0e2`, `251a94b`)
+- [x] the coverage gate in `regression.sh` (`68aa0e2`)
+- [x] Q10–Q12 (`68aa0e2`)
+- [x] the Red Team's five questions (`68aa0e2`)
+- [x] the weekly page and its stage (`68aa0e2`)
+- [x] the Actions workflow (`68aa0e2`; its first run passed)
+- [x] the documents and the two findings (F234, F235 at `a9f1212`; the rest at `68aa0e2`)
+
+## Deviations
+
+1. **mypy without site-packages.** The prompt measured
+   `mypy src/motodiag --ignore-missing-imports` (203 errors on its copy).
+   With this venv's site-packages that command gives 284; the count moves
+   with whatever libraries are installed, so this desktop, the fence and
+   GitHub's runner would disagree. `[tool.mypy]` sets `no_site_packages`:
+   204 at Step 0, the same everywhere (proven by the Actions run).
+2. **Five files over 100 KB, not four.** `core/migration_086_rows.py`
+   (165967 bytes) is over it too. Q12 holds all five alike. 100 KB is
+   100,000 bytes, the prompt's own KB (572812 bytes was its "573 KB").
+3. **The five questions are worded so "no" is the defect.** The prompt's
+   2, 3 and 5 ask whether a defect is present ("Does it write a new private
+   … helper"), while it says "A 'no' with a file and line is a factual
+   defect". Each is reworded to ask whether the code is sound, keeping the
+   prompt's subject (`red_team.QUESTIONS`).
+4. **The weekly page's coverage is the regression of record's.** A full run
+   is about 35 minutes in the fence; the page reads the newest "Line
+   coverage of record" line in a phase log on master and names its commit,
+   rather than running the suite each Monday.
+5. **The first page is the first Monday after the stage comes up**
+   (`quality_since`, as `quartermaster_since`): Monday 2026-11-02 once the
+   service runs this code. The older dispatcher tests' clock crossed a
+   Monday 08:00, and the stage must not fire for a week before it existed.
+6. **The coverage pin is 87.5, and a rise is said, not failed.** The
+   counts' ratchet fails a fall below the pin until the pin moves;
+   coverage's only rule in the prompt is "it may not fall below its pin".
+   The pin is code, so it is set before the regression of record and is
+   Step 0's 87.597% cut to one decimal (`251a94b`). A total 0.5 points or
+   more above it prints "raise COVERAGE_PERCENT to lock it in".
+7. **Changed-line coverage is `code_quality.changed_coverage`**, not
+   diff-cover: the diff's hunks against coverage's JSON. A changed file the
+   JSON does not hold counts as missed.
+8. **Q10 uses the base's rules and the base's script.** The prompt names
+   the comparison; a pull request that changes `pyproject.toml` or
+   `code_quality.py` could otherwise loosen what checks it. The base's
+   `src/` is unpacked with `git archive`.
+9. **Bug fix #1 had no effect a reader could see** (Step 0, S0-7): pypdf
+   reads the five characters back exactly from a PDF built on master. The
+   fix stands for the function; its behaviour test passes before and after,
+   and the tests that fail on the old code are the function's (the spy and
+   the name).
+10. **Bug fix #2's locked table is planted at the statement**, by a
+    connection wrapper raising SQLite's "database table is locked" error.
+    A real second connection's lock makes the first, unhandled statement
+    raise before any handler is reached (WAL lets readers through, and the
+    memory delete takes the write lock first), so it cannot reach the
+    three handlers. The control is real: both tables dropped.
+11. **The integration-gap orphan pin moved 115 → 124.** Nine shop functions
+    whose only reference was an unused import in `cli/shop.py`; listed as
+    unwired-feature with the reason, not re-imported.
+12. **Existing tests changed:** the Red Team's stand-in replies carry the
+    checklist (`red_json`, `support/phase393.ALL_YES`) in 389, 390, 392 and
+    394's files; 392's replay of #14's real round 3 adds it (that round
+    predates the checklist); 391's two Quartermaster tests count the code
+    check's command and stand in passing Q10–Q12; 388's pause test marks its
+    crossed Monday done; 256's chokepoint test moves three line numbers up
+    one (the import clean-up).
+13. **The helper count is three exact names** (`_money`, `_now`, `_now_iso`),
+    the prompt's own; the Red Team's scan reads a wider pattern for new ones
+    (`_cents`, `_dollars`, `_utcnow`, `_fmt_money`).
+14. **A failed weekly measure is tried again after an hour**, not every
+    five-minute cycle.
+15. **In the Actions run `roadmap_check` runs without the mobile repository**
+    (its half of R2, R3 and R5 is not run there); the ratchet runs whole.
+16. **A third bug fix** (the phase log): this phase's own test reached
+    GitHub through `yeoman.facts`; found by the fence, which has no `gh`.
+
+## Results
+
+- **The baseline**, each count measured twice on `a38a36b` (Step 0, S0-6
+  and S0-8), and the pins after the clean-up and the bug fixes:
+
+  | count | Step 0, twice | pin |
+  |---|---|---|
+  | ruff findings | 1409, 1409 | 1108 |
+  | mypy errors | 204, 204 | 202 |
+  | functions over McCabe 20 | 25, 25 | 25 |
+  | files in `src/` over 100 KB | 5, 5 | 5 |
+  | private `_money`/`_now`/`_now_iso` | 19, 19 | 19 |
+  | `except Exception: pass` | 25, 25 | 22 |
+  | line coverage, fenced | 87.597%, 87.597% | 87.5 |
+
+- **The safe fixes** (`a0bcabc`): 297 fixed in 182 files, import order,
+  unused imports and f-strings with no placeholder; mypy unchanged. The full
+  suite outside the fence on that tree: 11862 passed, 4 failed (F216's
+  four), 33 skipped. ORPHAN_COUNT 115 → 124.
+- **Bug fix #1** (`b0327b2`) and **#2** (`f2149cb`):
+  `tests/test_phase393_bug_fixes.py`, 12 tests, 8 red on the old code.
+  **Bug fix #3** (`0029289`): this phase's own digest test ran the real
+  `gh`; the first fenced regression run's `wholetree.sh --full` caught it.
+- **Q10–Q12** and the **five questions**, each with its known-bad case
+  seen red: `tests/test_phase393_code_checks.py` (17),
+  `tests/test_phase393_red_team_code.py` (14); `393_mutate.py`: 31/31 red.
+- **The weekly page**: `tests/test_phase393_quality_report.py` (14);
+  `quality_report.py --print` on master is in the handoff.
+- **The Actions workflow's first run**:
+  https://github.com/Kubanjaze/moto-diag/actions/runs/40962596948, success:
+  the ratchet 25 passed, `roadmap_check` ok.
+- **Fast mode** after the ratchet joined it: 79 files, 64.6 s, against
+  `FAST_LIMIT_S` 285 s.
+- **The regression of record** (the phase log carries its skip lines):
+  "Regression of record: 11882 passed, 0 failed, 105 skipped, 0 errors at
+  `0029289` (34 min 26 s wall, `python -m pytest -n auto --dist load
+  --cov=motodiag`, exit 0) (run inside the fleet's fence)", after
+  `wholetree.sh --full` (4911 passed, 36 skipped, 16 min 20 s). "Line
+  coverage of record: 87.62% at `0029289` (the pin is 87.50%)". Without
+  coverage, the same suite in the fence: 303's 35 min 1 s at `42f8651`,
+  and this commit's in the phase log.
 
 ## Version history
 
 | version | date | what |
 |---|---|---|
-| 1.0 | 2026-10-29 | the plan |
+| 1.0 | 2026-10-29 | the plan (`a9f1212`) |
+| 1.1 | 2026-10-29 | built: Deviations and Results |
