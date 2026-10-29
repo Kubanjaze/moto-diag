@@ -337,8 +337,8 @@ held twice on one commit.
   --cov=motodiag`, exit 0) (run inside the fleet's fence)", after
   `wholetree.sh --full` (4911 passed, 36 skipped, 16 min 20 s). "Line
   coverage of record: 87.62% at `0029289` (the pin is 87.50%)". Without
-  coverage, the same suite in the fence: 303's 35 min 1 s at `42f8651`,
-  and this commit's in the phase log.
+  coverage, the same suite on the same commit in the fence: 11882 passed,
+  105 skipped, 35 min 11 s. Coverage costs no measurable time.
 
 ## Version history
 

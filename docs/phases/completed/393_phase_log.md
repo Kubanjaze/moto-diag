@@ -274,3 +274,12 @@ With coverage: 34 min 26 s for the suite. Coverage 87.62%, 0.12 points over the 
 No refute pass ran.
 - v1.1, the ROADMAP row (✅, 76 words by `roadmap_words.py`), the history
   row in `implementation.md`, the files moved to `completed/`, the handoff.
+
+## 2026-10-29 — the wall time without coverage
+
+`393_fenced_measure.py ~/motodiag/p393/state 0029289 nocov nocovR`: the same
+suite on the same commit in the fence, `python -m pytest -n auto --dist
+load -rA` with no `--cov` (`~/motodiag/p393/state/runs/20261029_191605_check`):
+"11882 passed, 105 skipped", 35 min 11 s wall, exit 0. With coverage (the
+regression of record): 34 min 26 s. Coverage costs no measurable time here;
+the two differ by less than run-to-run noise.
