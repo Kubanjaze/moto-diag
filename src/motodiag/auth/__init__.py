@@ -9,16 +9,6 @@ authentication wiring happens when Track H adds the API and Stripe billing.
 System user (id=1) owns all pre-retrofit rows via migration 005 defaults.
 """
 
-from motodiag.auth.models import (
-    User, Role, Permission,
-    UserRole, RolePermission,
-    RoleName, PermissionName,
-)
-from motodiag.auth.users_repo import (
-    create_user, get_user, get_user_by_username, list_users,
-    update_user, deactivate_user, get_system_user, count_users,
-)
-
 # Phase 176 additions: API keys, rate limiting, FastAPI deps
 from motodiag.auth.api_key_repo import (
     ApiKey,
@@ -34,13 +24,33 @@ from motodiag.auth.api_key_repo import (
     revoke_api_key,
     verify_api_key,
 )
+from motodiag.auth.models import (
+    Permission,
+    PermissionName,
+    Role,
+    RoleName,
+    RolePermission,
+    User,
+    UserRole,
+)
 from motodiag.auth.rate_limiter import (
+    RateLimiter,
     RateLimitExceededError,
     RateLimitState,
-    RateLimiter,
     get_rate_limiter,
     reset_rate_limiter,
 )
+from motodiag.auth.users_repo import (
+    count_users,
+    create_user,
+    deactivate_user,
+    get_system_user,
+    get_user,
+    get_user_by_username,
+    list_users,
+    update_user,
+)
+
 # Phase 209: `motodiag.auth.deps` imports FastAPI, which lives in the
 # `api` extra — deliberately, because the CLI is meant to install
 # without a web framework. Importing it here made that impossible:

@@ -54,8 +54,8 @@ from motodiag.hardware.connection import (
     RetryPolicy,
 )
 from motodiag.hardware.ecu_detect import AutoDetector, NoECUDetectedError
-from motodiag.hardware.protocols.exceptions import ProtocolError
 from motodiag.hardware.protocols.exceptions import (
+    ProtocolError,
     UnsupportedCommandError,
 )
 from motodiag.hardware.scenarios import BUILTIN_NAMES
@@ -66,7 +66,6 @@ from motodiag.hardware.sensors import (
     parse_pid_list,
 )
 from motodiag.hardware.simulator import (
-    RecordingSupportUnavailable,
     Scenario,
     ScenarioLoader,
     ScenarioParseError,
@@ -75,7 +74,6 @@ from motodiag.hardware.simulator import (
     SimulationClock,
 )
 from motodiag.knowledge.dtc_lookup import resolve_dtc_info
-
 
 # --- Phase 141 stream defaults ----------------------------------------
 #
@@ -889,6 +887,8 @@ def _require_textual() -> None:
     """
     from motodiag.hardware.dashboard import (
         TEXTUAL_AVAILABLE,
+    )
+    from motodiag.hardware.dashboard import (
         _require_textual as _inner_require,
     )
 
@@ -2397,6 +2397,7 @@ def register_compat(hardware_group: click.Group) -> None:
     - ``compat note add`` / ``compat note list`` — mechanic notes layer.
     """
     import json as _json
+
     from motodiag.hardware import compat_loader as _cl
     from motodiag.hardware import compat_repo as _cr
 
@@ -3319,8 +3320,8 @@ def _diagnose_step3_protocol(
             if bike and importlib.util.find_spec(
                 "motodiag.hardware.compat_repo"
             ) is not None:
-                from motodiag.hardware import compat_repo as _cr
                 from motodiag.cli.diagnose import _resolve_bike_slug
+                from motodiag.hardware import compat_repo as _cr
                 vehicle = _resolve_bike_slug(bike)
                 if vehicle is not None:
                     resolved_make = (

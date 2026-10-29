@@ -34,20 +34,25 @@ from motodiag.accounting import tax as tax_mod
 from motodiag.accounting.invoice_repo import (
     add_line_item,
     create_invoice,
-    get_invoice as _get_invoice_row,
     get_line_items,
+)
+from motodiag.accounting.invoice_repo import (
+    get_invoice as _get_invoice_row,
+)
+from motodiag.accounting.invoice_repo import (
     update_invoice as _update_invoice,
 )
 from motodiag.accounting.models import (
     Invoice,
     InvoiceLineItem,
     InvoiceLineItemType,
+)
+from motodiag.accounting.models import (
     InvoiceStatus as _AccountingInvoiceStatus,
 )
 from motodiag.core.database import get_connection
 from motodiag.core.timestamps import local_day, utc_cutoff
 from motodiag.shop.work_order_repo import require_work_order
-
 
 logger = logging.getLogger(__name__)
 

@@ -24,6 +24,7 @@ Cross-Commit-1 dependencies (created by Builder-A):
 
 from __future__ import annotations
 
+import json
 import logging
 import tempfile
 from pathlib import Path
@@ -34,13 +35,11 @@ from motodiag.core.config import get_settings
 from motodiag.core.models import VideoAnalysisState
 from motodiag.media import ffmpeg as ffmpeg_module
 from motodiag.media.paths import resolve_media_path
-import json
-
-from motodiag.media.vision_types import VehicleContext
 from motodiag.media.vision_analysis_pipeline import (
     VisionAnalyzer,
     VisionPipelineError,
 )
+from motodiag.media.vision_types import VehicleContext
 
 _log = logging.getLogger(__name__)
 

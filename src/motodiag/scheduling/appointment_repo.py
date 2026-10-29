@@ -5,7 +5,9 @@ from typing import Optional
 
 from motodiag.core.database import get_connection
 from motodiag.scheduling.models import (
-    Appointment, AppointmentType, AppointmentStatus,
+    Appointment,
+    AppointmentStatus,
+    AppointmentType,
 )
 
 

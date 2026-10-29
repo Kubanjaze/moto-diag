@@ -35,21 +35,24 @@ from datetime import datetime, timezone
 from typing import Any, Literal, Optional
 
 from motodiag.core.database import get_connection
-from motodiag.core.timestamps import local_display
 from motodiag.core.session_repo import (
-    SessionOwnershipError, get_session_for_owner,
+    SessionOwnershipError,
+    get_session_for_owner,
 )
+from motodiag.core.timestamps import local_display
 from motodiag.core.video_repo import list_session_videos
-from motodiag.knowledge.dtc_repo import get_dtc, get_dtcs
+from motodiag.knowledge.dtc_repo import get_dtcs
 from motodiag.shop.invoicing import (
-    InvoiceNotFoundError, get_invoice_with_items,
+    InvoiceNotFoundError,
+    get_invoice_with_items,
 )
 from motodiag.shop.issue_repo import list_issues
 from motodiag.shop.parts_needs import list_parts_for_wo
-from motodiag.shop.rbac import PermissionDenied, has_shop_permission
+from motodiag.shop.rbac import PermissionDenied
 from motodiag.shop.shop_repo import get_shop
 from motodiag.shop.work_order_repo import (
-    WorkOrderNotFoundError, get_work_order,
+    WorkOrderNotFoundError,
+    get_work_order,
 )
 
 

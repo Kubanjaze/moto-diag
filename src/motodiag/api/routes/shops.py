@@ -12,7 +12,6 @@ from fastapi import APIRouter, Depends
 from motodiag.api.deps import get_db_path
 from motodiag.shop.shop_repo import ShopNotFoundError, get_shop
 
-
 router = APIRouter(tags=["shops"])
 
 

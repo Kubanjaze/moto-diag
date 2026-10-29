@@ -31,10 +31,15 @@ push = [
 ]
 dev = [
     "pytest>=8.0",
-    "pytest-cov>=5.0",
+    # Phase 393 (K54): the code's own checks, pinned exactly, because each
+    # count is pinned in tests/support/quality_counts.py and a new version
+    # of a tool moves its count. regression.sh measures coverage.
+    "pytest-cov==7.1.0",
+    "coverage==7.14.1",
     # Phase 355: the regression of record runs in parallel (`-n auto`).
     "pytest-xdist>=3.6",
-    "ruff>=0.4",
+    "ruff==0.16.9",
+    "mypy==2.3.1",
     # Phase 191C: F9 mock-vs-runtime-drift pattern lint via
     # scripts/check_f9_patterns.py wired through .pre-commit-config.yaml.
     # Architect-side opt-in via `pre-commit install`.
@@ -139,6 +144,22 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W"]
+
+# Phase 393 (K54): "McCabe 20". Read only when C901 is selected on purpose
+# (scripts/code_quality.py, which also passes the limit itself).
+[tool.ruff.lint.mccabe]
+max-complexity = 20
+
+# Phase 393: the type count. No site-packages, so every third-party import is
+# `Any` and the count is the same in this venv, the fleet's fence and GitHub's
+# runner (Step 0, S0-3: 284 errors with site-packages, 204 without).
+[tool.mypy]
+python_version = "3.14"
+ignore_missing_imports = true
+no_site_packages = true
+
+[tool.coverage.run]
+source = ["motodiag"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

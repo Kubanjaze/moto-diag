@@ -11,7 +11,6 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 SourceTier = Literal["oem", "aftermarket", "used", "superseded"]
 TierPreference = Literal["oem", "aftermarket", "used", "balanced"]
 Availability = Literal["in_stock", "3-5_days", "backorder", "discontinued"]

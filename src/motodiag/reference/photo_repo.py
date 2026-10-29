@@ -6,7 +6,7 @@ Phase 117: CRUD for failure-mode photographic library.
 from typing import Optional
 
 from motodiag.core.database import get_connection
-from motodiag.reference.models import FailurePhoto, FailureCategory
+from motodiag.reference.models import FailureCategory, FailurePhoto
 
 
 def add_photo(photo: FailurePhoto, db_path: str | None = None) -> int:

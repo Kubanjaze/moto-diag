@@ -30,7 +30,6 @@ from __future__ import annotations
 import click
 from click.shell_completion import CompletionItem
 
-
 # Maximum number of suggestions returned per tab-press.
 # Tab-completion UIs typically page beyond this; keeping the cap small
 # preserves responsiveness on large garages / DTC tables.

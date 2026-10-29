@@ -32,8 +32,8 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from motodiag.core.database import get_connection
-from motodiag.knowledge.issues_repo import row_to_issue_dict
 from motodiag.core.severity import SEVERITY_RANK_SQL
+from motodiag.knowledge.issues_repo import row_to_issue_dict
 
 #: Absolute floor for a fuzzy match. Below this, nothing is proposed at all.
 FUZZY_FLOOR = 0.78

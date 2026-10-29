@@ -37,7 +37,6 @@ from __future__ import annotations
 import bisect
 import json
 import os
-import sqlite3
 import threading
 import time
 import uuid
@@ -47,7 +46,6 @@ from pathlib import Path
 from typing import Any, Iterable, Iterator, Optional
 
 from motodiag.core.database import get_connection, get_db_path
-
 
 # ---------------------------------------------------------------------------
 # Constants

@@ -9,9 +9,11 @@ from typing import Optional
 
 from motodiag.core.database import get_connection
 from motodiag.feedback.models import (
-    DiagnosticFeedback, SessionOverride, FeedbackOutcome, OverrideField,
+    DiagnosticFeedback,
+    FeedbackOutcome,
+    OverrideField,
+    SessionOverride,
 )
-
 
 # --- DiagnosticFeedback ---
 

@@ -49,8 +49,8 @@ from motodiag.workflows import (
     get_checklist_items,
     get_template_by_slug,
     list_templates,
+    run_repo,
 )
-from motodiag.workflows import run_repo
 from motodiag.workflows.runner import checklist_workflow
 
 

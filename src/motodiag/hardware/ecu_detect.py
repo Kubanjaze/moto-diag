@@ -57,7 +57,6 @@ from typing import Any, Callable, List, Optional, Tuple
 from motodiag.hardware.protocols.base import ProtocolAdapter
 from motodiag.hardware.protocols.exceptions import ProtocolError
 
-
 logger = logging.getLogger(__name__)
 
 

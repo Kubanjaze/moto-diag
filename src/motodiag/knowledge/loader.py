@@ -3,11 +3,11 @@
 import json
 from pathlib import Path
 
+from motodiag.core.models import DTCCategory, DTCCode, Severity, SymptomCategory
 from motodiag.core.timestamps import utc_now
-from motodiag.core.models import DTCCategory, DTCCode, SymptomCategory, Severity
 from motodiag.knowledge.dtc_repo import add_dtc
-from motodiag.knowledge.symptom_repo import add_symptom
 from motodiag.knowledge.issues_repo import add_known_issue
+from motodiag.knowledge.symptom_repo import add_symptom
 
 
 def backfill_row_applicability(conn) -> int:

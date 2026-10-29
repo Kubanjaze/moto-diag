@@ -25,10 +25,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any, Optional
+from typing import Optional
 
 from motodiag.core.config import get_settings
-
 
 # ---------------------------------------------------------------------------
 # Model alias + pricing tables
@@ -218,7 +217,8 @@ class ShopAIClient:
         cache_key: Optional[str] = None
         if cache_kind and cache_payload is not None:
             from motodiag.engine.cache import (
-                _make_cache_key, get_cached_response,
+                _make_cache_key,
+                get_cached_response,
             )
             cache_key = _make_cache_key(cache_kind, cache_payload)
             cached = get_cached_response(cache_key, db_path=db_path)

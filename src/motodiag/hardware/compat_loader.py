@@ -25,14 +25,13 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 from motodiag.hardware.compat_repo import (
     add_adapter,
     add_compat_note,
     add_compatibility,
 )
-
 
 DEFAULT_DATA_DIR: Path = Path(__file__).parent / "compat_data"
 

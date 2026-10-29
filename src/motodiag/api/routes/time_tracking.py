@@ -34,8 +34,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
 from motodiag.api.deps import get_db_path
-from motodiag.auth.deps import AuthedUser, get_current_user, require_tier
 from motodiag.api.routes.shop_mgmt import require_shop_access
+from motodiag.auth.deps import AuthedUser, get_current_user, require_tier
 from motodiag.shop.time_entries import (
     adjust_entry,
     clock_in,

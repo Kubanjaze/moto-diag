@@ -54,10 +54,11 @@ from typing import Dict, List, Optional
 from motodiag.hardware.protocols.base import ProtocolAdapter
 from motodiag.hardware.protocols.exceptions import (
     ConnectionError,
-    TimeoutError as ProtocolTimeoutError,
     UnsupportedCommandError,
 )
-
+from motodiag.hardware.protocols.exceptions import (
+    TimeoutError as ProtocolTimeoutError,
+)
 
 # Default happy-path state. Chosen to mirror a realistic 2011+ Harley
 # with a coolant-sensor fault (P0115) and a random misfire (P0300) —

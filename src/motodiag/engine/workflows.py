@@ -6,8 +6,8 @@ diagnosis step by step until a confident conclusion is reached.
 """
 
 from datetime import datetime, timezone
-from typing import Optional
 from enum import Enum
+from typing import Optional
 
 from pydantic import BaseModel, Field
 

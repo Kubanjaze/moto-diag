@@ -57,7 +57,6 @@ from motodiag.shop.transcript_repo import (
     update_whisper_result,
 )
 
-
 _log = logging.getLogger(__name__)
 
 

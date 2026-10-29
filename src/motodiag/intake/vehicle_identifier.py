@@ -29,7 +29,6 @@ from motodiag.intake.models import (
     VehicleGuess,
 )
 
-
 # --- Constants (easily tuned; future Track T 343 moves to DB config) ---
 
 # Phase 191D: import-from-SSOT instead of literal pin (F9 subspecies (ii)

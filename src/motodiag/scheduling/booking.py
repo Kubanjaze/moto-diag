@@ -26,7 +26,9 @@ from motodiag.core.database import get_connection
 from motodiag.core.timestamps import utc_now
 from motodiag.crm import communication_repo
 from motodiag.scheduling.appointment_repo import (
-    create_appointment, get_appointment, update_appointment,
+    create_appointment,
+    get_appointment,
+    update_appointment,
 )
 from motodiag.scheduling.models import Appointment, AppointmentType
 
@@ -506,7 +508,9 @@ def check_in(appt_id: int, work_order_id: Optional[int] = None,
     """
     from motodiag.shop.intake_repo import get_intake
     from motodiag.shop.work_order_repo import (
-        TERMINAL_STATUSES, create_work_order, open_work_order,
+        TERMINAL_STATUSES,
+        create_work_order,
+        open_work_order,
     )
 
     appt = require_appointment(appt_id, db_path=db_path)

@@ -63,7 +63,6 @@ from motodiag.advanced.fleet_repo import (
 from motodiag.advanced.predictor import SEVERITY_WEIGHT, predict_failures
 from motodiag.core.database import get_connection
 
-
 # ---------------------------------------------------------------------------
 # Phase 149 soft-guard
 # ---------------------------------------------------------------------------

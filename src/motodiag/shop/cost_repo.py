@@ -21,7 +21,6 @@ from typing import Literal, Optional
 
 from motodiag.core.database import get_connection
 
-
 # Mirrors the migration-043 `kind` CHECK constraint. Literal from
 # day one per F37 Track 1 discipline (Phase 195B plan §7).
 CostEventKind = Literal[

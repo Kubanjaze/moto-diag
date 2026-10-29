@@ -4,12 +4,10 @@ Phase 117: 4 enums (source/type/category/level) + 4 models. All models
 support optional year range via year_start/year_end (NULL = universal).
 """
 
-from datetime import datetime
 from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel, Field
-
 
 # --- Enums ---
 

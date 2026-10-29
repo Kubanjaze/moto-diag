@@ -10,7 +10,6 @@ from __future__ import annotations
 import logging
 from typing import Callable, Optional
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -143,8 +142,13 @@ def _a_change_status(action: dict, ctx: dict, db_path) -> dict:
     """Route through Phase 161 lifecycle transition functions
     (never generic `update_work_order`)."""
     from motodiag.shop.work_order_repo import (
-        cancel_work_order, complete_work_order, open_work_order,
-        pause_work, reopen_work_order, resume_work, start_work,
+        cancel_work_order,
+        complete_work_order,
+        open_work_order,
+        pause_work,
+        reopen_work_order,
+        resume_work,
+        start_work,
     )
     wo = _require_wo(ctx)
     target = action["value"]

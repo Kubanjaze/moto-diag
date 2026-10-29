@@ -7,6 +7,7 @@ against the model-specific service manual for exact specs.
 """
 
 from typing import Optional
+
 from pydantic import BaseModel, Field
 
 

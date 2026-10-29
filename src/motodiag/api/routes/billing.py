@@ -10,15 +10,16 @@ from pydantic import BaseModel, ConfigDict
 
 from motodiag.api.deps import get_db_path, get_settings
 from motodiag.auth.deps import (
-    AuthedUser, get_current_user, require_api_key,
+    AuthedUser,
+    get_current_user,
 )
 from motodiag.billing.providers import (
-    BillingProvider, get_billing_provider,
+    BillingProvider,
+    get_billing_provider,
 )
 from motodiag.billing.subscription_repo import get_active_subscription
 from motodiag.billing.webhook_handlers import LiveEventRefused, dispatch_event
 from motodiag.core.config import Settings
-
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["billing"])

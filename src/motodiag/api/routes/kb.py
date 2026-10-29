@@ -21,15 +21,20 @@ from motodiag.api.deps import get_db_path
 from motodiag.auth.deps import ApiKey, require_api_key
 from motodiag.core.search import search_all
 from motodiag.knowledge.dtc_repo import (
-    count_dtcs_matching, get_dtc, list_all_categories, search_dtcs,
+    count_dtcs_matching,
+    get_dtc,
+    list_all_categories,
+    search_dtcs,
 )
 from motodiag.knowledge.issues_repo import (
-    count_known_issues_matching, get_known_issue, search_known_issues,
+    count_known_issues_matching,
+    get_known_issue,
+    search_known_issues,
 )
 from motodiag.knowledge.symptom_repo import (
-    count_symptoms_matching, search_symptoms,
+    count_symptoms_matching,
+    search_symptoms,
 )
-
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/kb", tags=["knowledge-base"])

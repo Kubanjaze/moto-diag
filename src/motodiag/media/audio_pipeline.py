@@ -65,7 +65,6 @@ import wave
 from dataclasses import dataclass
 from typing import Optional
 
-
 _log = logging.getLogger(__name__)
 
 

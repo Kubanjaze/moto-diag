@@ -71,7 +71,6 @@ from motodiag.hardware.protocols.exceptions import (
     TimeoutError as ProtocolTimeoutError,
 )
 
-
 # ---------------------------------------------------------------------------
 # SensorSpec — immutable catalog row
 # ---------------------------------------------------------------------------

@@ -14,18 +14,21 @@ from typing import Optional
 import click
 
 from motodiag.billing.providers import (
-    BillingProviderError, get_billing_provider,
+    BillingProviderError,
+    get_billing_provider,
 )
 from motodiag.billing.subscription_repo import (
-    get_active_subscription, update_subscription, upsert_from_stripe,
+    get_active_subscription,
+    update_subscription,
+    upsert_from_stripe,
 )
 from motodiag.billing.webhook_handlers import (
-    SubscriptionEventError, subscription_data_from_stripe,
+    SubscriptionEventError,
+    subscription_data_from_stripe,
 )
 from motodiag.cli.theme import get_console
 from motodiag.core.config import get_settings
 from motodiag.core.database import get_connection, init_db
-
 
 SUBSCRIPTION_TIERS = ("individual", "shop", "company")
 
@@ -225,11 +228,13 @@ def register_subscription(cli_group: click.Group) -> None:
         """
         from datetime import datetime, timedelta, timezone
 
+        from motodiag.billing.models import (
+            Subscription,
+            SubscriptionStatus,
+            SubscriptionTier,
+        )
         from motodiag.billing.subscription_repo import (
             create_subscription as _create_sub,
-        )
-        from motodiag.billing.models import (
-            Subscription, SubscriptionStatus, SubscriptionTier,
         )
 
         console = get_console()

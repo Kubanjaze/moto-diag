@@ -9,19 +9,19 @@ on accidental re-uploads. Image bytes never persist.
 
 from motodiag.intake.models import (
     IdentifyKind,
-    VehicleGuess,
-    IntakeUsageEntry,
-    IntakeQuota,
     IntakeError,
+    IntakeQuota,
+    IntakeUsageEntry,
     QuotaExceededError,
+    VehicleGuess,
 )
 from motodiag.intake.vehicle_identifier import (
-    VehicleIdentifier,
-    MONTHLY_CAPS,
     BUDGET_ALERT_THRESHOLD,
-    SONNET_ESCALATION_THRESHOLD,
     HAIKU_MODEL_ID,
+    MONTHLY_CAPS,
+    SONNET_ESCALATION_THRESHOLD,
     SONNET_MODEL_ID,
+    VehicleIdentifier,
 )
 
 __all__ = [

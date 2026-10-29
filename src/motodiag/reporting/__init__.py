@@ -5,6 +5,12 @@ normalized :class:`ReportDocument` dict assembled by the three
 builders in :mod:`motodiag.reporting.builders`.
 """
 
+from motodiag.reporting.builders import (
+    ReportBuildError,
+    build_invoice_report_doc,
+    build_session_report_doc,
+    build_work_order_report_doc,
+)
 from motodiag.reporting.renderers import (
     PDF_AVAILABLE,
     PdfReportRenderer,
@@ -12,13 +18,6 @@ from motodiag.reporting.renderers import (
     TextReportRenderer,
     get_renderer,
 )
-from motodiag.reporting.builders import (
-    ReportBuildError,
-    build_invoice_report_doc,
-    build_session_report_doc,
-    build_work_order_report_doc,
-)
-
 
 __all__ = [
     "PDF_AVAILABLE",

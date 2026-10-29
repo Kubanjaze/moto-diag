@@ -14,7 +14,6 @@ from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-
 HEX_COLOR_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
 
 

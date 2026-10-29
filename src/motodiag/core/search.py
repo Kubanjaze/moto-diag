@@ -1,10 +1,10 @@
 """Unified search engine — query across all knowledge stores from one entry point."""
 
-from motodiag.vehicles.registry import list_vehicles
-from motodiag.knowledge.dtc_repo import search_dtcs
-from motodiag.knowledge.symptom_repo import search_symptoms
-from motodiag.knowledge.issues_repo import search_known_issues
 from motodiag.core.session_repo import list_sessions
+from motodiag.knowledge.dtc_repo import search_dtcs
+from motodiag.knowledge.issues_repo import search_known_issues
+from motodiag.knowledge.symptom_repo import search_symptoms
+from motodiag.vehicles.registry import list_vehicles
 
 
 def search_all(

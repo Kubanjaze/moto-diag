@@ -4,8 +4,8 @@ import hashlib
 import json
 import sqlite3
 
-from motodiag.core.severity import SEVERITY_RANK_SQL
 from motodiag.core.database import get_connection
+from motodiag.core.severity import SEVERITY_RANK_SQL
 from motodiag.core.timestamps import utc_now
 
 

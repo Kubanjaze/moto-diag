@@ -11,7 +11,6 @@ from motodiag.api.deps import get_db_path, get_settings
 from motodiag.core.config import Settings
 from motodiag.core.database import get_schema_version
 
-
 router = APIRouter(tags=["meta"])
 
 

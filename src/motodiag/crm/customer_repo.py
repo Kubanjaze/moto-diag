@@ -9,7 +9,6 @@ from motodiag.core.database import get_connection
 from motodiag.core.timestamps import utc_now
 from motodiag.crm.models import Customer
 
-
 UNASSIGNED_CUSTOMER_ID = 1
 UNASSIGNED_CUSTOMER_NAME = "Unassigned"
 

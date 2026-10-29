@@ -11,7 +11,6 @@ from typing import Optional
 from motodiag.core.database import get_connection
 from motodiag.i18n.models import Locale
 
-
 DEFAULT_LOCALE = Locale.EN
 
 

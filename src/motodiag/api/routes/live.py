@@ -67,7 +67,6 @@ from motodiag.auth.deps import resolve_credential, resolve_tier, tier_meets
 from motodiag.auth.sessions_repo import SESSION_PREFIX
 from motodiag.core.session_repo import get_session_for_owner
 
-
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["live"])
 

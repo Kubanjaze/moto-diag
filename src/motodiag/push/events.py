@@ -185,7 +185,8 @@ def notify_obd_failure(
     try:
         from motodiag.core.config import get_settings
         from motodiag.obd_reports import (
-            mark_notified, should_alert,
+            mark_notified,
+            should_alert,
         )
 
         admin_id = int(getattr(get_settings(), "admin_user_id", 0) or 0)

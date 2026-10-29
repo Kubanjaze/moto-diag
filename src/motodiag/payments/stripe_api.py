@@ -21,7 +21,6 @@ from typing import Any, Callable, Optional, TypeVar
 
 from motodiag.core.config import Environment, Settings, get_settings
 
-
 # Pinned with the SDK (`stripe==16.0.0` sends this version). A test
 # requires the two to agree, so an SDK bump is a deliberate change.
 API_VERSION = "2026-09-30.endive"

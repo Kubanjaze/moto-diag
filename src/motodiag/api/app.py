@@ -23,7 +23,6 @@ from motodiag.api.middleware import (
 from motodiag.api.openapi import install_openapi
 from motodiag.core.config import Environment, Settings
 
-
 APP_VERSION = "v1"
 
 
@@ -118,22 +117,22 @@ def create_app(
     # --- Routers (lazy import to keep module-import cheap) ---
     from motodiag.api.routes.auth import router as auth_router
     from motodiag.api.routes.billing import router as billing_router
+    from motodiag.api.routes.diagnostics import router as diagnostics_router
     from motodiag.api.routes.kb import router as kb_router
     from motodiag.api.routes.live import router as live_router
     from motodiag.api.routes.meta import router as meta_router
+    from motodiag.api.routes.parts import router as parts_router
+    from motodiag.api.routes.photos import router as photos_router
+    from motodiag.api.routes.push import router as push_router
     from motodiag.api.routes.reports import router as reports_router
     from motodiag.api.routes.sessions import router as sessions_router
+    from motodiag.api.routes.share import router as share_router
     from motodiag.api.routes.shop_mgmt import router as shop_mgmt_router
     from motodiag.api.routes.shops import router as shops_router
+    from motodiag.api.routes.time_tracking import router as time_tracking_router
+    from motodiag.api.routes.transcripts import router as transcripts_router
     from motodiag.api.routes.vehicles import router as vehicles_router
     from motodiag.api.routes.videos import router as videos_router
-    from motodiag.api.routes.photos import router as photos_router
-    from motodiag.api.routes.transcripts import router as transcripts_router
-    from motodiag.api.routes.push import router as push_router
-    from motodiag.api.routes.share import router as share_router
-    from motodiag.api.routes.diagnostics import router as diagnostics_router
-    from motodiag.api.routes.parts import router as parts_router
-    from motodiag.api.routes.time_tracking import router as time_tracking_router
 
     app.include_router(meta_router)             # /healthz, /v1/version
     app.include_router(auth_router, prefix="/v1")  # Phase 303 — staff logins

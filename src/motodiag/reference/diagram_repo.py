@@ -6,7 +6,7 @@ Phase 117: CRUD for exploded views, schematics, wiring, assembly diagrams.
 from typing import Optional
 
 from motodiag.core.database import get_connection
-from motodiag.reference.models import PartsDiagram, DiagramType
+from motodiag.reference.models import DiagramType, PartsDiagram
 
 
 def add_diagram(diagram: PartsDiagram, db_path: str | None = None) -> int:

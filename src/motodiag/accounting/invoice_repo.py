@@ -2,11 +2,13 @@
 
 from typing import Optional
 
-from motodiag.core.database import get_connection
 from motodiag.accounting.models import (
-    Invoice, InvoiceLineItem, InvoiceStatus, InvoiceLineItemType,
+    Invoice,
+    InvoiceLineItem,
+    InvoiceLineItemType,
+    InvoiceStatus,
 )
-
+from motodiag.core.database import get_connection
 
 # --- Invoice CRUD ---
 

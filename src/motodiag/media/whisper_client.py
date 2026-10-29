@@ -34,7 +34,6 @@ from typing import Optional
 
 from motodiag.core.config import get_settings
 
-
 _log = logging.getLogger(__name__)
 
 # Whisper API pricing: USD 0.006 per audio-minute (2026-05 rate).

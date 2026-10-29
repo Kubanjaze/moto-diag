@@ -34,7 +34,6 @@ from motodiag.core.config import get_settings
 from motodiag.core.database import get_connection
 from motodiag.media.paths import resolve_media_path
 
-
 _log = logging.getLogger(__name__)
 
 

@@ -4,8 +4,8 @@ import json
 import logging
 import os
 import time
-from typing import Optional
 from datetime import datetime, timezone
+from typing import Optional
 
 from motodiag.core.config import get_settings
 from motodiag.engine.cache import (
@@ -15,18 +15,18 @@ from motodiag.engine.cache import (
     set_cached_response,
 )
 from motodiag.engine.models import (
-    DiagnosticResponse,
     DiagnosisItem,
+    DiagnosticResponse,
     DiagnosticSeverity,
-    TokenUsage,
     SessionMetrics,
+    TokenUsage,
 )
 from motodiag.engine.prompts import (
     DIAGNOSTIC_SYSTEM_PROMPT,
-    build_vehicle_context,
-    build_symptom_context,
-    build_knowledge_context,
     build_full_prompt,
+    build_knowledge_context,
+    build_symptom_context,
+    build_vehicle_context,
 )
 
 _log = logging.getLogger(__name__)

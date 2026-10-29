@@ -23,16 +23,18 @@ from datetime import datetime, timezone
 from typing import Any, Callable, Optional
 
 from motodiag.billing.providers import (
-    BillingProvider, BillingProviderError, tier_for_price,
+    BillingProvider,
+    BillingProviderError,
+    tier_for_price,
 )
 from motodiag.billing.subscription_repo import (
-    get_subscription_by_stripe_id, upsert_from_stripe,
+    get_subscription_by_stripe_id,
+    upsert_from_stripe,
 )
 from motodiag.core.config import Environment, Settings, get_settings
 from motodiag.core.database import get_connection
 from motodiag.core.timestamps import utc_now
 from motodiag.payments import invoice_payments, stripe_api
-
 
 logger = logging.getLogger(__name__)
 

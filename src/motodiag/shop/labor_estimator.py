@@ -22,22 +22,27 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime, timezone
-from typing import Callable, Literal, Optional
+from typing import Callable, Optional
 
 from motodiag.core.database import get_connection
 from motodiag.core.timestamps import utc_cutoff
 from motodiag.shop.ai_client import (
-    AIResponse, ShopAIClient, ShopAIClientError, extract_json_block,
+    ShopAIClient,
+    extract_json_block,
 )
 from motodiag.shop.labor_models import (
-    LaborEstimate, ReconcileBucket, ReconciliationReport, SkillTier,
+    LaborEstimate,
+    ReconcileBucket,
+    ReconciliationReport,
 )
 from motodiag.shop.work_order_repo import (
     TERMINAL_STATUSES as WO_TERMINAL_STATUSES,
-    WorkOrderNotFoundError, list_work_orders, require_work_order,
+)
+from motodiag.shop.work_order_repo import (
+    list_work_orders,
+    require_work_order,
     update_work_order,
 )
-
 
 logger = logging.getLogger(__name__)
 

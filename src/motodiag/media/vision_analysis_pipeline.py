@@ -34,11 +34,11 @@ from motodiag.media.vision_costs import (
     record_vision_cost,
 )
 from motodiag.media.vision_types import (
+    GUIDANCE_PROMPT,
     VISION_ANALYSIS_PROMPT,
+    GuidanceResponse,
     VehicleContext,
     VisualAnalysisResult,
-    GUIDANCE_PROMPT,
-    GuidanceResponse,
 )
 
 _log = logging.getLogger(__name__)

@@ -98,11 +98,26 @@ UNREACHABLE_MODULES: dict[str, tuple[str, str]] = {
 _TEST_RESET = "Resets module-level state between tests; production has no reason to call it."
 _REPO_HELPER = "Small repository query kept as library surface; low risk, no in-tree caller."
 _PRICING_MODEL = "Pydantic/enum model used only by the unreachable motodiag.pricing package."
+_CLI_IMPORT_ONLY = ("Tested and re-exported by motodiag.shop; no `shop` command calls it. Its "
+                    "only reference was an unused import in cli/shop.py, removed in Phase 393.")
 
 # `relative/path.py::name` inside REACHABLE modules -> (classification, reason).
 # Orphans inside unreachable modules are implied by the module entry and are
 # not listed a second time.
 ORPHANS: dict[str, tuple[str, str]] = {
+    # --- Phase 393: ruff's safe fixes removed cli/shop.py's unused imports ---
+    # The CLI imported these nine and never called them; the import was their
+    # only reference in src/. Listed, not re-imported: a dead import that hides
+    # an orphan is the gap this list exists to show.
+    "shop/bay_scheduler.py::cancel_slot": ("unwired-feature", _CLI_IMPORT_ONLY),
+    "shop/bay_scheduler.py::complete_slot": ("unwired-feature", _CLI_IMPORT_ONLY),
+    "shop/bay_scheduler.py::start_slot": ("unwired-feature", _CLI_IMPORT_ONLY),
+    "shop/rbac.py::current_assignment": ("unwired-feature", _CLI_IMPORT_ONLY),
+    "shop/rbac.py::list_shop_mechanics": ("unwired-feature", _CLI_IMPORT_ONLY),
+    "shop/rbac.py::mechanic_workload": ("unwired-feature", _CLI_IMPORT_ONLY),
+    "shop/triage_queue.py::ShopTriageError": ("unwired-feature", _CLI_IMPORT_ONLY),
+    "shop/triage_queue.py::clear_urgent": ("unwired-feature", _CLI_IMPORT_ONLY),
+    "shop/workflow_rules.py::trigger_rules_for_event": ("unwired-feature", _CLI_IMPORT_ONLY),
     # --- Phase 380: row keys (F129) and the junction per make (F142) ---
     "knowledge/models.py::unassigned_models": ("test-infra",
         "Phase 380, F142: the operator's 3A list of multi-make models with no "

@@ -49,7 +49,6 @@ from typing import Optional
 from motodiag.core.database import get_connection
 from motodiag.core.timestamps import utc_cutoff, utc_now
 
-
 logger = logging.getLogger(__name__)
 
 

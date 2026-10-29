@@ -45,14 +45,12 @@ import io
 from abc import ABC, abstractmethod
 from typing import Any
 
-
 try:  # reportlab ships with the project venv (verified Phase 182 build)
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import LETTER
     from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
     from reportlab.lib.units import mm
     from reportlab.platypus import (
-        PageBreak,
         Paragraph,
         SimpleDocTemplate,
         Spacer,

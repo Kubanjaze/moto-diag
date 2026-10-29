@@ -84,9 +84,10 @@ from pydantic import (
 from motodiag.hardware.protocols.base import ProtocolAdapter
 from motodiag.hardware.protocols.exceptions import (
     ConnectionError as ProtocolConnectionError,
+)
+from motodiag.hardware.protocols.exceptions import (
     TimeoutError as ProtocolTimeoutError,
 )
-
 
 # ---------------------------------------------------------------------------
 # PID symbolic aliases

@@ -79,10 +79,11 @@ from motodiag.hardware.protocols.exceptions import (
 )
 from motodiag.hardware.protocols.exceptions import (
     ProtocolError,
-    TimeoutError as ProtocolTimeoutError,
     UnsupportedCommandError,
 )
-
+from motodiag.hardware.protocols.exceptions import (
+    TimeoutError as ProtocolTimeoutError,
+)
 
 # ---------------------------------------------------------------------------
 # Module constants

@@ -577,6 +577,7 @@ def register_kb(cli_group: click.Group) -> None:
                     "Example: --format pdf --output issue.pdf"
                 )
             from pathlib import Path
+
             from motodiag.cli.export import format_as_pdf, write_binary
             pdf_bytes = format_as_pdf(
                 title=title,

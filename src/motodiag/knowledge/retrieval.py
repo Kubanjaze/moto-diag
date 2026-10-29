@@ -28,7 +28,7 @@ import logging
 import sqlite3
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Iterable, Literal, Mapping, Optional, Sequence
+from typing import Any, Literal, Mapping, Optional, Sequence
 
 from motodiag.core.database import get_connection
 from motodiag.knowledge.applicability import ApplicabilityError, row_applies

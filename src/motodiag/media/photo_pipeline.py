@@ -28,7 +28,7 @@ from __future__ import annotations
 import io
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 # Phase 209: Pillow is in the `vision` extra, and this module-level
 # import meant `motodiag serve` could not START on an `[api]` install —

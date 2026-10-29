@@ -22,15 +22,16 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from motodiag.cli.theme import get_console, status as theme_status, severity_style
-from motodiag.cli.diagnose import (
-    _resolve_model,
-    _load_vehicle,
-    _load_known_issues,
-    _parse_symptoms,
-)
 from motodiag.cli.completion import complete_dtc_code
+from motodiag.cli.diagnose import (
+    _load_known_issues,
+    _load_vehicle,
+    _parse_symptoms,
+    _resolve_model,
+)
 from motodiag.cli.subscription import current_tier
+from motodiag.cli.theme import get_console, severity_style
+from motodiag.cli.theme import status as theme_status
 from motodiag.core.database import init_db
 from motodiag.engine.fault_codes import classify_code
 from motodiag.knowledge.dtc_repo import (

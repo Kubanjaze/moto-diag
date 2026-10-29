@@ -7,7 +7,7 @@ import json
 from typing import Optional
 
 from motodiag.core.database import get_connection
-from motodiag.reference.models import VideoTutorial, SkillLevel
+from motodiag.reference.models import SkillLevel, VideoTutorial
 
 
 def _row_to_video(row) -> dict:

@@ -15,8 +15,6 @@ implementation.
 
 from __future__ import annotations
 
-import hashlib
-import hmac
 import json as _json
 import logging
 from abc import ABC, abstractmethod
@@ -25,7 +23,6 @@ from typing import Any, Optional
 
 from motodiag.core.config import Settings, get_settings
 from motodiag.payments import stripe_api
-
 
 logger = logging.getLogger(__name__)
 

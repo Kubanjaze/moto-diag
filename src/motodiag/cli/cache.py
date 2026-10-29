@@ -26,7 +26,6 @@ from motodiag.engine.cache import (
     purge_cache,
 )
 
-
 # Default age cutoff for `cache purge` when the user doesn't override it.
 # 30 days matches the knowledge-base freshness horizon (most fault-code
 # interpretations don't drift over a month); shop owners who want

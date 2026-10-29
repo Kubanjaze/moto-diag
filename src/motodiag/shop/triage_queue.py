@@ -25,7 +25,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from motodiag.core.database import get_connection
 from motodiag.shop.work_order_repo import (
-    list_work_orders, update_work_order, WorkOrderNotFoundError,
+    WorkOrderNotFoundError,
+    list_work_orders,
+    update_work_order,
 )
 
 

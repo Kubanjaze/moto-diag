@@ -14,7 +14,6 @@ from __future__ import annotations
 
 from typing import Callable
 
-
 CONDITION_TYPES: tuple[str, ...] = (
     "always",
     "priority_gte", "priority_lte", "priority_eq",

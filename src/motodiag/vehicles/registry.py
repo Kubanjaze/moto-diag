@@ -4,16 +4,14 @@ Phase 110 (Retrofit): extended to support powertrain/engine_type/battery
 fields while preserving full backward compatibility with existing callers.
 """
 
-import json
-from typing import Optional
 
-from motodiag.core.database import get_connection, init_db
-from motodiag.core.timestamps import utc_now
+from motodiag.core.database import get_connection
 from motodiag.core.models import (
-    VehicleBase, ProtocolType,
-    PowertrainType, EngineType, BatteryChemistry,
+    EngineType,
+    PowertrainType,
+    VehicleBase,
 )
-
+from motodiag.core.timestamps import utc_now
 
 # ---------------------------------------------------------------------------
 # Phase 177 additions: owner scoping + tier quotas

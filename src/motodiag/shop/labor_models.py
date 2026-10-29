@@ -7,7 +7,6 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 SkillTier = Literal["apprentice", "journeyman", "master"]
 ReconcileBucket = Literal["under", "within", "over"]
 

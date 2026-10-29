@@ -38,7 +38,6 @@ from typing import Optional
 
 from motodiag.core.database import get_connection
 
-
 # ---------------------------------------------------------------------------
 # Path defaults
 # ---------------------------------------------------------------------------

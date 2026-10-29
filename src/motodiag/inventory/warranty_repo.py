@@ -3,7 +3,7 @@
 from typing import Optional
 
 from motodiag.core.database import get_connection
-from motodiag.inventory.models import Warranty, CoverageType
+from motodiag.inventory.models import CoverageType, Warranty
 
 
 def add_warranty(warranty: Warranty, db_path: str | None = None) -> int:

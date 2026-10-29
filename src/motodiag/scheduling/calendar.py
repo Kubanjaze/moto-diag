@@ -18,7 +18,11 @@ from typing import Optional
 
 from motodiag.core.database import get_connection
 from motodiag.scheduling.booking import (
-    TYPE_LABELS, clock_time, is_zoned_elsewhere, list_for_shop, user_label,
+    TYPE_LABELS,
+    clock_time,
+    is_zoned_elsewhere,
+    list_for_shop,
+    user_label,
 )
 
 _APPOINTMENT_ICS_STATUS = {

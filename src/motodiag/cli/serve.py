@@ -22,13 +22,11 @@ Phase 175's choice that the app factory be side-effect-free for tests.
 from __future__ import annotations
 
 import copy
+import logging
 import re
 from typing import Optional
 
-import logging
-
 import click
-
 
 # === Phase 303 (K56): a session token never lands in a log ===
 # uvicorn writes the request line with its query string on
@@ -208,7 +206,8 @@ def register_serve(cli_group: click.Group) -> None:
         # finds it does not resolve. So it is checked at startup, and in
         # prod it is fatal rather than advisory.
         from motodiag.core.public_url import (
-            check_public_base_url, has_blocking_problem,
+            check_public_base_url,
+            has_blocking_problem,
         )
 
         url_problems = check_public_base_url(

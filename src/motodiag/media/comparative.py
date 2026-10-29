@@ -22,7 +22,6 @@ from pydantic import BaseModel, Field
 
 from motodiag.media.audio_capture import AudioSample
 
-
 # --- Local Spectrogram Support ---
 # Phase 97 (SpectrogramAnalyzer) does not exist yet. We define minimal
 # spectrogram structures here so Phase 103 can operate independently.

@@ -23,16 +23,15 @@ import logging
 from datetime import datetime, timezone
 from typing import Callable, Optional
 
-from motodiag.advanced.parts_repo import get_part as get_part_by_slug
 from motodiag.core.database import get_connection
 from motodiag.core.timestamps import utc_cutoff
 from motodiag.shop.ai_client import (
-    AIResponse, ShopAIClient, ShopAIClientError, extract_json_block,
+    ShopAIClient,
+    extract_json_block,
 )
 from motodiag.shop.sourcing_models import (
-    SourcingRecommendation, TierPreference, VendorSuggestion,
+    SourcingRecommendation,
 )
-
 
 logger = logging.getLogger(__name__)
 
