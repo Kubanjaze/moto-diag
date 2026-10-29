@@ -23,7 +23,6 @@ from __future__ import annotations
 from importlib import resources
 from pathlib import Path
 
-
 BUILTIN_NAMES: tuple[str, ...] = (
     "cbr600_warm_idle",
     "charging_fault",

@@ -2,8 +2,8 @@
 
 from typing import Optional
 
-from motodiag.core.database import get_connection
 from motodiag.billing.models import Payment, PaymentStatus
+from motodiag.core.database import get_connection
 
 
 def record_payment(payment: Payment, db_path: str | None = None) -> int:

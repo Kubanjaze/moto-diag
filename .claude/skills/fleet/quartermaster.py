@@ -24,6 +24,16 @@ what those fourteen miss for a fleet-built PR (391 Step 0, S0-1):
   Q7 no stub in v1.1
   Q8 the handoff, and roadmap_check (R1-R8) on the branch
   Q9 the clone is clean and the head merges onto master with no conflict
+  Q10 lint and types: no src/ file the PR touches has more ruff findings or
+      mypy errors on the head than on master (Phase 393, K54)
+  Q11 coverage: the lines the PR adds or changes in src/ are at least 85%
+      covered by the full run on the head
+  Q12 size: no new or changed function over McCabe 20; no src/ file grows
+      past 100 KB, and none already over it grows
+
+Q10 and Q12 are `scripts/code_quality.py pr`, run by the dispatcher in the
+fence with no model and no network, with the base's copy of the script when
+the base has one; Q11 reads the full run's coverage JSON.
 
 Then one fresh, read-only Opus call reads the results and judges what no
 script can: check 4's hits (a stub, or prose that uses the word) and the
@@ -34,6 +44,7 @@ check from the list, and nothing else.
 from __future__ import annotations
 
 import datetime as dt
+import json
 import pathlib
 import re
 import subprocess
@@ -43,7 +54,9 @@ from dataclasses import dataclass
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "closeout"))
+sys.path.insert(0, str(HERE.parents[2] / "scripts"))
 import closeout_check  # noqa: E402
+import code_quality  # noqa: E402
 import engineer  # noqa: E402
 import plan_check  # noqa: E402
 import plan_order  # noqa: E402
@@ -67,6 +80,9 @@ CHECKS = {
     "Q7": "no stub in v1.1",
     "Q8": "the handoff",
     "Q9": "it merges onto master",
+    "Q10": "lint and types, per touched file",
+    "Q11": "changed-line coverage",
+    "Q12": "complexity and file size",
     "V1": "master pushed, tree clean", "V2": "no code after the regression hash",
     "V3": "docs in completed", "V4": "stubs", "V5": "deviations and the bug-fix register",
     "V6": "the row's words", "V7": "the findings header", "V8": "schema and live",
@@ -311,6 +327,72 @@ def mergeable(clone: pathlib.Path, base: str = "master") -> Finding:
     return Finding("Q9", True)
 
 
+# ------------------------------------------------------ Q10-Q12 (Phase 393)
+CODE_SCRIPT = "scripts/code_quality.py"
+
+
+def code_command(base: str) -> list[str]:
+    """The fenced, model-free command for Q10 and Q12 on the head: the base's
+    `scripts/code_quality.py` when the base has one, so a pull request does
+    not bring its own judge, else the head's."""
+    return ["/bin/sh", "-c",
+            f"if git cat-file -e {base}:{CODE_SCRIPT} 2>/dev/null; then "
+            f"git show {base}:{CODE_SCRIPT} > /fleet/run/code_quality.py; "
+            f"else cp {CODE_SCRIPT} /fleet/run/code_quality.py; fi && "
+            f".venv/bin/python /fleet/run/code_quality.py pr --base {base} --root ."]
+
+
+def code_result(out: str) -> dict | None:
+    """The `pr` JSON from the fenced run's output: its last line that parses."""
+    for line in reversed(out.strip().splitlines()):
+        try:
+            got = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(got, dict) and {"Q10", "Q12"} <= set(got):
+            return got
+    return None
+
+
+def _plural(n: int, word: str) -> str:
+    return f"{n} {word}" + ("" if n == 1 else "s")
+
+
+def code_checks(pr: dict | None, cov: dict, why: str = "") -> list[Finding]:
+    """Q10, Q11 and Q12 from the scripts' results. Each failure names the
+    file and the number (K54)."""
+    if pr is None:
+        none = f"the fenced code check gave no result: {why}"[:300]
+        q10, q12 = Finding("Q10", False, none), Finding("Q12", False, none)
+    else:
+        names = {"ruff": "ruff finding", "mypy": "mypy error"}
+        q10 = Finding("Q10", not pr["Q10"], "; ".join(
+            f"{e['file']}: {_plural(e['head'], names[e['tool']])} on the head, "
+            f"{e['base']} on master" for e in pr["Q10"])[:500])
+        parts = []
+        for e in pr["Q12"]:
+            if "function" in e:
+                parts.append(f"{e['file']}:{e['line']} `{e['function']}` is McCabe "
+                             f"{e['complexity']}, over {e['limit']}, and the pull request "
+                             f"changes it")
+            else:
+                parts.append(f"{e['file']} is {e['bytes']} bytes ({e['base_bytes']} on "
+                             f"master), over the limit of {e['limit']}")
+        q12 = Finding("Q12", not pr["Q12"], "; ".join(parts)[:500])
+    if cov.get("ok"):
+        q11 = Finding("Q11", True, "" if cov.get("percent") is None else
+                      f"{cov['percent']}% of {cov['measured']} changed lines")
+    elif cov.get("why"):
+        q11 = Finding("Q11", False, cov["why"])
+    else:
+        worst = "; ".join(f"{w['file']}: {w['covered']} of {w['measured']}"
+                          for w in cov["worst"])
+        q11 = Finding("Q11", False, f"{cov['percent']}% of the {cov['measured']} changed lines "
+                                    f"in src/ are covered ({cov['covered']}), under "
+                                    f"{code_quality.CHANGED_COVERAGE:g}%: {worst}"[:500])
+    return [q10, q11, q12]
+
+
 # ------------------------------------------------------------- together
 def scripted(clone: pathlib.Path, phase: str, tip: str, comments: list[dict], *,
              full_ok: bool, full_line: str | None, full_why: str, verify_text: str,
@@ -337,7 +419,7 @@ verdict with theirs. You are read-only: you may Read, Grep and Glob the
 repository (the pull request's head) to check what you are told.
 
 Scripts, not you, ran the checks below: the full test run, the whole-tree
-run, verify_phase.sh's fourteen, and Q1-Q9. A check marked FAIL already
+run, verify_phase.sh's fourteen, and Q1-Q12. A check marked FAIL already
 refuses this merge; you cannot overturn it. Judge only what a script cannot:
 1. V4 (stubs): each hit is a stub (unfinished text) or a sentence that only
    uses the word. A stub refuses, under V4.

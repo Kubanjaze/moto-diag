@@ -29,14 +29,13 @@ import sqlite3
 from datetime import date, datetime, timezone
 from typing import Optional
 
-from motodiag.core.database import get_connection
 from motodiag.advanced.schedule_repo import (
     ServiceIntervalError,
     get_interval_by_slug,
     list_intervals,
     update_interval,
 )
-
+from motodiag.core.database import get_connection
 
 # ---------------------------------------------------------------------------
 # Helpers — date parsing + month arithmetic

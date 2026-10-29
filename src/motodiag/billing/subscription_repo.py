@@ -2,10 +2,12 @@
 
 from typing import Optional
 
-from motodiag.core.database import get_connection
 from motodiag.billing.models import (
-    Subscription, SubscriptionTier, SubscriptionStatus,
+    Subscription,
+    SubscriptionStatus,
+    SubscriptionTier,
 )
+from motodiag.core.database import get_connection
 
 
 def create_subscription(sub: Subscription, db_path: str | None = None) -> int:
@@ -101,8 +103,9 @@ def delete_subscription(sub_id: int, db_path: str | None = None) -> bool:
 # ---------------------------------------------------------------------------
 
 
-from pydantic import BaseModel, ConfigDict
 from typing import Any
+
+from pydantic import BaseModel, ConfigDict
 
 
 class ActiveSubscription(BaseModel):
@@ -212,7 +215,6 @@ def upsert_from_stripe(
     Stripe event with the same sub id updates in place rather than
     duplicating.
     """
-    import json as _json  # only for logging; not stored here
 
     now = datetime_now_iso()
     existing = get_subscription_by_stripe_id(

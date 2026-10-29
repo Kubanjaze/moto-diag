@@ -31,9 +31,9 @@ from pydantic import BaseModel, ConfigDict, Field
 from motodiag.core.database import get_connection
 from motodiag.core.timestamps import utc_cutoff
 from motodiag.shop.work_order_repo import (
-    WorkOrderNotFoundError, require_work_order, update_work_order,
+    require_work_order,
+    update_work_order,
 )
-
 
 # ---------------------------------------------------------------------------
 # Exceptions

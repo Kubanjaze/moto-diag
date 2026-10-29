@@ -5,7 +5,6 @@ import json
 from motodiag.core.database import get_connection
 from motodiag.core.timestamps import utc_now
 
-
 # ---------------------------------------------------------------------------
 # Repair Plan CRUD
 # ---------------------------------------------------------------------------

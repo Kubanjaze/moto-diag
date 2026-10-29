@@ -32,7 +32,7 @@ import rank_call  # noqa: E402
 from plan_check import GOOD  # noqa: E402
 from test_phase388_dispatcher import T0, Clock, Host, claude_json  # noqa: E402
 from test_phase389_fleet_git import git, make_origin  # noqa: E402
-from test_phase389_red_team import FINDING, TABLE  # noqa: E402
+from test_phase389_red_team import FINDING, TABLE, red_json  # noqa: E402
 
 PHASE = "902"
 TITLE = f"Phase {PHASE}: the trial"
@@ -198,8 +198,7 @@ def test_mission_to_merge_needs_review(world):
     assert "| 385 | The push token's own write | 🔲 |" in roadmap
 
     # the Red Team, round 1: back
-    step(clock, fleet, host, claude_json({"verdict": "back", "findings": [FINDING],
-                                          "refuter_pass": TABLE}, model=rank_call.OPUS))
+    step(clock, fleet, host, red_json("back", [FINDING]))
     assert labels(host) == ["build:open", "mission"]
     assert "Red Team, round 1: back" in pr["comments"][-1] and "F213" in pr["comments"][-1]
 
@@ -209,8 +208,7 @@ def test_mission_to_merge_needs_review(world):
     assert "fix round 1" in pr["comments"][-1]
 
     # the Red Team, round 2: clear, its table committed into the log
-    step(clock, fleet, host, claude_json({"verdict": "clear", "findings": [],
-                                          "refuter_pass": TABLE}, model=rank_call.OPUS))
+    step(clock, fleet, host, red_json("clear", []))
     assert labels(host) == ["mission", "review:clear"]
     log = git("show", f"{BRANCH}:docs/phases/in_progress/{PHASE}_phase_log.md", cwd=origin).stdout
     assert "## Refuter pass" in log and "No refute pass ran." not in log
@@ -336,8 +334,7 @@ def test_three_red_team_rounds_then_the_admiral(world):
     fleet, host, clock, *_ = world
     go_to_approved(world)
     step(clock, fleet, host)                                      # the PR
-    back = claude_json({"verdict": "back", "findings": [FINDING], "refuter_pass": TABLE},
-                       model=rank_call.OPUS)
+    back = red_json("back", [FINDING])
     for rnd in (1, 2):
         step(clock, fleet, host, back)
         assert "build:open" in labels(host), rnd
@@ -407,8 +404,7 @@ def test_the_red_team_runs_without_a_push_identity_and_the_fix_round_does_not(wo
     due, and nothing would push."""
     fleet, host, clock, origin, engineer, *_ = world
     planted = planted_pr(world)
-    step(clock, fleet, host, claude_json({"verdict": "back", "findings": [FINDING],
-                                          "refuter_pass": TABLE}, model=rank_call.OPUS))
+    step(clock, fleet, host, red_json("back", [FINDING]))
     assert labels(host, 32) == ["build:open", "mission"]
     assert "F213" in host.prs[planted]["comments"][-1]
     assert fleet.newest(32, D.RED_M) is None
@@ -419,6 +415,5 @@ def test_the_red_team_runs_without_a_push_identity_and_the_fix_round_does_not(wo
 def test_a_clear_with_no_push_identity_waits_for_one(world):
     fleet, host, clock, *_ = world
     planted_pr(world)
-    step(clock, fleet, host, claude_json({"verdict": "clear", "findings": [],
-                                          "refuter_pass": TABLE}, model=rank_call.OPUS))
+    step(clock, fleet, host, red_json("clear", []))
     assert "needs-hands" in labels(host, 32) and "review:clear" not in labels(host, 32)

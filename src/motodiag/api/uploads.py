@@ -16,7 +16,6 @@ from typing import Optional
 
 from fastapi import UploadFile
 
-
 CHUNK_BYTES = 1024 * 1024  # 1 MiB
 
 

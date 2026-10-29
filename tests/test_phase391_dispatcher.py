@@ -69,8 +69,9 @@ def test_a_verdict_on_the_pr_the_issue_and_the_record_and_no_label_moved(w):
     assert rec["verdict"] == "refuse" and rec["pr"] == pr(w)["number"] and "Q7" in rec["failed"]
     runs = w.checks[before:]
     assert [full for _, full, cmd in runs if cmd is None] == [True], "one full model-free run"
-    [cmd] = [cmd for _, _, cmd in runs if cmd]
-    assert cmd[0] == ".claude/skills/closeout/verify_phase.sh" and cmd[1] == "902"
+    verify, code = [cmd for _, _, cmd in runs if cmd]          # Phase 393: and Q10-Q12's
+    assert verify[0] == ".claude/skills/closeout/verify_phase.sh" and verify[1] == "902"
+    assert "code_quality.py pr --base" in code[-1]
     no_unfinished(w)
 
 
@@ -121,6 +122,8 @@ def test_a_merge_verdict(w, monkeypatch):
     monkeypatch.setattr(D.quartermaster, "scripted", lambda *a, **k: (
         [D.quartermaster.Finding(c, True) for c in ("Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9")],
         {"captain": "", "red_team": "", "verify": [], "cited": []}))
+    monkeypatch.setattr(D.Fleet, "code_findings", lambda *a, **k: [
+        D.quartermaster.Finding(c, True) for c in ("Q10", "Q11", "Q12")])     # Phase 393
     advance(w, claude_json({"verdict": "merge", "failed": [], "summary": "Ready."},
                            model=rank_call.OPUS))
     [text] = qm_comments(w)

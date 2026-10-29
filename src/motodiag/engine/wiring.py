@@ -7,6 +7,7 @@ what connector to check, and what voltage/resistance to expect.
 """
 
 from typing import Optional
+
 from pydantic import BaseModel, Field
 
 

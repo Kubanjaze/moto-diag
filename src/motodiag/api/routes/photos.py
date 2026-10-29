@@ -46,17 +46,28 @@ from pathlib import Path
 from typing import Literal, Optional
 
 from fastapi import (
-    APIRouter, Depends, File, Form, HTTPException,
-    Path as PathParam, UploadFile, status,
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+    status,
+)
+from fastapi import (
+    Path as PathParam,
 )
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from motodiag.api.uploads import UploadTooLargeError, read_bounded
-from motodiag.api.deps import get_db_path, get_settings as get_api_settings
+from motodiag.api.deps import get_db_path
+from motodiag.api.deps import get_settings as get_api_settings
 from motodiag.api.routes.shop_mgmt import require_shop_access
+from motodiag.api.uploads import read_bounded
 from motodiag.auth.deps import (
-    AuthedUser, get_current_user, require_tier,
+    AuthedUser,
+    get_current_user,
+    require_tier,
 )
 from motodiag.core.config import Settings
 from motodiag.media.paths import resolve_media_path, stored_media_path
@@ -77,7 +88,6 @@ from motodiag.shop.wo_photo_repo import (
     soft_delete_wo_photo,
     update_pairing,
 )
-
 
 _log = logging.getLogger(__name__)
 

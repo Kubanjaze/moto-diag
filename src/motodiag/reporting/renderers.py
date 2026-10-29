@@ -43,8 +43,8 @@ from __future__ import annotations
 
 import io
 from abc import ABC, abstractmethod
+from html import escape as _html_escape
 from typing import Any
-
 
 try:  # reportlab ships with the project venv (verified Phase 182 build)
     from reportlab.lib import colors
@@ -52,7 +52,6 @@ try:  # reportlab ships with the project venv (verified Phase 182 build)
     from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
     from reportlab.lib.units import mm
     from reportlab.platypus import (
-        PageBreak,
         Paragraph,
         SimpleDocTemplate,
         Spacer,
@@ -317,16 +316,16 @@ class PdfReportRenderer(ReportRenderer):
         )
         story: list = []
         story.append(Paragraph(
-            _escape(doc.get("title") or "Report"),
+            _markup_escape(doc.get("title") or "Report"),
             self._title_style,
         ))
         if doc.get("subtitle"):
             story.append(Paragraph(
-                _escape(doc["subtitle"]), self._subtitle_style,
+                _markup_escape(doc["subtitle"]), self._subtitle_style,
             ))
         if doc.get("issued_at"):
             story.append(Paragraph(
-                f"Issued: {_escape(doc['issued_at'])}",
+                f"Issued: {_markup_escape(doc['issued_at'])}",
                 self._subtitle_style,
             ))
         story.append(Spacer(1, 4 * mm))
@@ -335,25 +334,25 @@ class PdfReportRenderer(ReportRenderer):
             heading = section.get("heading")
             if heading:
                 story.append(Paragraph(
-                    _escape(heading), self._heading_style,
+                    _markup_escape(heading), self._heading_style,
                 ))
             if "body" in section:
                 body = section.get("body") or ""
                 for para in body.split("\n"):
                     if para.strip():
                         story.append(Paragraph(
-                            _escape(para), self._body_style,
+                            _markup_escape(para), self._body_style,
                         ))
             elif "rows" in section:
                 rows = section.get("rows") or []
-                data = [[_escape(str(k)), _escape(str(v))]
+                data = [[_markup_escape(str(k)), _markup_escape(str(v))]
                         for k, v in rows]
                 if data:
                     story.append(_kv_table(data))
             elif "bullets" in section:
                 for bullet in section.get("bullets") or []:
                     story.append(Paragraph(
-                        "• " + _escape(str(bullet)), self._body_style,
+                        "• " + _markup_escape(str(bullet)), self._body_style,
                     ))
             elif "table" in section:
                 table = section.get("table") or {}
@@ -372,26 +371,26 @@ class PdfReportRenderer(ReportRenderer):
                 for idx, video in enumerate(videos, start=1):
                     fname = video.get("filename") or "—"
                     story.append(Paragraph(
-                        f"Recording {idx} ({_escape(fname)})",
+                        f"Recording {idx} ({_markup_escape(fname)})",
                         self._body_style,
                     ))
                     meta_data = [
-                        [_escape("Video ID"),
-                         _escape(str(video.get("video_id", "—")))],
-                        [_escape("Captured"),
-                         _escape(str(video.get("captured_at", "—")))],
-                        [_escape("Duration (ms)"),
-                         _escape(str(video.get("duration_ms", 0)))],
-                        [_escape("Size (bytes)"),
-                         _escape(str(video.get("size_bytes", 0)))],
-                        [_escape("Interrupted"),
-                         _escape(str(video.get("interrupted", False)))],
-                        [_escape("Analysis state"),
-                         _escape(str(
+                        [_markup_escape("Video ID"),
+                         _markup_escape(str(video.get("video_id", "—")))],
+                        [_markup_escape("Captured"),
+                         _markup_escape(str(video.get("captured_at", "—")))],
+                        [_markup_escape("Duration (ms)"),
+                         _markup_escape(str(video.get("duration_ms", 0)))],
+                        [_markup_escape("Size (bytes)"),
+                         _markup_escape(str(video.get("size_bytes", 0)))],
+                        [_markup_escape("Interrupted"),
+                         _markup_escape(str(video.get("interrupted", False)))],
+                        [_markup_escape("Analysis state"),
+                         _markup_escape(str(
                              video.get("analysis_state", "pending")
                          ))],
-                        [_escape("Analyzing started at"),
-                         _escape(str(
+                        [_markup_escape("Analyzing started at"),
+                         _markup_escape(str(
                              video.get("analyzing_started_at")
                          ))],
                     ]
@@ -407,7 +406,7 @@ class PdfReportRenderer(ReportRenderer):
                         ) or ""
                         if overall:
                             story.append(Paragraph(
-                                f"Overall: {_escape(overall)}",
+                                f"Overall: {_markup_escape(overall)}",
                                 self._body_style,
                             ))
                         for f in findings.get("findings") or []:
@@ -420,34 +419,34 @@ class PdfReportRenderer(ReportRenderer):
                                 if conf is not None else "—"
                             )
                             story.append(Paragraph(
-                                f"• [{_escape(str(ftype))} / "
-                                f"{_escape(str(sev))} / conf "
-                                f"{_escape(conf_str)}] "
-                                f"{_escape(str(desc))}",
+                                f"• [{_markup_escape(str(ftype))} / "
+                                f"{_markup_escape(str(sev))} / conf "
+                                f"{_markup_escape(conf_str)}] "
+                                f"{_markup_escape(str(desc))}",
                                 self._body_style,
                             ))
                         if findings.get("image_quality_note"):
                             story.append(Paragraph(
                                 f"Image quality: "
-                                f"{_escape(str(findings['image_quality_note']))}",
+                                f"{_markup_escape(str(findings['image_quality_note']))}",
                                 self._body_style,
                             ))
                         if findings.get("frames_analyzed"):
                             story.append(Paragraph(
                                 f"Frames analyzed: "
-                                f"{_escape(str(findings['frames_analyzed']))}",
+                                f"{_markup_escape(str(findings['frames_analyzed']))}",
                                 self._body_style,
                             ))
                         if findings.get("model_used"):
                             story.append(Paragraph(
                                 f"Model: "
-                                f"{_escape(str(findings['model_used']))}",
+                                f"{_markup_escape(str(findings['model_used']))}",
                                 self._body_style,
                             ))
                         if findings.get("cost_estimate_usd"):
                             story.append(Paragraph(
                                 f"Cost (USD): "
-                                f"{_escape(str(findings['cost_estimate_usd']))}",
+                                f"{_markup_escape(str(findings['cost_estimate_usd']))}",
                                 self._body_style,
                             ))
                     story.append(Spacer(1, 2 * mm))
@@ -456,7 +455,7 @@ class PdfReportRenderer(ReportRenderer):
         if doc.get("footer"):
             story.append(Spacer(1, 4 * mm))
             story.append(Paragraph(
-                _escape(doc["footer"]), self._footer_style,
+                _markup_escape(doc["footer"]), self._footer_style,
             ))
 
         pdf.build(story)
@@ -468,10 +467,14 @@ class PdfReportRenderer(ReportRenderer):
 # ---------------------------------------------------------------------------
 
 
-def _escape(text: Any) -> str:
+def _markup_escape(text: Any) -> str:
     """reportlab Paragraph uses XML-style markup; escape angle
     brackets + ampersands so user-provided content doesn't break
-    rendering."""
+    rendering.
+
+    Phase 393, bug fix #1: this was `_escape`, and the HTML renderer's
+    `from html import escape as _escape` further down rebound the name, so
+    the PDF renderer ran `html.escape`. One name per function now."""
     s = str(text)
     return (
         s.replace("&", "&amp;")
@@ -514,9 +517,6 @@ def _grid_table(columns, rows):
 # HTML renderer (Phase 200 — customer-facing share view)
 # ---------------------------------------------------------------------------
 
-from html import escape as _escape  # noqa: E402  (kept beside its user)
-
-
 def _e(value: object) -> str:
     """Escape any value for HTML text content.
 
@@ -525,7 +525,7 @@ def _e(value: object) -> str:
     mechanic-authored free text (symptoms, notes, vehicle strings), so
     escaping is a correctness requirement, not a nicety.
     """
-    return _escape(str(value), quote=True)
+    return _html_escape(str(value), quote=True)
 
 
 #: Inline, dependency-free stylesheet. No external assets by design:

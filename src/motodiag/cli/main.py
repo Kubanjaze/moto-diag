@@ -4,33 +4,33 @@ import click
 from rich.panel import Panel
 from rich.table import Table
 
-from motodiag import __version__, __app_name__
-from motodiag.cli.subscription import (
-    SubscriptionTier,
-    current_tier,
-    get_tier_features,
-    format_tier_comparison,
-    get_enforcement_mode,
-)
+from motodiag import __app_name__, __version__
 from motodiag.cli.advanced import register_advanced
+from motodiag.cli.apikey import register_apikey
+from motodiag.cli.billing import register_subscription
 from motodiag.cli.cache import register_cache
+from motodiag.cli.capture import register_capture
 from motodiag.cli.code import register_code
 from motodiag.cli.completion import register_completion
+from motodiag.cli.costs import register_costs
 from motodiag.cli.diagnose import register_diagnose, register_quick
 from motodiag.cli.hardware import register_hardware
 from motodiag.cli.kb import register_kb
-from motodiag.cli.apikey import register_apikey
-from motodiag.cli.user import register_user
-from motodiag.cli.billing import register_subscription
+from motodiag.cli.memory import register_memory
 from motodiag.cli.payments import register_payments_check
+from motodiag.cli.reference import register_reference
 from motodiag.cli.serve import register_serve
 from motodiag.cli.shop import register_shop
+from motodiag.cli.subscription import (
+    SubscriptionTier,
+    current_tier,
+    format_tier_comparison,
+    get_enforcement_mode,
+    get_tier_features,
+)
 from motodiag.cli.theme import get_console, status, tier_style
 from motodiag.cli.transcripts import register_transcripts
-from motodiag.cli.costs import register_costs
-from motodiag.cli.memory import register_memory
-from motodiag.cli.capture import register_capture
-from motodiag.cli.reference import register_reference
+from motodiag.cli.user import register_user
 from motodiag.cli.workflow import register_workflow
 
 console = get_console()
@@ -254,6 +254,7 @@ def config_show() -> None:
 def config_paths() -> None:
     """Show data and output directory paths with existence status."""
     from pathlib import Path
+
     from motodiag.core.config import get_settings
 
     settings = get_settings()
@@ -360,10 +361,12 @@ def db() -> None:
 @db.command("init")
 def db_init() -> None:
     """Initialize database and load all starter data (DTCs, symptoms, known issues)."""
+    from motodiag.core.config import SEED_DATA_DIR, get_settings
     from motodiag.core.database import init_db
-    from motodiag.core.config import get_settings, SEED_DATA_DIR
     from motodiag.knowledge.loader import (
-        load_dtc_directory, load_symptom_file, load_known_issues_file,
+        load_dtc_directory,
+        load_known_issues_file,
+        load_symptom_file,
     )
 
     settings = get_settings()
@@ -497,7 +500,10 @@ def garage_add(make: str, model_name: str, year: int, engine_cc: int | None,
     """Add a bike to the garage manually."""
     from motodiag.core.database import init_db
     from motodiag.core.models import (
-        VehicleBase, ProtocolType, PowertrainType, EngineType,
+        EngineType,
+        PowertrainType,
+        ProtocolType,
+        VehicleBase,
     )
     from motodiag.vehicles.registry import add_vehicle
 
@@ -620,9 +626,12 @@ def garage_add_from_photo(image_path: str, hints: str | None, yes: bool,
     """Identify a bike from a photo and add it to the garage."""
     from motodiag.core.database import init_db
     from motodiag.core.models import (
-        VehicleBase, ProtocolType, PowertrainType, EngineType,
+        EngineType,
+        PowertrainType,
+        ProtocolType,
+        VehicleBase,
     )
-    from motodiag.intake import VehicleIdentifier, QuotaExceededError, IntakeError
+    from motodiag.intake import IntakeError, QuotaExceededError, VehicleIdentifier
     from motodiag.vehicles.registry import add_vehicle
 
     init_db()
@@ -787,7 +796,7 @@ def intake() -> None:
 def intake_photo(image_path: str, hints: str | None) -> None:
     """Identify a bike from a photo without saving (preview only)."""
     from motodiag.core.database import init_db
-    from motodiag.intake import VehicleIdentifier, QuotaExceededError, IntakeError
+    from motodiag.intake import IntakeError, QuotaExceededError, VehicleIdentifier
 
     init_db()
     identifier = VehicleIdentifier()
@@ -810,7 +819,7 @@ def intake_photo(image_path: str, hints: str | None) -> None:
 def intake_quota() -> None:
     """Show current photo-ID quota usage for the current user."""
     from motodiag.core.database import init_db
-    from motodiag.intake import VehicleIdentifier, BUDGET_ALERT_THRESHOLD
+    from motodiag.intake import BUDGET_ALERT_THRESHOLD, VehicleIdentifier
 
     init_db()
     identifier = VehicleIdentifier()

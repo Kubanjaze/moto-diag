@@ -30,10 +30,9 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 from motodiag.advanced.parts_repo import add_part, add_xref
-
 
 #: Default data directory — ``advanced/data`` next to this module. The
 #: directory is created/maintained by Phases 151/152/153 and is

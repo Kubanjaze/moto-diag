@@ -43,7 +43,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from motodiag.core.database import get_connection
 
-
 # ---------------------------------------------------------------------------
 # Exceptions
 # ---------------------------------------------------------------------------

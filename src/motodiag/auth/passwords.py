@@ -18,7 +18,6 @@ import hmac
 import secrets
 from typing import Optional
 
-
 SCHEME = "scrypt"
 SCRYPT_N = 2**14
 SCRYPT_R = 8

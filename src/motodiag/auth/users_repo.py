@@ -6,12 +6,10 @@ data. Do not delete the system user — it's referenced by diagnostic_sessions,
 repair_plans, and known_issues as the fallback/default owner.
 """
 
-from typing import Optional
 
+from motodiag.auth.models import User
 from motodiag.core.database import get_connection
 from motodiag.core.timestamps import utc_now
-from motodiag.auth.models import User
-
 
 SYSTEM_USER_ID = 1
 SYSTEM_USERNAME = "system"

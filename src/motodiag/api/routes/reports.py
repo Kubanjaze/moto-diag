@@ -31,7 +31,7 @@ Auth / scoping:
 from __future__ import annotations
 
 import logging
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel, Field
@@ -44,7 +44,6 @@ from motodiag.reporting import (
     build_work_order_report_doc,
     get_renderer,
 )
-
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/reports", tags=["reports"])

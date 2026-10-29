@@ -18,7 +18,7 @@ its own phase). CLI report is the Phase 195B surface.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 
 import click
 

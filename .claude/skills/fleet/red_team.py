@@ -33,7 +33,9 @@ writes its number into each row.
 """
 from __future__ import annotations
 
+import ast
 import pathlib
+import re
 import subprocess
 import sys
 
@@ -41,7 +43,9 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "closeout"))
 sys.path.insert(0, str(HERE.parent / "refute"))
+sys.path.insert(0, str(HERE.parents[2] / "scripts"))
 import closeout_check  # noqa: E402
+import code_quality  # noqa: E402
 import plan_order  # noqa: E402
 import rank_call  # noqa: E402
 import refute_check  # noqa: E402
@@ -49,6 +53,33 @@ from rank_call import OPUS, Runner, Stop  # noqa: E402
 
 MAX_ROUNDS = 3
 CLEAR, BACK = "clear", "back"
+
+#: Phase 393 (K54): the five questions asked of the code. Each is worded so
+#: that "yes" is sound and "no" a defect: "A 'no' with a file and line is a
+#: factual defect under K9."
+QUESTIONS = {
+    1: "Is every new public function reached from the CLI or the API, or listed on the "
+       "integration-gap allowlist (tests/support/integration_gaps_allowlist.py) with its "
+       "reason?",
+    2: "Does the diff avoid a new private money, time or constant helper where one module "
+       "should own it?",
+    3: "Does every new exception handler name the error it expects, rather than swallow "
+       "whatever comes?",
+    4: "Do the new tests check behaviour, rather than only that some text exists?",
+    5: "If it touches auth/, payments/, billing/, api/uploads.py or memory/erase.py: is "
+       "nothing newly reachable by a caller without the right role or tier?",
+}
+SENSITIVE = ("src/motodiag/auth/", "src/motodiag/payments/", "src/motodiag/billing/",
+             "src/motodiag/api/uploads.py", "src/motodiag/memory/erase.py")
+_HELPER = re.compile(r"^_+(?:money|now|utcnow|cents|dollars|fmt_money|format_money)\w*$")
+CHECKLIST_SCHEMA = {"type": "array", "items": {
+    "type": "object",
+    "properties": {"question": {"type": "integer", "enum": [1, 2, 3, 4, 5]},
+                   "answer": {"enum": ["yes", "no", "not-applicable"]},
+                   "where": {"type": "string"}, "why": {"type": "string"}},
+    "required": ["question", "answer", "where", "why"], "additionalProperties": False}}
+_WHERE = re.compile(r"\S+:\d+")
+
 SCHEMA = {
     "type": "object",
     "properties": {
@@ -62,8 +93,9 @@ SCHEMA = {
             "required": ["claim", "kind", "what_is_wrong", "where"],
             "additionalProperties": False}},
         "refuter_pass": {"type": "string"},
+        "code_checklist": CHECKLIST_SCHEMA,
     },
-    "required": ["verdict", "findings", "refuter_pass"],
+    "required": ["verdict", "findings", "refuter_pass", "code_checklist"],
     "additionalProperties": False,
 }
 
@@ -90,11 +122,21 @@ Refute, in this order:
 5. The plan of record's and docs/decisions.md's words on this phase, at
    the end: a claim that contradicts them, a K-id or dated entry cited for
    what it does not say, or work no entry puts in order, is a finding.
+6. The code itself (Phase 393, K54). Ask these five questions of the
+   branch's diff from master, and answer each one in code_checklist:
+   "yes", "no" or "not-applicable", with the file and line that shows it
+   ("src/motodiag/x.py:42") and one sentence why:
+{QUESTIONS}
+   A "no" is a factual defect (K9): give it also as a finding of kind
+   "code", and the verdict is "back". The script's scan of the added lines,
+   below the diff, already answers some with "no"; each of those stands,
+   whatever you find.
 
 Return:
 - verdict: "back" if any finding is factual, a citation, or code;
   "clear" if there are none, or only wording.
 - findings: each with the claim, its kind, what is wrong and where.
+- code_checklist: the five answers, one per question.
 - refuter_pass: the phase log's refute table, exactly in this form:
 
 ## Refuter pass
@@ -129,7 +171,68 @@ def plan_commit(clone: pathlib.Path, phase: str) -> str | None:
     return out[-1] if out else None
 
 
-def gather(clone: pathlib.Path, phase: str, f9_output: str, base: str = "origin/master") -> str:
+def _broad(h: ast.ExceptHandler) -> bool:
+    return h.type is None or (isinstance(h.type, ast.Name)
+                              and h.type.id in ("Exception", "BaseException"))
+
+
+def _swallows(h: ast.ExceptHandler) -> bool:
+    return all(isinstance(b, (ast.Pass, ast.Continue))
+               or (isinstance(b, ast.Expr) and isinstance(b.value, ast.Constant))
+               for b in h.body)
+
+
+def code_scan(clone: pathlib.Path, base: str = "origin/master") -> dict:
+    """What a script can answer of the five questions, over the lines the
+    branch adds under src/: {"no": [{question, where, why}], "public",
+    "sensitive", "tests"}. A "no" here is a factual defect whatever the
+    model says (questions 2 and 3); the rest is handed to the model."""
+    changed = code_quality.changed_lines(clone, base)
+    no, public = [], []
+    for path, lines in sorted(changed.items()):
+        try:
+            tree = ast.parse((clone / path).read_text(encoding="utf-8"))
+        except (OSError, SyntaxError):
+            continue
+        for n in ast.walk(tree):
+            if (isinstance(n, ast.ExceptHandler) and n.lineno in lines and _broad(n)
+                    and _swallows(n)):
+                what = "a bare `except:`" if n.type is None else f"`except {n.type.id}`"
+                no.append({"question": 3, "where": f"{path}:{n.lineno}",
+                           "why": f"{what} whose body only passes: it swallows every error "
+                                  "without naming the one it expects"})
+            if (isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.lineno in lines
+                    and _HELPER.match(n.name)):
+                no.append({"question": 2, "where": f"{path}:{n.lineno}",
+                           "why": f"a new private money or time helper, `{n.name}`"})
+        public += [f"{path}:{n.lineno} {n.name}" for n in tree.body
+                   if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+                   and n.lineno in lines and not n.name.startswith("_")]
+    names = _git(clone, "diff", "--name-only", f"{base}...HEAD").split()
+    return {"no": no, "public": public,
+            "sensitive": [p for p in names if p.startswith(SENSITIVE)],
+            "tests": [p for p in names if p.startswith("tests/") and p.endswith(".py")]}
+
+
+def scan_text(scan: dict) -> str:
+    def block(items: list[str]) -> str:
+        return "\n".join(f"- {x}" for x in items) or "- (none)"
+    return ("=== the code checklist: the script's scan of the added lines ===\n"
+            "Already a \"no\" (questions 2 and 3):\n"
+            + block([f"question {x['question']}, {x['where']}: {x['why']}" for x in scan["no"]])
+            + "\nNew public functions (question 1):\n" + block(scan["public"])
+            + "\nFiles under auth/, payments/, billing/, api/uploads.py, memory/erase.py "
+              "(question 5):\n" + block(scan["sensitive"])
+            + "\nTest files changed (question 4):\n" + block(scan["tests"]))
+
+
+def brief(rnd: int) -> str:
+    return BRIEF.replace("{ROUND}", str(rnd)).replace(
+        "{QUESTIONS}", "\n".join(f"   {k}. {q}" for k, q in QUESTIONS.items()))
+
+
+def gather(clone: pathlib.Path, phase: str, f9_output: str, base: str = "origin/master",
+           scan: dict | None = None) -> str:
     """The context the model reads, all of it produced by script."""
     impl_now = next((p for p in (clone / "docs" / "phases" / d / f"{phase}_implementation.md"
                                  for d in ("completed", "in_progress")) if p.is_file()), None)
@@ -148,16 +251,45 @@ def gather(clone: pathlib.Path, phase: str, f9_output: str, base: str = "origin/
     return (f"=== closeout_check.py . {phase} (A1–A8) ===\n" + ("\n".join(a) or "(nothing: complete)")
             + f"\n\n=== scripts/check_f9_patterns.py --all ===\n{f9_output.strip()}"
             + f"\n\n=== the branch's diff from master, by file ===\n{diff_names.strip()}"
+            + (f"\n\n{scan_text(scan)}" if scan is not None else "")
             + f"\n\n=== v1.0 as approved ({(pc or 'not found')[:12]}) ===\n{v10}"
             + f"\n\n=== the diff of v1.0 to v1.1 ===\n{plan_diff}"
             + f"\n\n=== v1.1 as it stands ===\n{v11}"
             + f"\n\n{plan_order.brief_block(clone, phase)}")
 
 
+def checklist_nos(v: dict, scan: dict | None) -> list[dict]:
+    """The code checklist's "no" answers, the model's and the script's, as
+    findings of kind "code" (Phase 393). Stops on a checklist that does not
+    answer each of the five questions once, or a "no" with no file and line."""
+    cl = v.get("code_checklist")
+    if not isinstance(cl, list) or not all(isinstance(a, dict) for a in cl):
+        raise Stop("no code checklist")
+    asked = sorted(a.get("question") for a in cl if isinstance(a.get("question"), int))
+    if asked != sorted(QUESTIONS):
+        raise Stop(f"the code checklist answers questions {asked}, not each of 1-5 once")
+    out = []
+    for a in cl:
+        if a.get("answer") == "no":
+            if not _WHERE.search(str(a.get("where", ""))):
+                raise Stop(f"a \"no\" to code question {a['question']} names no file and line")
+            out.append({"claim": f"code question {a['question']}: {QUESTIONS[a['question']]}",
+                        "kind": "code", "what_is_wrong": str(a.get("why", "")),
+                        "where": str(a["where"])})
+    for s in (scan or {}).get("no", []):
+        if not any(f["where"] == s["where"] for f in out):
+            out.append({"claim": f"code question {s['question']}: {QUESTIONS[s['question']]}",
+                        "kind": "code", "what_is_wrong": f"{s['why']} (found by script)",
+                        "where": s["where"]})
+    return out
+
+
 def review(phase: str, rnd: int, context: str, *, clone: pathlib.Path, run: Runner,
-           model: str = OPUS) -> tuple[dict, rank_call.Call]:
-    """One round. The verdict, its findings and a table that passes C1–C7."""
-    c = rank_call.call("red-team", BRIEF.replace("{ROUND}", str(rnd)) + "\n" + context, model,
+           model: str = OPUS, scan: dict | None = None) -> tuple[dict, rank_call.Call]:
+    """One round. The verdict, its findings and a table that passes C1–C7.
+    A "no" on the code checklist, the model's or the script's, makes it a
+    back (Phase 393, K54: a factual defect under K9)."""
+    c = rank_call.call("red-team", brief(rnd) + "\n" + context, model,
                        SCHEMA, cwd=clone, run=run, timeout=3600)
     v = c.structured
     if v.get("verdict") not in (CLEAR, BACK):
@@ -165,6 +297,11 @@ def review(phase: str, rnd: int, context: str, *, clone: pathlib.Path, run: Runn
     findings = v.get("findings")
     if not isinstance(findings, list):
         raise Stop("the findings are not a list")
+    nos = checklist_nos(v, scan)
+    added = [f for f in nos if not any(f["where"] == g.get("where") for g in findings)]
+    if added or nos:
+        findings = [*findings, *added]
+        v = {**v, "findings": findings, "verdict": BACK if nos else v["verdict"]}
     blocking = [f for f in findings if f.get("kind") in ("factual", "citation", "code")]
     if v["verdict"] == CLEAR and blocking:
         raise Stop(f"clear, with {len(blocking)} factual, citation or code findings")

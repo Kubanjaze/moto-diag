@@ -5,21 +5,43 @@ populate actual content: Clymer/Haynes citations (293), per-model torque
 specs (294), failure photo library (295), video tutorial index (296-302).
 """
 
-from motodiag.reference.models import (
-    ManualSource, DiagramType, FailureCategory, SkillLevel,
-    ManualReference, PartsDiagram, FailurePhoto, VideoTutorial,
+from motodiag.reference.diagram_repo import (
+    add_diagram,
+    delete_diagram,
+    get_diagram,
+    list_diagrams,
+    update_diagram,
 )
 from motodiag.reference.manual_repo import (
-    add_manual, get_manual, list_manuals, update_manual, delete_manual,
+    add_manual,
+    delete_manual,
+    get_manual,
+    list_manuals,
+    update_manual,
 )
-from motodiag.reference.diagram_repo import (
-    add_diagram, get_diagram, list_diagrams, update_diagram, delete_diagram,
+from motodiag.reference.models import (
+    DiagramType,
+    FailureCategory,
+    FailurePhoto,
+    ManualReference,
+    ManualSource,
+    PartsDiagram,
+    SkillLevel,
+    VideoTutorial,
 )
 from motodiag.reference.photo_repo import (
-    add_photo, get_photo, list_photos, update_photo, delete_photo,
+    add_photo,
+    delete_photo,
+    get_photo,
+    list_photos,
+    update_photo,
 )
 from motodiag.reference.video_repo import (
-    add_video, get_video, list_videos, update_video, delete_video,
+    add_video,
+    delete_video,
+    get_video,
+    list_videos,
+    update_video,
 )
 
 __all__ = [

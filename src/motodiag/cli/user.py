@@ -18,15 +18,23 @@ import click
 
 from motodiag.auth.models import User
 from motodiag.auth.passwords import (
-    MIN_PASSWORD_LENGTH, PasswordTooShort, hash_password,
+    MIN_PASSWORD_LENGTH,
+    PasswordTooShort,
+    hash_password,
 )
 from motodiag.auth.sessions_repo import (
-    list_user_sessions, revoke_user_sessions, session_client,
+    list_user_sessions,
+    revoke_user_sessions,
+    session_client,
     session_expires_at,
 )
 from motodiag.auth.users_repo import (
-    create_user, deactivate_user, get_user, get_user_by_username,
-    list_users, update_user,
+    create_user,
+    deactivate_user,
+    get_user,
+    get_user_by_username,
+    list_users,
+    update_user,
 )
 from motodiag.cli.theme import get_console
 from motodiag.core.database import init_db

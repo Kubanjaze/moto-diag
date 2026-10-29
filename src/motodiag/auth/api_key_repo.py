@@ -20,7 +20,6 @@ from pydantic import BaseModel, ConfigDict
 
 from motodiag.core.database import get_connection
 
-
 logger = logging.getLogger(__name__)
 
 

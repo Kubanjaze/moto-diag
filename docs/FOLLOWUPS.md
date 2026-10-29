@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F233** (this file). The
+At the time of writing the highest assigned is **F235** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4505,3 +4505,47 @@ Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 
 - The first stop was the fork at Step 0: "The fork at Step 0" (docs/phases/completed/303_implementation.md p. 208)
 
 What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).
+
+### F234
+
+**182 `except Exception` handlers in `src/` still catch every error, 22 of them only to pass**
+
+Found in Phase 393 (2026-10-29), Step 0 (`393_step0.md`, S0-6): an `ast`
+walk of `src/motodiag` found 185 handlers of `except Exception`, 25 of them
+with a body of only `pass`. Phase 393 fixed the three in
+`memory/erase.py` (bug fix #2: a locked table during a customer's erase was
+swallowed and the erase reported success), which leaves 182, and 22 that
+only pass. The 22 are listed by `scripts/code_quality.py`'s `swallowed()`;
+16 are in `hardware/` (the dashboard, the protocol drivers and the
+recorder), where a dropped serial error can read as a quiet bus.
+
+What it affects: each one turns an error its author did not foresee into
+silence. `SWALLOWED_EXCEPTIONS` in `tests/support/quality_counts.py` pins
+the pass-only count, so it can only fall; the other 160 are not counted.
+
+What would close it: each handler names the error it was written for (as
+393 did for the erase), or re-raises what it does not expect; the pin falls
+to 0, and a count of every `except Exception` is pinned beside it.
+
+### F235
+
+**Money and time are formatted by 19 private copies, which disagree**
+
+Found in Phase 393 (2026-10-29), Step 0 (`393_step0.md`, S0-6): `ast` over
+`src/motodiag` finds 7 functions named `_money`, 6 `_now` and 6 `_now_iso`.
+Six `_money` take cents (`reporting/builders.py`, `accounting/export.py`,
+`inventory/warranty_claims.py`, `cli/shop_finance.py`, `cli/payments.py`,
+`cli/shop_inventory.py`) and one takes float dollars
+(`shop/notifications.py`); they disagree on a missing amount ("—" against
+"not recorded"). `git grep -n -E "^\s*def _\w*(money|now|cents|dollars)\w*\("`
+lists 37 private names touching money or time in all.
+
+What it affects: an invoice, a warranty claim and a notification can show
+one amount three ways, and a fix to one copy reaches none of the others.
+`PRIVATE_HELPERS` in `tests/support/quality_counts.py` pins the 19, so a
+new copy fails the suite.
+
+What would close it: one module for money (cents in, one rule for a
+missing amount) and one for time, every copy replaced by an import, the pin
+lowered to 0. Out of Phase 393's scope by its prompt ("consolidating the
+money and time helpers").

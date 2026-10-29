@@ -39,9 +39,10 @@ from motodiag.hardware.protocols.exceptions import (
 )
 from motodiag.hardware.protocols.exceptions import (
     ProtocolError,
+)
+from motodiag.hardware.protocols.exceptions import (
     TimeoutError as ProtocolTimeoutError,
 )
-
 
 # ---------------------------------------------------------------------------
 # KWP2000 service identifiers (ISO 14230-3)

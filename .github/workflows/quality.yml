@@ -1,0 +1,31 @@
+# Phase 393 (K54): the code's lint and type ratchet, and the ROADMAP ledger,
+# on every pull request, off the home desktop. The repository is public, so
+# GitHub's runners cost nothing.
+#
+# It runs no live-data path and holds no secret: nothing reads `secrets.`,
+# and the token GitHub gives the run can only read. `tests/conftest.py` finds
+# no live.json here and runs without live, as on the Mac (Phase 382).
+# tests/test_phase393_actions.py holds this shape.
+name: code quality
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ratchet:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install the package with the pinned tools
+        run: python -m pip install -e ".[dev]"
+      - name: The lint and type ratchet
+        run: python -m pytest -p no:cacheprovider -o addopts= -q tests/test_phase393_quality_ratchet.py
+      - name: The ROADMAP ledger
+        run: python .claude/skills/closeout/roadmap_check.py

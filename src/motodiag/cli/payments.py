@@ -21,11 +21,16 @@ from motodiag.core.database import init_db
 from motodiag.core.timestamps import local_display
 from motodiag.payments import stripe_api
 from motodiag.payments.connect import (
-    ConnectError, connect_shop, get_shop_account, onboarding_link,
+    ConnectError,
+    connect_shop,
+    get_shop_account,
+    onboarding_link,
     refresh_status,
 )
 from motodiag.payments.invoice_payments import (
-    payments_for_invoice, start_checkout, start_terminal,
+    payments_for_invoice,
+    start_checkout,
+    start_terminal,
 )
 from motodiag.payments.terminal import setup_simulated_reader
 

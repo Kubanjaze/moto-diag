@@ -55,7 +55,11 @@ from typing import Optional
 from motodiag.hardware.protocols.base import ProtocolAdapter
 from motodiag.hardware.protocols.exceptions import (
     ConnectionError as ProtocolConnectionError,
+)
+from motodiag.hardware.protocols.exceptions import (
     ProtocolError,
+)
+from motodiag.hardware.protocols.exceptions import (
     TimeoutError as ProtocolTimeoutError,
 )
 

@@ -40,7 +40,6 @@ from typing import Any
 
 import click
 
-
 # --- Minimal inline stylesheet for the HTML wrapper ----------------------
 #
 # Intentionally small and print-friendly: serif body, readable margins,

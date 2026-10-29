@@ -21,15 +21,18 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from motodiag.api.deps import get_db_path
 from motodiag.auth.deps import AuthedUser, get_current_user
-from motodiag.core.timestamps import with_utc_times
 from motodiag.core.models import (
-    BatteryChemistry, EngineType, PowertrainType,
-    ProtocolType, VehicleBase, VehicleTransmission,
+    BatteryChemistry,
+    EngineType,
+    PowertrainType,
+    ProtocolType,
+    VehicleBase,
+    VehicleTransmission,
 )
+from motodiag.core.timestamps import with_utc_times
 from motodiag.vehicles.registry import (
     TIER_VEHICLE_LIMITS,
     VehicleOwnershipError,
-    VehicleQuotaExceededError,
     add_vehicle_for_owner,
     check_vehicle_quota,
     count_vehicles_for_owner,
@@ -38,7 +41,6 @@ from motodiag.vehicles.registry import (
     list_vehicles_for_owner,
     update_vehicle_for_owner,
 )
-
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/vehicles", tags=["vehicles"])

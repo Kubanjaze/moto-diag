@@ -26,7 +26,10 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from motodiag.core.database import get_connection
 from motodiag.core.timestamps import (
-    local_day, local_day_start, stored_instant, utc_cutoff,
+    local_day,
+    local_day_start,
+    stored_instant,
+    utc_cutoff,
 )
 from motodiag.shop.bay_scheduler import utilization_for_day
 from motodiag.shop.invoicing import RevenueRollup, revenue_rollup
@@ -35,7 +38,6 @@ from motodiag.shop.shop_costs import (
     list_expenses,
     list_mechanic_cost_rates,
 )
-
 
 # ---------------------------------------------------------------------------
 # Constants

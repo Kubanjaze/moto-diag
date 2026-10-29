@@ -15,14 +15,15 @@ import logging
 from datetime import datetime, timezone
 from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 from motodiag.core.database import get_connection
 from motodiag.shop.work_order_repo import (
-    InvalidWorkOrderTransition, TERMINAL_STATUSES, WorkOrderNotFoundError,
-    require_work_order, update_work_order,
+    TERMINAL_STATUSES,
+    InvalidWorkOrderTransition,
+    require_work_order,
+    update_work_order,
 )
-
 
 logger = logging.getLogger(__name__)
 

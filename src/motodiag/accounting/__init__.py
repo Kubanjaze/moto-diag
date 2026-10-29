@@ -6,13 +6,23 @@ a Xero sales-invoice file (Phase 275, rows 277 and 278). Syncing with
 either through its API is paused (rows 365 and 366).
 """
 
-from motodiag.accounting.models import (
-    InvoiceStatus, InvoiceLineItemType, Invoice, InvoiceLineItem,
-)
 from motodiag.accounting.invoice_repo import (
-    create_invoice, get_invoice, get_invoice_by_number, list_invoices,
-    update_invoice, delete_invoice,
-    add_line_item, get_line_items, update_line_item, delete_line_item,
+    add_line_item,
+    create_invoice,
+    delete_invoice,
+    delete_line_item,
+    get_invoice,
+    get_invoice_by_number,
+    get_line_items,
+    list_invoices,
+    update_invoice,
+    update_line_item,
+)
+from motodiag.accounting.models import (
+    Invoice,
+    InvoiceLineItem,
+    InvoiceLineItemType,
+    InvoiceStatus,
 )
 
 __all__ = [

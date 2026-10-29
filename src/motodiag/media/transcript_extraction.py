@@ -47,7 +47,6 @@ from typing import Optional
 
 from motodiag.engine.symptoms import SYMPTOM_CATEGORIES, categorize_symptoms
 
-
 # Sentence + clause boundary regex. Matches periods, exclamation,
 # question marks, semicolons (sentence boundaries) and commas (clause
 # boundaries). Tolerates whitespace + multiple punctuation marks.

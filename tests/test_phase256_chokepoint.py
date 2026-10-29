@@ -569,9 +569,10 @@ class TestNothingBypassesTheChokepoint:
         assert sorted(set(found)) == [
             "capture/stats.py:19",
             "core/timestamps.py:229",  # 379 added column_cutoff above it
-            "shop/intake_repo.py:91",
-            "shop/issue_repo.py:173",
-            "shop/work_order_repo.py:112",
+            # 393's import clean-up moved these three up one line each.
+            "shop/intake_repo.py:90",
+            "shop/issue_repo.py:172",
+            "shop/work_order_repo.py:111",
         ], f"new dynamic table-name query: {sorted(set(found))}"
 
 

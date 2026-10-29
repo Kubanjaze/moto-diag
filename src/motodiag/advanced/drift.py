@@ -53,7 +53,6 @@ from pydantic import BaseModel, ConfigDict, Field
 from motodiag.core.database import get_connection
 from motodiag.core.timestamps import column_cutoff
 
-
 # ---------------------------------------------------------------------------
 # Unicode 1/8 block sparkline palette (copied from Phase 143 dashboard)
 # ---------------------------------------------------------------------------

@@ -11,7 +11,6 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 RidabilityImpact = Literal["none", "low", "med", "high"]
 SeverityTier = Literal[1, 2, 3, 4, 5]
 

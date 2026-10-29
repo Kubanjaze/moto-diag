@@ -23,8 +23,8 @@ make-scoped, truncated at the first contrast marker, and silent when unsure.
 from __future__ import annotations
 
 import re
-from functools import lru_cache
 import sqlite3
+from functools import lru_cache
 from typing import Optional
 
 from motodiag.core.database import get_connection

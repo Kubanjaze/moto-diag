@@ -38,16 +38,28 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import (
-    APIRouter, BackgroundTasks, Depends, File, Form, HTTPException,
-    Path as PathParam, UploadFile, status,
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+    status,
+)
+from fastapi import (
+    Path as PathParam,
 )
 from fastapi.responses import FileResponse
-from pydantic import ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
-from motodiag.api.uploads import UploadTooLargeError, read_bounded
-from motodiag.api.deps import get_db_path, get_settings as get_api_settings
+from motodiag.api.deps import get_db_path
+from motodiag.api.deps import get_settings as get_api_settings
+from motodiag.api.uploads import read_bounded
 from motodiag.auth.deps import (
-    AuthedUser, get_current_user, require_tier,
+    AuthedUser,
+    get_current_user,
+    require_tier,
 )
 from motodiag.capture import record_guidance_interaction
 from motodiag.core import video_repo
@@ -55,7 +67,6 @@ from motodiag.core.config import Settings
 from motodiag.core.models import VideoBase, VideoResponse
 from motodiag.media.paths import resolve_media_path, stored_media_path
 from motodiag.media.vision_types import GuidanceResponse
-from pydantic import BaseModel, Field
 
 
 class AskRequest(BaseModel):
@@ -512,7 +523,8 @@ def ask_about_video(
         )
 
     from motodiag.knowledge.retrieval import (
-        candidate_fetch_size, rows_for_machine,
+        candidate_fetch_size,
+        rows_for_machine,
     )
     from motodiag.knowledge.vehicle_resolver import known_issues_for_vehicle
     from motodiag.media import ffmpeg as ffmpeg_module

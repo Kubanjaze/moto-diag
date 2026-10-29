@@ -6,10 +6,9 @@ to work; new code should set `dtc_category` for proper classification.
 """
 
 import json
-from typing import Optional
 
 from motodiag.core.database import get_connection
-from motodiag.core.models import DTCCode, DTCCategory, SymptomCategory, Severity
+from motodiag.core.models import DTCCategory, DTCCode
 
 
 def add_dtc(dtc: DTCCode, db_path: str | None = None) -> None:

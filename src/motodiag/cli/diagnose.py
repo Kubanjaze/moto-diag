@@ -26,32 +26,38 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from motodiag.cli.theme import get_console, status as theme_status, severity_style
+from motodiag.cli.theme import get_console, severity_style
+from motodiag.cli.theme import status as theme_status
 
 _log = logging.getLogger(__name__)
-from motodiag.knowledge.vehicle_resolver import (
-    VehicleIdentity,
-    known_issues_for_vehicle,
-)
-from motodiag.cli.subscription import (
-    SubscriptionTier,
-    current_tier,
-    get_enforcement_mode,
-    ENFORCEMENT_MODE_HARD,
-)
 from motodiag.cli.completion import (
     complete_bike_slug,
     complete_session_id,
 )
-from motodiag.core.database import init_db, get_connection
-from motodiag.core.timestamps import local_display
-from motodiag.core.session_repo import (
-    create_session, get_session, list_sessions, set_diagnosis,
-    close_session, update_session, reopen_session, append_note, get_notes,
+from motodiag.cli.subscription import (
+    ENFORCEMENT_MODE_HARD,
+    current_tier,
+    get_enforcement_mode,
 )
-from motodiag.knowledge.issues_repo import search_known_issues
+from motodiag.core.database import get_connection, init_db
+from motodiag.core.session_repo import (
+    append_note,
+    close_session,
+    create_session,
+    get_notes,
+    get_session,
+    list_sessions,
+    reopen_session,
+    set_diagnosis,
+    update_session,
+)
+from motodiag.core.timestamps import local_display
 from motodiag.knowledge.prompt_rows import compose_prompt_rows
 from motodiag.knowledge.retrieval import candidate_fetch_size, rows_for_machine
+from motodiag.knowledge.vehicle_resolver import (
+    VehicleIdentity,
+    known_issues_for_vehicle,
+)
 from motodiag.vehicles.registry import get_vehicle
 
 # --- Slug parsing tunables ---
@@ -1237,7 +1243,7 @@ def register_diagnose(cli_group: click.Group) -> None:
         ai_model = _resolve_model(tier, ai_model_flag)
         if ai_model_flag and ai_model != ai_model_flag.lower():
             console.print(
-                f"[yellow]⚠ Sonnet requires Shop tier+. Falling back to Haiku (soft enforcement).[/yellow]"
+                "[yellow]⚠ Sonnet requires Shop tier+. Falling back to Haiku (soft enforcement).[/yellow]"
             )
 
         symptom_list = _parse_symptoms(symptoms)
@@ -1582,6 +1588,7 @@ def register_diagnose(cli_group: click.Group) -> None:
                     "Example: --format pdf --output session.pdf"
                 )
             from pathlib import Path
+
             from motodiag.cli.export import format_as_pdf, write_binary
             pdf_bytes = format_as_pdf(
                 title=f"Session #{s['id']}",

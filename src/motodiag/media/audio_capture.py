@@ -10,7 +10,6 @@ Designed for phone microphone input in noisy motorcycle shop environments.
 
 import array
 import math
-import os
 import struct
 import wave
 from datetime import datetime, timezone

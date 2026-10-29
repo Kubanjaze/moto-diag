@@ -1,6 +1,7 @@
 """Symptom repository — CRUD and search for mechanic-reported symptoms."""
 
 import json
+
 from motodiag.core.database import get_connection
 
 

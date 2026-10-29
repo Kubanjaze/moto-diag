@@ -6,23 +6,48 @@ and reference data.
 """
 
 from motodiag.engine.client import DiagnosticClient
+from motodiag.engine.confidence import (
+    ConfidenceScore,
+    rank_diagnoses,
+    score_diagnosis_from_evidence,
+)
+from motodiag.engine.correlation import SymptomCorrelator
+from motodiag.engine.fault_codes import FaultCodeInterpreter, FaultCodeResult
+from motodiag.engine.intermittent import IntermittentAnalyzer
 from motodiag.engine.models import (
-    DiagnosticResponse, DiagnosisItem, DiagnosticSeverity, TokenUsage, SessionMetrics,
+    DiagnosisItem,
+    DiagnosticResponse,
+    DiagnosticSeverity,
+    SessionMetrics,
+    TokenUsage,
+)
+from motodiag.engine.parts import (
+    PartRecommendation,
+    PartSource,
+    PartsRecommender,
+    ToolRecommendation,
 )
 from motodiag.engine.prompts import (
-    DIAGNOSTIC_SYSTEM_PROMPT, build_vehicle_context, build_symptom_context,
-    build_knowledge_context, build_full_prompt,
+    DIAGNOSTIC_SYSTEM_PROMPT,
+    build_full_prompt,
+    build_knowledge_context,
+    build_symptom_context,
+    build_vehicle_context,
 )
-from motodiag.engine.fault_codes import FaultCodeInterpreter, FaultCodeResult
-from motodiag.engine.workflows import DiagnosticWorkflow, WorkflowStep, StepResult
-from motodiag.engine.confidence import ConfidenceScore, score_diagnosis_from_evidence, rank_diagnoses
-from motodiag.engine.repair import RepairProcedureGenerator, RepairProcedure, RepairStep, SkillLevel
-from motodiag.engine.parts import PartsRecommender, PartRecommendation, ToolRecommendation, PartSource
-from motodiag.engine.safety import SafetyChecker, SafetyAlert, AlertLevel, format_alerts
-from motodiag.engine.correlation import SymptomCorrelator
-from motodiag.engine.intermittent import IntermittentAnalyzer
-from motodiag.engine.wiring import get_circuit_reference, get_circuits_by_system, build_wiring_context
-from motodiag.engine.service_data import get_torque_spec, get_service_interval, get_valve_clearance, build_service_data_context
+from motodiag.engine.repair import RepairProcedure, RepairProcedureGenerator, RepairStep, SkillLevel
+from motodiag.engine.safety import AlertLevel, SafetyAlert, SafetyChecker, format_alerts
+from motodiag.engine.service_data import (
+    build_service_data_context,
+    get_service_interval,
+    get_torque_spec,
+    get_valve_clearance,
+)
+from motodiag.engine.wiring import (
+    build_wiring_context,
+    get_circuit_reference,
+    get_circuits_by_system,
+)
+from motodiag.engine.workflows import DiagnosticWorkflow, StepResult, WorkflowStep
 
 __all__ = [
     # Phase 79 — Client + models + prompts

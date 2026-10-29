@@ -2,10 +2,8 @@
 
 from typing import Optional
 
-from motodiag.core.severity import SEVERITY_RANK_SQL
 from motodiag.core.database import get_connection
-
-
+from motodiag.core.severity import SEVERITY_RANK_SQL
 
 
 def list_recalls_for_vehicle(

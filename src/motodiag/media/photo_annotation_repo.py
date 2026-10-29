@@ -7,7 +7,7 @@ actual canvas overlay using this metadata.
 from typing import Optional
 
 from motodiag.core.database import get_connection
-from motodiag.media.photo_annotation import PhotoAnnotation, AnnotationShape
+from motodiag.media.photo_annotation import AnnotationShape, PhotoAnnotation
 
 
 def add_annotation(annotation: PhotoAnnotation, db_path: str | None = None) -> int:

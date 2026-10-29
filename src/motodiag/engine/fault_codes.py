@@ -336,8 +336,8 @@ class FaultCodeInterpreter:
                 for this input fingerprint.
         """
         from motodiag.engine.prompts import (
-            build_vehicle_context,
             build_knowledge_context,
+            build_vehicle_context,
         )
 
         # Step 1: Classify the code

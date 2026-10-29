@@ -71,7 +71,6 @@ from typing import Optional
 from motodiag.advanced.models import FailurePrediction, PredictionConfidence
 from motodiag.knowledge.issues_repo import search_known_issues
 
-
 # --- Tunable constants ---
 
 # Severity-weight for sort tiebreaking. Critical floats to the top.
@@ -750,8 +749,9 @@ def _lookup_parts_cost(
     Phase 148 behaviour.
     """
     try:
-        from motodiag.advanced.parts_repo import lookup_typical_cost
         import json as _json
+
+        from motodiag.advanced.parts_repo import lookup_typical_cost
 
         if isinstance(parts_needed_raw, list):
             names = parts_needed_raw

@@ -30,6 +30,20 @@ in the retention set a repair shop is required to keep, so it has no retention
 justification and must be deletable on request.
 """
 
+from motodiag.memory.answers import Answer, answer_from_memory
+from motodiag.memory.compile import (
+    CompileResult,
+    compile_all,
+    compile_all_detailed,
+    compile_vehicle,
+    compile_vehicle_detailed,
+)
+from motodiag.memory.erase import (
+    SENTINEL_CUSTOMER_ID,
+    attach_vehicle,
+    erase_customer,
+    erase_plan,
+)
 from motodiag.memory.facts import (
     FACT_KINDS,
     SOURCES,
@@ -39,21 +53,7 @@ from motodiag.memory.facts import (
     list_facts,
     reconcile_facts,
 )
-from motodiag.memory.compile import (
-    CompileResult,
-    compile_all,
-    compile_all_detailed,
-    compile_vehicle,
-    compile_vehicle_detailed,
-)
 from motodiag.memory.recall import recall, recall_summary
-from motodiag.memory.answers import Answer, answer_from_memory
-from motodiag.memory.erase import (
-    SENTINEL_CUSTOMER_ID,
-    attach_vehicle,
-    erase_customer,
-    erase_plan,
-)
 
 __all__ = [
     "FACT_KINDS",

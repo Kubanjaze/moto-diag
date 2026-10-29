@@ -55,7 +55,6 @@ from motodiag.shop.rbac import (
 )
 from motodiag.shop.shop_repo import get_shop
 
-
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
 

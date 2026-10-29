@@ -6,14 +6,14 @@ add_checklist_item calls to populate PPI, tire service, winterization, etc.
 """
 
 import json
-from typing import Optional
 
 from motodiag.core.database import get_connection
 from motodiag.core.timestamps import utc_now
 from motodiag.workflows.models import (
-    WorkflowCategory, WorkflowTemplate, ChecklistItem,
+    ChecklistItem,
+    WorkflowCategory,
+    WorkflowTemplate,
 )
-
 
 # --- Template CRUD ---
 

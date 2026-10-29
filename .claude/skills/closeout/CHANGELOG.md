@@ -1,5 +1,17 @@
 # closeout — changelog
 
+## 2026-10-29 — the regression of record measures coverage (Phase 393, K54)
+
+`regression.sh` runs the suite with `--cov=motodiag`, writes the data and a
+JSON beside its log (`COVERAGE_FILE`, `--cov-report=json:`), and runs
+`scripts/code_quality.py coverage-gate`: a total below `COVERAGE_PERCENT`
+(`tests/support/quality_counts.py`) sets RC=1, so the line printed is
+"Regression run FAILED (not of record)". It then prints the gate's line,
+"Line coverage of record: <n>% at `<hash>` (the pin is …)", which the
+weekly page reads. Measured at 393's Step 0 in the fence: 35 min 33 s with
+coverage against 303's 35 min 1 s without. Held by
+`tests/test_phase393_quality_ratchet.py` (the gate and its wiring).
+
 ## 2026-10-26 — R8: a paste block's `gh` names its repository (F222)
 
 The operator, in Phase 391's prompt: "Every gh call in an operator paste

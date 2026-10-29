@@ -6,12 +6,17 @@ English-only content at this stage.
 """
 
 from motodiag.i18n.models import Locale, Translation
-from motodiag.i18n.translator import t, current_locale, set_locale
 from motodiag.i18n.translation_repo import (
-    get_translation, set_translation, list_translations,
-    delete_translation, import_translations, locale_completeness,
-    list_locales, count_translations,
+    count_translations,
+    delete_translation,
+    get_translation,
+    import_translations,
+    list_locales,
+    list_translations,
+    locale_completeness,
+    set_translation,
 )
+from motodiag.i18n.translator import current_locale, set_locale, t
 
 __all__ = [
     "Locale", "Translation",

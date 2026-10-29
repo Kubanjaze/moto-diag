@@ -5,7 +5,6 @@ symptom matches, DTC codes, knowledge base matches, test results, vehicle histor
 and environmental factors. Scores are 0.0-1.0 with explicit uncertainty handling.
 """
 
-from typing import Optional
 
 from pydantic import BaseModel, Field
 

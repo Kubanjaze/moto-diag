@@ -21,15 +21,15 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 from motodiag.api.deps import get_db_path
-from motodiag.core.timestamps import with_utc_times
-from motodiag.push.events import notify_wo_assigned, notify_wo_transition
-from motodiag.shop.time_entries import (
-    close_open_entries_for_wo,
-    total_seconds_for_wo,
-)
 from motodiag.auth.deps import (
-    AuthedUser, SUBSCRIPTION_TIERS, get_current_user, require_tier,
+    AuthedUser,
+    get_current_user,
+    require_tier,
 )
+from motodiag.core.timestamps import with_utc_times
+from motodiag.crm import customer_repo
+from motodiag.crm.models import Customer
+from motodiag.push.events import notify_wo_assigned, notify_wo_transition
 from motodiag.shop import (
     add_shop_member,
     assign_mechanic,
@@ -40,35 +40,37 @@ from motodiag.shop import (
     create_work_order,
     dashboard_snapshot,
     generate_invoice_for_wo,
-    get_shop,
-    get_shop_by_name,
     get_invoice_with_items,
+    get_shop,
+    get_work_order,
     has_shop_permission,
+    list_intakes,
     list_invoices_for_shop,
     list_issues,
-    list_intakes,
     list_notifications,
     list_shop_members,
-    list_shops,
     list_work_orders,
-    get_work_order,
-    unassign_mechanic,
-    require_shop_permission,
     revenue_rollup,
     seed_first_owner,
     top_issues,
     trigger_notification,
+    unassign_mechanic,
     update_shop,
 )
 from motodiag.shop.rbac import PermissionDenied
-from motodiag.shop.work_order_repo import (
-    cancel_work_order, complete_work_order,
-    open_work_order, pause_work, reopen_work_order,
-    resume_work, start_work,
+from motodiag.shop.time_entries import (
+    close_open_entries_for_wo,
+    total_seconds_for_wo,
 )
-from motodiag.crm import customer_repo
-from motodiag.crm.models import Customer
-
+from motodiag.shop.work_order_repo import (
+    cancel_work_order,
+    complete_work_order,
+    open_work_order,
+    pause_work,
+    reopen_work_order,
+    resume_work,
+    start_work,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/shop", tags=["shop-management"])

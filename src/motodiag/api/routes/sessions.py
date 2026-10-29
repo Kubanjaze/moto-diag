@@ -23,9 +23,8 @@ from motodiag.api.deps import get_db_path
 from motodiag.auth.deps import AuthedUser, get_current_user
 from motodiag.capture import capture_session_overrides
 from motodiag.core.session_repo import (
-    SessionOwnershipError,
     TIER_SESSION_MONTHLY_LIMITS,
-    _assert_owner,
+    SessionOwnershipError,
     add_fault_code_for_owner,
     add_symptom_for_owner,
     append_note_for_owner,
@@ -38,7 +37,6 @@ from motodiag.core.session_repo import (
     reopen_session_for_owner,
     update_session_for_owner,
 )
-
 
 logger = logging.getLogger(__name__)
 _log = logging.getLogger(__name__)

@@ -24,16 +24,16 @@ thing that matters for the thing that might matter later. Same contract Phase
 244L set for cost recording, for the same reason.
 """
 
+from motodiag.capture.analyses import (
+    current_analysis,
+    list_analyses,
+    record_analysis,
+)
 from motodiag.capture.guidance_log import (
-    record_guidance_interaction,
     list_interactions,
+    record_guidance_interaction,
 )
 from motodiag.capture.overrides import capture_session_overrides
-from motodiag.capture.analyses import (
-    record_analysis,
-    list_analyses,
-    current_analysis,
-)
 from motodiag.capture.stats import capture_stats
 
 __all__ = [

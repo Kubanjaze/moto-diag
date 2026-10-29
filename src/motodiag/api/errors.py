@@ -17,7 +17,6 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -51,98 +50,132 @@ def _exc_class_chain():
     eagerly at FastAPI boot isn't ideal. Lazy resolution keeps
     ``from motodiag.api import create_app`` fast.
     """
-    from motodiag.shop.bay_scheduler import (
-        BayNotFoundError, InvalidSlotTransition, SlotNotFoundError,
-        SlotOverlapError,
-    )
-    from motodiag.shop.invoicing import (
-        InvoiceGenerationError, InvoiceNotFoundError, InvoiceTaxNotOnRecord,
-    )
-    from motodiag.shop.issue_repo import (
-        InvalidIssueTransition, IssueFKError, IssueNotFoundError,
-    )
-    from motodiag.shop.notifications import (
-        InvalidNotificationTransition, NotificationContextError,
-        NotificationNotFoundError,
-    )
-    from motodiag.shop.parts_needs import (
-        InvalidPartNeedTransition, PartNotInCatalogError,
-        WorkOrderPartNotFoundError,
-    )
-    from motodiag.shop.time_entries import (
-        NoOpenTimeEntryError, TimeEntryNotFoundError,
-    )
-    from motodiag.shop.rbac import (
-        InvalidRoleError, MechanicNotInShopError, PermissionDenied,
-        ShopMembershipNotFoundError,
-    )
-    from motodiag.shop.shop_repo import (
-        ShopNameExistsError, ShopNotFoundError,
-    )
-    from motodiag.shop.intake_repo import (
-        IntakeAlreadyClosedError, IntakeNotFoundError,
-    )
-    from motodiag.shop.work_order_repo import (
-        InvalidWorkOrderTransition, WorkOrderFKError,
-        WorkOrderNotFoundError,
-    )
-    from motodiag.shop.workflow_actions import InvalidActionError
-    from motodiag.shop.workflow_conditions import InvalidConditionError
-    from motodiag.shop.workflow_rules import (
-        DuplicateRuleNameError, InvalidEventError, RuleNotFoundError,
-    )
+    from motodiag.api.routes.videos import VideoFileTooLargeError
+    from motodiag.api.uploads import UploadTooLargeError
+
     # Phase 176 — auth + billing
     from motodiag.auth.api_key_repo import (
-        ApiKeyNotFoundError, InvalidApiKeyError,
+        ApiKeyNotFoundError,
+        InvalidApiKeyError,
     )
     from motodiag.auth.deps import (
         SubscriptionRequiredError,
         SubscriptionTierInsufficientError,
     )
-    from motodiag.auth.rate_limiter import RateLimitExceededError
+
     # Phase 303 — staff logins
     from motodiag.auth.passwords import PasswordTooShort
+    from motodiag.auth.rate_limiter import RateLimitExceededError
     from motodiag.auth.sessions_repo import (
-        LoginFailedError, LoginSessionNotFoundError, NotASessionError,
+        LoginFailedError,
+        LoginSessionNotFoundError,
+        NotASessionError,
     )
     from motodiag.billing.providers import (
-        BillingProviderError, StripeLibraryMissingError,
+        BillingProviderError,
+        StripeLibraryMissingError,
         WebhookSignatureError,
     )
-    # Phase 177 — vehicle domain
-    from motodiag.vehicles.registry import (
-        VehicleOwnershipError, VehicleQuotaExceededError,
-    )
+
     # Phase 178 — diagnostic session domain
     from motodiag.core.session_repo import (
-        SessionOwnershipError, SessionQuotaExceededError,
+        SessionOwnershipError,
+        SessionQuotaExceededError,
     )
-    # Phase 182 — report builders
-    from motodiag.reporting.builders import ReportBuildError
+
     # Phase 191B — video domain
     from motodiag.core.video_repo import (
-        VideoOwnershipError, VideoQuotaExceededError,
+        VideoOwnershipError,
+        VideoQuotaExceededError,
     )
-    from motodiag.api.routes.videos import VideoFileTooLargeError
-    # Phase 209D — the monthly AI spend cap (off unless one is configured)
-    from motodiag.shop.cost_cap import CostCapExceeded
-    from motodiag.api.uploads import UploadTooLargeError
-    # Phase 194 — work-order photo domain
-    from motodiag.shop.wo_photo_repo import (
-        WorkOrderPhotoOwnershipError,
-        WorkOrderPhotoQuotaExceededError,
-        WorkOrderPhotoPairingError,
+    from motodiag.media.audio_pipeline import (
+        AudioDecodeError,
+        UnsupportedAudioFormatError,
     )
     from motodiag.media.photo_pipeline import (
-        ImageDecodeError, UnsupportedImageFormatError,
+        ImageDecodeError,
+        UnsupportedImageFormatError,
     )
+
+    # Phase 182 — report builders
+    from motodiag.reporting.builders import ReportBuildError
+    from motodiag.shop.bay_scheduler import (
+        BayNotFoundError,
+        InvalidSlotTransition,
+        SlotNotFoundError,
+        SlotOverlapError,
+    )
+
+    # Phase 209D — the monthly AI spend cap (off unless one is configured)
+    from motodiag.shop.cost_cap import CostCapExceeded
+    from motodiag.shop.intake_repo import (
+        IntakeAlreadyClosedError,
+        IntakeNotFoundError,
+    )
+    from motodiag.shop.invoicing import (
+        InvoiceGenerationError,
+        InvoiceNotFoundError,
+        InvoiceTaxNotOnRecord,
+    )
+    from motodiag.shop.issue_repo import (
+        InvalidIssueTransition,
+        IssueFKError,
+        IssueNotFoundError,
+    )
+    from motodiag.shop.notifications import (
+        InvalidNotificationTransition,
+        NotificationContextError,
+        NotificationNotFoundError,
+    )
+    from motodiag.shop.parts_needs import (
+        InvalidPartNeedTransition,
+        PartNotInCatalogError,
+        WorkOrderPartNotFoundError,
+    )
+    from motodiag.shop.rbac import (
+        InvalidRoleError,
+        MechanicNotInShopError,
+        PermissionDenied,
+        ShopMembershipNotFoundError,
+    )
+    from motodiag.shop.shop_repo import (
+        ShopNameExistsError,
+        ShopNotFoundError,
+    )
+    from motodiag.shop.time_entries import (
+        NoOpenTimeEntryError,
+        TimeEntryNotFoundError,
+    )
+
     # Phase 195 — voice transcript domain
     from motodiag.shop.transcript_repo import (
         VoiceTranscriptOwnershipError,
         VoiceTranscriptQuotaExceededError,
     )
-    from motodiag.media.audio_pipeline import (
-        AudioDecodeError, UnsupportedAudioFormatError,
+
+    # Phase 194 — work-order photo domain
+    from motodiag.shop.wo_photo_repo import (
+        WorkOrderPhotoOwnershipError,
+        WorkOrderPhotoPairingError,
+        WorkOrderPhotoQuotaExceededError,
+    )
+    from motodiag.shop.work_order_repo import (
+        InvalidWorkOrderTransition,
+        WorkOrderFKError,
+        WorkOrderNotFoundError,
+    )
+    from motodiag.shop.workflow_actions import InvalidActionError
+    from motodiag.shop.workflow_conditions import InvalidConditionError
+    from motodiag.shop.workflow_rules import (
+        DuplicateRuleNameError,
+        InvalidEventError,
+        RuleNotFoundError,
+    )
+
+    # Phase 177 — vehicle domain
+    from motodiag.vehicles.registry import (
+        VehicleOwnershipError,
+        VehicleQuotaExceededError,
     )
 
     # tuple of (exception_class, http_status, slug, title)

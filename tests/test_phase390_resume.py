@@ -39,7 +39,7 @@ from test_phase388_dispatcher import LIMITED, USAGE_LIMITED, Clock, claude_json 
 from test_phase389_dispatcher import ASSESS, BRANCH, LINE, PHASE, PLAN, TERMS  # noqa: E402
 from test_phase389_dispatcher import TITLE, TRIAL, FakeEngineer, GitHub  # noqa: E402
 from test_phase389_fleet_git import git, make_origin  # noqa: E402
-from test_phase389_red_team import FINDING, TABLE  # noqa: E402
+from test_phase389_red_team import FINDING, TABLE, red_json  # noqa: E402
 
 N = 31
 CUT = "sess-cut"
@@ -48,10 +48,8 @@ V1 = claude_json({"implementation_md": PLAN})
 APPROVE = claude_json({"verdict": "approve", "items": [], "reason": "ok"})
 XO_BACK = claude_json({"verdict": "back-to-captain", "items": ["Name the file."],
                        "reason": "One defect."})
-BACK = claude_json({"verdict": "back", "findings": [FINDING], "refuter_pass": TABLE},
-                   model=rank_call.OPUS)
-CLEAR = claude_json({"verdict": "clear", "findings": [], "refuter_pass": TABLE},
-                    model=rank_call.OPUS)
+BACK = red_json("back", [FINDING])
+CLEAR = red_json("clear", [])
 MERGE = claude_json({"decision": "merge", "lines": ["It adds row 385.", "Green.", "Merge."]})
 DIGEST = claude_json({"summary": "A quiet day."}, model=rank_call.HAIKU)
 

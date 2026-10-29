@@ -17,7 +17,6 @@ from typing import Literal, Optional
 
 from motodiag.core.database import get_connection
 
-
 ExtractionMethod = Literal["keyword", "claude", "manual_edit"]
 
 

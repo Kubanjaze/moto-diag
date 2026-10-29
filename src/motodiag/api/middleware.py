@@ -10,7 +10,6 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
-
 logger = logging.getLogger("motodiag.api.access")
 
 
@@ -110,7 +109,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         """Best-effort API key or session resolution. Doesn't 401 here —
         that's the route's ``require_api_key`` dep's job."""
         from motodiag.auth.deps import (
-            _extract_key_from_headers, API_KEY_HEADER, resolve_credential,
+            API_KEY_HEADER,
+            _extract_key_from_headers,
+            resolve_credential,
         )
         header = request.headers.get(API_KEY_HEADER)
         authz = request.headers.get("Authorization")

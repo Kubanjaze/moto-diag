@@ -9,7 +9,6 @@ from typing import Optional
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 # Four levels up from src/motodiag/core/config.py is the repo root — in a
 # SOURCE CHECKOUT. In an installed package the same arithmetic lands on
 # `<venv>/lib/python3.x`, because site-packages sits one level shallower

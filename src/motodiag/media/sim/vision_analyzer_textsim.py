@@ -21,12 +21,12 @@ from __future__ import annotations
 from typing import Optional
 
 from motodiag.media.vision_types import (
+    FLUID_COLOR_GUIDE,
+    SMOKE_COLOR_GUIDE,
     VISION_ANALYSIS_PROMPT,
+    Severity,
     VehicleContext,
     VisualAnalysisResult,
-    SMOKE_COLOR_GUIDE,
-    FLUID_COLOR_GUIDE,
-    Severity,
 )
 
 

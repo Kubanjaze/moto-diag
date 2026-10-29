@@ -40,9 +40,7 @@ import click
 from rich.panel import Panel
 from rich.table import Table
 
-from motodiag.core.severity import SEVERITY_RANK_SQL
 from motodiag.advanced.comparative import (
-    FLEET_UNAVAILABLE,
     PeerComparison,
     _fleet_tables_available,
     _normalize_pid_hex,
@@ -57,7 +55,7 @@ from motodiag.cli.theme import (
     get_console,
 )
 from motodiag.core.database import get_connection, init_db
-
+from motodiag.core.severity import SEVERITY_RANK_SQL
 
 # --- Styling helpers ----------------------------------------------------
 
@@ -216,7 +214,9 @@ def _recall_corpus_warning(console) -> bool:
 def _list_bike_recalls(console, bike: str, json_output: bool) -> None:
     """A garage bike's open and resolved recalls (Phase 281)."""
     from motodiag.advanced.recall_repo import (
-        get_resolutions_for_bike, list_open_for_bike, recall_state,
+        get_resolutions_for_bike,
+        list_open_for_bike,
+        recall_state,
     )
     from motodiag.cli.diagnose import _resolve_bike_slug
     from motodiag.cli.recall_nhtsa import VIN_INCLUSION_NOTE, render_none_found, render_recalls
@@ -904,7 +904,7 @@ def register_advanced(cli_group: click.Group) -> None:
         console = get_console()
         init_db()
 
-        from motodiag.advanced.drift import _render_sparkline, compute_trend
+        from motodiag.advanced.drift import _render_sparkline
         from motodiag.hardware.recorder import RecordingManager
 
         try:
@@ -1705,6 +1705,7 @@ def register_advanced(cli_group: click.Group) -> None:
     ) -> None:
         """Log a completed service event for a bike."""
         from datetime import date as _d
+
         from motodiag.advanced.history_repo import (
             add_service_event,
             get_service_event,

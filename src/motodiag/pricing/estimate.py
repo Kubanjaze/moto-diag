@@ -1,7 +1,7 @@
 """Cost estimation engine — connects diagnostics to pricing."""
 
 from motodiag.pricing.labor_rates import get_labor_rate, get_rate_comparison
-from motodiag.pricing.repair_plan import get_plan, get_plan_items
+from motodiag.pricing.repair_plan import get_plan
 
 
 def estimate_issue_cost(

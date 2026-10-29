@@ -25,13 +25,15 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from motodiag.auth.api_key_repo import (
-    ApiKey, _row_to_key, hash_api_key, key_prefix,
+    ApiKey,
+    _row_to_key,
+    hash_api_key,
+    key_prefix,
 )
 from motodiag.auth.passwords import SCHEME, verify_password
 from motodiag.auth.users_repo import get_user_by_username
 from motodiag.core.database import get_connection
 from motodiag.core.timestamps import stored_instant
-
 
 logger = logging.getLogger(__name__)
 

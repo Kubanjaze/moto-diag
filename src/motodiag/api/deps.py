@@ -11,7 +11,8 @@ from typing import Optional
 
 from fastapi import Request
 
-from motodiag.core.config import Settings, get_settings as _get_settings
+from motodiag.core.config import Settings
+from motodiag.core.config import get_settings as _get_settings
 
 
 def get_settings() -> Settings:

@@ -12,7 +12,8 @@ from typing import Iterator, Optional
 from motodiag.core.database import get_connection
 from motodiag.core.timestamps import utc_cutoff
 from motodiag.feedback.feedback_repo import (
-    count_feedback_by_outcome, _row_to_feedback,
+    _row_to_feedback,
+    count_feedback_by_outcome,
 )
 from motodiag.feedback.models import FeedbackOutcome
 

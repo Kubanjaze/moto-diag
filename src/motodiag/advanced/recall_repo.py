@@ -29,9 +29,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from motodiag.core.severity import severity_rank_sql
 from motodiag.core.database import get_connection
-
+from motodiag.core.severity import severity_rank_sql
 
 # ---------------------------------------------------------------------------
 # VIN decoding

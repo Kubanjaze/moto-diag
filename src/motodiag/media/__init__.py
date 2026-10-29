@@ -14,10 +14,14 @@ Key capabilities:
 
 from motodiag.media.photo_annotation import AnnotationShape, PhotoAnnotation
 from motodiag.media.photo_annotation_repo import (
-    add_annotation, get_annotation,
-    list_annotations_for_image, list_annotations_for_failure_photo,
+    add_annotation,
+    bulk_import_annotations,
     count_annotations_for_image,
-    update_annotation, delete_annotation, bulk_import_annotations,
+    delete_annotation,
+    get_annotation,
+    list_annotations_for_failure_photo,
+    list_annotations_for_image,
+    update_annotation,
 )
 
 __all__ = [

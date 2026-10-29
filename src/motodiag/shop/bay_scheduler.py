@@ -12,9 +12,7 @@ utilization optimization (target 80-90%, warn over 90%).
 
 from __future__ import annotations
 
-import json
 import logging
-import math
 import random
 from datetime import datetime, timedelta, timezone
 from typing import Literal, Optional
@@ -24,9 +22,10 @@ from pydantic import BaseModel, ConfigDict, Field
 from motodiag.core.database import get_connection
 from motodiag.shop.work_order_repo import (
     TERMINAL_STATUSES as WO_TERMINAL_STATUSES,
-    WorkOrderNotFoundError, require_work_order,
 )
-
+from motodiag.shop.work_order_repo import (
+    require_work_order,
+)
 
 logger = logging.getLogger(__name__)
 

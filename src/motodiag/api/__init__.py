@@ -10,5 +10,4 @@ from __future__ import annotations
 
 from motodiag.api.app import APP_VERSION, create_app
 
-
 __all__ = ["APP_VERSION", "create_app"]

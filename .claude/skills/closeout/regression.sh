@@ -44,18 +44,28 @@ if [ "$MODE" = parallel ]; then
 else
   ARGS="-p no:xdist"
 fi
+# Phase 393 (K54): the regression of record measures line coverage. The
+# data and the JSON go beside the log, never into the repository.
+ARGS="$ARGS --cov=motodiag"
 CMD="python -m pytest $ARGS"
 
 OUT="$HOME/.cache/motodiag/regressions"; mkdir -p "$OUT"
 STEM="$OUT/${HASH}_${MODE}_$(date +%Y%m%d_%H%M%S)"
+export COVERAGE_FILE="$STEM.coverage"
 KEEP_AWAKE=""; command -v caffeinate >/dev/null 2>&1 && KEEP_AWAKE="caffeinate -i"
 
 echo "regression.sh: $CMD at $HASH ($MODE); log $STEM.log"
 T0=$(date +%s)
 # shellcheck disable=SC2086
-PYTHONUTF8=1 $KEEP_AWAKE "$PY" -m pytest $ARGS -rA --junitxml="$STEM.xml" > "$STEM.log" 2>&1
+PYTHONUTF8=1 $KEEP_AWAKE "$PY" -m pytest $ARGS --cov-report="json:$STEM.coverage.json" \
+  --cov-report= -rA --junitxml="$STEM.xml" > "$STEM.log" 2>&1
 RC=$?
 WALL=$(( $(date +%s) - T0 ))
+
+# Phase 393: coverage may not fall below its pin (tests/support/quality_counts.py).
+# Below it, the run is not of record: RC=1 makes its line "FAILED".
+GATE=$("$PY" -B "$REPO/scripts/code_quality.py" coverage-gate "$STEM.coverage.json" "$HASH") \
+  || RC=1
 
 tail -n 25 "$STEM.log"
 echo
@@ -64,4 +74,6 @@ echo
 # follows on its own line, with its file and reason.
 "$PY" -B "$DIR/closeout_check.py" --format-regression "$STEM.log" "$HASH" "$WALL" "$CMD" "$RC" \
   || exit 2
+echo "$GATE"
+echo "Coverage data: $STEM.coverage.json"
 exit $RC

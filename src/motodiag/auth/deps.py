@@ -28,7 +28,9 @@ from pydantic import BaseModel, ConfigDict
 
 from motodiag.api.deps import get_db_path
 from motodiag.auth.api_key_repo import (
-    ApiKey, InvalidApiKeyError, verify_api_key,
+    ApiKey,
+    InvalidApiKeyError,
+    verify_api_key,
 )
 from motodiag.auth.sessions_repo import SESSION_PREFIX, verify_session
 

@@ -27,21 +27,18 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from motodiag.accounting.invoice_repo import (
     get_invoice as _get_invoice_row,
-    get_line_items as _get_invoice_line_items,
 )
 from motodiag.core.database import get_connection
 from motodiag.core.timestamps import utc_cutoff
 from motodiag.shop.notification_templates import (
     NOTIFICATION_CHANNELS,
     NOTIFICATION_EVENTS,
-    NotificationChannel,
-    NotificationEvent,
-    TemplateNotFoundError,
     UnknownEventError,
     get_template,
+)
+from motodiag.shop.notification_templates import (
     list_templates as _list_templates_raw,
 )
-
 
 logger = logging.getLogger(__name__)
 

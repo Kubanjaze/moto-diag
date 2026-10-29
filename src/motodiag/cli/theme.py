@@ -52,7 +52,6 @@ from typing import Optional
 
 from rich.console import Console
 
-
 # --- Icons --------------------------------------------------------------------
 #
 # Centralized so a future theme change (e.g. ASCII fallback for dumb

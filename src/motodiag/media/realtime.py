@@ -17,7 +17,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from motodiag.media.audio_capture import AudioSample, AudioConfig, AudioPreprocessor
+from motodiag.media.audio_capture import AudioConfig, AudioPreprocessor, AudioSample
 
 
 class DisplayMode(str, Enum):

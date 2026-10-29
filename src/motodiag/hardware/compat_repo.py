@@ -49,10 +49,9 @@ Design notes
 
 from __future__ import annotations
 
-from typing import Any, Iterable, List, Optional
+from typing import Any, Optional
 
 from motodiag.core.database import get_connection
-
 
 # ---------------------------------------------------------------------------
 # Constants

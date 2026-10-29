@@ -1,4 +1,12 @@
 """Track F — advanced diagnostics: predictive maintenance, wear analysis, fleet mgmt."""
+from motodiag.advanced.baseline import (
+    BaselineProfile,
+    OperatingState,
+    flag_recording_as_healthy,
+    get_baseline,
+    list_baselines,
+    rebuild_baseline,
+)
 from motodiag.advanced.comparative import (
     PeerComparison,
     PeerStats,
@@ -36,7 +44,28 @@ from motodiag.advanced.models import (
     ServiceEventType,
     ServiceInterval,
 )
+from motodiag.advanced.parts_repo import (
+    add_part,
+    add_xref,
+    get_part,
+    get_part_by_oem,
+    get_xrefs,
+    list_parts_for_bike,
+    lookup_typical_cost,
+    search_parts,
+)
 from motodiag.advanced.predictor import predict_failures
+from motodiag.advanced.recall_repo import (
+    check_vin,
+    decode_vin,
+    get_resolutions_for_bike,
+    list_open_for_bike,
+    load_recalls_from_json,
+    mark_resolved,
+)
+from motodiag.advanced.recall_repo import (
+    lookup as lookup_recalls,
+)
 from motodiag.advanced.schedule_repo import (
     ServiceIntervalError,
     create_interval,
@@ -56,33 +85,6 @@ from motodiag.advanced.scheduler import (
     next_due_calc,
     overdue_items,
     record_completion,
-)
-from motodiag.advanced.baseline import (
-    BaselineProfile,
-    OperatingState,
-    flag_recording_as_healthy,
-    get_baseline,
-    list_baselines,
-    rebuild_baseline,
-)
-from motodiag.advanced.parts_repo import (
-    add_part,
-    add_xref,
-    get_part,
-    get_part_by_oem,
-    get_xrefs,
-    list_parts_for_bike,
-    lookup_typical_cost,
-    search_parts,
-)
-from motodiag.advanced.recall_repo import (
-    check_vin,
-    decode_vin,
-    get_resolutions_for_bike,
-    list_open_for_bike,
-    load_recalls_from_json,
-    lookup as lookup_recalls,
-    mark_resolved,
 )
 from motodiag.advanced.tsb_repo import (
     add_tsb,

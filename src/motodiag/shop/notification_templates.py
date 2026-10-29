@@ -13,7 +13,6 @@ from __future__ import annotations
 from string import Template
 from typing import Literal, Optional
 
-
 NotificationEvent = Literal[
     "wo_opened", "wo_in_progress", "wo_on_hold", "wo_completed",
     "wo_cancelled", "invoice_issued", "invoice_paid",

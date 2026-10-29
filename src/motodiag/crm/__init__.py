@@ -9,19 +9,30 @@ via migration 006. Real customers are scoped to a user (shop) via
 owner_user_id FK so multi-shop deployments don't cross customer data.
 """
 
-from motodiag.crm.models import (
-    Customer, CustomerBike, CustomerRelationship,
+from motodiag.crm.customer_bikes_repo import (
+    get_current_owner,
+    link_customer_bike,
+    list_bikes_for_customer,
+    list_customers_for_bike,
+    transfer_ownership,
+    unlink_customer_bike,
 )
 from motodiag.crm.customer_repo import (
-    create_customer, get_customer, get_unassigned_customer,
-    list_customers, search_customers, update_customer,
-    deactivate_customer, count_customers,
-    UNASSIGNED_CUSTOMER_ID, UNASSIGNED_CUSTOMER_NAME,
+    UNASSIGNED_CUSTOMER_ID,
+    UNASSIGNED_CUSTOMER_NAME,
+    count_customers,
+    create_customer,
+    deactivate_customer,
+    get_customer,
+    get_unassigned_customer,
+    list_customers,
+    search_customers,
+    update_customer,
 )
-from motodiag.crm.customer_bikes_repo import (
-    link_customer_bike, unlink_customer_bike,
-    list_bikes_for_customer, list_customers_for_bike,
-    get_current_owner, transfer_ownership,
+from motodiag.crm.models import (
+    Customer,
+    CustomerBike,
+    CustomerRelationship,
 )
 
 __all__ = [

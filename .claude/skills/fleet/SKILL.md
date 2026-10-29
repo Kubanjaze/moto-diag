@@ -1,6 +1,6 @@
 ---
 name: fleet
-description: The fleet's ranks — the Executive Officer's plan checklist and verdict (plan_check.py, xo.py), the Yeoman's decisions file and daily digest (yeoman.py), the GitHub labels that carry a phase's state (labels.py), and since Phase 389 the ranks that write — the Science Officer's Step 0 (scout.py), the Captain's v1.0 and merge recommendation (captain.py), the Chief Engineer's build to a PR (engineer.py), the Red Team's refute (red_team.py) — and since Phase 391 the Quartermaster in shadow (quartermaster.py), the last check before a merge, which merges nothing — with the push gate and identity they push through (fleet_git.py); on the home desktop, the bubblewrap fence every model call runs in (fence.sh) and the dispatcher that polls the labels (dispatcher.py, its systemd unit), with since Phase 390 each stage's journal (journal.py) and the search on start that resumes a stage a restart cut off; and since Phase 392 the plan of record, read exactly (plan_order.py: the "Next, in order" list, what bears on a phase, the stops a K-id answers), and the next mission the dispatcher opens from it. Use when reviewing a phase's v1.0, recording an operator decision as a K-id, writing the digest, checking the labels, opening a mission for the fleet, running, checking or changing the fence, the push gate, a rank or the dispatcher, restarting the fleet's service and checking what it resumed, or reading or changing the order the fleet follows.
+description: The fleet's ranks — the Executive Officer's plan checklist and verdict (plan_check.py, xo.py), the Yeoman's decisions file and daily digest (yeoman.py), the GitHub labels that carry a phase's state (labels.py), and since Phase 389 the ranks that write — the Science Officer's Step 0 (scout.py), the Captain's v1.0 and merge recommendation (captain.py), the Chief Engineer's build to a PR (engineer.py), the Red Team's refute (red_team.py) — and since Phase 391 the Quartermaster in shadow (quartermaster.py), the last check before a merge, which merges nothing — with the push gate and identity they push through (fleet_git.py); on the home desktop, the bubblewrap fence every model call runs in (fence.sh) and the dispatcher that polls the labels (dispatcher.py, its systemd unit), with since Phase 390 each stage's journal (journal.py) and the search on start that resumes a stage a restart cut off; and since Phase 392 the plan of record, read exactly (plan_order.py: the "Next, in order" list, what bears on a phase, the stops a K-id answers), and the next mission the dispatcher opens from it; and since Phase 393 the code itself checked (the Quartermaster's Q10–Q12, the Red Team's five questions, the weekly page quality_report.py). Use when reviewing a phase's v1.0, recording an operator decision as a K-id, writing the digest, checking the labels, opening a mission for the fleet, running, checking or changing the fence, the push gate, a rank or the dispatcher, restarting the fleet's service and checking what it resumed, or reading or changing the order the fleet follows.
 ---
 
 # fleet — the ranks, the fence and the dispatcher
@@ -493,6 +493,74 @@ no summary line. V10 needs a pytest summary with no failure.
 `fleet@motodiag.invalid` until the account exists, and a `Co-Authored-By:`
 line naming the model.
 
+## The code itself is checked (Phase 393, K54)
+
+The operator's numbers (K54): 85% changed-line coverage, McCabe 20, 100 KB
+per file, and the ratchet. `scripts/code_quality.py` is the one measure.
+
+**The Quartermaster's Q10–Q12**, scripted, model-free, in the fence. The
+dispatcher runs `quartermaster.code_command(<merge-base>)` as a fenced
+check (no model, no network): `code_quality.py pr`, the **base's** copy of
+the script when the base has one, and the base's `pyproject.toml` for both
+trees, so a pull request is not checked by rules or a judge it brought.
+The base's `src/` is unpacked beside the head with `git archive`. Q11 reads
+the full run's coverage JSON (`regression.sh` writes it under the fence's
+`HOME`, the check run's own folder), copied into the stage's folder as
+`head.coverage.json`.
+
+| id | the check | refuses with |
+|---|---|---|
+| Q10 | no `src/` file the PR touches has more ruff findings or mypy errors on the head than on master | the file, the tool, the head's count and master's |
+| Q11 | the lines the PR adds or changes in `src/` that coverage can run are at least 85% covered by the full run on the head; a changed file the JSON does not hold counts as missed; no coverage data refuses | the percent, the lines, the worst files |
+| Q12 | no new or changed function over McCabe 20 (a changed line inside its span); no `src/` file grows past 100,000 bytes, and none already over it grows | the file and line, the function and its number; or the file's bytes on the head and on master |
+
+Known-bad and good fixtures: `fixtures/code_checks/` (its README), each
+committed into a throwaway repository by `tests/test_phase393_code_checks.py`.
+
+**The Red Team's five questions** (`red_team.QUESTIONS`). The brief asks
+each of the diff, answered in `code_checklist` as `yes`, `no` or
+`not-applicable`, with a file and line. Each is worded so that "no" is the
+defect (Deviations, 393):
+1. every new public function is reached from the CLI or the API, or is on
+   the integration-gap allowlist with its reason;
+2. no new private money, time or constant helper where one module should own it;
+3. every new handler names the error it expects;
+4. the new tests check behaviour, not only that some text exists;
+5. on `auth/`, `payments/`, `billing/`, `api/uploads.py` or
+   `memory/erase.py`: nothing newly reachable without the right role or tier.
+
+A "no" with a file and line is a factual defect (K9): `review` adds it as
+a `code` finding and the round is a **back**, whatever the model's verdict.
+`red_team.code_scan` answers 2 and 3 by script over the **added** lines
+(a broad handler whose body only passes; a new `_money`/`_now`-style
+name); a scripted no stands whatever the model says. A checklist missing a
+question, answering one twice, or a "no" with no file and line, is a stop.
+Known-bad: a planted `except Exception: pass` in `payments/`, answered
+clear by the stand-in model, comes back a back.
+
+**The weekly page, "Code health, weekly"** (`quality_report.py`).
+`measure` gives the seven counts of a tree as JSON, model-free; coverage is
+the newest "Line coverage of record" line a phase log on that tree carries
+(a full run is forty minutes; the page names its commit). `page` writes
+each number, last week's and an arrow, and on the first line the counts
+that went the wrong way two weeks running. `--print` measures where it is
+run and prints, posting nothing.
+
+The dispatcher's `stage_quality`, journaled: from Monday 08:00 local
+(`QUALITY_HOUR`), once a week, and only for a Monday after `quality_since`
+(set by the first cycle, as `quartermaster_since` is: the first page is the
+first Monday after the stage came up). It measures master in the fence,
+keeps the page in `state/quality/<monday>.md` and one record in
+`quality.jsonl`, and posts the page as a comment on the one open issue
+titled "Code health, weekly" opened by the fleet's account, opening and
+pinning it the first time. **Without the fleet's account nothing is opened
+or posted**; the record is kept. A failed measure is a stop, tried again
+after an hour. The next digest gains one line naming the page (`yeoman.facts`'s
+"Code health, weekly").
+
+**Off this PC.** `.github/workflows/quality.yml`, on every pull request:
+the lint and type ratchet and `roadmap_check.py`; no secret, read-only.
+
 ## What is held by a test
 
 `tests/test_phase387_fleet_contract.py` (the checklist, every known-bad
@@ -523,4 +591,9 @@ refusal on its own copy), `test_phase392_ranks_cite.py`,
 its kill point), `test_phase392_answers.py`, `test_phase392_authors.py`
 (F223's third login), `test_phase392_tmp.py` (F226), `test_phase392_check_limit.py`
 (F225), `test_phase392_open_files.py` (F227), `test_phase392_red_team_c7.py`
-(F228, #14's round 3).
+(F228, #14's round 3); Phase 393's `tests/test_phase393_code_checks.py`
+(Q10–Q12 on `fixtures/code_checks/`, the stage's fenced run),
+`test_phase393_red_team_code.py` (the five questions, the planted swallow),
+`test_phase393_quality_report.py` (the page, the weekly stage, its kill
+point), `test_phase393_quality_ratchet.py` (the counts against their pins)
+and `test_phase393_actions.py` (the workflow's shape).

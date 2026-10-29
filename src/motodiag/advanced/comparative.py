@@ -55,7 +55,6 @@ from typing import Any, Optional
 
 from motodiag.core.database import get_connection
 
-
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------

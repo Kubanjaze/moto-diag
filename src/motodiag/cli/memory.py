@@ -18,17 +18,17 @@ from __future__ import annotations
 
 import click
 
+from motodiag.core.database import get_connection
 from motodiag.memory import (
+    CompileResult,
     answer_from_memory,
     attach_vehicle,
-    CompileResult,
     compile_all_detailed,
     compile_vehicle_detailed,
     erase_customer,
     erase_plan,
     recall,
 )
-from motodiag.core.database import get_connection
 
 
 def register_memory(cli: click.Group) -> None:

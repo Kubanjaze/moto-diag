@@ -62,5 +62,7 @@ MODULE_ISLAND_COUNT = 9
 #: migrations, and unassigned_models, test-infra for the 3A pin) → 118 (Phase
 #: 381: migration 086's content_086 calls update_known_issue_by_key) → 115
 #: (Phase 303: `motodiag user` calls create_user, deactivate_user and
-#: list_users).
-ORPHAN_COUNT = 115
+#: list_users) → 124 (Phase 393: ruff's safe fixes removed cli/shop.py's
+#: unused imports, the only reference nine shop functions had; listed as
+#: unwired-feature, not re-imported).
+ORPHAN_COUNT = 124

@@ -30,19 +30,23 @@ from motodiag.core.timestamps import utc_cutoff
 #: only decides how much the scorer reads.
 _KB_MATCH_LIMIT = 5
 from motodiag.shop.ai_client import (
-    AIResponse, ShopAIClient, ShopAIClientError, extract_json_block,
+    AIResponse,
+    ShopAIClient,
+    extract_json_block,
 )
 from motodiag.shop.priority_models import (
-    PriorityScore, PriorityScoreResponse, PriorityScorerInput,
+    PriorityScore,
+    PriorityScoreResponse,
+    PriorityScorerInput,
 )
 from motodiag.shop.work_order_repo import (
     TERMINAL_STATUSES as WO_TERMINAL_STATUSES,
-    WorkOrderNotFoundError,
+)
+from motodiag.shop.work_order_repo import (
     list_work_orders,
     require_work_order,
     update_work_order,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -282,7 +286,8 @@ def _kb_candidates_for_vehicle(
     if vehicle_id is None:
         return []
     from motodiag.knowledge.retrieval import (
-        candidate_fetch_size, rows_for_machine,
+        candidate_fetch_size,
+        rows_for_machine,
     )
     from motodiag.knowledge.vehicle_resolver import known_issues_for_vehicle
 
