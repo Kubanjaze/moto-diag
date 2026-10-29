@@ -1,5 +1,26 @@
 # fleet — changelog
 
+## 2026-10-29 — the code itself gets checked (Phase 393)
+
+The operator, 2026-10-27: "how do i make sure and maintain the quality of
+code thats been written leading up to this point ?" (K54, with the
+numbers: 85% changed-line coverage, McCabe 20, 100 KB per file, the
+ratchet). The prompt is `docs/prompts/393_the_code_itself_gets_checked.txt`;
+Step 0 is `393_step0.md`.
+
+- **The Quartermaster's Q10–Q12** (`quartermaster.code_command`,
+  `code_result`, `code_checks`; `Fleet.code_findings`): lint and types per
+  touched file, changed-line coverage, complexity and size; model-free in
+  the fence, with the base's script and rules. `Check.coverage` carries the
+  full run's coverage JSON.
+- **The Red Team's five questions** (`red_team.QUESTIONS`, `code_scan`,
+  `checklist_nos`): `code_checklist` is required; a "no" is a back.
+- **The weekly page** (`quality_report.py`, `Fleet.stage_quality`): Monday
+  08:00, one pinned issue in the fleet's name, `quality.jsonl`, a digest line
+  (`yeoman.facts(quality=…)`).
+- `fixtures/code_checks/` (Q10–Q12's known-bad and good trees);
+  `fixtures/resume/kill_points.json` gains `quality`.
+
 ## 2026-10-28 — a rank's brief on standard input (Phase 394)
 
 The operator, 2026-10-28: "New small phase, on my word: the fleet passes a

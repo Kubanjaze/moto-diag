@@ -28,6 +28,7 @@ import fleet_git  # noqa: E402
 import rank_call  # noqa: E402
 import red_team  # noqa: E402
 import refute_check  # noqa: E402
+from support.phase393 import ALL_YES  # noqa: E402
 from test_phase388_dispatcher import claude_json  # noqa: E402
 from test_phase389_dispatcher import BRANCH, go_to_approved, labels, step, world  # noqa: E402,F401
 from test_phase389_fleet_git import git  # noqa: E402
@@ -35,7 +36,10 @@ from test_phase389_fleet_git import git  # noqa: E402
 R14 = json.loads((FLEET / "fixtures" / "red_team" / "14_round3.json").read_text())
 TABLE14 = R14["refuter_pass"]
 WORDING = "The Results bullet says `wholetree.sh --full` passed 4530"
-V14 = {k: R14[k] for k in ("verdict", "findings", "refuter_pass")}
+#: The real round 3 predates Phase 393's code checklist, so the replay adds
+#: an answer with no defect: what it tests is the wording finding, not the code.
+V14 = {**{k: R14[k] for k in ("verdict", "findings", "refuter_pass")},
+       "code_checklist": ALL_YES}
 
 
 def clear_with_wording() -> str:
@@ -113,8 +117,8 @@ class TestTheDispatcherFilesIt:
         step(clock, fleet, host)                                  # the PR
         back = claude_json({"verdict": "back", "findings": [{"claim": "c", "kind": "code",
                                                              "what_is_wrong": "w", "where": "x"}],
-                            "refuter_pass": TABLE14.replace("| 3 · ", "| 1 · ")},
-                           model=rank_call.OPUS)
+                            "refuter_pass": TABLE14.replace("| 3 · ", "| 1 · "),
+                            "code_checklist": ALL_YES}, model=rank_call.OPUS)
         for _ in (1, 2):
             step(clock, fleet, host, back)
             step(clock, fleet, host)                              # the fix round

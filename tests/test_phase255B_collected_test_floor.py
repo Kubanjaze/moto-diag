@@ -430,8 +430,18 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: (-7). Measured on the branch: 11872. Merged onto master at f856439
 #: (11756): 11756 + 134 = 11890, by a diff of collected ids against
 #: master. Measured: 11890.
+#: Phase 393 (the code itself gets checked), by a diff of collected ids
+#: against a38a36b (11890): +115 -18. Added: test_phase393_quality_ratchet.py
+#: (25), test_phase393_code_checks.py (17), test_phase393_red_team_code.py
+#: (14), test_phase393_quality_report.py (14), test_phase393_bug_fixes.py
+#: (12), test_phase393_actions.py (5), the weekly page's kill point in
+#: test_phase390_resume_contract.py (1), and 27 ids in
+#: test_phase209B_integration_gaps.py. Removed: 18 of that file's
+#: parametrized ids, renumbered by the nine orphans 393's import clean-up
+#: listed (-18; +27 is the same entries' new ids and the nine). Measured:
+#: 11987.
 #:
-COLLECTED_TEST_FLOOR = 11890
+COLLECTED_TEST_FLOOR = 11987
 
 
 def _collected_count() -> int:

@@ -1,0 +1,26 @@
+"""A catalogue held in code. Its size limit is the test's: 700, 800 or 1,000 bytes."""
+
+PARTS = [
+    ("P0001", "clutch cover gasket"),
+    ("P0002", "stator cover seal"),
+    ("P0003", "front brake pads"),
+    ("P0004", "rear brake pads"),
+    ("P0005", "chain and sprocket kit"),
+    ("P0006", "air filter element"),
+    ("P0007", "oil filter"),
+    ("P0008", "spark plug"),
+    ("P0009", "fork seal pair"),
+    ("P0010", "steering head bearings"),
+    ("P0011", "wheel bearing, front"),
+    ("P0012", "wheel bearing, rear"),
+    ("P0013", "throttle cable"),
+    ("P0014", "clutch cable"),
+    ("P0015", "battery, 12 V AGM"),
+    ("P0016", "regulator rectifier"),
+    ("P0017", "fuel pump"),
+    ("P0018", "fuel filter"),
+    ("P0019", "coolant hose set"),
+    ("P0020", "thermostat"),
+    ("P0021", "radiator cap"),
+    ("P0022", "brake fluid, DOT 4"),
+]

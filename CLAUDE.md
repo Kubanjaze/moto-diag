@@ -139,6 +139,19 @@ each of these more than once.
      step codes, check numbers or finding numbers.
    - **A builder may install a Homebrew core tool a test needs**, naming it
      in the phase log and the handoff (the operator's K26, 2026-10-07).
+   - **The code's own counts only improve** (Phase 393, K54). Seven counts
+     are pinned once, in `tests/support/quality_counts.py`: ruff findings,
+     mypy errors, functions over McCabe 20, files in `src/` over 100 KB,
+     private `_money`/`_now`/`_now_iso` helpers, `except Exception: pass`
+     blocks, and line coverage. A count above its pin fails; one below it
+     fails until the pin is lowered in the same commit, with the reason in
+     its history. Coverage may not fall: `regression.sh` measures it, and a
+     total below its pin is not of record. `scripts/code_quality.py` is the
+     one implementation. The Quartermaster holds every pull request to
+     Q10–Q12, and the Red Team asks five questions of the code.
+   - **The weekly page.** The dispatcher posts "Code health, weekly" every
+     Monday from 08:00 local, as a comment on one pinned issue in the
+     fleet's name; `quality_report.py --print` prints it by hand.
 
    The rest of what prompts carried is held by checks:
    - the clock census, and `clock_check.sh` before a regression of record
@@ -210,6 +223,21 @@ reads its prompt from there.
 ---
 
 ## Change log
+
+### 2026-10-29 — rule 6: the code's counts only improve, and the weekly page (Phase 393, K54)
+
+The operator, 2026-10-27: "how do i make sure and maintain the quality of
+code thats been written leading up to this point ?" and, in Phase 393's
+prompt: "CLAUDE.md rule 6 names the ratchet and the weekly page, with a
+dated change-log entry." Rule 6 gained two bullets. What holds them:
+- `tests/test_phase393_quality_ratchet.py`: the six measured counts against
+  their pins, both ways, in fast mode and on every push; the coverage gate
+  and its wiring into `regression.sh`;
+- the Quartermaster's Q10–Q12 (`tests/test_phase393_code_checks.py`) and the
+  Red Team's five questions (`tests/test_phase393_red_team_code.py`);
+- the weekly stage (`tests/test_phase393_quality_report.py`);
+- `.github/workflows/quality.yml`, the ratchet and `roadmap_check.py` on
+  every pull request, off the home desktop.
 
 ### 2026-10-26 — R8: an operator paste block's `gh` names its repository (before Phase 391, F222)
 

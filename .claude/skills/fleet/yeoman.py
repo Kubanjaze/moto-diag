@@ -196,7 +196,7 @@ def shadow(verdicts: list[dict], run: Runner) -> list[str]:
 
 
 def facts(root: pathlib.Path, day: dt.date, run: Runner,
-          verdicts: list[dict] | None = None) -> str:
+          verdicts: list[dict] | None = None, quality: list[str] | None = None) -> str:
     tz = dt.datetime.now().astimezone().tzinfo
     start = dt.datetime.combine(day, dt.time(), tz)
     end = start + dt.timedelta(days=1)
@@ -245,6 +245,9 @@ def facts(root: pathlib.Path, day: dt.date, run: Runner,
     out += [f"- PROBLEM: {p}" for p in problems]
     if verdicts is not None:
         out += [""] + shadow(verdicts, run)
+    if quality:
+        # Phase 393: the weekly page, one line each, posted in the window.
+        out += ["", "## Code health, weekly", ""] + [f"- {q}" for q in quality]
     return "\n".join(out).rstrip() + "\n"
 
 
@@ -273,8 +276,9 @@ def unsupported(summary: str, facts_text: str) -> list[str]:
 
 
 def digest(day: dt.date, *, root: pathlib.Path = ROOT, run: Runner = subprocess.run,
-           out=print, verdicts: list[dict] | None = None) -> int:
-    body = facts(root, day, run, verdicts)
+           out=print, verdicts: list[dict] | None = None,
+           quality: list[str] | None = None) -> int:
+    body = facts(root, day, run, verdicts, quality)
     try:
         call = rank_call.call("yeoman", f"{SUMMARY_BRIEF}\n=== the facts ===\n{body}", HAIKU,
                               SUMMARY_SCHEMA, cwd=root, run=run)

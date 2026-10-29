@@ -20,6 +20,7 @@ sys.path.insert(0, str(SKILL))
 
 import rank_call  # noqa: E402
 import red_team as R  # noqa: E402
+from support.phase393 import ALL_YES  # noqa: E402
 from test_phase388_dispatcher import claude_json  # noqa: E402
 
 TABLE = """## Refuter pass
@@ -40,9 +41,18 @@ def ledger(tmp_path, monkeypatch):
     monkeypatch.setenv("FLEET_LEDGER", str(tmp_path / "calls.jsonl"))
 
 
+def red_json(verdict: str, findings: list, table: str = TABLE) -> str:
+    """A stand-in Red Team reply as `claude -p` prints it, with the code
+    checklist the schema requires since Phase 393."""
+    return claude_json({"verdict": verdict, "findings": findings, "refuter_pass": table,
+                        "code_checklist": ALL_YES}, model=rank_call.OPUS)
+
+
 class Replies:
     def __init__(self, *structured):
-        self.queue = [claude_json(s, model=rank_call.OPUS) for s in structured]
+        # Phase 393: the schema asks every reply for the code checklist.
+        self.queue = [claude_json({"code_checklist": ALL_YES, **s}, model=rank_call.OPUS)
+                      for s in structured]
         self.calls: list[list[str]] = []
         self.briefs: list[str] = []          # each call's stdin (Phase 394)
 

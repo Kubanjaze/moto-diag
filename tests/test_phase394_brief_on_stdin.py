@@ -41,7 +41,8 @@ from plan_check import FIXTURE_PHASE, GOOD  # noqa: E402
 import test_phase389_dispatcher as T389  # noqa: E402
 from test_phase388_dispatcher import T0, claude_json  # noqa: E402
 from test_phase389_dispatcher import go_to_approved, labels, step, world  # noqa: E402,F401
-from test_phase389_red_team import TABLE  # noqa: E402
+from support.phase393 import ALL_YES  # noqa: E402
+from test_phase389_red_team import TABLE, red_json  # noqa: E402
 from test_phase392_ranks_cite import repo  # noqa: E402,F401  (the fixture)
 
 #: One argument's limit, with its terminating NUL (`394_step0.md`, S0-1).
@@ -126,8 +127,8 @@ def test_the_command_has_no_brief():
 # ------------------------------------------- each rank, its brief on stdin
 class TestEachRank:
     def test_red_team(self, claude, repo):
-        claude.answer({"verdict": "clear", "findings": [], "refuter_pass": TABLE},
-                      model=rank_call.OPUS)
+        claude.answer({"verdict": "clear", "findings": [], "refuter_pass": TABLE,
+                       "code_checklist": ALL_YES}, model=rank_call.OPUS)
         v, _ = red_team.review(FIXTURE_PHASE, 1, BIG, clone=repo, run=subprocess.run)
         assert v["verdict"] == "clear"
         claude.got_the_whole_brief()
@@ -190,8 +191,8 @@ def fleet(tmp_path: pathlib.Path) -> D.Fleet:
 
 class TestThroughTheFence:
     def test_a_rank_call(self, claude, repo, tmp_path):
-        claude.answer({"verdict": "clear", "findings": [], "refuter_pass": TABLE},
-                      model=rank_call.HAIKU)
+        claude.answer({"verdict": "clear", "findings": [], "refuter_pass": TABLE,
+                       "code_checklist": ALL_YES}, model=rank_call.HAIKU)
         (tmp_path / "run").mkdir()
         runner = D.FencedRunner(fleet(tmp_path), repo, tmp_path / "run")
         red_team.review(FIXTURE_PHASE, 1, BIG, clone=repo, run=runner, model=rank_call.HAIKU)
@@ -199,8 +200,8 @@ class TestThroughTheFence:
 
     def test_a_resumed_rank_call(self, claude, repo, tmp_path):
         """A call cut off, run again with `--resume`: the brief still on stdin."""
-        claude.answer({"verdict": "clear", "findings": [], "refuter_pass": TABLE},
-                      model=rank_call.HAIKU)
+        claude.answer({"verdict": "clear", "findings": [], "refuter_pass": TABLE,
+                       "code_checklist": ALL_YES}, model=rank_call.HAIKU)
         run = tmp_path / "stage"
         (run / "run").mkdir(parents=True)
         j = J.Journal.create(run, {"stage": "red_team", "session": "sess-cut"},
@@ -310,8 +311,7 @@ def test_started_is_said_once_over_a_failed_run_and_its_retries(world):
     assert said(host, f"{D.STARTED_M} rank=red-team") == 1
     assert sum("its `started` comment stands" in ln for ln in world[6]) == 2
     fleet_.host = real
-    step(clock, fleet_, host, claude_json({"verdict": "clear", "findings": [],
-                                           "refuter_pass": TABLE}, model=rank_call.OPUS))
+    step(clock, fleet_, host, red_json("clear", []))
     assert said(host, f"{D.STARTED_M} rank=red-team") == 1
     assert "review:clear" in labels(host)
 
@@ -341,7 +341,6 @@ def test_started_is_said_again_for_a_new_stage_run(world):
     clock.t += dt.timedelta(minutes=1)
     host.issues[31]["labels"].remove("review:open")
     host.label(31, "review:open")
-    step(clock, fleet_, host, claude_json({"verdict": "clear", "findings": [],
-                                           "refuter_pass": TABLE}, model=rank_call.OPUS))
+    step(clock, fleet_, host, red_json("clear", []))
     assert said(host, f"{D.STARTED_M} rank=red-team") == 2
     assert "review:clear" in labels(host)

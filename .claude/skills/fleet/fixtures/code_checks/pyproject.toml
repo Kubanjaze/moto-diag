@@ -1,0 +1,16 @@
+# Phase 393: the configuration every code_checks fixture is checked with,
+# the same rules as the repository's own pyproject.toml.
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 20
+
+[tool.mypy]
+python_version = "3.14"
+ignore_missing_imports = true
+no_site_packages = true

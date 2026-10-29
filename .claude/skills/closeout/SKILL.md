@@ -44,8 +44,9 @@ uncommitted.
    commit to be tested: `regression.sh` refuses to start without its
    record for HEAD. Then the full suite, in parallel:
    `.claude/skills/closeout/regression.sh` runs
-   `python -m pytest -n auto --dist load` on a clean tree and prints the
-   line to record. The line carries the counts, the hash, the wall time
+   `python -m pytest -n auto --dist load --cov=motodiag` on a clean tree and
+   prints the line to record, and below it the line coverage of record (since
+   Phase 393: a total below `COVERAGE_PERCENT` makes the run not of record). The line carries the counts, the hash, the wall time
    and the command. Copy it into the phase log as printed, with the
    `Skipped in the regression of record:` lines right below it. A5 checks for
    the hash and the count together, because a count without a commit

@@ -88,13 +88,16 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "closeout"))
 sys.path.insert(0, str(HERE.parent / "finding"))
+sys.path.insert(0, str(HERE.parents[2] / "scripts"))
 import captain  # noqa: E402
 import closeout_check  # noqa: E402
+import code_quality  # noqa: E402
 import finding_check  # noqa: E402
 import engineer  # noqa: E402
 import fleet_git  # noqa: E402
 import journal  # noqa: E402
 import plan_order  # noqa: E402
+import quality_report  # noqa: E402
 import quartermaster  # noqa: E402
 import red_team  # noqa: E402
 import roadmap_check  # noqa: E402
@@ -122,6 +125,9 @@ OPUS_CEILING = 70
 FABLE_CEILING = 70
 SWEEP_HOURS = 24.0
 DIGEST_HOUR = 7
+#: Phase 393 (K54): the weekly page, "Code health, weekly", from Monday 08:00 local.
+QUALITY_HOUR = 8
+QUALITY_M = "<!-- fleet-quality:"
 RESET_UNKNOWN = dt.timedelta(hours=1)
 KEEP_RUNS = 20
 #: The model-free run's limit. The operator's number, 2026-10-27 (K51):
@@ -189,7 +195,7 @@ _ENG_STARTED = re.compile(r"^<!-- fleet-engineer: started round=\d+(?: run=(\S+)
 STAGE_RANK = {"scout": "scout", "captain": "captain", "xo": "xo", "engineer": "engineer",
               "recheck": "engineer",
               "red_team": "red-team", "recommend": "captain", "quartermaster": "quartermaster",
-              "digest": "digest", "next": "next"}
+              "digest": "digest", "next": "next", "quality": "quality"}
 _RED = re.compile(r"^<!-- fleet-red-team: verdict=(\w+) round=(\d+)", re.M)
 _XO = re.compile(r"^<!-- xo-verdict: \S+ round=\d+ applied=(\S+)", re.M)
 
@@ -654,6 +660,8 @@ class Check:
     why: str = ""
     #: A command run's whole output (Phase 391: `verify_phase.sh`, read section by section).
     out: str = ""
+    #: A full run's coverage JSON, in its run folder (Phase 393: the Quartermaster's Q11).
+    coverage: str = ""
 
 
 def _time(s: str) -> dt.datetime:
@@ -1124,7 +1132,7 @@ class Fleet:
         c = self.check(clone, commit, full=full, command=command)
         if self.journal is not None:
             self.journal.put_check(key, {"ok": c.ok, "commit": c.commit, "line": c.line,
-                                         "why": c.why, "out": c.out})
+                                         "why": c.why, "out": c.out, "coverage": c.coverage})
         return c
 
     def clone(self, run: pathlib.Path, branch: str) -> pathlib.Path:
@@ -1224,7 +1232,12 @@ class Fleet:
         line = next((ln for ln in text.splitlines()
                      if ln.startswith((closeout_check.PREFIX, closeout_check.FAILED_PREFIX))), None)
         parsed, why = closeout_check.regression_record(text)
-        return Check(r.returncode == 0 and parsed is not None, commit, line, why or "")
+        # Phase 393: regression.sh writes its coverage JSON under the fence's
+        # HOME, which is this run's folder.
+        cov = sorted((run / "run" / "home" / ".cache" / "motodiag" / "regressions")
+                     .glob("*.coverage.json"))
+        return Check(r.returncode == 0 and parsed is not None, commit, line, why or "",
+                     coverage=str(cov[-1]) if cov else "")
 
     def push_rank(self, clone: pathlib.Path, *, rank: str, phase: str, branch: str,
                   ident: fleet_git.Identity, tested: Callable[[str], tuple[bool, str]]) -> str:
@@ -1580,8 +1593,9 @@ class Fleet:
         runner = FencedRunner(self, clone, run / "run", journal=j)
         self.log(f"issue {issue}: the Red Team on phase {phase}, round {rnd}")
         try:
-            v, call = red_team.review(phase, rnd, red_team.gather(clone, phase, f9.why),
-                                      clone=clone, run=runner)
+            scan = red_team.code_scan(clone)               # Phase 393: the five questions
+            v, call = red_team.review(phase, rnd, red_team.gather(clone, phase, f9.why, scan=scan),
+                                      clone=clone, run=runner, scan=scan)
         except RateLimited as e:
             self.pause(j, e, runner)
             return "rate-limited"
@@ -1713,6 +1727,20 @@ class Fleet:
     def verdicts(self) -> pathlib.Path:
         return self.state_dir / "quartermaster.jsonl"
 
+    def code_findings(self, run: pathlib.Path, clone: pathlib.Path, head: str,
+                      full: Check) -> list:
+        """Q10-Q12 (Phase 393): `code_quality.py pr` in the fence with no model,
+        and the full run's coverage, kept in this stage's own folder so a
+        resumed stage reads the same file."""
+        base = self.git("-C", str(clone), "merge-base", "master", head).stdout.strip() or "master"
+        kept = run / "head.coverage.json"
+        if full.coverage and pathlib.Path(full.coverage).is_file() and not kept.is_file():
+            shutil.copyfile(full.coverage, kept)
+        code = self.checked(clone, head, full=False, command=quartermaster.code_command(base))
+        pr = quartermaster.code_result(code.out)
+        cov = code_quality.q11(kept if kept.is_file() else None, clone, base)
+        return quartermaster.code_checks(pr, cov, code.why[-300:])
+
     def stage_quartermaster(self, issue: int, phase: str, body: str, branch: str, *,
                             resume: dict | None = None) -> str:
         """The verdict on the PR, the issue and in `quartermaster.jsonl`. It
@@ -1742,7 +1770,7 @@ class Fleet:
             found, extra = quartermaster.scripted(
                 clone, phase, head, self.comments(issue), full_ok=full.ok, full_line=full.line,
                 full_why=full.why, verify_text=ver.out, sibling=self.mobile)
-            found = [q1, *found]
+            found = [q1, *found, *self.code_findings(run, clone, head, full)]
             pr_body = self.gh("pr", "view", str(pr["number"]), "--json", "body", "--jq", ".body")
             runner = FencedRunner(self, clone, run / "run", journal=j)
             try:
@@ -1791,7 +1819,7 @@ class Fleet:
         runner = FencedRunner(self, clone, run / "run", journal=j)
         try:
             code = yeoman.digest(day, root=clone, run=runner, out=self.log,
-                                 verdicts=self.verdicts_on(day))
+                                 verdicts=self.verdicts_on(day), quality=self.quality_on(day))
         except RateLimited as e:
             self.pause(j, e, runner)
             return "rate-limited"
@@ -1804,6 +1832,100 @@ class Fleet:
         state["last_digest"] = day.isoformat()
         self.save(state)
         return f"written, {self.state_dir / 'digests' / page.name}"
+
+    # ---- the weekly page, "Code health, weekly" (Phase 393, K54)
+    def quality_path(self) -> pathlib.Path:
+        return self.state_dir / "quality.jsonl"
+
+    def quality_week(self) -> dt.date | None:
+        """This week's Monday, once it is past 08:00 local and the week has
+        no page yet; else None. A dispatcher down on Monday posts at its
+        first cycle after. Only a Monday after the page first came up on this
+        machine (`quality_since`, set by the first cycle, as
+        `quartermaster_since` is): the first page is the next Monday's."""
+        now = self.now()
+        monday = now.date() - dt.timedelta(days=now.weekday())
+        start = dt.datetime.combine(monday, dt.time(QUALITY_HOUR), tzinfo=now.tzinfo)
+        state = self.load()
+        since = state.get("quality_since")
+        if now < start or since is None or start < _time(since):
+            return None
+        failed = state.get("quality_failed")
+        if failed and now - _time(failed) < dt.timedelta(hours=1):
+            return None                    # a failed measure is tried again hourly, not each cycle
+        return None if state.get("last_quality") == monday.isoformat() else monday
+
+    def quality_on(self, day: dt.date) -> list[str]:
+        """The digest's line for each weekly page posted on one local day."""
+        rows = quality_report.read_history(self.quality_path())
+        return [f"Posted on #{r['issue']}: {r['first_line']}" if r.get("issue") else
+                f"Measured, not posted (no fleet account): {r['first_line']}"
+                for r in rows if r.get("at") and
+                _time(r["at"]).astimezone(self.now().tzinfo).date() == day]
+
+    def quality_issue(self, ident: fleet_git.Identity) -> int | None:
+        """The one open issue titled "Code health, weekly" the fleet opened."""
+        for i in json.loads(self.gh("issue", "list", "--state", "open", "--limit", "200",
+                                    "--json", "number,title,author") or "[]"):
+            if i.get("title") == quality_report.TITLE and \
+                    (i.get("author") or {}).get("login") == ident.login:
+                return int(i["number"])
+        return None
+
+    def stage_quality(self, week: dt.date, *, resume: dict | None = None) -> str:
+        """The seven counts on master, measured in the fence with no model;
+        the page posted on the pinned issue in the fleet's name, never
+        without its account; one record in `quality.jsonl` for next week's
+        arrows and the digest's line."""
+        run, j = self.begin("quality", {"stage": "quality", "week": week.isoformat()}, resume)
+        clone = self.stage_clone(run, "master")
+        head = j.value("clone")["base"]
+        check = self.checked(clone, head, full=False, command=[
+            ".venv/bin/python", ".claude/skills/fleet/quality_report.py", "measure"])
+        now = quality_report.parse_measure(check.out)
+        if not check.ok or now is None:
+            state = self.load()
+            state["quality_failed"] = self.now().isoformat(timespec="seconds")
+            self.save(state)
+            raise Stop(f"the weekly measure did not run: {check.why[-300:]}")
+        page = quality_report.page(now, quality_report.read_history(self.quality_path()), week)
+        (self.state_dir / "quality").mkdir(parents=True, exist_ok=True)
+        (self.state_dir / "quality" / f"{week.isoformat()}.md").write_text(page, encoding="utf-8")
+        ident = fleet_git.read_identity_file(self.identity_file)
+        issue = None
+        if ident is None:
+            self.log(f"the weekly page for {week}: the fleet has no GitHub account of its own, "
+                     f"so it is not posted (kept in {self.state_dir / 'quality'})")
+        else:
+            def open_issue() -> int:
+                url = self.gh_as(ident, "issue", "create", "--title", quality_report.TITLE,
+                                 "--body", "The code's seven counts on master, posted here every "
+                                 "Monday by the fleet (Phase 393). Each comment is one week.")
+                m = re.search(r"/issues/(\d+)\s*$", url.strip())
+                if not m:
+                    raise Stop(f"gh issue create printed no issue: {url[:200]}")
+                n = int(m.group(1))
+                self.gh_as(ident, "issue", "pin", str(n))
+                self.log(f"the weekly page: opened and pinned issue {n}")
+                return n
+            issue = self.step("issue", lambda: self.quality_issue(ident) or open_issue(),
+                              lambda: self.quality_issue(ident))
+            marker = self.tag(f"{QUALITY_M} week={week.isoformat()} -->")
+            self.step("comment", lambda: self.gh_as(ident, "issue", "comment", str(issue),
+                                                    "--body", f"{marker}\n{page}"),
+                      lambda: self.has_comment(issue, marker))
+        record = {**now, "week": week.isoformat(), "at": self.now().isoformat(timespec="seconds"),
+                  "issue": issue, "first_line": quality_report.first_line(page), "run": run.name}
+
+        def write() -> None:
+            with self.quality_path().open("a", encoding="utf-8") as f:
+                f.write(json.dumps(record) + "\n")
+        self.step("record", write, lambda: any(
+            r.get("run") == run.name for r in quality_report.read_history(self.quality_path())))
+        state = self.load()
+        state["last_quality"] = week.isoformat()
+        self.save(state)
+        return f"the weekly page for {week}" + (f", on #{issue}" if issue else ", not posted")
 
     def pause(self, j: journal.Journal, limited: RateLimited, runner: FencedRunner) -> None:
         """A usage limit: `paused` names the stage's journal, which stays open."""
@@ -1835,6 +1957,8 @@ class Fleet:
             return self.stage_digest(dt.date.fromisoformat(paused["day"]), resume=paused)
         if s == "next":
             return self.stage_next(paused["entry"], resume=paused)
+        if s == "quality":
+            return self.stage_quality(dt.date.fromisoformat(paused["week"]), resume=paused)
         if s == "scout":
             return self.stage_scout(n, ph, paused["title"], paused["body"], resume=paused)
         if s == "captain":
@@ -2299,6 +2423,12 @@ class Fleet:
             self.save(state)
             self.log(f"the Quartermaster judges merge:needs-review applied after "
                      f"{state['quartermaster_since']}")
+        if "quality_since" not in state:
+            # Phase 393: the weekly page starts with the first Monday after this.
+            state["quality_since"] = self.now().isoformat(timespec="seconds")
+            self.save(state)
+            self.log(f"the weekly page starts with the first Monday 08:00 after "
+                     f"{state['quality_since']}")
         paused = state.get("paused")
         if paused:
             if self.now() < _time(paused["until"]):
@@ -2366,6 +2496,13 @@ class Fleet:
                 self.log(f"digest: held, no new stage: {why}")
             else:
                 self.run_stage(None, "digest", lambda: self.stage_digest(day))
+        week = None if self.load().get("paused") else self.quality_week()
+        if week is not None:
+            why = self.space_refusal()
+            if why:
+                self.log(f"the weekly page: held, no new stage: {why}")
+            else:
+                self.run_stage(None, "quality", lambda: self.stage_quality(week))
         keep = self.load().get("paused", {}).get("run")
         self.prune_runs({keep} if keep else set())
 

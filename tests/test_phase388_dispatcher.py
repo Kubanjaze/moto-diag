@@ -556,6 +556,9 @@ class TestTheRateLimitPauses:
         assert len(host.model_calls()) == 1, "a model stage started while paused"
 
         clock.t = dt.datetime(2026, 10, 28, 12, 1, tzinfo=NY)
+        # Phase 393: past Monday 08:00, the weekly page is due; its own tests
+        # are 393's, so this week's is marked done.
+        fleet.save({**fleet.load(), "last_quality": "2026-10-26"})
         host.usage_text = USAGE_OK
         host.replies = [claude_json(V_APPROVE, session="sess-limited-1"),
                         claude_json({"summary": "A quiet day."}, model=rank_call.HAIKU)]
