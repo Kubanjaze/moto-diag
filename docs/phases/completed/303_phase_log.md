@@ -155,7 +155,71 @@ Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:3
 
 No bug fixes in this phase.
 
-No refute pass ran.
+## Refuter pass
+
+The fleet's Red Team, three rounds on PR #34 (K9): round 1 at 08:37 on
+2026-10-29, reading `1428785`; round 2 at 09:46, reading `ea04f16`;
+round 3 at 10:58, reading `f5d54ff`. Each page is the line number in the
+commit that round read. Every finding was paperwork in the documents; none
+was in the code.
+- **Round 1:** six findings, five factual and one wording. All six were
+  corrected in `ea04f16`: the handoff's operator blocks are four, not one;
+  the filtered commands are `apikey list` and `apikey show`; "No other stop
+  was met" deleted; Step 2's one variable recorded as a deviation; v1.0's
+  five commits named in the v1.1 header; the mutation breakdown no longer
+  counts L1 to L3 twice.
+- **Round 2:** one citation finding and one wording finding, both handled
+  in `f5d54ff`. The renumbering entry's pointer was corrected, and the
+  "my own tests" sentence was deleted.
+- **Round 3:** one factual finding and two wording findings. The two
+  wording findings went to F233 (`5995cd4`). The factual one was the
+  handoff's unrecorded fence-run sentence. Under K9 the operator decided
+  it (K57), and the sentence was deleted (`441ef96`).
+
+Rows refuted in more than one round carry the last round. The claims that
+cite K55 cite 303's own requirements, K56 since the merge (`c079c24`).
+
+| claim | verdict | quote | source | round · kind · outcome |
+|---|---|---|---|---|
+| The handoff's one operator block has no gh call | killed | "### Step 4: regenerate the phone app's types" | docs/handoffs/2026-10-28_303_closed.md p. 163 | 1 · factual · fixed |
+| Handoff: apikey list and apikey revoke leave sessions alone | killed | "changed = revoke_api_key(key_id)" | src/motodiag/cli/apikey.py p. 122 | 1 · factual · fixed |
+| No other stop was met | killed | "Stopped before the regression of record: a test this session cannot make green" | docs/phases/completed/303_phase_log.md p. 46 | 1 · factual · deleted |
+| The first user is created under MOTODIAG_DB_PATH and MOTODIAG_DATA_DIR as the service sets them | killed | "export MOTODIAG_DB_PATH=~/motodiag/live/motodiag.db" | docs/handoffs/2026-10-28_303_closed.md p. 112 | 1 · factual · fixed |
+| Built as planned against v1.0 0e5f614; Deviations lists what the plan did not say | killed | "(v1.0 `0e5f614`, 2026-10-27)" | docs/phases/completed/303_implementation.md p. 3 | 1 · factual · fixed |
+| Mutations: the plan's ten, the four K55 requirements, and ten more | killed | "the four K55 requirements, and ten more" | docs/phases/completed/303_implementation.md p. 141 | 1 · wording · fixed |
+| The F-numbers were cited only in "Results of item 10" | killed | "Cited elsewhere only in `303_implementation.md` (Results of item 10), now F231 and F232." | docs/phases/completed/303_phase_log.md p. 65 | 2 · citation · fixed |
+| "Two of my own tests were corrected" (the 244G guard; the allowlists) | killed | "Two of my own tests were corrected before their first commit (the 244G raw-source guard; the allowlists), as logged." | docs/phases/completed/303_implementation.md p. 201 | 2 · wording · deleted |
+| Steps 1 and 2's blocks were run in the fence, with a wrong login answering 401 | killed | "The blocks in steps 1 and 2 were run against a scratch database and a server on loopback in the fence" | docs/handoffs/2026-10-28_303_closed.md p. 45 | 3 · factual · deleted |
+| The handoff lists what the user command shipped | killed | "`motodiag user create / list / set-password /" | docs/handoffs/2026-10-28_303_closed.md p. 14 | 3 · wording · open F233 |
+| The first stop was the fork at Step 0 | killed | "The fork at Step 0" | docs/phases/completed/303_implementation.md p. 208 | 3 · wording · open F233 |
+| 141 tests in nine files (v1.1 Tests, Results) | kept | "+141 -7. Added: test_phase303_auth_api.py (44)," | tests/test_phase255B_collected_test_floor.py p. 417 | 3 · none · kept |
+| The floor rose 11738 → 11872 | kept | "COLLECTED_TEST_FLOOR = 11872" | tests/test_phase255B_collected_test_floor.py p. 428 | 3 · none · kept |
+| Regression of record 11767 passed, 105 skipped at d0f31ca (11767 + 105 = 11872, the floor) | kept | "Regression of record: 11767 passed, 0 failed, 105 skipped, 0 errors at `d0f31ca`" | docs/phases/completed/303_phase_log.md p. 73 | 3 · none · kept |
+| wholetree.sh --full 4781 passed before the regression | kept | "`wholetree.sh --full` on `d0f31ca`, a clean tree, exit 0: 4781 passed, 36 skipped" | docs/phases/completed/303_phase_log.md p. 69 | 3 · none · kept |
+| Mutations 24/24 red; the plan's ten + K1–K4 + ten more = 24 | kept | "24/24 red" | docs/phases/completed/303_mutate.out p. 25 | 3 · none · kept |
+| F231 is the rule-1 stop with no way back into the fleet | kept | "A rule-1 stop raised by the Chief Engineer has no way back into the fleet" | docs/FOLLOWUPS.md p. 4460 | 3 · none · kept |
+| F232 is a migration with no path through the fleet | kept | "A phase with a migration has no path through the fleet" | docs/FOLLOWUPS.md p. 4481 | 3 · none · kept |
+| The FOLLOWUPS header reads F232 after the renumbering | kept | "At the time of writing the highest assigned is **F232**" | docs/FOLLOWUPS.md p. 22 | 3 · none · kept |
+| ORPHAN_COUNT 118 → 115 | kept | "ORPHAN_COUNT = 115" | tests/support/integration_gaps_counts.py p. 66 | 3 · none · kept |
+| 244X's own pin 50 → 47 | kept | "→ 47 (Phase 303 wired create_user, deactivate_user, list_users)" | tests/test_phase244X_multiline_reexports.py p. 138 | 3 · none · kept |
+| docs/guide/api.md's count is now 88 routes over 111 operations | kept | "88 routes over 111 operations." | docs/guide/api.md p. 3 | 3 · none · kept |
+| uvicorn 0.49 writes a WebSocket handshake's path with its query string on its error logger | kept | "'%s - \"WebSocket %s\" [accepted]'," | .venv/lib/python3.14/site-packages/uvicorn/protocols/websockets/websockets_impl.py p. 263 | 3 · none · kept |
+| The redaction filter is attached to uvicorn.access and uvicorn.error through log_config | kept | "for name in (\"uvicorn.access\", \"uvicorn.error\"):" | src/motodiag/cli/serve.py p. 72 | 3 · none · kept |
+| "Confined to mds_" is substr, because _ is a LIKE wildcard | kept | "# SQL for \"this row is a session\". Not LIKE 'mds_%': '_' is a LIKE wildcard." | src/motodiag/auth/sessions_repo.py p. 67 | 3 · none · kept |
+| authenticate runs the check against the dummy hash on an unknown or passwordless name (K55 req. 2) | kept | "matched = verify_password(password, stored if has_password else DUMMY_HASH)" | src/motodiag/auth/sessions_repo.py p. 226 | 3 · none · kept |
+| scrypt n 2**14, r 8, p 1, 32-byte key; maxmem 64 MiB | kept | "MAX_MEMORY = 64 * 1024 * 1024" | src/motodiag/auth/passwords.py p. 30 | 3 · none · kept |
+| A query-string session is refused 4401 with today's "missing API key" reason, even beside a good subprotocol | kept | "if not plaintext or _session_in_query(websocket):" | src/motodiag/api/routes/live.py p. 321 | 3 · none · kept |
+| The live socket's tier comes from resolve_tier; _resolve_tier removed | kept | "sub_tier = resolve_tier(api_key, db_path=db_path)" | src/motodiag/api/routes/live.py p. 334 | 3 · none · kept |
+| request.state.caller is set in get_api_key as well (Deviations) | kept | "request.state.caller = Caller(key.user_id, key.kind, key.id)" | src/motodiag/auth/deps.py p. 212 | 3 · none · kept |
+| The limiter key stays key:<id>; a credentialed caller with no tier stays 'individual' | kept | "return f\"key:{key.id}\", tier or \"individual\"" | src/motodiag/api/middleware.py p. 159 | 3 · none · kept |
+| The reset's K55 checks read memberships active or not (Deviations) | kept | "others = list_shops_for_user(user_id, active_only=False, db_path=db_path)" | src/motodiag/api/routes/auth.py p. 247 | 3 · none · kept |
+| LoginFailedError 401 login-failed and LoginSessionNotFoundError 404 login-session-not-found are mapped | kept | "(LoginFailedError, 401, \"login-failed\", \"Login failed\")," | src/motodiag/api/errors.py p. 226 | 3 · none · kept |
+| apikey list and apikey show skip session rows | kept | "if k.kind == \"api_key\"]" | src/motodiag/cli/apikey.py p. 85 | 3 · none · kept |
+| The operator's four requirements are recorded in docs/decisions.md (K55 then, K56 now) | kept | "1. The owner's password reset must refuse when the person being reset is an owner at any shop" | docs/decisions.md p. 54 | 3 · none · kept |
+| The plan of record's "Next, in order" row 2 puts 303 in order | kept | "2026-10-26 · K43" | docs/reports/2026-10-12_plan_of_record.md p. 14 | 3 · none · kept |
+| 303 and 348 are two missions, 303 first (K48) | kept | "**303 and 348 are two missions, 303 first.**" | docs/reports/2026-10-12_plan_of_record.md p. 82 | 3 · none · kept |
+| The ROADMAP row is closed with its date and regression line | kept | "**CLOSED 2026-10-28.**" | docs/ROADMAP.md p. 559 | 3 · none · kept |
+| The handoff's operator blocks carry no gh call (R8) | kept | "could not push the app" | docs/handoffs/2026-10-28_303_closed.md p. 158 | 3 · none · kept |
 
 ## 2026-10-28: Close-out
 
