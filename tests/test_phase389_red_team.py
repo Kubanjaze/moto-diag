@@ -44,9 +44,11 @@ class Replies:
     def __init__(self, *structured):
         self.queue = [claude_json(s, model=rank_call.OPUS) for s in structured]
         self.calls: list[list[str]] = []
+        self.briefs: list[str] = []          # each call's stdin (Phase 394)
 
     def __call__(self, cmd, **kw):
         self.calls.append(cmd)
+        self.briefs.append(kw["input"])
         return subprocess.CompletedProcess(cmd, 0, self.queue.pop(0), "")
 
 
@@ -63,7 +65,7 @@ class TestReview:
         assert v["verdict"] == "clear"
         cmd = run.calls[0]
         assert rank_call.OPUS in cmd and cmd[cmd.index("--tools") + 1] == "Read,Grep,Glob"
-        assert "1 · none" in cmd[2] and "p. <line>" in cmd[2]
+        assert "1 · none" in run.briefs[0] and "p. <line>" in run.briefs[0]
 
     def test_a_back_with_a_killed_row_open(self, tmp_path):
         """Phase 389, bug fix #2: a killed factual row is open until the

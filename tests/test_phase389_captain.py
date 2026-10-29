@@ -39,9 +39,11 @@ class Replies:
     def __init__(self, *structured, model=rank_call.FABLE):
         self.queue = [claude_json(s, model=model) for s in structured]
         self.calls: list[list[str]] = []
+        self.briefs: list[str] = []          # each call's stdin (Phase 394)
 
     def __call__(self, cmd, **kw):
         self.calls.append(cmd)
+        self.briefs.append(kw["input"])
         return subprocess.CompletedProcess(cmd, 0, self.queue.pop(0), "")
 
 
@@ -78,7 +80,7 @@ def test_a_failing_plan_gets_one_more_call_with_the_failures(clone):
     run = Replies({"implementation_md": NO_STOPS}, {"implementation_md": PLAN})
     calls = captain.write_plan(FIXTURE_PHASE, ROW, "", step0(clone), clone=clone, run=run)
     assert len(calls) == 2 and (clone / IMPL).read_text() == PLAN
-    assert "P8 FAIL" in run.calls[1][2] and "=== the plan as it stands ===" in run.calls[1][2]
+    assert "P8 FAIL" in run.briefs[1] and "=== the plan as it stands ===" in run.briefs[1]
 
 
 def test_failing_twice_is_a_stop_and_writes_nothing(clone):
@@ -102,7 +104,7 @@ def test_a_revision_is_given_the_xos_items_and_the_plan(clone):
     run = Replies({"implementation_md": PLAN})
     captain.write_plan(FIXTURE_PHASE, ROW, "", step0(clone), clone=clone, run=run,
                        items=["Fix the count in Logic."])
-    prompt = run.calls[0][2]
+    prompt = run.briefs[0]
     assert "- Fix the count in Logic." in prompt and PLAN[:200] in prompt
 
 

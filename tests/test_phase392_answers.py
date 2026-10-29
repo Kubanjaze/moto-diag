@@ -41,7 +41,7 @@ def prompts(world):
 
     class Recording(type(engineer)):
         def __call__(self, cmd, stdout, stderr, **kw):
-            seen.append(cmd[cmd.index("-p") + 1])
+            seen.append(pathlib.Path(kw["stdin"].name).read_text())   # on stdin (Phase 394)
             return real(cmd, stdout, stderr, **kw)
 
     engineer.__class__ = Recording

@@ -413,8 +413,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: next mission's kill point). Measured: 11737.
 #: Then +1, bug fix #1 (F227's leak): test_phase392_init_db_closes.py.
 #: Measured: 11738.
+#: Phase 394 (a rank's brief on stdin), by a diff of collected ids against
+#: master at c608169 (11738): +19 -1: test_phase394_brief_on_stdin.py (18),
+#: and test_phase392_plan_order.py's 303-then-393 test renamed for 394's
+#: place in the order (K55), net 0. Measured: 11756.
 #:
-COLLECTED_TEST_FLOOR = 11738
+COLLECTED_TEST_FLOOR = 11756
 
 
 def _collected_count() -> int:

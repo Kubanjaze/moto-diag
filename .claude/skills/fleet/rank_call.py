@@ -64,6 +64,15 @@ class Stop(Exception):
     """The call cannot be acted on; the stage leaves the label where it was."""
 
 
+class LaunchFailed(Stop):
+    """The model call could not be started (Phase 394): an `OSError` from the
+    launch, such as a brief over Linux's 128 KiB limit on one argument. A
+    `Stop`, so the stage stops once and the cycle goes on."""
+
+    def __init__(self, e: OSError):
+        super().__init__(f"the model call could not start: {e}")
+
+
 @dataclass
 class Call:
     rank: str
@@ -88,9 +97,11 @@ class Call:
                 f"${self.cost_usd:.2f} at list price")
 
 
-def command(prompt: str, model: str, schema: dict | None = None,
+def command(model: str, schema: dict | None = None,
             tools: tuple[str, ...] = FENCE) -> list[str]:
-    cmd = ["claude", "-p", prompt, "--model", model, *tools, "--output-format", "json"]
+    """The call's argv. The brief is not in it: `call` hands it to `claude -p`
+    on standard input (Phase 394), which has no size limit an argument has."""
+    cmd = ["claude", "-p", "--model", model, *tools, "--output-format", "json"]
     if schema is not None:
         cmd += ["--json-schema", json.dumps(schema)]
     return cmd
@@ -100,8 +111,11 @@ def call(rank: str, prompt: str, model: str, schema: dict | None = None, *,
          cwd: pathlib.Path = ROOT, run: Runner = subprocess.run, timeout: int = 1800,
          ledger: pathlib.Path | None = None, tools: tuple[str, ...] = FENCE) -> Call:
     """One fenced call. Returns the recorded Call, or raises Stop."""
-    r = run(command(prompt, model, schema, tools), capture_output=True, text=True, cwd=cwd,
-            timeout=timeout)
+    try:
+        r = run(command(model, schema, tools), input=prompt, capture_output=True, text=True,
+                cwd=cwd, timeout=timeout)
+    except OSError as e:
+        raise LaunchFailed(e) from e
     if r.returncode != 0:
         raise Stop(f"claude exited {r.returncode}: {(r.stderr or r.stdout).strip()[:300]}")
     try:
