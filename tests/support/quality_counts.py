@@ -42,7 +42,9 @@ PRIVATE_HELPERS = 19
 #: (393 bug fix #2: memory/erase.py's three). F234 holds the rest.
 SWALLOWED_EXCEPTIONS = 22
 
-#: Total line coverage, percent, from the regression of record. Measured at
-#: Step 0 in the fence on a38a36b: 87.60%. Set here to the regression of
-#: record's own figure at close-out (the phase log).
-COVERAGE_PERCENT = 87.6
+#: Total line coverage, percent, from the regression of record, which may not
+#: fall below it. Measured at Step 0 in the fence on a38a36b, twice: 87.597%
+#: both times. Pinned at 87.5, the measure cut to one decimal, before the
+#: regression of record (393's log): a pin is code, so it cannot follow the
+#: run that tests it, and a pin above the run's own total would refuse it.
+COVERAGE_PERCENT = 87.5
