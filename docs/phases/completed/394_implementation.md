@@ -1,6 +1,6 @@
 # Phase 394 — The fleet passes a rank's brief on standard input
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-28
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-29 (v1.0 `544012b`)
 
 ---
 
@@ -117,18 +117,48 @@ it unblocks 303, a Wave 1 phase whose row is 🚧.
 
 ## Planned items
 
-- [ ] `rank_call.py`: stdin, `LaunchFailed`
-- [ ] `dispatcher.py`: `FencedRunner` stdin, the Engineer's session, `started()` once per run
-- [ ] `engineer.py`: `session_argv`, `session_brief`
-- [ ] `journal.py`: `call_key`
-- [ ] tests; existing tests moved to stdin; collected floor
-- [ ] skill and CHANGELOG
-- [ ] mutations; regression of record; close-out; handoff with the operator's block
+- [x] `rank_call.py`: stdin, `LaunchFailed`
+- [x] `dispatcher.py`: `FencedRunner` stdin, the Engineer's session, `started()` once per run
+- [x] `engineer.py`: `session_argv`, `session_brief`
+- [x] `journal.py`: `call_key`
+- [x] tests; existing tests moved to stdin; collected floor
+- [x] skill and CHANGELOG
+- [x] mutations; regression of record; close-out; handoff with the operator's block
 
 ## Deviations
 
-(None yet; v1.1.)
+- **The regression of record ran in the fence, not in this checkout.**
+  `wholetree.sh --full` here failed gate 11 (4 failures, all
+  `tests/test_phase205_gate11.py` run by later gates). Gate 11 reads
+  `../moto-diag-mobile`, whose local `main` carries the unpushed commit
+  `7489fd5`, 303's API snapshot ("push after 303 merges"). Master fails it
+  the same way (2 failed, 19 passed). The run of record is the fleet's
+  model-free run of `ff3ce4a` (`394_regression.py`) with the mobile
+  repository at its published `origin/main`, `0074eb9`. Nothing in either
+  repository was changed for it. Open in the handoff.
+- **`failed_start`** is a method of its own (the plan put the check inside
+  `started()`), so it could be tested directly: in every walk-through a
+  stop, not a `started`, is the last rank comment.
+- **A test the plan did not list:**
+  `test_only_a_failed_runs_started_stands_for_a_retry`, for mutation S2.
+- **The existing tests moved to stdin** were ten files the plan did not
+  name: the stubs of 388 (`Host.model_briefs`), 389 (Captain, Science
+  Officer, Red Team, Engineer, dispatcher), 390 (resume), 391 (dispatcher)
+  and 392 (answers, ranks cite).
+- No bug fixes: the register is empty.
 
 ## Results
 
-(v1.1.)
+- **Step 0:** 69 launch failures in `dispatcher.log`, 69 "Red Team
+  started" comments on #31; `claude -p` 2.1.312 reads a 291094-byte brief
+  from stdin; this kernel refuses a 131073-byte argument and takes a
+  131072-byte one.
+- **Tests:** `tests/test_phase394_brief_on_stdin.py`, 18, against a
+  stand-in `claude` on PATH under the kernel's real limit. Collected floor
+  11738 → 11756 by a diff of collected ids against master at `c608169`
+  (+19 −1).
+- **Mutations:** 15/15 red (`394_mutate.out`).
+- **Regression of record** (inside the fence, after `wholetree.sh --full`
+  4806 passed): Regression of record: 11651 passed, 0 failed, 105 skipped, 0 errors at `ff3ce4a` (34 min 35 s wall, `python -m pytest -n auto --dist load`, exit 0) (run inside the fleet's fence)
+- **Live:** none; nothing here reads live.
+- **#31 and PR #34** were read, never written.
