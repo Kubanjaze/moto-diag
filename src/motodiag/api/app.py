@@ -116,6 +116,7 @@ def create_app(
         )
 
     # --- Routers (lazy import to keep module-import cheap) ---
+    from motodiag.api.routes.auth import router as auth_router
     from motodiag.api.routes.billing import router as billing_router
     from motodiag.api.routes.kb import router as kb_router
     from motodiag.api.routes.live import router as live_router
@@ -135,6 +136,7 @@ def create_app(
     from motodiag.api.routes.time_tracking import router as time_tracking_router
 
     app.include_router(meta_router)             # /healthz, /v1/version
+    app.include_router(auth_router, prefix="/v1")  # Phase 303 — staff logins
     app.include_router(shops_router, prefix="/v1")
     app.include_router(billing_router, prefix="/v1")
     app.include_router(vehicles_router, prefix="/v1")

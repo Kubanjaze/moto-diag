@@ -100,6 +100,11 @@ def _exc_class_chain():
         SubscriptionTierInsufficientError,
     )
     from motodiag.auth.rate_limiter import RateLimitExceededError
+    # Phase 303 — staff logins
+    from motodiag.auth.passwords import PasswordTooShort
+    from motodiag.auth.sessions_repo import (
+        LoginFailedError, LoginSessionNotFoundError, NotASessionError,
+    )
     from motodiag.billing.providers import (
         BillingProviderError, StripeLibraryMissingError,
         WebhookSignatureError,
@@ -217,6 +222,14 @@ def _exc_class_chain():
          "Subscription tier insufficient"),
         (RateLimitExceededError, 429, "rate-limit-exceeded",
          "Rate limit exceeded"),
+        # Phase 303 — staff logins
+        (LoginFailedError, 401, "login-failed", "Login failed"),
+        (NotASessionError, 400, "not-a-session",
+         "This action needs a session token, not an API key"),
+        (LoginSessionNotFoundError, 404, "login-session-not-found",
+         "Login session not found"),
+        (PasswordTooShort, 422, "password-too-short",
+         "Password too short"),
         (WebhookSignatureError, 400, "webhook-signature-failed",
          "Webhook signature verification failed"),
         (StripeLibraryMissingError, 500, "stripe-not-installed",

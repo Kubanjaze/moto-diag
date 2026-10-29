@@ -417,8 +417,21 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: master at c608169 (11738): +19 -1: test_phase394_brief_on_stdin.py (18),
 #: and test_phase392_plan_order.py's 303-then-393 test renamed for 394's
 #: place in the order (K55), net 0. Measured: 11756.
+#: Phase 303 (staff logins), by a diff of collected ids against the branch
+#: at 5313a5e (11738): +141 -7. Added: test_phase303_auth_api.py (44),
+#: test_phase303_sessions_repo.py (31), test_phase303_passwords.py (17),
+#: test_phase303_user_cli.py (17), test_phase303_live_session.py (10),
+#: test_phase303_tier_for_session.py (9), test_phase303_log_redaction.py
+#: (6), test_phase303_wiring.py (4), test_phase303_caller_on_request.py (3).
+#: Removed: three allowlist entries `motodiag user` now calls (create_user,
+#: deactivate_user, list_users), each one id in
+#: test_phase209B_integration_gaps.py and one in
+#: test_phase244X_multiline_reexports.py, and 244X's create_user control
+#: (-7). Measured on the branch: 11872. Merged onto master at f856439
+#: (11756): 11756 + 134 = 11890, by a diff of collected ids against
+#: master. Measured: 11890.
 #:
-COLLECTED_TEST_FLOOR = 11756
+COLLECTED_TEST_FLOOR = 11890
 
 
 def _collected_count() -> int:

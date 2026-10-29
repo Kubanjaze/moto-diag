@@ -317,6 +317,27 @@ def has_shop_permission(
     return row is not None
 
 
+def list_member_permissions(
+    shop_id: int, user_id: int, db_path: Optional[str] = None,
+) -> list[str]:
+    """The permission names the member's role grants (Phase 303), by the
+    join :func:`has_shop_permission` walks; empty for a non-member or an
+    inactive member."""
+    with get_connection(db_path) as conn:
+        rows = conn.execute(
+            """SELECT DISTINCT p.name
+               FROM shop_members sm
+               JOIN roles r ON r.name = sm.role
+               JOIN role_permissions rp ON rp.role_id = r.id
+               JOIN permissions p ON p.id = rp.permission_id
+               WHERE sm.shop_id = ? AND sm.user_id = ?
+                 AND sm.is_active = 1
+               ORDER BY p.name""",
+            (shop_id, user_id),
+        ).fetchall()
+    return [str(r[0]) for r in rows]
+
+
 def require_shop_permission(
     shop_id: int, user_id: int, permission: str,
     db_path: Optional[str] = None,

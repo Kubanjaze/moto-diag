@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F230** (this file). The
+At the time of writing the highest assigned is **F233** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4454,3 +4454,54 @@ that changes the fleet's code or the finding skill; none is in the order
 yet. The operator, 2026-10-27: "yes go ahead", to the advisor's
 recommendation to reserve F229 and log this gap so that the fleet's next
 code change fixes it.
+
+### F231
+
+**A rule-1 stop raised by the Chief Engineer has no way back into the fleet: the operator's answer is carried by hand**
+
+Found 2026-10-27 by the Captain, writing Phase 303's v1.0 (Logic item 1),
+and lived through by 303 on 2026-10-28. When the Engineer stops with a
+rule-1 kind, the dispatcher labels the issue `needs-admiral` and the
+stopped session's commits are never pushed (`dispatcher.py` pushes only in
+`engineer_finish`, on `pr-ready`). After the operator removes the label,
+`next_stage` finds no stage for an issue on `build:open` with no held run,
+no record answer and no Red Team verdict, and the Engineer's brief carries
+no issue comment, so nothing in the fleet reads the operator's words. 303
+needed a hand-run paste block on the Mac: fetch the branch, write the
+operator's comment into `docs/phases/in_progress/303_phase_log.md` under a
+fixed heading, commit, run the checks, push, and re-apply `plan:approved`
+(commit `5313a5e`). One phase, one stop, about one operator round trip of
+hand work. What would close it: a fleet stage that takes the operator's
+answer to an Engineer's stop (a comment by the repository's owner, F223's
+rule) into the phase log on the branch and makes the Engineer due again;
+under K43 rule 4, its row names the first-shop phase it unblocks.
+
+### F232
+
+**A phase with a migration has no path through the fleet: the Engineer cannot dry-run, apply live or push between the regression and the close-out**
+
+Found 2026-10-27 by the Captain, writing Phase 303's v1.0 (the end of
+Logic, the new-table alternative the operator did not pick). The fence
+mounts no home and sets `HOME` to `/fleet/run/home` (`fence.sh`), so
+`live.json` is missing and every `deploy.py` mode exits 4, the refusal the
+Quartermaster fixture `pr20` shows. K18's order puts the live apply after
+the regression of record and before the close-out commit, with the branch
+pushed, and the Engineer can neither push mid-session nor pause for the
+operator's dry run; the Quartermaster's Q1 refuses such a pull request in
+shadow either way. It affects every first-shop row whose plan needs a
+migration. 303 avoided it by keeping sessions in `api_keys` (the
+operator's answer, part (a)). What would close it: a fleet deploy stage, or
+a stop kind that pauses the build at K18's point and resumes it after the
+operator's dry run and apply; a plan-of-record change, the operator's under
+K43 rule 4, naming the first-shop phase it unblocks.
+
+### F233
+
+**Wording the Red Team left open on phase 303, round 3**
+
+Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 392, F228). K9: "after round 3, remaining wording defects go to one finding". The rows, from the refute table in the Red Team's round 3 on phase 303:
+
+- The handoff lists what the user command shipped: "`motodiag user create / list / set-password /" (docs/handoffs/2026-10-28_303_closed.md p. 14)
+- The first stop was the fork at Step 0: "The fork at Step 0" (docs/phases/completed/303_implementation.md p. 208)
+
+What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).

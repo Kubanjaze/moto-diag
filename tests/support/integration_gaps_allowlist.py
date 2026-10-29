@@ -361,22 +361,8 @@ ORPHANS: dict[str, tuple[str, str]] = {
         "Repository helper kept as library surface. Only auth/__init__.py "
         "names it; hidden until Phase 244X blanked parenthesised multi-line "
         "re-exports."),
-    "auth/users_repo.py::create_user": ("unwired-feature",
-        "No other INSERT INTO users exists; users are migration-005 seed "
-        "data only. No signup path calls this. Only auth/__init__.py names "
-        "it; hidden until Phase 244X blanked parenthesised multi-line re- "
-        "exports."),
-    "auth/users_repo.py::deactivate_user": ("unwired-feature",
-        "Soft-delete wrapper over update_user, whose only caller is this "
-        "function. No command or route deactivates a user. Only "
-        "auth/__init__.py names it; hidden until Phase 244X blanked "
-        "parenthesised multi-line re-exports."),
     "auth/users_repo.py::get_system_user": ("public-api",
         "Wrapper over get_user for SYSTEM_USER_ID. Only auth/__init__.py "
-        "names it; hidden until Phase 244X blanked parenthesised multi-line "
-        "re-exports."),
-    "auth/users_repo.py::list_users": ("public-api",
-        "Repository helper kept as library surface. Only auth/__init__.py "
         "names it; hidden until Phase 244X blanked parenthesised multi-line "
         "re-exports."),
     "billing/subscription_repo.py::delete_subscription": ("public-api",

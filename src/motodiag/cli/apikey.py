@@ -79,9 +79,10 @@ def register_apikey(cli_group: click.Group) -> None:
         plaintext is never stored)."""
         console = get_console()
         init_db()
-        keys = list_api_keys(
+        # Phase 303: login sessions share the table; `user sessions` lists them.
+        keys = [k for k in list_api_keys(
             user_id=user_id, include_revoked=include_revoked,
-        )
+        ) if k.kind == "api_key"]
         if as_json:
             click.echo(_json.dumps(
                 [k.model_dump() for k in keys], default=str, indent=2,
@@ -144,6 +145,8 @@ def register_apikey(cli_group: click.Group) -> None:
             key = get_api_key_by_id(int(prefix_or_id))
         else:
             key = get_api_key_by_prefix(prefix_or_id)
+        if key is not None and key.kind != "api_key":
+            key = None
         if key is None:
             raise click.ClickException(
                 f"no API key found matching {prefix_or_id!r}"

@@ -20,6 +20,7 @@ from motodiag.cli.diagnose import register_diagnose, register_quick
 from motodiag.cli.hardware import register_hardware
 from motodiag.cli.kb import register_kb
 from motodiag.cli.apikey import register_apikey
+from motodiag.cli.user import register_user
 from motodiag.cli.billing import register_subscription
 from motodiag.cli.payments import register_payments_check
 from motodiag.cli.serve import register_serve
@@ -900,6 +901,8 @@ register_serve(cli)
 # monetization gate — API key management + Stripe billing CLI).
 # Must come before completion so shell-completion sees them.
 register_apikey(cli)
+# Phase 303: `user` — staff logins (create, passwords, sessions).
+register_user(cli)
 register_subscription(cli)
 register_payments_check(cli)
 

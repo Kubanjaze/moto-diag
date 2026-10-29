@@ -12,11 +12,16 @@ Tier ordering (ascending): ``anonymous < individual < shop < company``.
 A company subscription satisfies any tier requirement; shop
 subscriptions satisfy individual + shop; individual subscriptions
 satisfy only individual.
+
+Phase 303: a login session (``mds_``) is a second credential, a row of
+the same table as an API key (``mdk_``). :func:`resolve_credential` and
+:func:`resolve_tier` decide both, for these dependencies, the rate-limit
+middleware and the live socket alike.
 """
 
 from __future__ import annotations
 
-from typing import Literal, Optional
+from typing import Literal, NamedTuple, Optional
 
 from fastapi import Depends, Header, Request
 from pydantic import BaseModel, ConfigDict
@@ -25,6 +30,9 @@ from motodiag.api.deps import get_db_path
 from motodiag.auth.api_key_repo import (
     ApiKey, InvalidApiKeyError, verify_api_key,
 )
+from motodiag.auth.sessions_repo import SESSION_PREFIX, verify_session
+
+API_KEY_PREFIX = "mdk_"
 
 
 API_KEY_HEADER = "X-API-Key"
@@ -79,11 +87,77 @@ class AuthedUser(BaseModel):
     is_active: bool
     api_key_id: int
     api_key_prefix: str
+    # Phase 303: "session" for a login token; the id and prefix above are
+    # the session's, because a session is a row of the same table.
+    credential_kind: str = "api_key"
+
+
+class Caller(NamedTuple):
+    """Who made a request, left on ``request.state.caller`` (Phase 303),
+    for Phase 348's log of which staff login did what."""
+
+    user_id: int
+    credential_kind: str
+    credential_id: int
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+
+def resolve_credential(
+    plaintext: Optional[str], db_path: Optional[str] = None,
+) -> Optional[ApiKey]:
+    """The row behind a key or a session token, dispatched on its prefix;
+    None for anything else."""
+    if not plaintext:
+        return None
+    if plaintext.startswith(API_KEY_PREFIX):
+        return verify_api_key(plaintext, db_path=db_path)
+    if plaintext.startswith(SESSION_PREFIX):
+        from motodiag.core.config import get_settings
+
+        return verify_session(
+            plaintext, get_settings().session_lifetime_days, db_path=db_path,
+        )
+    return None
+
+
+def resolve_tier(
+    credential: ApiKey, db_path: Optional[str] = None,
+) -> Optional[str]:
+    """The caller's subscription tier, the one rule for every caller.
+
+    A key caller: the user's own active subscription, as before Phase 303.
+    A session caller: the user's own, else the highest active subscription
+    of an owner-role active member of any shop where the caller is an
+    active member (the operator's answer at Phase 303's stop).
+    """
+    from motodiag.billing.subscription_repo import get_active_subscription
+    from motodiag.core.database import get_connection
+
+    sub = get_active_subscription(credential.user_id, db_path=db_path)
+    if sub is not None:
+        return sub.tier
+    if credential.kind != "session":
+        return None
+    with get_connection(db_path) as conn:
+        owners = [int(r[0]) for r in conn.execute(
+            """SELECT DISTINCT owner.user_id
+               FROM shop_members me
+               JOIN shop_members owner
+                 ON owner.shop_id = me.shop_id
+                AND owner.role = 'owner' AND owner.is_active = 1
+               WHERE me.user_id = ? AND me.is_active = 1""",
+            (credential.user_id,),
+        ).fetchall()]
+    tiers = [
+        s.tier for s in (
+            get_active_subscription(o, db_path=db_path) for o in owners
+        ) if s is not None and s.tier in _TIER_RANK
+    ]
+    return max(tiers, key=_TIER_RANK.__getitem__) if tiers else None
 
 
 def tier_meets(current: Optional[str], required: str) -> bool:
@@ -132,31 +206,32 @@ async def get_api_key(
     plaintext = _extract_key_from_headers(x_api_key, authorization)
     if plaintext is None:
         return None
-    key = verify_api_key(plaintext, db_path=db_path)
+    key = resolve_credential(plaintext, db_path=db_path)
     if key is not None:
         request.state.api_key = key
+        request.state.caller = Caller(key.user_id, key.kind, key.id)
     return key
 
 
 async def require_api_key(
     api_key: Optional[ApiKey] = Depends(get_api_key),
 ) -> ApiKey:
-    """401 if the caller has no valid API key."""
+    """401 if the caller has no valid API key or session token."""
     if api_key is None:
         raise InvalidApiKeyError(
-            "valid API key required (X-API-Key header or "
-            "Authorization: Bearer <key>)"
+            "valid API key or session token required (X-API-Key header "
+            "or Authorization: Bearer <key or token>)"
         )
     return api_key
 
 
 async def get_current_user(
+    request: Request,
     api_key: ApiKey = Depends(require_api_key),
     db_path: str = Depends(get_db_path),
 ) -> AuthedUser:
-    """Resolve the user row behind the API key. Includes the caller's
-    active subscription tier (None if no active sub)."""
-    from motodiag.billing.subscription_repo import get_active_subscription
+    """Resolve the user row behind the API key or session. Includes the
+    caller's subscription tier by :func:`resolve_tier` (None if none)."""
     from motodiag.core.database import get_connection
 
     with get_connection(db_path) as conn:
@@ -169,15 +244,16 @@ async def get_current_user(
         raise InvalidApiKeyError(
             f"user id={api_key.user_id} not found or inactive"
         )
-    sub = get_active_subscription(api_key.user_id, db_path=db_path)
+    request.state.caller = Caller(api_key.user_id, api_key.kind, api_key.id)
     return AuthedUser(
         id=int(row["id"]),
         username=str(row["username"]),
         email=row["email"],
-        tier=sub.tier if sub is not None else None,
+        tier=resolve_tier(api_key, db_path=db_path),
         is_active=True,
         api_key_id=api_key.id,
         api_key_prefix=api_key.key_prefix,
+        credential_kind=api_key.kind,
     )
 
 

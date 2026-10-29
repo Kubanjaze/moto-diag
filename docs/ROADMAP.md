@@ -556,7 +556,7 @@ Multi-user auth, voice-first mode, printing, barcode scanning, photo annotation,
 
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
-| 303 | Multi-user auth with roles | 🚧 | Owner/tech/service writer/apprentice, permission gating, session management |
+| 303 | Multi-user auth with roles | ✅ | **CLOSED 2026-10-28.** Staff log in: `motodiag user` creates users with scrypt passwords (8+ characters); roles stay `shop member add`. Sessions are `mds_` rows of `api_keys` (no migration), 30 days, compared as UTC. `/v1/auth/*`: login, me, logout, sessions, own password, and the owner's reset under `manage_users`, refusing owners and other shops' members (K56). Every route and the live socket take a session or a key; a session's tier is its own or its shop owner's. `mds_` tokens kept out of uvicorn's logs. F231, F232 filed. 24/24 mutations. Regression 11785 passed / 0 failed / 105 expected skips at `42f8651` (master merged, K57), inside the fence. |
 | 304 | Voice-first mode (expand Phase 183) | 🔲 | Hands-free wrenching, voice commands, continuous listening mode |
 | 305 | Print + label support | 🔲 | Service tags, work order printouts, parts labels, Brother/Dymo printer integration |
 | 306 | Barcode / QR scanning | 🔲 | Parts inventory scanning, bike check-in via VIN barcode, mobile camera or USB scanner |
