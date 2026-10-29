@@ -6,23 +6,24 @@ Written 2026-10-12 by the advisor session that verified Phases 373–381. This c
 
 The fleet reads this table exactly (`.claude/skills/fleet/plan_order.py`): the first row whose ROADMAP row is not ✅ is the next mission. A row built by a builder session is waited for. A row that needs the operator is asked first, in plain English. Otherwise the fleet opens the mission's issue and a one-row pull request that marks its row 🚧, and the operator merges it by hand (K49). The list changes only by a dated entry under "Changes to the order" with a K-id, written on the operator's word (K48).
 
-As of 2026-10-27, K54.
+As of 2026-10-28, K55.
 
 | # | phase | kind | built by | needs the operator | entry |
 |---|---|---|---|---|---|
 | 1 | 392 | fleet | builder | nothing | 2026-10-26, later · K44 |
 | 2 | 303 | shop | fleet | nothing | 2026-10-26 · K43 |
-| 3 | 393 | fleet | builder | nothing | 2026-10-27 · K54 |
-| 4 | 348 | shop | fleet | nothing | 2026-10-26 · K43 |
-| 5 | 385 | shop | fleet | nothing | 2026-10-21 · K53 |
-| 6 | 345 | shop | fleet | an outside account: the offsite backup's service account, which the operator opens | Wave 1, item 2 · K48 |
-| 7 | 343 | shop | fleet | an outside account: crash reports (Sentry), which the operator opens | Wave 1, item 2 · K48 |
-| 8 | 371 | shop | fleet | a fork: Stripe's production webhooks need an endpoint Stripe can reach, and the backend is tailnet-only (the operator's decision 3 of 2026-09-28); and an outside account, Stripe's live account ("Stripe: the live account, for 371 and 372") | Wave 1, item 4 · K48, K52 |
-| 9 | 372 | shop | fleet | an outside account: Stripe's live account | Wave 1, item 4 · K48 |
-| 10 | 330 | shop | fleet | a rule change: F210's general rule comes first ("F210's general rule is still needed before onboarding (330)", 2026-10-21); it changes the set-aside list's definition, which is the operator's call | Wave 1, item 5 · K48, K52 |
-| 11 | 334 | shop | fleet | an outside person: a lawyer, for the terms a shop signs | Wave 1, item 5 · K48 |
-| 12 | 344 | shop | fleet | nothing | Wave 1, item 5 · K48 |
-| 13 | 210 | shop | fleet | nothing | Wave 1, item 6 · K48 |
+| 3 | 394 | fleet | builder | nothing | 2026-10-28 · K55 |
+| 4 | 393 | fleet | builder | nothing | 2026-10-27 · K54 |
+| 5 | 348 | shop | fleet | nothing | 2026-10-26 · K43 |
+| 6 | 385 | shop | fleet | nothing | 2026-10-21 · K53 |
+| 7 | 345 | shop | fleet | an outside account: the offsite backup's service account, which the operator opens | Wave 1, item 2 · K48 |
+| 8 | 343 | shop | fleet | an outside account: crash reports (Sentry), which the operator opens | Wave 1, item 2 · K48 |
+| 9 | 371 | shop | fleet | a fork: Stripe's production webhooks need an endpoint Stripe can reach, and the backend is tailnet-only (the operator's decision 3 of 2026-09-28); and an outside account, Stripe's live account ("Stripe: the live account, for 371 and 372") | Wave 1, item 4 · K48, K52 |
+| 10 | 372 | shop | fleet | an outside account: Stripe's live account | Wave 1, item 4 · K48 |
+| 11 | 330 | shop | fleet | a rule change: F210's general rule comes first ("F210's general rule is still needed before onboarding (330)", 2026-10-21); it changes the set-aside list's definition, which is the operator's call | Wave 1, item 5 · K48, K52 |
+| 12 | 334 | shop | fleet | an outside person: a lawyer, for the terms a shop signs | Wave 1, item 5 · K48 |
+| 13 | 344 | shop | fleet | nothing | Wave 1, item 5 · K48 |
+| 14 | 210 | shop | fleet | nothing | Wave 1, item 6 · K48 |
 
 The ROADMAP stays the ledger: this file records the order of the open rows, and why. A Step 0 that measures something new can change the order. Any change is recorded here, dated.
 
@@ -91,6 +92,11 @@ The operator's words:
   - **The operator's words:** "Approved: Phase 393 as drafted, after 303 and before 348, built by a builder session; its numbers are mine."
   - **It is built by a builder session, and the fleet waits for it:** it changes `.claude/skills/fleet/`, which the push gate keeps from the fleet. 348 and every first-shop phase after it are built under its checks.
   - **Its prompt** is `docs/prompts/393_the_code_itself_gets_checked.txt`, and its row is on master, 🔲. The numbers in it (85% changed-line coverage, McCabe 20, 100 KB per file, the ratchet) are the operator's.
+- **2026-10-28: 394 goes right after 303 (K55).** PR #34, 303's build, made the Red Team's brief larger than Linux's 128 KiB limit on a single command-line argument. The brief went on the command line, so the Red Team's stage could not start: the dispatcher's log says "cycle failed" every 5 minutes from 16:38, and each retry said "Red Team started" again on #31.
+  - **The operator's words:** "New small phase, on my word: the fleet passes a rank's brief on standard input. Next free ROADMAP number, row 🚧 first, kind fleet, built by a builder; its row names 303 as what it unblocks (K43 rule 4); add it to "Next, in order" right after 303 with a dated entry and the next K-id (yeoman.py decide)".
+  - **It unblocks 303,** whose Red Team cannot run without it. #31 is held with `needs-admiral` until it merges.
+  - **It is built by a builder session, and the fleet waits for it:** it changes `.claude/skills/fleet/`, which the push gate keeps from the fleet.
+  - **Its prompt** is `docs/prompts/394_the_brief_on_stdin.txt`, and its row is 🚧.
 
 ## Where the ledger stands
 
