@@ -18,6 +18,7 @@ does.
 
 from __future__ import annotations
 
+import sqlite3
 from dataclasses import dataclass
 from typing import Optional
 
@@ -26,6 +27,15 @@ from motodiag.core.database import get_connection
 # `customers` row 1 is named "Unassigned" -- it is a sentinel meaning "no
 # customer", not a person. Migration 046 already encodes this convention.
 SENTINEL_CUSTOMER_ID = 1
+
+
+def _table_absent(e: sqlite3.OperationalError) -> None:
+    """Drop the one error the optional-table reads were written for: the
+    table is absent at this install's schema version. Anything else -- a
+    locked table, a disk error -- reaches the caller, so an erase never
+    reports success over data it did not delete (Phase 393, bug fix #2)."""
+    if "no such table" not in str(e):
+        raise e
 
 
 @dataclass
@@ -81,8 +91,8 @@ def erase_plan(customer_id: int, db_path: Optional[str] = None) -> ErasePlan:
                     (customer_id,),
                 )
             )
-        except Exception:
-            pass
+        except sqlite3.OperationalError as e:
+            _table_absent(e)
 
         vehicle_ids = sorted(set(vehicle_ids))
         if not vehicle_ids:
@@ -102,8 +112,8 @@ def erase_plan(customer_id: int, db_path: Optional[str] = None) -> ErasePlan:
                 f"WHERE vehicle_id IN ({placeholders})",
                 vehicle_ids,
             ).fetchone()[0]
-        except Exception:
-            pass
+        except sqlite3.OperationalError as e:
+            _table_absent(e)
 
     return ErasePlan(
         customer_id=customer_id,
@@ -143,9 +153,8 @@ def erase_customer(customer_id: int, db_path: Optional[str] = None) -> int:
                 plan.vehicle_ids,
             )
             deleted += cursor.rowcount
-        except Exception:
-            # Table absent at this install's schema version.
-            pass
+        except sqlite3.OperationalError as e:
+            _table_absent(e)
 
         conn.commit()
         return deleted
