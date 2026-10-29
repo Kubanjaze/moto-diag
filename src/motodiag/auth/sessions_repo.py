@@ -11,7 +11,7 @@ A session's expiry is ``created_at`` plus ``session_lifetime_days``,
 computed and never stored. ``created_at`` is SQLite's
 ``CURRENT_TIMESTAMP`` (``YYYY-MM-DD HH:MM:SS``, UTC), so it is parsed into
 an aware UTC time and compared with the current UTC time, never as text
-(the operator's K55).
+(the operator's K56).
 
 Every function that lists or revokes touches only rows whose prefix begins
 ``mds_``: an API key is never listed or revoked here.
@@ -58,7 +58,7 @@ LOGIN_FAILED = "invalid username or password"
 
 #: A well-formed hash of a random string nobody kept. ``authenticate`` checks
 #: against it when the name is unknown or has no password, so a wrong name
-#: and a wrong password take the same time (the operator's K55).
+#: and a wrong password take the same time (the operator's K56).
 DUMMY_HASH = (
     "scrypt$16384$8$1$ae2b067dcf1009103ad606aff35ecf5a$"
     "483fcd0e2a44c2eb0abef727f75f880e4abc21636bf905906ab1ad22393c6c1a"

@@ -39,12 +39,15 @@ def call_key(cmd: list[str]) -> str:
     """The command's hash: its model, tools and schema, with the prompt and
     `--resume <id>` left out. Not the prompt: a rank's prompt can read what
     its own stage already wrote (the Science Officer's census counts its own
-    committed Step 0), so a replay sees a different prompt for the same call."""
+    committed Step 0), so a replay sees a different prompt for the same call.
+    Since Phase 394 the prompt is on stdin and `-p` is followed by a flag; that
+    flag stays, so a command from before and one from after key the same."""
     plain = list(cmd)
     for flag in ("--resume", "-p"):
         if flag in plain:
             k = plain.index(flag)
-            del plain[k:k + 2]
+            after = plain[k + 1] if k + 1 < len(plain) else ""
+            del plain[k:k + 1 if flag == "-p" and after.startswith("--") else k + 2]
     return hashlib.sha256(json.dumps(plain).encode()).hexdigest()[:16]
 
 

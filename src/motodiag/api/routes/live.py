@@ -34,7 +34,7 @@ are accepted; query param wins on conflict.
 Phase 303: a login session token (``mds_...``) is accepted through the
 subprotocol only. A query string is written to the server's logs, so a
 query-string value beginning ``mds_`` is refused with 4401, as if no
-credential had been sent (the operator's K55).
+credential had been sent (the operator's K56).
 
 ## Client → server messages (JSON)
 

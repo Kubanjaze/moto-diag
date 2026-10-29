@@ -1,4 +1,4 @@
-"""Phase 303 — uvicorn's own logs carry no session token (the operator's K55
+"""Phase 303 — uvicorn's own logs carry no session token (the operator's K56
 requirement 3).
 
 uvicorn 0.49 writes the HTTP request line, query string included, on

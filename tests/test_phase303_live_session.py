@@ -1,5 +1,5 @@
 """Phase 303 — a session on the live socket (Logic item 5; the operator's
-K55 requirement 3).
+K56 requirement 3).
 
 A session opens `/v1/live/{id}` through the `bearer.<token>` subprotocol
 only. A query string is written to the server's logs, so a session token
@@ -145,7 +145,7 @@ def _session_text_in(records) -> list[str]:
     return out
 
 
-class TestNoSessionTokenInTheLogsK55:
+class TestNoSessionTokenInTheLogsK56:
     def _capture(self, caplog):
         caplog.set_level(logging.DEBUG)
         for name in LOGGERS:

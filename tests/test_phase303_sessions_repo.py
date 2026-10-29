@@ -1,5 +1,5 @@
 """Phase 303 — sessions as rows of `api_keys`, and the password check
-(Logic item 3; the operator's K55 requirements 2 and 4).
+(Logic item 3; the operator's K56 requirements 2 and 4).
 
 `created_at` is written here by SQLite's own `datetime('now', ...)`, the
 shape `CURRENT_TIMESTAMP` stores, so the expiry is tested on the text the
@@ -99,8 +99,8 @@ class TestVerify:
         assert verify_session("mds_nope", 30, db_path=db) is None
 
 
-class TestExpiryK55:
-    """K55 requirement 4: real UTC times, never date text."""
+class TestExpiryK56:
+    """K56 requirement 4: real UTC times, never date text."""
 
     def test_30_days_plus_a_minute_is_expired(self, db):
         uid = make_user(db, "tess")

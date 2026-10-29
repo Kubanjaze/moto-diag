@@ -6,7 +6,7 @@ exact strings (each must occur once), the tests run after clearing
 `__pycache__`, every file restored whatever happens. Exits 1 if any mutation
 stays green. An argument runs only the mutations whose name starts with it:
 `P` passwords, `S` sessions, `D` deps, `R` the routes, `L` the live socket
-and the logs, `C` the CLI, `K` the operator's K55.
+and the logs, `C` the CLI, `K` the operator's K56.
 
 No mutation reads the live database or reaches the network.
 """
@@ -95,7 +95,7 @@ MUTATIONS = [
        '            record.args = tuple(\n                a')], T_LOG),
     # the CLI
     ("C1 apikey list shows sessions", [(AKC, ') if k.kind == "api_key"]', ")]")], T_CLI),
-    # the operator's K55
+    # the operator's K56
     ("K1 the reset takes an owner at any shop",
      [(RT, "    if _owner_anywhere(user_id, db_path):", "    if False:")], T_API),
     ("K2 the reset takes a member of another shop",

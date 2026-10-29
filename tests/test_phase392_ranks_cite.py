@@ -51,7 +51,7 @@ class Replies:
 
     def __call__(self, cmd, **kw):
         if cmd[0] == "claude":
-            self.prompts.append(cmd[cmd.index("-p") + 1])
+            self.prompts.append(kw["input"])             # the brief's on stdin (Phase 394)
             return subprocess.CompletedProcess(cmd, 0, self.queue.pop(0), "")
         return subprocess.CompletedProcess(cmd, 0, "{\"comments\": []}", "")
 

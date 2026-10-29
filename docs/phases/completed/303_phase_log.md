@@ -6,7 +6,7 @@
 
 ## 2026-10-28: The operator's answers to the Chief Engineer's stop
 
-> My answers to the Chief Engineer's stop: go with your picks, plus K55. (a) Sessions live in the API-key table, mds_ for sessions and mdk_ for keys, no migration. (b) Gate only the new login path; existing commands behave as today. (c) A logged-in staff member uses their own subscription, else the highest active subscription of an owner-role active member of a shop they are an active member of. (d) A session lives 30 days; a password is at least 8 characters.
+> My answers to the Chief Engineer's stop: go with your picks, plus K56. (a) Sessions live in the API-key table, mds_ for sessions and mdk_ for keys, no migration. (b) Gate only the new login path; existing commands behave as today. (c) A logged-in staff member uses their own subscription, else the highest active subscription of an owner-role active member of a shop they are an active member of. (d) A session lives 30 days; a password is at least 8 characters.
 
 ## 2026-10-28: The Chief Engineer's build session reads the answers
 
@@ -16,7 +16,7 @@ The heading above is on the branch, so this session does not stop again (Logic i
 - **(b)** The only new gate is `manage_users` on the owner's password reset. Every existing command and route behaves as it does today.
 - **(c)** A session caller's tier is their own active subscription, else the highest active subscription of an owner-role active member of any shop where the caller is an active member. A key caller is resolved as today.
 - **(d)** `session_lifetime_days = 30`; `MIN_PASSWORD_LENGTH = 8`.
-- **K55** governs where it differs from the plan text: the reset refuses an owner at any shop and a member of any other shop where the caller lacks `manage_users`; `authenticate` runs the check against a fixed dummy hash on both failing paths; the socket takes a session only through the bearer subprotocol, and serve installs a redaction filter on uvicorn's two loggers; expiry is compared as UTC times.
+- **K56** governs where it differs from the plan text: the reset refuses an owner at any shop and a member of any other shop where the caller lacks `manage_users`; `authenticate` runs the check against a fixed dummy hash on both failing paths; the socket takes a session only through the bearer subprotocol, and serve installs a redaction filter on uvicorn's two loggers; expiry is compared as UTC times.
 
 Baseline: 11738 collected ids on `5313a5e`, kept at `/fleet/run/ids_before.txt` for the floor diff.
 
@@ -26,7 +26,7 @@ Baseline: 11738 collected ids on `5313a5e`, kept at `/fleet/run/ids_before.txt` 
 
 - `auth/passwords.py`, `auth/sessions_repo.py`, `ApiKey.kind`; `auth/deps.py` (`resolve_credential`, `resolve_tier`, `Caller`, `AuthedUser.credential_kind`); `api/routes/live.py` (one credential function and one tier function, `_resolve_tier` removed, a session in the query string refused 4401); `api/middleware.py`; `api/routes/auth.py`, mounted in `app.py`, with `openapi.py` and `errors.py`; `shop/rbac.list_member_permissions`; `cli/user.py` and the two `apikey` filters; `core/config.session_lifetime_days`; the uvicorn redaction filter in `cli/serve.py`.
 - `tests/test_phase176_auth_billing.py`, `tests/test_phase180_shop_api.py`, `tests/test_phase181_live_ws.py` and `tests/test_phase183_openapi.py` pass with no edit: 147 passed.
-- **Decision: the reset's K55 checks read memberships active or not.** "Owner at any shop" and "belongs to any other shop" count a deactivated membership too, so a former owner, or a member set aside at another shop who could be brought back, is still refused. That refuses more than the operator's words require, never less; the control (a plain tech of the caller's shop, no other membership) is still reset. Tested by `test_a_member_set_aside_at_another_shop_is_still_refused`.
+- **Decision: the reset's K56 checks read memberships active or not.** "Owner at any shop" and "belongs to any other shop" count a deactivated membership too, so a former owner, or a member set aside at another shop who could be brought back, is still refused. That refuses more than the operator's words require, never less; the control (a plain tech of the caller's shop, no other membership) is still reset. Tested by `test_a_member_set_aside_at_another_shop_is_still_refused`.
 - **Decision: `authenticate` treats a hash not of the module's form as no password** and checks against the dummy hash, so a foreign-shaped hash does not return early either.
 - **Decision: `request.state.caller` is set in `get_api_key` as well as `get_current_user`,** so a route that needs only a key (the eight kb routes) leaves the caller too, which is what the Goal's sentence for Phase 348 asks.
 - **Decision: two exceptions beyond the plan's two,** `LoginFailedError` (401 `login-failed`, every login failure and a wrong current password) and `LoginSessionNotFoundError` (404 `login-session-not-found`; `session-not-found` is a diagnostic session's). Deviations in v1.1.
@@ -38,7 +38,7 @@ Baseline: 11738 collected ids on `5313a5e`, kept at `/fleet/run/ids_before.txt` 
 ## 2026-10-28: Mutations, the guides, the findings
 
 - `303_mutate.py`, 24 mutations after 392's harness: **24/24 red** (`303_mutate.out`). Afterwards `git status` showed `src/` and `tests/` exactly as committed. The edit guard did not block the script: it writes `src/` from a script file, not from a shell redirect.
-- **Decision: the mutations reach past the plan's ten.** The plan's ten guards are P1, P2, S1–S3, S4 (the one-reason login), S5, D1, D2 (the tier rule, which breaks one function) and R1. The four K55 requirements are K1–K4 (K4 compares the date text, as K55 asks) and L1–L3. Ten more cover the other promises (S6, D3, D4, R2–R4, C1, and L1–L3's filter and socket).
+- **Decision: the mutations reach past the plan's ten.** The plan's ten guards are P1, P2, S1–S3, S4 (the one-reason login), S5, D1, D2 (the tier rule, which breaks one function) and R1. The four K56 requirements are K1–K4 (K4 compares the date text, as K56 asks) and L1–L3. Ten more cover the other promises (S6, D3, D4, R2–R4, C1, and L1–L3's filter and socket).
 - `docs/guide/api.md`: "A staff login" and "An API key" under Authentication; the 401 text, the 401 table row and the tier sentence follow the code. The opening count is corrected to 88 routes over 111 operations (a deviation).
 - `docs/guide/shop-workflow.md` section 0 gains `motodiag user create` before `shop member add`, as run against a fresh database. Without a terminal, getpass printed "Can not control echo" warnings; the guide shows the prompts as a terminal prints them. Everything else is the output verbatim. `tests/test_phase208_docs.py`: 20 passed.
 - **Findings F229 and F230** filed with the `finding` skill (`next_f_number.sh`: F228 here, F181 in the mobile repo, next F229) before any document cited them. `finding_check.py` exit 0. (Renumbered F231 and F232 on 2026-10-28 after master took F229 and F230; see the last entry.)
@@ -170,7 +170,7 @@ No code changed, so no bug fix and no new regression of record; the line above s
 - **The stops were two.** The Rule-1 section's "No other stop was met" is deleted and points to Results, which names the second (Gate 11's mobile snapshot).
 - **Step 2's block sets only `MOTODIAG_DB_PATH`**, where item 11 also named `MOTODIAG_DATA_DIR`. Its four commands read the database path, not the data directory (`grep` of `cli/user.py`, `cli/shop.py`, `auth/` and `shop/rbac.py` finds no `data_dir`). Recorded as a deviation; the block, run as written in the fence, is unchanged.
 - **The plan the build is measured against is named.** v1.0 was committed five times without a version bump: `f3f7859`, `b4abb65`, `461b381`, `a0688a8`, `0e5f614`. The first planned migration 088 with a `user_sessions` table; the Executive Officer's round-1 revision, `b4abb65`, moved sessions into `api_keys` and left the table as part (a)'s alternative; `0e5f614` is the text approved on issue #31. The v1.1 header now says so.
-- **The mutation count no longer labels L1 to L3 twice.** The 2026-10-28 entry above called K1–K4 and L1–L3 "the four K55 requirements" and counted L1–L3 in the ten more as well. Correctly: the plan's ten; K1 and K2 (requirement 1), K3 (2) and K4 (4); and ten more, L1–L3 (requirement 3) among them. 10 + 4 + 10 = 24, as `303_mutate.out` lists. v1.1's Tests line says so.
+- **The mutation count no longer labels L1 to L3 twice.** The 2026-10-28 entry above called K1–K4 and L1–L3 "the four K56 requirements" and counted L1–L3 in the ten more as well. Correctly: the plan's ten; K1 and K2 (requirement 1), K3 (2) and K4 (4); and ten more, L1–L3 (requirement 3) among them. 10 + 4 + 10 = 24, as `303_mutate.out` lists. v1.1's Tests line says so.
 
 ## 2026-10-29: The Red Team's round 2, two document corrections
 

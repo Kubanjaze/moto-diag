@@ -6,8 +6,9 @@ the repository's own hooks are the boundary (Step 0, S0-4, measured the
 edit guard firing inside the fence in that mode). It pushes nothing and
 opens nothing: the dispatcher does, after the checks here.
 
-- `session_argv`: the command, with the brief (the plan, the rules, the
-  traps, the stops) and, on a fix round, the Red Team's findings.
+- `session_argv`: the command; `session_brief`: the brief (the plan, the
+  rules, the traps, the stops) and, on a fix round, the Red Team's
+  findings, which goes on the session's stdin, never in argv (Phase 394).
 - `watch`: run every 30 seconds while the session lives, outside the
   model. A phase log reaching `### Bug fix #3`, or two guard blocks with
   the same guard and reason in the session's transcript, ends the session
@@ -143,14 +144,18 @@ thing stops you again, stop again: that time it goes to the operator. ===
 """
 
 
-def session_argv(phase: str, issue: int, *, findings: str | None = None, rnd: int = 0,
-                 model: str = OPUS, answer: str | None = None) -> list[str]:
+def session_brief(phase: str, issue: int, *, findings: str | None = None, rnd: int = 0,
+                  answer: str | None = None) -> str:
     prompt = BRIEF.format(N=phase, ISSUE=issue, KINDS=", ".join(STOP_KINDS))
     if findings:
         prompt += FIX_ROUND.format(ROUND=rnd, FINDINGS=findings)
     if answer:
         prompt += ANSWERED.format(ANSWER=answer)
-    return ["claude", "-p", prompt, "--model", model, "--permission-mode", "bypassPermissions",
+    return prompt
+
+
+def session_argv(model: str = OPUS) -> list[str]:
+    return ["claude", "-p", "--model", model, "--permission-mode", "bypassPermissions",
             "--disallowedTools", "WebFetch,WebSearch", "--strict-mcp-config",
             "--output-format", "json"]
 

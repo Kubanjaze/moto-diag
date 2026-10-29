@@ -42,9 +42,11 @@ class Replies:
     def __init__(self, *structured):
         self.queue = [claude_json(s, model=rank_call.HAIKU) for s in structured]
         self.calls: list[list[str]] = []
+        self.briefs: list[str] = []          # each call's stdin (Phase 394)
 
     def __call__(self, cmd, **kw):
         self.calls.append(cmd)
+        self.briefs.append(kw["input"])
         return subprocess.CompletedProcess(cmd, 0, self.queue.pop(0), "")
 
 
@@ -126,7 +128,7 @@ class TestTheCalls:
         run = Replies(COUNTED, GOOD)
         v, calls = scout.assess(MISSION, ROW, "table", [], "", cwd=repo, run=run)
         assert v == GOOD and len(calls) == 2
-        assert scout.RECOUNT in run.calls[1][2] and "14 files" in run.calls[1][2]
+        assert scout.RECOUNT in run.briefs[1] and "14 files" in run.briefs[1]
 
     def test_a_bare_phase_number_is_a_count_to_the_checker(self, repo):
         """Phase 389, bug fix #1: the trial's first report said "No row for
@@ -138,7 +140,7 @@ class TestTheCalls:
         assert '"Phase 385", never "385" alone' in " ".join(scout.ASSESS_BRIEF.split())
         run = Replies(bare, GOOD)
         scout.assess(MISSION, ROW, "table", [], "", cwd=repo, run=run)
-        assert '"Phase 385"' in run.calls[1][2] and "385 exists" in run.calls[1][2]
+        assert '"Phase 385"' in run.briefs[1] and "385 exists" in run.briefs[1]
 
     def test_counts_in_prose_twice_is_a_stop(self, repo):
         with pytest.raises(rank_call.Stop, match="no query"):

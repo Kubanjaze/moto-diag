@@ -1,4 +1,4 @@
-"""Phase 303 — the auth routes (Logic items 4, 6 and 7; the operator's K55
+"""Phase 303 — the auth routes (Logic items 4, 6 and 7; the operator's K56
 requirement 1).
 
 Shop A is Olga's (owner, shop subscription). Tess is a tech there and Abe an
@@ -245,8 +245,8 @@ class TestOwnersReset:
         assert r.status_code == 402
 
 
-class TestOwnersResetK55:
-    """K55 requirement 1: a member who owns a second shop, an owner at any
+class TestOwnersResetK56:
+    """K56 requirement 1: a member who owns a second shop, an owner at any
     shop, and a member of another shop where the caller has no
     manage_users are each refused; nothing about the target changes."""
 

@@ -30,7 +30,7 @@ import logging
 import click
 
 
-# === Phase 303 (K55): a session token never lands in a log ===
+# === Phase 303 (K56): a session token never lands in a log ===
 # uvicorn writes the request line with its query string on
 # `uvicorn.access`, and a WebSocket handshake's path with its query string
 # on `uvicorn.error`. The live socket refuses a session in the query

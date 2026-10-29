@@ -64,14 +64,14 @@ def transcript(run_dir: pathlib.Path, *results: tuple[str, bool]) -> None:
 
 class TestTheBrief:
     def test_the_command(self):
-        cmd = E.session_argv("389A", 31)
-        assert cmd[:2] == ["claude", "-p"] and rank_call.OPUS in cmd
+        cmd = E.session_argv()
+        assert cmd[:3] == ["claude", "-p", "--model"] and rank_call.OPUS in cmd
         assert cmd[cmd.index("--permission-mode") + 1] == "bypassPermissions"
         assert "WebFetch" in cmd[cmd.index("--disallowedTools") + 1]
         assert cmd[cmd.index("--output-format") + 1] == "json"
 
     def test_it_names_the_plan_the_stops_and_the_traps(self):
-        brief = E.session_argv("389A", 31)[2]
+        brief = E.session_brief("389A", 31)
         for words in ("389A_implementation.md", "issue #31", "wholetree.sh", "regression.sh",
                       "a third bug fix", "rule-1", "twice for the same reason", "F124", "244H",
                       "never pip install", "closeout_check.py . 389A", "engineer.json",
@@ -79,7 +79,7 @@ class TestTheBrief:
             assert words in brief, words
 
     def test_a_fix_round_carries_the_findings(self):
-        brief = E.session_argv("389A", 31, findings="- [factual] the row: F213", rnd=1)[2]
+        brief = E.session_brief("389A", 31, findings="- [factual] the row: F213", rnd=1)
         assert "fix round 1" in brief and "- [factual] the row: F213" in brief and "K9" in brief
 
 
@@ -224,10 +224,13 @@ class TestTheSession:
             made.append((cmd, kw))
             return FakeProc(cmd, out='{"is_error": false}', **kw)
 
-        r, reason = self.runner(tmp_path, popen).session(E.session_argv("389A", 1), watch=lambda: None)
+        r, reason = self.runner(tmp_path, popen).session(E.session_argv(),
+                                                         E.session_brief("389A", 1),
+                                                         watch=lambda: None)
         assert reason is None and r.returncode == 0 and r.stdout == '{"is_error": false}'
         cmd, kw = made[0]
         assert "--token-fd" in cmd and kw["pass_fds"] == (3,) and kw["env"].keys() == {"PATH"}
+        assert (tmp_path / "run" / "session.brief").read_text() == E.session_brief("389A", 1)
 
     def test_a_watcher_reason_ends_it(self, tmp_path):
         procs = []
@@ -237,7 +240,7 @@ class TestTheSession:
             return procs[0]
 
         r, reason = self.runner(tmp_path, popen).session(
-            E.session_argv("389A", 1), watch=lambda: "third-bug-fix: #3")
+            E.session_argv(), "brief", watch=lambda: "third-bug-fix: #3")
         assert reason == "third-bug-fix: #3" and procs[0].terminated
 
     def test_a_new_session_over_the_opus_ceiling_never_starts(self, tmp_path):
@@ -246,7 +249,7 @@ class TestTheSession:
                              usage="Current week (all models): 71% used · resets Oct 28, 12pm "
                                    "(America/New_York)\n")
         with pytest.raises(rank_call.Stop, match="no new Opus stage"):
-            runner.session(E.session_argv("389A", 1), watch=lambda: None)
+            runner.session(E.session_argv(), "brief", watch=lambda: None)
         assert made == []
 
     def test_a_usage_limit_is_a_pause_not_a_stop(self, tmp_path):
@@ -254,4 +257,4 @@ class TestTheSession:
                    / "rate_limited.json").read_text()
         with pytest.raises(D.RateLimited):
             self.runner(tmp_path, lambda cmd, **kw: FakeProc(cmd, out=limited, rc=1, **kw)).session(
-                E.session_argv("389A", 1), watch=lambda: None)
+                E.session_argv(), "brief", watch=lambda: None)

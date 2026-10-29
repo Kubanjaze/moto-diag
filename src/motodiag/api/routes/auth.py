@@ -12,7 +12,7 @@ told apart.
 The one new permission gate is the owner's password reset for a member,
 which needs ``manage_users`` at that shop. It refuses a target who is an
 owner at any shop, or who belongs to any other shop where the caller has
-no ``manage_users`` (the operator's K55), so one shop's owner cannot take
+no ``manage_users`` (the operator's K56), so one shop's owner cannot take
 over a login another shop relies on.
 """
 
@@ -238,7 +238,7 @@ def reset_member_password(
         raise ShopMembershipNotFoundError(
             f"no active member: shop_id={shop_id}, user_id={user_id}"
         )
-    # K55: memberships are read active or not, so a member set aside at
+    # K56: memberships are read active or not, so a member set aside at
     # another shop, or a former owner, is still refused.
     if _owner_anywhere(user_id, db_path):
         raise PermissionDenied(

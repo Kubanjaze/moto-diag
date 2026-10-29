@@ -159,6 +159,7 @@ class World:
                 transcript(cmd)
                 raise Killed("the Engineer's session")
             self.sessions.append(cmd[cmd.index("--") + 1:])
+            self.session_briefs.append(pathlib.Path(kw["stdin"].name).read_text())  # Phase 394
             return self.engineer(cmd, stdout, stderr, **kw)
 
         self.fleet = D.Fleet(
@@ -170,6 +171,7 @@ class World:
         return self.fleet
 
     sessions: list = dataclasses.field(default_factory=list)
+    session_briefs: list = dataclasses.field(default_factory=list)
 
 
 @pytest.fixture(autouse=True)
@@ -394,7 +396,8 @@ def test_engineer_cut_in_its_session_goes_on_with_continue(w):
     killed(w)
     restart(w)
     (cmd,) = w.sessions
-    assert cmd[:4] == ["claude", "--resume", CUT, "-p"] and cmd[4] == E.CONTINUE
+    assert cmd[:5] == ["claude", "--resume", CUT, "-p", "--model"]
+    assert w.session_briefs == [E.CONTINUE]
     assert labels(w) == ["mission", "review:open"] and BRANCH in w.host.prs
 
 

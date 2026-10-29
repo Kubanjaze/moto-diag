@@ -280,7 +280,7 @@ def test_the_captain_revises_after_the_xo_sends_it_back(world):
                                           "reason": "One defect."}))
     assert labels(host) == ["mission", "plan:needs-review"]
     step(clock, fleet, host, claude_json({"implementation_md": PLAN + "\nRevised.\n"}))
-    revision = host.model_calls()[-1][2]
+    revision = host.model_briefs()[-1]
     assert "- Say which file holds the row." in revision
     assert host.comments(31)[-1].startswith(f"{D.CAPTAIN_M} revision round=1")
     step(clock, fleet, host, claude_json({"verdict": "approve", "items": [], "reason": "ok"}))

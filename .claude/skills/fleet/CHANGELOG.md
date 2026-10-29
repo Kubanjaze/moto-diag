@@ -1,5 +1,26 @@
 # fleet — changelog
 
+## 2026-10-28 — a rank's brief on standard input (Phase 394)
+
+The operator, 2026-10-28: "New small phase, on my word: the fleet passes a
+rank's brief on standard input." (K55). The prompt is
+`docs/prompts/394_the_brief_on_stdin.txt`; Step 0 is `394_step0.md`. PR #34
+made the Red Team's brief larger than Linux's 131072-byte limit on one
+argument: 69 launch failures and 69 "Red Team started" comments on #31.
+
+- **`rank_call.command`** has no prompt argument; `call` hands the brief to
+  `claude -p` on stdin. `FencedRunner` passes it through the fence.
+- **The Chief Engineer**: `engineer.session_argv()` and
+  `engineer.session_brief()`; the brief is `<run>/session.brief`, opened as
+  the session's stdin; resumed, `CONTINUE` is.
+- **`rank_call.LaunchFailed(Stop)`**: an `OSError` from a launch stops the
+  stage once, label unchanged, instead of failing the cycle every 5 minutes.
+- **`started` once per stage run** (`Fleet.failed_start`).
+- **`journal.call_key`** keys the old and the new command shapes alike, so a
+  stage cut across the upgrade replays.
+- Tests: `tests/test_phase394_brief_on_stdin.py` (18), with a stand-in
+  `claude` on PATH and the kernel's real limit; 15/15 mutations red.
+
 ## 2026-10-27 — the fleet follows the plan of record (Phase 392)
 
 The operator, 2026-10-26: "well the fleet should be reading the plan of
