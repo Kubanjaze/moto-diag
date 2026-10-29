@@ -215,7 +215,7 @@ def test_a_resumed_stage_reads_verify_phases_output_back_from_its_journal(w, mon
     runs = len(w.checks)
     restart(w, REFUSE)
     assert len(w.checks) == runs, "a finished model-free run was made again"
-    prompt = calls(w)[-1][calls(w)[-1].index("-p") + 1]
+    prompt = w.host.model_briefs()[-1]                     # on stdin (Phase 394)
     assert "V2 no code after the regression hash: pass" in prompt and marker.strip() in prompt
 
 

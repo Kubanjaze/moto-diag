@@ -108,6 +108,17 @@ recorded per call in `~/.local/state/motodiag/fleet/calls.jsonl` (or
 `$FLEET_LEDGER`). Not `--bare`: it reads only an API key, never the
 subscription login.
 
+**The brief goes on standard input, never in argv** (Phase 394, K55): the
+command is `claude -p --model …` with no prompt argument, and `claude`
+reads the brief from stdin (measured on 2.1.312 with 291094 bytes). Linux
+refuses any one argument over 131072 bytes; PR #34's Red Team brief was
+over it, and the stage could not start. The fence passes stdin through
+(`FencedRunner.fenced`'s `input`); the Chief Engineer's brief is written to
+`<run>/session.brief` and is its session's stdin (`engineer.session_brief`).
+A launch that raises `OSError` is `rank_call.LaunchFailed`, a `Stop`: the
+stage says "the model call could not start" once on its issue, the label
+stays, and the cycle goes on.
+
 `fence_probe.py` proves the fence on the machine it runs on: a planted
 Bash call under the fence makes no file; the control, with Bash allowed,
 does. It calls the model, so it is run by hand and its output logged.
@@ -341,7 +352,10 @@ before.
 
 One log line per stage. Every rank posts `<!-- fleet-started: rank=<rank>
 run=<run> -->` first (its own prefix: no due rule reads it), and every marker
-a stage writes ends ` run=<run>`. `paused` stays in `state.json` until its
+a stage writes ends ` run=<run>`. Once per stage run (Phase 394): a stage the
+cycle runs again after its run *failed*, with that run's `started` still
+the issue's last rank comment, says nothing new (`failed_start`); the log
+says whose comment stands. `paused` stays in `state.json` until its
 resumed stage ends. `prune_runs` keeps every unfinished run.
 `recover --dry-run` says what a start would do and writes nothing (no lock,
 no mirror update): run it beside the live service before new code goes live.

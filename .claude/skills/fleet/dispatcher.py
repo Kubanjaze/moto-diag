@@ -102,7 +102,7 @@ import scout  # noqa: E402
 import xo  # noqa: E402
 import yeoman  # noqa: E402
 from labels import LABELS  # noqa: E402
-from rank_call import FABLE, OPUS, Runner, Stop  # noqa: E402
+from rank_call import FABLE, OPUS, LaunchFailed, Runner, Stop  # noqa: E402
 
 REPO = "Kubanjaze/moto-diag"
 FOLLOWUPS = "docs/FOLLOWUPS.md"
@@ -371,9 +371,15 @@ class FencedRunner:
             argv.append("--token-fd")
         return [*argv, "--", *cmd]
 
-    def fenced(self, cmd: list[str], timeout: int = 1800) -> subprocess.CompletedProcess:
+    def fenced(self, cmd: list[str], timeout: int = 1800,
+               input: str | None = None) -> subprocess.CompletedProcess:
+        """`cmd` in the fence; `input`, a rank's brief, on its stdin (Phase
+        394): fence.sh and fence_net.py hand fd 0 on to claude."""
         env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin")}
         r_fd, kw = token_pipe(self.fleet.token)
+        if input is not None:
+            del kw["stdin"]
+            kw["input"] = input
         try:
             return self.fleet.host(self.fence_argv(cmd), capture_output=True, text=True,
                                    cwd=self.clone, env=env, timeout=timeout, **kw)
@@ -437,7 +443,7 @@ class FencedRunner:
         self.gate_model(cmd[cmd.index("--model") + 1] if "--model" in cmd else None)
         if session:
             cmd = [cmd[0], "--resume", session, *cmd[1:]]
-        r = self.fenced(cmd, timeout=kw.get("timeout", 1800))
+        r = self.fenced(cmd, timeout=kw.get("timeout", 1800), input=kw.get("input"))
         limited = rate_limit(r)
         if limited:
             if self.journal is not None:
@@ -452,14 +458,15 @@ class FencedRunner:
                                      stderr=r.stderr or "", session=sid or session)
         return r
 
-    def session(self, cmd: list[str], *, watch: Callable[[], str | None],
+    def session(self, cmd: list[str], brief: str, *, watch: Callable[[], str | None],
                 timeout: int = engineer.SESSION_TIMEOUT_S, every: int = engineer.WATCH_EVERY_S
                 ) -> tuple[subprocess.CompletedProcess, str | None]:
         """A long call (the Engineer's), watched from outside the model: every
         `every` seconds `watch()` may name a reason to end it. Returns the
         result and that reason (None when it ended by itself). Resumed, a
         finished session is read back from its files; a cut one goes on with
-        `engineer.CONTINUE`."""
+        `engineer.CONTINUE`. The brief is the session's stdin, from
+        `session.brief` in the run (Phase 394)."""
         out, err = self.run_dir / "session.json", self.run_dir / "session.err"
         k, done, session = self.replay(cmd)
         if done is None and self.resumed and session_ended(out):
@@ -475,13 +482,18 @@ class FencedRunner:
             return r, done.get("reason")
         self.gate_model(cmd[cmd.index("--model") + 1] if "--model" in cmd else None)
         if session:
-            cmd = [cmd[0], "--resume", session, cmd[1], engineer.CONTINUE, *cmd[3:]]
+            cmd, brief = [cmd[0], "--resume", session, *cmd[1:]], engineer.CONTINUE
+        brief_file = self.run_dir / "session.brief"
+        brief_file.write_text(brief, encoding="utf-8")
         r_fd, kw = token_pipe(self.fleet.token)
         try:
-            with out.open("w") as o, err.open("w") as e:
+            with out.open("w") as o, err.open("w") as e, brief_file.open("rb") as i:
+                kw["stdin"] = i
                 proc = self.fleet.popen(self.fence_argv(cmd), stdout=o, stderr=e, cwd=self.clone,
                                         env={"PATH": os.environ.get("PATH", "/usr/bin:/bin")},
                                         **kw)
+        except OSError as e:
+            raise LaunchFailed(e) from e
         finally:
             os.close(r_fd)
         start, reason = time.monotonic(), None
@@ -1074,8 +1086,29 @@ class Fleet:
                   lambda: label in self.labels_of(issue))
 
     def started(self, issue: int, rank: str, text: str) -> None:
-        """Every rank's first GitHub step: what the search on start reads."""
+        """Every rank's first GitHub step: what the search on start reads.
+        Said once per stage run (Phase 394): a retry of a run that failed,
+        whose `started` is still the issue's last rank comment, says nothing
+        new; its journal records whose comment stands."""
+        j = self.journal
+        if j is not None and not j.done("started"):
+            failed = self.failed_start(issue, rank)
+            if failed is not None:
+                j.mark("started", f"said by {failed}")
+                self.log(f"issue {issue}: the {rank}'s stage runs again after {failed} failed; "
+                         f"its `started` comment stands, not said again")
+                return
         self.say_once(issue, f"{STARTED_M} rank={rank} -->", text, step="started")
+
+    def failed_start(self, issue: int, rank: str) -> str | None:
+        """The run whose `started` marker for `rank` is the issue's last rank
+        comment, when that run's journal ended `failed`; else None."""
+        found = self.open_started(issue)
+        if found is None or found[0] != rank or found[1] is None:
+            return None
+        j = journal.Journal.load(self.runs / found[1])
+        outcome = (j.data.get("outcome") or "") if j is not None else ""
+        return found[1] if outcome.startswith("failed") else None
 
     def checked(self, clone: pathlib.Path, commit: str, *, full: bool,
                 command: list[str] | None = None) -> Check:
@@ -1372,10 +1405,12 @@ class Fleet:
         self.author(clone, "engineer", ident if ident.is_fleet else None)
         self.label_once(issue, "build:open", step="label-build")
         runner = FencedRunner(self, clone, run / "run", journal=j)
-        argv = engineer.session_argv(phase, issue, findings=findings, rnd=rnd, answer=answer)
+        argv = engineer.session_argv()
+        brief = engineer.session_brief(phase, issue, findings=findings, rnd=rnd, answer=answer)
         self.log(f"issue {issue}: the Chief Engineer on phase {phase}, round {rnd}, {clone}")
         try:
-            r, reason = runner.session(argv, watch=lambda: engineer.watch(clone, run / "run", phase))
+            r, reason = runner.session(argv, brief,
+                                       watch=lambda: engineer.watch(clone, run / "run", phase))
         except RateLimited as e:
             self.pause(j, e, runner)
             return "rate-limited"

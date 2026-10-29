@@ -101,6 +101,10 @@ class Host:
     def model_calls(self) -> list[list[str]]:
         return [inner for inner, _ in self.fenced if "/usage" not in inner]
 
+    def model_briefs(self) -> list[str | None]:
+        """Each model call's brief, as it reached the fence's stdin (Phase 394)."""
+        return [kw.get("input") for inner, kw in self.fenced if "/usage" not in inner]
+
     def __call__(self, cmd, **kw):
         cmd = list(cmd)
         if cmd[0] == "gh":

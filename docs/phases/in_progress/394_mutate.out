@@ -1,0 +1,16 @@
+B1 the brief goes back into argv: red
+B2 the brief is not handed to stdin: red
+B3 the fence keeps /dev/null as stdin: red
+B4 the fenced runner drops the brief: red
+L1 a rank's launch OSError is not a stop: red
+L2 the stop does not say why: red
+E1 the session's stdin is not its brief: red
+E2 a resumed session gets its first brief, not CONTINUE: red
+E3 the session's launch OSError is not a stop: red
+E4 the brief stays in the Engineer's argv: red
+J1 call_key drops the flag after -p: red
+J2 call_key keeps the old brief: red
+S1 a retry says started again: red
+S2 any run's started stands, failed or not: red
+S3 another rank's started stands: red
+15/15 red
