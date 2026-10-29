@@ -207,4 +207,5 @@ v1.1: all done. The merge and `verify_phase.sh` are the operator's, after the cl
 - **Mutations:** 24/24 red (`303_mutate.out`).
 - **Stops:** two. The fork at Step 0 (answered: "go with your picks, plus K56"), and Gate 11's mobile snapshot, a test this session could not make green (answered: the operator refreshed the snapshot in the mobile repository, `7489fd5`, and asked for master merged in and the findings renumbered).
 - **Findings:** F231 (an Engineer's rule-1 stop has no way back into the fleet) and F232 (a migration has no path through the fleet).
-- **Regression of record** (inside the fence, after `wholetree.sh --full` 4781 passed): Regression of record: 11767 passed, 0 failed, 105 skipped, 0 errors at `d0f31ca` (34 min 32 s wall, `python -m pytest -n auto --dist load`, exit 0) (run inside the fleet's fence)
+- **Regression of record** (inside the fence, after `wholetree.sh --full` 4799 passed, on master merged in under K57; the floor 11756 → 11890): Regression of record: 11785 passed, 0 failed, 105 skipped, 0 errors at `42f8651` (35 min 1 s wall, `python -m pytest -n auto --dist load`, exit 0) (run inside the fleet's fence)
+- **The earlier run, before master was merged** (after `wholetree.sh --full` 4781 passed): 11767 passed, 0 failed, 105 skipped, 0 errors at `d0f31ca` (34 min 32 s wall), inside the fleet's fence.
