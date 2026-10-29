@@ -209,7 +209,10 @@ class TestTheStage:
         fleet.cycle()
         [line] = fleet.quality_on(MONDAY.date())
         assert line.startswith("Posted on #") and "Nothing went the wrong way" in line
-        facts = yeoman.facts(fleet.mirror, MONDAY.date(), subprocess.run, quality=[line])
+        # A stand-in for `gh`: no test reaches GitHub, and the fence has no gh
+        # (bug fix #3: the real one ran here, and failed in the fence).
+        no_issues = lambda cmd, **kw: subprocess.CompletedProcess(cmd, 0, "[]", "")  # noqa: E731
+        facts = yeoman.facts(fleet.mirror, MONDAY.date(), no_issues, quality=[line])
         assert f"## Code health, weekly\n\n- {line}" in facts
 
 
