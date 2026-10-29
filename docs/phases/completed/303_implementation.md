@@ -198,7 +198,7 @@ v1.1: all done. The merge and `verify_phase.sh` are the operator's, after the cl
 - **Shared test helpers** in `tests/support/phase303.py`, and 24 mutations where the plan named ten guards (Tests).
 - **Master merged before the regression, and the two findings renumbered.** Master took F229 and F230 (`c608169`) while this branch held its own F229 and F230. As the operator asked, master was merged in (`d0f31ca`) and this branch's two became F231 and F232, the next free numbers by the `finding` skill.
 - **The mobile snapshot was refreshed by the operator**, not in this phase (moto-diag-mobile `7489fd5`, unpushed), after the stop at Gate 11; no test changed. Pushing it and regenerating the app's types wait for the merge (the handoff's steps 3 and 4).
-- **No bug fixes**: nothing committed was found wrong. Two of my own tests were corrected before their first commit (the 244G raw-source guard; the allowlists), as logged.
+- **No bug fixes**: nothing committed was found wrong.
 
 ## Results
 

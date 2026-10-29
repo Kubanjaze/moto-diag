@@ -62,7 +62,7 @@ Copied verbatim from the comment by Kubanjaze on issue #31:
 
 - `git merge origin/master` (`c608169`): one conflict, in `docs/FOLLOWUPS.md`, where master's F229 (reserved, closed) and F230 met this branch's two entries. Master's two are kept as they are.
 - With the `finding` skill's rule (both repositories' files, master's copy for this repository): highest F230 here, F181 in the mobile repository, next free F231. This branch's "no way back from an Engineer's rule-1 stop" is now **F231** and "a migration has no path through the fleet" **F232**; the header reads F232.
-- Cited elsewhere only in `303_implementation.md` (Results of item 10), now F231 and F232. The operator's words above, which name master's F229 and F230, are kept verbatim, as is the earlier entry with a note.
+- Cited elsewhere only in `303_implementation.md` (item 11's "Built:" line and the Results' Findings bullet), now F231 and F232. The operator's words above, which name master's F229 and F230, are kept verbatim, as is the earlier entry with a note.
 
 ## 2026-10-28: The regression of record
 
@@ -171,3 +171,10 @@ No code changed, so no bug fix and no new regression of record; the line above s
 - **Step 2's block sets only `MOTODIAG_DB_PATH`**, where item 11 also named `MOTODIAG_DATA_DIR`. Its four commands read the database path, not the data directory (`grep` of `cli/user.py`, `cli/shop.py`, `auth/` and `shop/rbac.py` finds no `data_dir`). Recorded as a deviation; the block, run as written in the fence, is unchanged.
 - **The plan the build is measured against is named.** v1.0 was committed five times without a version bump: `f3f7859`, `b4abb65`, `461b381`, `a0688a8`, `0e5f614`. The first planned migration 088 with a `user_sessions` table; the Executive Officer's round-1 revision, `b4abb65`, moved sessions into `api_keys` and left the table as part (a)'s alternative; `0e5f614` is the text approved on issue #31. The v1.1 header now says so.
 - **The mutation count no longer labels L1 to L3 twice.** The 2026-10-28 entry above called K1–K4 and L1–L3 "the four K55 requirements" and counted L1–L3 in the ten more as well. Correctly: the plan's ten; K1 and K2 (requirement 1), K3 (2) and K4 (4); and ten more, L1–L3 (requirement 3) among them. 10 + 4 + 10 = 24, as `303_mutate.out` lists. v1.1's Tests line says so.
+
+## 2026-10-29: The Red Team's round 2, two document corrections
+
+No code changed, so no bug fix and no new regression of record; the line above stands.
+
+- **The renumbering entry pointed at the wrong section.** It said the findings are cited in "Results of item 10"; item 10 is `core/config.py`, and the citations are in item 11's "Built:" line and the Results' Findings bullet. The pointer now names those two.
+- **v1.1's "No bug fixes" bullet called the allowlists "my own tests".** Only the wiring test was this phase's own; the allowlist and count pins were existing tests moved by the wiring, as the 2026-10-28 entry says. The sentence is deleted (K9); "nothing committed was found wrong" stands.
