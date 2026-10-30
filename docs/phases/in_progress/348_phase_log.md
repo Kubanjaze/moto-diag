@@ -59,3 +59,9 @@ The commit guard accepts a change to `migrations.py` only with a passing `wholet
 - This session cannot refresh the snapshot: the mobile checkout is read-only in the fence and there is no network. The gate is not loosened.
 - The operator's answer (part e) asked for exactly this stop. So: kind `test-cannot-be-green`; no regression of record run; nothing closed out; no database step yet. Built and committed at `c19f2ab` and `fed9e47`, with this entry after them.
 - After the operator's refresh and push of these commits, the next session runs `wholetree.sh --full`, then `regression.sh`, then ends with the outcome `deploy` (Logic item 9).
+
+## 2026-10-30: The operator's answers to the Chief Engineer's stop (second stop, test-cannot-be-green)
+
+Copied verbatim from the comment by Kubanjaze on issue #36:
+
+> My answer to the second stop (the phone app's snapshot): I pushed your three commits through e4ce354 to the branch, and refreshed the phone app's api-schema/openapi.json from this branch: moto-diag-mobile commit 04be61c, committed on the PC and not pushed. Push it only after 348 merges, then regenerate src/api-types.ts on the Mac; put both in the handoff's after-the-merge steps. Do not change the standing test. Carry on: the final full check, the regression of record, and the database step.
