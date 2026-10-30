@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import time
 import uuid
@@ -77,6 +78,16 @@ _RATE_LIMIT_EXEMPT_PATHS = (
 )
 
 
+def _request_db_path(request: Request, resolver=None) -> str:
+    """The database in use for this request: the middleware's resolver if
+    it has one, else the app's ``get_db_path`` override, else Settings."""
+    if resolver is not None:
+        return resolver(request)
+    from motodiag.api.deps import get_db_path
+    override = request.app.dependency_overrides.get(get_db_path)
+    return override() if override else get_db_path()
+
+
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Token-bucket rate limiting per api-key (authed) or per IP
     (anonymous).
@@ -118,15 +129,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         plaintext = _extract_key_from_headers(header, authz)
         if plaintext is None:
             return None
-        # Resolve db path via app override → Settings default
         try:
-            if self._db_path_resolver is not None:
-                db_path = self._db_path_resolver(request)
-            else:
-                from motodiag.api.deps import get_db_path
-                app = request.app
-                override = app.dependency_overrides.get(get_db_path)
-                db_path = override() if override else get_db_path()
+            db_path = _request_db_path(request, self._db_path_resolver)
             return resolve_credential(plaintext, db_path=db_path)
         except Exception as e:
             logger.warning(
@@ -147,13 +151,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         request.state.api_key = key
         # Look up subscription tier
         try:
-            if self._db_path_resolver is not None:
-                db_path = self._db_path_resolver(request)
-            else:
-                from motodiag.api.deps import get_db_path
-                app = request.app
-                override = app.dependency_overrides.get(get_db_path)
-                db_path = override() if override else get_db_path()
+            db_path = _request_db_path(request, self._db_path_resolver)
             tier = resolve_tier(key, db_path=db_path)
         except Exception:
             tier = None
@@ -212,3 +210,76 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         )
         response.headers["X-RateLimit-Tier"] = str(state.tier)
         return response
+
+
+# ---------------------------------------------------------------------------
+# Phase 348 — the audit log
+# ---------------------------------------------------------------------------
+
+
+AUDITED_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+audit_logger = logging.getLogger("motodiag.audit")
+
+
+class AuditMiddleware(BaseHTTPMiddleware):
+    """One ``audit_events`` row per write request, after the route answers.
+
+    Registered inside ``RateLimitMiddleware``, so a refused request (429)
+    is not recorded. Reads what the route left on the request's scope: the
+    caller (Phase 303's ``request.state.caller``), the endpoint and the path
+    ids. Never the body or the query string. A route that raises is
+    recorded as 500 and the exception goes on. A failed audit write never
+    fails the request (the operator, Phase 348): it is logged at ERROR on
+    ``motodiag.audit`` with the request id, and the response goes out as is.
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        if request.method not in AUDITED_METHODS:
+            return await call_next(request)
+        try:
+            response: Response = await call_next(request)
+        except Exception:
+            self._record(request, 500)
+            raise
+        self._record(request, response.status_code)
+        return response
+
+    def _record(self, request: Request, status: int) -> None:
+        from motodiag.audit import AuditEvent, append_event
+        from motodiag.core.database import get_connection
+
+        rid = getattr(request.state, "request_id", None)
+        try:
+            caller = getattr(request.state, "caller", None)
+            params = dict(request.scope.get("path_params") or {})
+            endpoint = request.scope.get("endpoint")
+            shop_id = str(params.get("shop_id", ""))
+            with get_connection(_request_db_path(request)) as conn:
+                username = None
+                if caller is not None:
+                    row = conn.execute(
+                        "SELECT username FROM users WHERE id = ?",
+                        (caller.user_id,),
+                    ).fetchone()
+                    username = row[0] if row else None
+                append_event(conn, AuditEvent(
+                    method=request.method,
+                    path=request.url.path,
+                    status=status,
+                    request_id=rid,
+                    actor_user_id=caller.user_id if caller else None,
+                    actor_username=username,
+                    credential_kind=caller.credential_kind if caller else None,
+                    credential_id=caller.credential_id if caller else None,
+                    client_address=request.client.host if request.client else None,
+                    forwarded_for=request.headers.get("X-Forwarded-For"),
+                    endpoint=getattr(endpoint, "__name__", None),
+                    path_params=(json.dumps(params, sort_keys=True, separators=(",", ":"),
+                                            default=str) if params else None),
+                    shop_id=int(shop_id) if shop_id.isdigit() else None,
+                ))
+        except Exception:
+            audit_logger.exception(
+                "audit write failed rid=%s %s %s", rid, request.method,
+                request.url.path,
+            )

@@ -17,6 +17,7 @@ from motodiag.api.deps import get_db_path, get_settings
 from motodiag.api.errors import register_exception_handlers
 from motodiag.api.middleware import (
     AccessLogMiddleware,
+    AuditMiddleware,
     RateLimitMiddleware,
     RequestIdMiddleware,
 )
@@ -95,6 +96,7 @@ def create_app(
     )
 
     # --- Request-scoped middleware (innermost first in FastAPI order) ---
+    app.add_middleware(AuditMiddleware)  # Phase 348 — inside the rate limit
     app.add_middleware(AccessLogMiddleware)
     app.add_middleware(RateLimitMiddleware)
     app.add_middleware(RequestIdMiddleware)

@@ -7,7 +7,7 @@ from typing import Generator
 
 from motodiag.core.config import get_settings
 
-SCHEMA_VERSION = 87  # Phase 383: media paths relative to the data folder (migration 087)
+SCHEMA_VERSION = 88  # Phase 348: the audit log, audit_events (migration 088)
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

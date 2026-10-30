@@ -1,0 +1,14 @@
+{
+ "_comment": "Phase 348, migration 088: adds one empty table (audit_events), one index, two triggers and one schema_version row. No existing row changes or is removed; every table not named here must not change at all.",
+ "tables": {
+  "schema_version": {"added": 1}
+ },
+ "schema": {
+  "added": [
+   "index idx_audit_events_shop",
+   "table audit_events",
+   "trigger audit_events_no_delete",
+   "trigger audit_events_no_update"
+  ]
+ }
+}
