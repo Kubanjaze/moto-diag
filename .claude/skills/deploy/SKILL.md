@@ -155,6 +155,46 @@ through `apply-live`, never through a restart.
 6. **At close-out**, the diff files move to `completed/` with the phase
    documents, and so does the scope file.
 
+## Through the fleet (Phase 395, K58, F232)
+
+A fleet-built phase never runs `deploy.py` itself: the fence has no live.
+The Engineer stops after the regression of record, and the dispatcher
+comments one paste block on the mission issue for the home desktop's
+Ubuntu terminal. The block runs **master's** `through_fleet.py` (the
+fleet's own checkout, `~/motodiag/fleet/code`, with the fleet's venv),
+never the branch's:
+
+    through_fleet.py <phase> <branch> <commit>
+
+- **Refuses before anything**: live not on this machine (exit 4); the
+  commit no longer the branch's head; a branch that changes anything under
+  `.claude/skills/deploy/` or `.claude/skills/closeout/` (the checks that
+  guard live are master's); no scope file.
+- **Works in its own checkout**, `~/motodiag/deploy/<phase>`, a fresh clone
+  of the fleet's mirror; never the builder's checkout or the server's.
+- **`dryrun`** with the branch's `src/` for the migration and the seed
+  build, run in a process of its own. A scope problem stops it.
+- **The change in plain words**: tables, indexes and triggers added,
+  removed or rewritten; columns added; rows added, changed and removed.
+- **Nothing is applied until the operator types yes** on the terminal.
+  The answer is written verbatim to `<phase>_deploy_answer.md`, with the
+  dry-run diff's sha256, and committed with the diff; the close-out quotes
+  it in the phase log.
+- **`apply-live`**, with every refusal above unchanged. The API is stopped
+  first and started after, and `/healthz` read, only when
+  `motodiag-api.service` serves the database being changed. Then the live
+  diff is committed and **`verify-live`** must exit 0.
+- **Nothing is pushed from the desktop.** On the resume the dispatcher
+  fetches the step's three files into the held clone and they reach GitHub
+  with the close-out, through the push gate.
+- **A second paste** after the apply changes nothing: it says so and runs
+  `verify-live`.
+
+The dispatcher reads live once more, outside the fence: `verify-live` on
+the resume and for Q1. Tests: `tests/test_phase395_through_fleet.py`. The
+trial, once, against a copy of live:
+`.claude/skills/fleet/fixtures/deploy/trial/trial_output.txt`.
+
 ## Backups, and a change with no migration
 
 - **`deploy.py backup [label]`** (Phase 382) takes a backup-API copy of live

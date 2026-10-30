@@ -260,6 +260,21 @@ def test_a_session_killed_before_it_can_hand_over_says_nothing_to_the_operator(d
     assert not any(c.startswith(D.DEPLOY_M) for c in d.host.comments(N))
 
 
+def test_the_quartermaster_hands_q1_verify_live_outside_the_fence(d, monkeypatch):
+    held = to_deploy(d)
+    operator_block(d)
+    advance(d)
+    seen = {}
+
+    def scope(clone, phase, base="master", live_check=None):
+        seen["said"] = live_check() if live_check else None
+        return D.quartermaster.Finding("Q1", False, "recorded")
+    monkeypatch.setattr(D.quartermaster, "scope", scope)
+    d.fleet.stage_quartermaster(N, PHASE, d.host.issues[N]["body"], BRANCH)
+    assert seen["said"] == (0, d.live.text) and d.live.calls[-1][1] == PHASE
+    assert held.is_dir()
+
+
 # -------------------------------------------------------------- the planners
 def test_the_planners_put_a_named_migration_in_scope():
     for brief in (captain.BRIEF, xo.BRIEF):

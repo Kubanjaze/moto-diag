@@ -302,6 +302,13 @@ def test_the_question_is_asked_and_answered_on_a_real_terminal():
     assert b"ANSWER='yes'" in out, out
 
 
+def test_a_live_that_verify_live_does_not_agree_with_is_off(world, monkeypatch):
+    real = D.verify_live
+    monkeypatch.setattr(D, "verify_live", lambda *a, **k: (real(*a, **k), 3)[1])
+    with pytest.raises(T.Off, match="does not match the change that was approved"):
+        step(world)
+
+
 def test_an_unexpected_error_still_ends_in_the_verdict(world, monkeypatch, capsys):
     def boom(*a, **k):
         raise RuntimeError("planted")

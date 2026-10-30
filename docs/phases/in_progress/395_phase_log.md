@@ -64,3 +64,62 @@ the one apply-live's "live still equals the backup" can hold.
 - **A contract kept Q1 read-only** (`tests/test_phase391_contract.py`: the
   module runs only read-only git verbs). Q1's "committed" check uses
   `cat-file -e HEAD:<path>`, already allowed, not `ls-files`.
+
+### Bug fix #1 — 2026-10-29 — the block's question could not be asked on a real terminal
+
+- **Issue.** The trial's first full run (21:22) reached the question and
+  stopped: `io.UnsupportedOperation: File or stream is not seekable`, a
+  Python traceback, and the block ended with no SOMETHING IS OFF line.
+  Nothing was applied: the stand-in stayed at schema 87, real live and the
+  real backups were unchanged.
+- **Root cause.** `ask_tty` opened `/dev/tty` once, `"r+"`, in text mode;
+  Python's text layer refuses a read-write open of a terminal. The tests
+  stood the question in (`ask=`), so no test opened a terminal; only the
+  trial, in the real place, did. And `main` caught only `Off` and
+  `LiveElsewhere`, so any other error ended without the verdict.
+- **Fix.** Two opens, one to write the question and one to read the
+  answer; `main` turns any other error into `SOMETHING IS OFF` with the
+  traceback above it.
+- **Files.** `.claude/skills/deploy/through_fleet.py`,
+  `tests/test_phase395_through_fleet.py`.
+- **Verified.** A new test asks through a pty, in a child whose standard
+  input is not the terminal (as the paste block's is not), and a second
+  plants an unexpected error: both red on the old code (2 failed), green
+  on the fix (16 passed).
+- **Commit.** `6d425b8`
+
+A first trial run before that one stopped at the push gate ("G3 nothing to
+push"): the trial had pushed the planted Engineer's commits to its stand-in
+GitHub itself. In the fleet those commits exist only in the stage's clone,
+so the trial's planted session now makes them there. Not a defect of the
+code under trial.
+
+## 2026-10-29 — the trial, the mutations, the documents
+
+- **The trial**, once, on the home desktop (`395_trial.py`), 21:25: a
+  planted phase 990 whose migration 088 adds one empty table, through the
+  real `stage_engineer` → `engineer_deploy` (the push gate, pushing to a
+  local bare repository standing in for GitHub), the comment's own paste
+  block run by bash in a terminal (a pty) and answered "yes", the real
+  `through_fleet.py` against a backup-API copy of live (`HOME` and
+  `live.json` the trial's own), `needs-hands` off, `stage_deployed` (the
+  fetch, the real `verify-live`, the close-out round, `engineer_finish`),
+  Q1 outside and inside the fence, and the block pasted again. TRIAL
+  PASSED. Real live's schema (head 87) and row counts, and the real backup
+  folder's listing, were the same before and after; the API was left
+  running (it serves real live, not the stand-in). Its output is
+  `.claude/skills/fleet/fixtures/deploy/trial/trial_output.txt`. The first
+  full run found bug fix #1.
+- **The mutations:** 35/35 red (`395_mutate.out`), each on the phase's own
+  tests: 10 on the block's script, 9 on the Engineer, 10 on the
+  dispatcher, 4 on Q1, 2 on the planners.
+- **The known-bad fixtures** (`.claude/skills/fleet/fixtures/deploy/known_bad/`),
+  each refused by its test, the good tree beside it passing: a deploy with
+  a dirty clone, a deploy with no scope file, a resume with live not equal
+  to the approved diff, a code change after the apply, Q1 with a migration
+  and no live diff. Each test is also red under its mutation (E1, E2, D4,
+  E4/D6, Q1).
+- **Documents:** "Through the fleet" in both skills' `SKILL.md`, each
+  `CHANGELOG.md`; F232 closed in `docs/FOLLOWUPS.md`.
+- **`COLLECTED_TEST_FLOOR`** 11987 → 12049, by a diff of collected ids
+  against master at `f6b6034`: +62 −0.

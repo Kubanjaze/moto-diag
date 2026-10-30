@@ -213,6 +213,11 @@ def test_a_migration_with_no_database_step_does_not_open_a_pr(tmp_path):
     assert any("database step has not run" in f for f in E.migration_changes(repo, PHASE))
 
 
+def test_verify_refuses_a_pr_ready_whose_migration_skipped_the_step(tmp_path):
+    fails = E.verify(good_tree(tmp_path), PHASE, RESULT, LINE)
+    assert any("database step has not run" in f for f in fails), fails
+
+
 def test_a_migration_changed_after_the_apply_does_not_open_a_pr(tmp_path):
     """A Red Team finding that would change an applied migration is the
     operator's (the prompt: a rule-1 stop), never a fix round's."""
