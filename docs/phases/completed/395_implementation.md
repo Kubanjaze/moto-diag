@@ -1,6 +1,6 @@
 # Phase 395 — The fleet hands the operator the database step
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-29
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-29 (v1.0 `fa4e9cc`)
 
 ---
 
@@ -166,13 +166,61 @@ of the Red Team and the apply.
 
 ## Planned items
 
-- [ ] `through_fleet.py` and its tests
-- [ ] the Engineer's `deploy` outcome, `verify_deploy`, `CLOSEOUT`, `verify_after_apply`
-- [ ] the dispatcher's pause, comment, resume and close-out round
-- [ ] Q1 with `live_check`
-- [ ] the Captain's and the XO's briefs
-- [ ] the known-bad fixtures, seen red
-- [ ] the mutations, red
-- [ ] the trial, on the desktop, against a copy of live
-- [ ] "Through the fleet" in both skills; F232 closed
-- [ ] the regression of record, the close-out, the handoff with the after-the-merge block
+- [x] `through_fleet.py` and its tests
+- [x] the Engineer's `deploy` outcome, `verify_deploy`, `CLOSEOUT`, `verify_after_apply`
+- [x] the dispatcher's pause, comment, resume and close-out round
+- [x] Q1 with `live_check`
+- [x] the Captain's and the XO's briefs
+- [x] the known-bad fixtures, seen red
+- [x] the mutations, red
+- [x] the trial, on the desktop, against a copy of live
+- [x] "Through the fleet" in both skills; F232 closed
+- [x] the regression of record, the close-out, the handoff with the after-the-merge block
+
+## Deviations
+
+- **`engineer.migration_changes`** (not in v1.0's Logic): `verify` now also
+  refuses a `pr-ready` whose migration skipped the database step. v1.0 named
+  only the refusal after the apply; the same function holds both, and a
+  migration with no step would otherwise have reached Q1 before anything
+  stopped it.
+- **A `deploy` hold the close-out's stop leaves runs again** when the
+  operator takes `needs-admiral` off (`held_for`), from the same hold:
+  otherwise a `verify-live` mismatch or a stopped close-out had no way on.
+- **`deploy` from a held recheck:** `stage_recheck` routes a held run whose
+  result is `deploy` to `engineer_deploy`, and a model-free run lost to load
+  or to free space holds it as a `pr-ready`'s is.
+- **Two existing contracts gained this phase's entries,** as 391–393 did:
+  `tests/test_phase390_resume_contract.py`'s module list (the `deployed`
+  kill point) and `fixtures/resume/kill_points.json`. Q1's "committed"
+  check uses `git cat-file -e HEAD:<path>`, because
+  `tests/test_phase391_contract.py` allows the Quartermaster only read-only
+  git verbs it already lists.
+- **The trial's model-free run and the Engineer's sessions stood in**: the
+  model-free run is not new in this phase, and no model call was wanted in
+  a trial against live's copy.
+- **The regression of record ran in the fence**, as 393's and 394's did:
+  this checkout's `regression.sh` failed four tests that fail on master here
+  too (the phase log, "the regression of record").
+- **Bug fix #1** (the trial): the question opened the terminal read-write.
+
+## Results
+
+- **Tests:** `tests/test_phase395_through_fleet.py` (17),
+  `test_phase395_engineer_deploy.py` (23), `test_phase395_dispatcher_deploy.py`
+  (12), `test_phase395_q1.py` (9), and the kill point in
+  `test_phase390_resume_contract.py` (1). Collected floor 11987 → 12049, by
+  a diff of collected ids against master at `f6b6034` (+62 −0).
+- **Known-bad fixtures,** each refused, beside a good tree that passes:
+  `fixtures/deploy/known_bad/` (a deploy with a dirty clone, with no scope
+  file; a resume with live not equal to the approved diff; a code change
+  after the apply; Q1 with a migration and no live diff).
+- **Mutations:** 35/35 red (`395_mutate.out`).
+- **The trial,** on the desktop against a copy of live: TRIAL PASSED
+  (`.claude/skills/fleet/fixtures/deploy/trial/trial_output.txt`); real
+  live's schema and row counts and the real backup folder unchanged.
+- **Regression of record** (inside the fence, after `wholetree.sh --full`
+  4973 passed): Regression of record: 11944 passed, 0 failed, 105 skipped, 0 errors at `8f20b84` (13 min 5 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0) (run inside the fleet's fence)
+- **Line coverage of record:** 87.62% at `8f20b84` (the pin is 87.50%).
+- **Live:** none; this phase changes nothing on live.
+- **F232** closed.
