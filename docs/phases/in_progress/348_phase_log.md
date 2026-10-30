@@ -167,3 +167,18 @@ Line coverage of record: 87.70% at `adc4840` (the pin is 87.50%)
 
 - 12028 + 105 = 12133, the floor `COLLECTED_TEST_FLOOR` was raised to. The 105 skips include the fence-boundary tests, which are proven from the host, not from inside the fence.
 - **Next, the database step:** this session ends with the outcome `deploy`. Every phase document stays in `docs/phases/in_progress/`, and nothing is closed out. The operator applies migration 088 from the dispatcher's paste block on the home desktop; the close-out round follows (Logic item 10).
+
+## 2026-10-30: The operator's answer to the database step, and live after the apply
+
+The operator ran the dry run on a copy on the home desktop, and answered (`348_deploy_answer.md`, asked `2026-10-30T12:12:23-04:00`, on the dry-run diff whose sha256 is `7a4572ebdd42037ce617a6d39b32c7af1574bdfa1e589a15885f1d97b25b4488`, committed at `5f1afc9`):
+
+> yes
+
+- **The dry-run diff** (`348_dryrun_diff.md`): migration 088 only, on a copy of a backup taken at 12:12:17 (`motodiag_pre348_20261030_121217.db`); scope problems `none`; F158 census on the copy 41. `sha256sum` of the committed file in this session: `7a4572ebdd42037ce617a6d39b32c7af1574bdfa1e589a15885f1d97b25b4488`, the one the answer names.
+- **Live after the apply** (`348_live_diff.md`, committed at `a7d7077`): scope problems `none`; equals the approved exact diff `yes`; set aside as written by the running API `0`; F158 census on live 41. What live gained: the table `audit_events`, the index `idx_audit_events_shop`, the triggers `audit_events_no_delete` and `audit_events_no_update`, and one `schema_version` row (version 88). No existing row changed or removed. The dispatcher checked it again with `verify-live`.
+
+## 2026-10-30: The close-out round (documents only)
+
+- **The guides** (Logic item 10). `docs/guide/api.md`: the opening count is now 89 routes over 112 operations, as `create_app().openapi()` counts them in this clone (89 paths, 112 operations; the `audit` tag has 1); the area table gains `audit`, and a paragraph below it names `GET /v1/shop/{shop_id}/audit`, its gate and its parameters, and the three `audit` commands. `docs/guide/shop-workflow.md` gains "See who did what" at its end, with `motodiag audit list` and `audit verify` as run against a fresh database (`MOTODIAG_DB_PATH` under `/fleet/run/g348`, never live). `tests/test_phase208_docs.py`: 20 passed.
+- **Noticed, not changed:** the same table's other rows are not all what the schema counts (`videos` 5 against 6, and no row for `auth`, 7, or `shops`, 1). The plan asks for the `audit` tag and the opening counts only, so the rest is left; the handoff names it.
+- No code changed after the live apply: everything this round commits is under `docs/`.
