@@ -1,5 +1,26 @@
 # fleet — changelog
 
+## 2026-10-29 — the database step through the fleet (Phase 395, K58, F232)
+
+The operator, 2026-10-29: "add it altogether to throw at it", then "yes go
+ahead" to the advisor's reading (K58): the fleet stops at the right point
+and hands the operator one paste block for the desktop; that block tries
+the change on a copy, shows what changes, applies it and checks it; when
+the operator says it is done, the fleet carries on. The prompt is
+`docs/prompts/395_the_database_step.txt`; Step 0 is `395_step0.md`.
+
+- **The Engineer's `deploy` outcome** (`engineer.py`): the brief's database
+  step, `read_result`, `verify_deploy`, `CLOSEOUT`, `verify_after_apply`,
+  `migration_changes`, the fix round's line on an applied migration.
+- **The dispatcher** (`engineer_deploy`, `deploy_block`, `fetch_applied`,
+  `stage_deployed`, `verify_live_here`; the `deploy` hold in `held_for`;
+  `resume`; `STAGE_RANK["deployed"]` and its kill point).
+- **Q1** (`quartermaster.database_step`, `live_check`); `NOT_READ["V8"]`.
+- **The planners** (`captain.BRIEF`, `xo.BRIEF`): `## The database step`.
+- **Fixtures:** `fixtures/deploy/` (the five known-bad cases, the trial's
+  output); `fixtures/resume/kill_points.json` gains `deployed`.
+- F232 closed. 35/35 mutations red (`395_mutate.out`).
+
 ## 2026-10-29 — the code itself gets checked (Phase 393)
 
 The operator, 2026-10-27: "how do i make sure and maintain the quality of

@@ -111,9 +111,14 @@ def claude(tmp_path, monkeypatch):
 
 
 def test_the_kernel_refuses_the_old_shape():
-    """The control: what `rank_call.command` built before this phase."""
+    """The control: what `rank_call.command` built before this phase.
+
+    Linux refuses BIG as one argument. macOS has no per-argument limit, only
+    ARG_MAX for the whole command line, so there the brief is one byte past
+    it (F236)."""
+    brief = BIG if sys.platform == "linux" else "x" * (os.sysconf("SC_ARG_MAX") + 1)
     with pytest.raises(OSError) as e:
-        subprocess.run(["true", "-p", BIG, "--model", rank_call.OPUS])
+        subprocess.run(["true", "-p", brief, "--model", rank_call.OPUS])
     assert e.value.errno == 7
 
 

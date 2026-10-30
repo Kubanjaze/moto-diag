@@ -41,10 +41,10 @@ class TestTheRealRecord:
 
     def test_the_list_is_the_plans_order(self):
         order = P.parse_order((ROOT / P.PLAN).read_text(encoding="utf-8"))
-        assert [e.phase for e in order.entries] == ["392", "303", "394", "393", "348", "385",
-                                                      "345", "343", "371", "372", "330", "334",
-                                                      "344", "210"]
-        assert order.as_of == ("2026-10-28", "K55")
+        assert [e.phase for e in order.entries] == ["392", "303", "394", "393", "395", "348",
+                                                      "385", "345", "343", "371", "372", "330",
+                                                      "334", "344", "210"]
+        assert order.as_of == ("2026-10-29", "K58")
 
     def test_392_is_a_builders_and_303_348_need_nothing(self):
         e = {x.phase: x for x in P.parse_order((ROOT / P.PLAN).read_text()).entries}
@@ -70,23 +70,23 @@ class TestTheRealRecord:
 class TestCheckRefuses:
     @pytest.mark.parametrize("rel,old,new,why", [
         (P.PLAN, "## Next, in order\n", "## The order\n", "has no '## Next, in order'"),
-        (P.PLAN, "As of 2026-10-28, K55.", "As of now.", "no 'As of"),
-        (P.PLAN, "As of 2026-10-28, K55.", "As of 2026-10-29, K55.", "no entry under"),
-        (P.PLAN, "As of 2026-10-28, K55.", "As of 2026-10-28, K99.", "K99, which does not"),
-        (P.PLAN, "As of 2026-10-28, K55.", "As of 2026-10-28, K47.", "does not cite K47"),
+        (P.PLAN, "As of 2026-10-29, K58.", "As of now.", "no 'As of"),
+        (P.PLAN, "As of 2026-10-29, K58.", "As of 2026-10-30, K58.", "no entry under"),
+        (P.PLAN, "As of 2026-10-29, K58.", "As of 2026-10-29, K99.", "K99, which does not"),
+        (P.PLAN, "As of 2026-10-29, K58.", "As of 2026-10-29, K47.", "does not cite K47"),
         (P.PLAN, "| 2 | 303 | shop | fleet | nothing |", "| 2 | 303 | shop | robots | nothing |",
          "its builder 'robots'"),
-        (P.PLAN, "| 5 | 348 | shop | fleet | nothing |", "| 5 | 348 | store | fleet | nothing |",
+        (P.PLAN, "| 6 | 348 | shop | fleet | nothing |", "| 6 | 348 | store | fleet | nothing |",
          "its kind 'store'"),
-        (P.PLAN, "| 13 | 344 | shop | fleet | nothing |", "| 13 | 344 | shop | fleet | a favour |",
+        (P.PLAN, "| 14 | 344 | shop | fleet | nothing |", "| 14 | 344 | shop | fleet | a favour |",
          "its need 'a favour'"),
-        (P.PLAN, "| 13 | 344 | shop | fleet | nothing |",
-         "| 13 | 344 | shop | fleet | an outside account |", "its need"),
-        (P.PLAN, "| 14 | 210 | shop | fleet | nothing | Wave 1, item 6 · K48 |",
-         "| 14 | 210 | shop | fleet | nothing | Wave 1, item 6 |", "cites no K-id"),
-        (P.PLAN, "| 14 | 210 |", "| 14 | 999 |", "phase 999 has no ROADMAP row"),
-        (P.PLAN, "| 14 | 210 |", "| 14 | 303 |", "phase 303 is listed twice"),
-        (P.PLAN, "| 14 | 210 |", "| 15 | 210 |", "not numbered"),
+        (P.PLAN, "| 14 | 344 | shop | fleet | nothing |",
+         "| 14 | 344 | shop | fleet | an outside account |", "its need"),
+        (P.PLAN, "| 15 | 210 | shop | fleet | nothing | Wave 1, item 6 · K48 |",
+         "| 15 | 210 | shop | fleet | nothing | Wave 1, item 6 |", "cites no K-id"),
+        (P.PLAN, "| 15 | 210 |", "| 15 | 999 |", "phase 999 has no ROADMAP row"),
+        (P.PLAN, "| 15 | 210 |", "| 15 | 303 |", "phase 303 is listed twice"),
+        (P.PLAN, "| 15 | 210 |", "| 16 | 210 |", "not numbered"),
         (P.PLAN, "Wave 1, item 6 · K48", "Wave 1, item 6 · K98", "cites K98"),
         (P.DECISIONS, "| K51 | 2026-10-27 |", "| K51 | 2026-10-27 |", None),
     ], ids=["no-section", "no-as-of", "as-of-undated", "as-of-unresolved", "as-of-uncited",
@@ -121,14 +121,16 @@ class TestNext:
         rows = {"392": ("🚧", "x"), "303": ("🔲", "y")}
         assert P.next_entry(order, rows).phase == "392"
 
-    def test_after_392_closes_303_is_next_then_394_393_then_348(self):
+    def test_after_392_closes_303_is_next_then_394_393_395_then_348(self):
         order = P.parse_order((ROOT / P.PLAN).read_text())
         assert P.next_entry(order, {"392": ("✅", "")}).phase == "303"
         done = {"392": ("✅", ""), "303": ("✅", "")}
         assert P.next_entry(order, done).phase == "394"                 # K55: a builder's
         done["394"] = ("✅", "")
         assert P.next_entry(order, done).phase == "393"                 # K54: a builder's
-        assert P.next_entry(order, {**done, "393": ("✅", "")}).phase == "348"
+        done["393"] = ("✅", "")
+        assert P.next_entry(order, done).phase == "395"                 # K58: a builder's
+        assert P.next_entry(order, {**done, "395": ("✅", "")}).phase == "348"
 
     def test_all_done_is_none(self):
         order = P.parse_order((ROOT / P.PLAN).read_text())

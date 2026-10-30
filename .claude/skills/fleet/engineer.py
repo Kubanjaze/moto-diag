@@ -16,11 +16,21 @@ opens nothing: the dispatcher does, after the checks here.
   a third patch"; the 389 prompt: "when a guard blocks twice for the same
   reason").
 - `read_result`: `/fleet/run/engineer.json`, schema-checked: `pr-ready`
-  with a summary and the regression line, or `stop` with its kind and a
+  with a summary and the regression line, `deploy` (Phase 395) with those
+  and the change to live in a sentence, or `stop` with its kind and a
   question for the operator.
 - `verify`: every claim of a `pr-ready` checked against the clone:
   committed and clean, `closeout_check.check` empty (A1–A8), and the
   model-free run's counts equal to the Engineer's line.
+
+**The database step** (Phase 395, K58, F232). A plan with a migration names
+it in a section `## The database step`. The Engineer then stops after the
+regression of record with the outcome `deploy`, never closing out: the
+fence never sees live, so the dry run, the operator's yes, the apply and
+the check are the operator's paste block (`deploy/through_fleet.py`).
+`verify_deploy` believes a `deploy` only as `verify` believes a `pr-ready`;
+after the apply, `CLOSEOUT` is the round's brief and `verify_after_apply`
+holds it to documents only.
 """
 from __future__ import annotations
 
@@ -35,6 +45,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "closeout"))
 import closeout_check  # noqa: E402
+import code_after_regression  # noqa: E402
 from rank_call import OPUS, Stop  # noqa: E402
 
 SESSION_TIMEOUT_S = 6 * 3600
@@ -49,6 +60,10 @@ CONTINUE = ("You were stopped part-way, by a usage limit or a restart of the mac
 _BUG = re.compile(r"^### Bug fix #(\d+)\b", re.M)
 _HOOK = "PreToolUse:Bash hook error:"
 _COUNTS = re.compile(r"(\d[\d,]*) passed, (\d[\d,]*) failed, (\d[\d,]*) skipped")
+MIGRATIONS = "src/motodiag/core/migrations.py"
+#: The plan's section that puts a migration in scope (Phase 395).
+DATABASE_STEP = "## The database step"
+_ANSWER = re.compile(r"^> (.*)$", re.M)
 
 BRIEF = """\
 You are the Chief Engineer of the MotoDiag fleet. You build phase {N} in a
@@ -79,7 +94,8 @@ workspace rules it imports are loaded; follow them. In particular:
 6. The regression of record: .claude/skills/closeout/wholetree.sh --full,
    then .claude/skills/closeout/regression.sh, on a clean tree. Copy the
    lines it prints into the phase log exactly as printed.
-7. Close out before you finish, as .claude/skills/closeout/SKILL.md sets
+7. Unless the plan has the database step (below), close out before you
+   finish, as .claude/skills/closeout/SKILL.md sets
    out: v1.1 (every section updated, Deviations, Results with the
    regression line); the phase log's status Complete; the phase's files
    moved to docs/phases/completed/ with git mv; the ROADMAP row ✅ with
@@ -99,6 +115,25 @@ workspace rules it imports are loaded; follow them. In particular:
    anything under .claude/skills/fleet/, and never change or remove
    another phase's ROADMAP row: the push is refused if you do. Never write
    a credential anywhere.
+
+**The database step.** When the plan has a section "## The database step",
+its migration is in scope: write it in src/motodiag/core/migrations.py,
+the deploy skill's scope file
+(docs/phases/in_progress/{N}_deploy_scope.json, every table and schema
+object it adds, as .claude/skills/deploy/SKILL.md step 1 sets out), and
+tests that run it on fresh databases (never live). Run the regression of
+record (rule 6) and commit it. Then do NOT close out: you cannot reach the
+live database, and the operator applies the change between your
+regression and your close-out. Leave every phase document in
+docs/phases/in_progress/, change nothing under .claude/skills/deploy/ or
+.claude/skills/closeout/, and write /fleet/run/engineer.json as
+{{"outcome": "deploy", "summary": "<three to six sentences: what the phase
+ ships>", "regression_line": "<the Regression of record: line exactly as
+ printed>", "live_change": "<one plain sentence for the operator: what the
+ change does to the live database>"}}
+and end your turn. A migration the plan does not name in that section, or
+one that changes or deletes existing live rows, is a stop
+(live-database-change), never a deploy.
 
 **Stop instead of finishing** when any of these happens: a third bug fix;
 a CLAUDE.md rule-1 condition (a real fork, a threshold or a rule's
@@ -126,8 +161,33 @@ delete a sentence rather than rewrite it, delete it (K9). A finding that
 changes code is a bug fix (rule 5 above); a wording or factual fix to a
 document is a dated phase-log entry. If code changed, run the regression
 of record again and update the close-out documents with the new line.
-Then write /fleet/run/engineer.json as above. ===
+The database step is done if docs/phases/completed/{N}_live_diff.md
+exists: the migration is then on the live database, and a finding that
+would change src/motodiag/core/migrations.py is a stop (live-database-change),
+never a fix. Then write /fleet/run/engineer.json as above. ===
 {FINDINGS}
+"""
+
+
+#: The round after the operator applied the change (Phase 395).
+CLOSEOUT = """
+=== The database step is done. The operator ran the dry run on a copy,
+typed their answer, applied the change to the live database and checked
+it; the dispatcher checked it again with verify-live. Three files are now
+committed in docs/phases/in_progress/: {N}_dryrun_diff.md (the approved
+change), {N}_deploy_answer.md (the operator's words) and {N}_live_diff.md
+(live after the apply). This round is the close-out only: change no code,
+and nothing under src/, tests/, scripts/ or .claude/.
+1. Quote the operator's answer in the phase log, in a dated entry, as the
+   line that starts "> " in {N}_deploy_answer.md, character for character,
+   with the dry-run diff's sha256 it names.
+2. The live outcome in v1.1's Results and in the handoff: what the live
+   diff says (its scope problems and whether it equals the approved diff).
+3. Close out as rule 7 sets out; git mv the three files and the scope file
+   to docs/phases/completed/ with the phase documents. Run
+   .claude/skills/closeout/closeout_check.py . {N} until it prints nothing.
+Then write /fleet/run/engineer.json with the outcome pr-ready, as above,
+and the regression line already in the phase log. ===
 """
 
 
@@ -145,12 +205,14 @@ thing stops you again, stop again: that time it goes to the operator. ===
 
 
 def session_brief(phase: str, issue: int, *, findings: str | None = None, rnd: int = 0,
-                  answer: str | None = None) -> str:
+                  answer: str | None = None, closeout: bool = False) -> str:
     prompt = BRIEF.format(N=phase, ISSUE=issue, KINDS=", ".join(STOP_KINDS))
     if findings:
-        prompt += FIX_ROUND.format(ROUND=rnd, FINDINGS=findings)
+        prompt += FIX_ROUND.format(ROUND=rnd, FINDINGS=findings, N=phase)
     if answer:
         prompt += ANSWERED.format(ANSWER=answer)
+    if closeout:
+        prompt += CLOSEOUT.format(N=phase)
     return prompt
 
 
@@ -216,12 +278,15 @@ def read_result(run_dir: pathlib.Path) -> dict:
         if r.get("kind") not in STOP_KINDS or not str(r.get("question", "")).strip():
             raise Stop(f"{RESULT} says stop with no known kind or no question")
         return r
-    if r.get("outcome") != "pr-ready":
-        raise Stop(f"{RESULT} has no outcome of pr-ready or stop")
+    outcome = r.get("outcome")
+    if outcome not in ("pr-ready", "deploy"):
+        raise Stop(f"{RESULT} has no outcome of pr-ready, deploy or stop")
     if not str(r.get("summary", "")).strip():
-        raise Stop(f"{RESULT} says pr-ready with no summary")
+        raise Stop(f"{RESULT} says {outcome} with no summary")
     if not str(r.get("regression_line", "")).startswith(closeout_check.PREFIX):
-        raise Stop(f"{RESULT} says pr-ready and gives no regression of record")
+        raise Stop(f"{RESULT} says {outcome} and gives no regression of record")
+    if outcome == "deploy" and not str(r.get("live_change", "")).strip():
+        raise Stop(f"{RESULT} says deploy and does not say what the change does to live")
     return r
 
 
@@ -230,19 +295,117 @@ def counts(line: str) -> tuple[int, int, int] | None:
     return tuple(int(x.replace(",", "")) for x in m.groups()) if m else None
 
 
+def _git(clone: pathlib.Path, *args: str) -> str:
+    return subprocess.run(["git", "-C", str(clone), *args], capture_output=True,
+                          text=True).stdout.strip()
+
+
+def _same_run(result: dict, model_free_line: str | None) -> list[str]:
+    mine, theirs = counts(result.get("regression_line", "")), counts(model_free_line or "")
+    if model_free_line is None:
+        return ["the model-free run produced no regression of record"]
+    if mine != theirs:
+        return [f"the Engineer's regression line counts {mine} (passed, failed, skipped); "
+                f"the model-free run counts {theirs}"]
+    return []
+
+
+def _dirty(clone: pathlib.Path) -> list[str]:
+    dirty = _git(clone, "status", "--porcelain")
+    return [f"uncommitted changes in the clone: {dirty.splitlines()[0]}"] if dirty else []
+
+
+def _doc(clone: pathlib.Path, phase: str, kind: str) -> pathlib.Path | None:
+    for folder in ("completed", "in_progress"):
+        p = clone / "docs" / "phases" / folder / f"{phase}_{kind}.md"
+        if p.is_file():
+            return p
+    return None
+
+
+def applied_at(clone: pathlib.Path, phase: str) -> str | None:
+    """The commit that added the phase's live diff: the change is on live
+    from there on. None before the database step."""
+    for folder in ("in_progress", "completed"):
+        c = _git(clone, "log", "-1", "--format=%H", "--diff-filter=A", "--",
+                 f"docs/phases/{folder}/{phase}_live_diff.md")
+        if c:
+            return c
+    return None
+
+
+def migration_changes(clone: pathlib.Path, phase: str, base: str = "master") -> list[str]:
+    """Why a pull request's migration may not open (Phase 395): a migration
+    that skipped the database step, or one changed after it was applied."""
+    if MIGRATIONS not in _git(clone, "diff", "--name-only", f"{base}...HEAD").split():
+        return []
+    at = applied_at(clone, phase)
+    if at is None:
+        return [f"it changes {MIGRATIONS} and the database step has not run: a migration "
+                "ends with the outcome deploy, before the close-out"]
+    if MIGRATIONS in _git(clone, "diff", "--name-only", f"{at}..HEAD").split():
+        return [f"{MIGRATIONS} changed after it was applied to the live database "
+                f"({at[:12]}): that is the operator's decision, not a fix"]
+    return []
+
+
 def verify(clone: pathlib.Path, phase: str, result: dict, model_free_line: str | None
            ) -> list[str]:
     """Every claim of a pr-ready, checked; [] when the PR may open."""
-    fails = []
-    dirty = subprocess.run(["git", "-C", str(clone), "status", "--porcelain"], capture_output=True,
-                           text=True).stdout.strip()
-    if dirty:
-        fails.append(f"uncommitted changes in the clone: {dirty.splitlines()[0]}")
+    fails = _dirty(clone)
     fails += [f"close-out: {f}" for f in closeout_check.check(clone, phase)]
-    mine, theirs = counts(result.get("regression_line", "")), counts(model_free_line or "")
-    if model_free_line is None:
-        fails.append("the model-free run produced no regression of record")
-    elif mine != theirs:
-        fails.append(f"the Engineer's regression line counts {mine} (passed, failed, skipped); "
-                     f"the model-free run counts {theirs}")
+    fails += migration_changes(clone, phase)
+    return fails + _same_run(result, model_free_line)
+
+
+def verify_deploy(clone: pathlib.Path, phase: str, result: dict, model_free_line: str | None,
+                  base: str = "master") -> list[str]:
+    """Every claim of a `deploy`, checked; [] when the operator may be asked
+    (Phase 395): the clone clean, the plan naming the database step, a
+    migration and its scope file committed, the regression of record in
+    the phase log, master's deploy and close-out tools, nothing of the
+    database step or the close-out done yet, and the model-free run
+    counting what the Engineer's line counts."""
+    fails = _dirty(clone)
+    inp = clone / "docs" / "phases" / "in_progress"
+    plan, log = inp / f"{phase}_implementation.md", inp / f"{phase}_phase_log.md"
+    if not plan.is_file() or not log.is_file():
+        fails.append("the phase documents are not in docs/phases/in_progress/: the database "
+                     "step comes before the close-out")
+    elif DATABASE_STEP not in plan.read_text(encoding="utf-8"):
+        fails.append(f"the plan has no section '{DATABASE_STEP}': its migration is not in scope")
+    scope = f"docs/phases/in_progress/{phase}_deploy_scope.json"
+    if not (clone / scope).is_file() or not _git(clone, "ls-files", scope):
+        fails.append(f"no committed scope file {scope}: nothing says what the change may touch")
+    paths = _git(clone, "diff", "--name-only", f"{base}...HEAD").split()
+    if MIGRATIONS not in paths:
+        fails.append(f"the branch does not change {MIGRATIONS}: there is no migration to apply")
+    tools = [p for p in paths
+             if p.startswith((".claude/skills/deploy/", ".claude/skills/closeout/"))]
+    if tools:
+        fails.append(f"it changes {tools[0]}: the database step runs only master's tools")
+    done = [k for k in ("dryrun_diff", "deploy_answer", "live_diff") if _doc(clone, phase, k)]
+    if done:
+        fails.append(f"the branch already carries {phase}_{done[0]}.md: only the operator's "
+                     "block writes the database step's files")
+    if log.is_file() and closeout_check.regression_record(log.read_text(encoding="utf-8"),
+                                                          phase)[0] is None:
+        fails.append("the phase log carries no regression of record the live apply can read")
+    return fails + _same_run(result, model_free_line)
+
+
+def verify_after_apply(clone: pathlib.Path, phase: str, applied: str) -> list[str]:
+    """The close-out round after the apply changed documents only, and
+    quoted the operator's answer in the phase log (Phase 395)."""
+    fails = []
+    code = code_after_regression.code_paths(_git(clone, "diff", "--name-only",
+                                                 f"{applied}..HEAD").split())
+    if code:
+        fails.append(f"code changed after the live apply at {applied[:12]}: {code[:5]}")
+    answer, log = _doc(clone, phase, "deploy_answer"), _doc(clone, phase, "phase_log")
+    said = _ANSWER.findall(answer.read_text(encoding="utf-8")) if answer else []
+    if not said:
+        fails.append(f"no {phase}_deploy_answer.md with the operator's words")
+    elif log is None or f"> {said[-1]}" not in log.read_text(encoding="utf-8"):
+        fails.append("the phase log does not quote the operator's answer as it was typed")
     return fails

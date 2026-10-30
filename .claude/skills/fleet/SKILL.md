@@ -561,6 +561,56 @@ after an hour. The next digest gains one line naming the page (`yeoman.facts`'s
 **Off this PC.** `.github/workflows/quality.yml`, on every pull request:
 the lint and type ratchet and `roadmap_check.py`; no secret, read-only.
 
+## Through the fleet: the database step (Phase 395, K58)
+
+F232: the fence never sees live, so a phase with a migration had no path.
+Now it has one, and the fence still never sees live, a backup or a
+credential.
+
+1. **The plan names it.** A migration is in scope only under a section
+   `## The database step` (what the change does to live, what it adds, and
+   that it changes or deletes no existing live row). The Captain writes it;
+   the XO sends a migration without it back. A migration that changes or
+   deletes existing live rows is still a rule-1 stop.
+2. **The Engineer stops at K18's point.** It writes the migration, the
+   deploy skill's scope file and tests on fresh databases, runs the
+   regression of record, and ends with `{"outcome": "deploy", …,
+   "live_change": "<one sentence>"}`, never closing out.
+   `engineer.verify_deploy` believes it only as a `pr-ready` is believed:
+   the clone clean, the plan naming the step, a migration and its scope
+   file committed, no deploy or close-out file yet, master's deploy and
+   close-out tools, and the model-free run counting what its line counts.
+3. **The dispatcher hands it over** (`engineer_deploy`): the push through
+   the gate, `held.json` with `why: deploy`, one comment (`fleet-database-step`)
+   with the change in a sentence and one paste block for the home desktop's
+   Ubuntu terminal (`deploy_block`), and `needs-hands`.
+4. **The operator's block** runs master's `.claude/skills/deploy/through_fleet.py`
+   with the fleet's venv: the dry run on a copy, the change in plain words,
+   nothing applied until the operator types yes, the apply, `verify-live`;
+   then it takes `needs-hands` off and prints ALL GOOD, or SOMETHING IS OFF.
+   The deploy skill's own "Through the fleet" says what it refuses.
+5. **The resume** (`held_for`, `stage_deployed`): the step's commits fetched
+   from `~/motodiag/deploy/<phase>` into the held clone (only the phase's
+   dry-run diff, answer and live diff may change); `verify-live` outside the
+   fence, and anything but exit 0 goes to the operator with no Engineer; the
+   Engineer's close-out round (`engineer.CLOSEOUT`) in the same clone;
+   `engineer_finish` with `verify_after_apply`: no code path changed after
+   the live diff's commit, and the operator's answer quoted in the phase log.
+   The close-out stopping and `needs-admiral` coming off runs it again from
+   the same hold. Resumable (`STAGE_RANK["deployed"]`, its kill point).
+6. **After the apply** the migration is the operator's: any later change to
+   `src/motodiag/core/migrations.py` refuses a `pr-ready`
+   (`engineer.migration_changes`), and the fix round's brief says so.
+7. **Q1** passes a migration or a dry-run diff only with the three files
+   committed, the live diff clean and equal to the approved diff, and
+   `verify-live`, run by the dispatcher outside the fence, exiting 0 (the
+   stage passes `live_check`). In the fence, with none, it refuses.
+
+The Red Team still reviews after the close-out (the order of record).
+Proven once on the desktop against a copy of live:
+`fixtures/deploy/trial/trial_output.txt`; the known-bad cases are in
+`fixtures/deploy/known_bad/`.
+
 ## What is held by a test
 
 `tests/test_phase387_fleet_contract.py` (the checklist, every known-bad
@@ -596,4 +646,10 @@ its kill point), `test_phase392_answers.py`, `test_phase392_authors.py`
 `test_phase393_red_team_code.py` (the five questions, the planted swallow),
 `test_phase393_quality_report.py` (the page, the weekly stage, its kill
 point), `test_phase393_quality_ratchet.py` (the counts against their pins)
-and `test_phase393_actions.py` (the workflow's shape).
+and `test_phase393_actions.py` (the workflow's shape); Phase 395's
+`tests/test_phase395_through_fleet.py` (the operator's block on a real
+mirror, its refusals, a real terminal), `test_phase395_engineer_deploy.py`
+(the `deploy` outcome and the round after the apply, on
+`fixtures/deploy/known_bad/`), `test_phase395_dispatcher_deploy.py` (the
+hand-over, the resume, its kill point, the planners) and
+`test_phase395_q1.py`.

@@ -440,8 +440,14 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: parametrized ids, renumbered by the nine orphans 393's import clean-up
 #: listed (-18; +27 is the same entries' new ids and the nine). Measured:
 #: 11987.
+#: Phase 395 (the database step through the fleet), by a diff of collected
+#: ids against master at f6b6034 (11987): +62 -0. Added:
+#: test_phase395_engineer_deploy.py (23), test_phase395_through_fleet.py
+#: (17), test_phase395_dispatcher_deploy.py (12), test_phase395_q1.py (9),
+#: and the new stage's kill point in test_phase390_resume_contract.py (1).
+#: Measured: 12049.
 #:
-COLLECTED_TEST_FLOOR = 11987
+COLLECTED_TEST_FLOOR = 12049
 
 
 def _collected_count() -> int:

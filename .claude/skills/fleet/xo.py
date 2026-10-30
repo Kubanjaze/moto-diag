@@ -79,6 +79,15 @@ below. Your job is what the checklist cannot see. Return exactly one of:
   item covers and that only the operator can weigh. Give the reason in at
   most three lines.
 
+A migration (src/motodiag/core/migrations.py) is in scope when the plan
+names the database step in a section "## The database step": what the
+change does to the live database, what it adds, and that it changes or
+deletes no existing live row. The Engineer then stops after the regression
+of record and the operator applies it from one paste block. A migration
+with no such section is back-to-captain. A plan whose migration changes or
+deletes existing live rows lists that as a rule-1 stop; if it does not,
+that is back-to-captain too.
+
 The operator alone decides CLAUDE.md rule 1's stops: a real fork, a
 threshold or rule's definition, a test that cannot be made green, a login
 or credential, a live-database change that alters or deletes rows. If the

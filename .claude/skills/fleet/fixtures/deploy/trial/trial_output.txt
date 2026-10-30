@@ -1,0 +1,119 @@
+# Phase 395's trial — 2026-10-29T21:24:56-04:00
+code under trial: 6d425b88e324951ebb89ec7a8d67a070e1f1da87 (phase-395-the-database-step)
+real live (read only): schema head 87, 122 tables; real backups: 11 files
+stand-in for live: /home/lilcu/motodiag/p395/trial/live/motodiag.db, a backup-API copy, schema head 87
+the dispatcher's deploy root: /home/lilcu/motodiag/p395/trial/home/motodiag/deploy
+
+## 1. The Engineer ends `deploy`; the dispatcher checks, pushes, holds, hands over
+stage outcome: held: the database step
+held.json: {"issue": 95, "phase": "990", "rnd": 0, "commit": "b275d7d39cd2c77d88f0fedb7b51ea8ed5c6c942", "why": "deploy"}
+labels: ['build:open', 'mission', 'needs-hands']
+pushed: phase-990-one-empty-table at b275d7d39cd2c77d88f0fedb7b51ea8ed5c6c942
+the comment, as the operator reads it:
+<!-- fleet-database-step: phase=990 commit=b275d7d39cd2c77d88f0fedb7b51ea8ed5c6c942 run=20261029_212458_engineer_990 -->
+**Phase 990 is built and tested. Its change to the live database is your step.**
+
+What the change does: It adds one new, empty table, trial_empty, and changes no existing row.
+
+What the phase says it may touch: table trial_empty; 1 row(s) added to schema_version.
+
+**Which computer:** the home desktop. **Which window:** the Ubuntu terminal. Paste this whole block. It tries the change on a copy of the live database first and shows you, in plain words, what would change. Nothing changes until you type yes. Then it makes the change, checks it, and hands the work back to the fleet, which finishes the phase by itself. It ends with ALL GOOD or SOMETHING IS OFF.
+
+```bash
+bash <<'EOF'
+set -u
+PY=~/.local/state/motodiag/fleet/venv/bin/python
+STEP=~/motodiag/fleet/code/.claude/skills/deploy/through_fleet.py
+bad() { echo; echo "SOMETHING IS OFF: $1"; exit 1; }
+[ -f "$STEP" ] || bad "the fleet's copy of the code has no database step; it is not on master yet"
+"$PY" "$STEP" 990 phase-990-one-empty-table b275d7d39cd2c77d88f0fedb7b51ea8ed5c6c942 </dev/null || exit 1
+TOLD="the change is made and checked, but the fleet could not be told"
+gh issue edit 95 -R Kubanjaze/moto-diag --remove-label needs-hands </dev/null >/dev/null \
+  || bad "$TOLD: take the needs-hands label off issue 95 by hand"
+echo
+echo "The change is on the live database and checked."
+echo "The fleet finishes phase 990 by itself now."
+echo "ALL GOOD"
+EOF
+```
+
+If you do not want this change, type anything but yes: nothing changes, and the phase waits here.
+
+## 2. The operator's paste block, in a terminal, answered yes
+Step 1 of 3: trying the change on a copy of the live database (live is only read)...
+
+On the copy, this change:
+  - adds a new table, trial_empty, with 2 columns: id, said
+  - adds 1 row to schema_version
+  - changes no existing row
+  - removes no row
+
+The full record is docs/phases/in_progress/990_dryrun_diff.md in /home/lilcu/motodiag/p395/trial/home/motodiag/deploy/990.
+
+Type yes and press Enter to make this change to the live database (anything else stops here, and nothing changes): yes
+
+Step 2 of 3: making the change on the live database...
+preflight passed; applying live: [88]
+after (live): {"rows": 5806, "tables": 122, "integrity": "ok"} scope problems: none
+
+Step 3 of 3: checking the live database against the approved change...
+verify-live 990: live against motodiag_pre990_20261029_212500.db (both copied read-only; the copies are deleted)
+  schema added: table trial_empty
+  schema removed: none
+  schema changed: none
+  rows: schema_version +1 ~0 -0
+  equals the approved exact diff: yes
+  integrity: ok; foreign keys: ok
+
+The change is on the live database and checked.
+The fleet finishes phase 990 by itself now.
+ALL GOOD
+block exit: 0
+gh, as the block called it: issue edit 95 -R Kubanjaze/moto-diag --remove-label needs-hands
+
+## 3. needs-hands off: the resume
+the stage due: engineer, held for deploy
+stage outcome: PR 100 ready
+labels: ['mission', 'review:open']; held runs left: []; sessions: 2
+the branch on the stand-in GitHub: 2b1a129a7b3aff05acf36d880536fecb7645f8aa
+  2b1a129 trial: Phase 990: the close-out after the database step
+  3ab5520 MotoDiag operator (the database step): Phase 990: the live diff
+  b5e0101 MotoDiag operator (the database step): Phase 990: the dry-run diff, and the operator's yes
+  b275d7d trial: Phase 990: the regression of record
+  fa19f22 trial: Phase 990: migration 088 and its scope
+  2f75104 Phase 395 trial: Phase 990: Step 0, the row and v1.0
+
+## 4. Q1 on the pull request's head, verify-live outside the fence
+Q1 the phase is in scope: pass
+verify-live exit 0:
+verify-live 990: live against motodiag_pre990_20261029_212500.db (both copied read-only; the copies are deleted)
+  schema added: table trial_empty
+  schema removed: none
+  schema changed: none
+  rows: schema_version +1 ~0 -0
+  equals the approved exact diff: yes
+  integrity: ok; foreign keys: ok
+the same in the fence, with no live: Q1 the phase is in scope: FAIL: it changes src/motodiag/core/migrations.py, a migration with no database step (verify-live was not run: no live in the fence); it carries docs/phases/completed/990_dryrun_diff.md, a live apply with no database step (verify-live was not run: no live in the fence)
+
+## 5. The block pasted a second time: nothing applied again
+This change is already on the live database; nothing is applied again.
+verify-live 990: live against motodiag_pre990_20261029_212500.db (both copied read-only; the copies are deleted)
+  schema added: table trial_empty
+  schema removed: none
+  schema changed: none
+  rows: schema_version +1 ~0 -0
+  equals the approved exact diff: yes
+  integrity: ok; foreign keys: ok
+
+The change is on the live database and checked.
+The fleet finishes phase 990 by itself now.
+ALL GOOD
+block exit: 0
+
+## 6. Real live and the real backups, after
+real live's schema unchanged: True (head 87); row counts unchanged: True; trial_empty on real live: False
+real backups unchanged: True
+the stand-in: schema head 88, trial_empty present (0 rows)
+trial backups (retain-5 on the trial's own folder): ['motodiag_pre990_20261029_212500.db', 'motodiag_pre990_20261029_212500.db-shm', 'motodiag_pre990_20261029_212500.db-wal']
+
+TRIAL PASSED

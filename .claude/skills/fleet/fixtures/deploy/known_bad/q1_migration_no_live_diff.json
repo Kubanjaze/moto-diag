@@ -1,0 +1,4 @@
+{"what": "Q1 on a pull request that changes the migration and carries a dry-run diff, but no live diff: the change never reached live through the database step.",
+ "remove": ["docs/phases/completed/990_live_diff.md"],
+ "commit": true,
+ "refusal": "a migration with no database step"}

@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F235** (this file). The
+At the time of writing the highest assigned is **F236** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4476,7 +4476,7 @@ answer to an Engineer's stop (a comment by the repository's owner, F223's
 rule) into the phase log on the branch and makes the Engineer due again;
 under K43 rule 4, its row names the first-shop phase it unblocks.
 
-### F232
+### F232 — CLOSED by Phase 395
 
 **A phase with a migration has no path through the fleet: the Engineer cannot dry-run, apply live or push between the regression and the close-out**
 
@@ -4494,6 +4494,18 @@ operator's answer, part (a)). What would close it: a fleet deploy stage, or
 a stop kind that pauses the build at K18's point and resumes it after the
 operator's dry run and apply; a plan-of-record change, the operator's under
 K43 rule 4, naming the first-shop phase it unblocks.
+
+**Closed 2026-10-29 by Phase 395** (K58), which unblocks 348. A plan names
+its migration in a section "## The database step"; the Engineer stops after
+the regression of record with the outcome `deploy`; the dispatcher pushes,
+holds the run and hands the operator one paste block for the home desktop
+(`.claude/skills/deploy/through_fleet.py`: the dry run on a copy, the change
+in plain words, nothing applied until the operator types yes, the apply,
+`verify-live`); once the operator's block takes `needs-hands` off, the
+dispatcher runs `verify-live` outside the fence and the Engineer closes out
+in the same clone, documents only. Q1 passes a migration only through that
+step. The fence still never sees live. Proven once on the desktop against a
+copy of live (`.claude/skills/fleet/fixtures/deploy/trial/trial_output.txt`).
 
 ### F233
 
@@ -4549,3 +4561,27 @@ What would close it: one module for money (cents in, one rule for a
 missing amount) and one for time, every copy replaced by an import, the pin
 lowered to 0. Out of Phase 393's scope by its prompt ("consolidating the
 money and time helpers").
+
+### F236 — CLOSED by the advisor's commit that filed it (branch `docs-395-database-step`, 2026-10-29)
+
+**394's kernel control test assumes Linux, so the whole-tree check fails on the Mac**
+
+Found 2026-10-29 by the advisor session, running `wholetree.sh` on the Mac
+before committing K58 at `47b93ea`: 4 failed, 2447 passed. Three were the
+Mac's own setup, not the repository: its `.venv` held ruff 0.15.17 and no
+mypy, against the dev extra's `ruff==0.16.9` and `mypy==2.3.1` (Phase 393).
+Installing the four pinned tools (ruff, mypy, pytest-cov, coverage) made
+393's three pass. The fourth is the repository's:
+`tests/test_phase394_brief_on_stdin.py::test_the_kernel_refuses_the_old_shape`
+expects the kernel to refuse a 300 KiB argument with errno 7. Linux does
+(one argument's limit, 131072 bytes); macOS has no per-argument limit, only
+`ARG_MAX` for the whole command line (`getconf ARG_MAX`: 1048576 on this
+Mac). The test failed there with "DID NOT RAISE". Since 394 merged, the
+push guard refused every push from the Mac. 393 and 394 were built and
+pushed on the PC, where the test passes.
+
+The fix keeps the Linux case byte for byte: on Linux the brief is still
+`BIG`, and anywhere else it is one byte past `os.sysconf("SC_ARG_MAX")`, so
+the control still sees the kernel refuse. No skip was added, so
+`EXPECTED_SKIPS` is unchanged. Seen red on the Mac with `BIG` and green with
+the platform's own limit.
