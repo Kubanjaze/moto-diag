@@ -47,6 +47,7 @@ import sqlite3
 import subprocess
 import sys
 import time
+import traceback
 import urllib.request
 from collections.abc import Callable
 
@@ -275,10 +276,12 @@ class Service:
 
 def ask_tty(prompt: str) -> str:
     """The operator's answer, from the terminal itself: the paste block's
-    own standard input is the block, never an answer."""
-    with open("/dev/tty", "r+") as tty:
-        tty.write(prompt)
-        tty.flush()
+    own standard input is the block, never an answer. Two opens: a text
+    file opened "r+" on a terminal refuses ("not seekable"; Phase 395's
+    trial, bug fix #1)."""
+    with open("/dev/tty", "w") as out, open("/dev/tty") as tty:
+        out.write(prompt)
+        out.flush()
         return tty.readline().rstrip("\n")
 
 
@@ -399,6 +402,11 @@ def main(argv: list[str]) -> int:
     except Off as e:
         print(f"{OFF}: {e}")
         return e.code
+    except Exception as e:      # the block must still end in its verdict (bug fix #1)
+        traceback.print_exc()
+        print(f"{OFF}: the database step failed unexpectedly ({type(e).__name__}: {e}); "
+              "the lines above say where")
+        return 1
 
 
 if __name__ == "__main__":

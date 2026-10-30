@@ -271,3 +271,40 @@ def test_plain_words_name_a_removal_and_a_change():
     assert "CHANGES 1 existing row in known_issues (title)" in words
     assert "REMOVES 1 row from known_issues" in words
     assert "changes no existing row" not in words
+
+
+def test_the_question_is_asked_and_answered_on_a_real_terminal():
+    """Bug fix #1 (the trial): `/dev/tty` opened "r+" as text refuses on a
+    terminal. A child process with a pty as its terminal, its stdin not
+    the terminal, is asked and answers."""
+    import os
+    import pty
+    import time
+
+    code = ("import sys; sys.path.insert(0, sys.argv[1]); import through_fleet as T; "
+            "print('ANSWER=' + repr(T.ask_tty('Type yes: ')))")
+    pid, fd = pty.fork()
+    if pid == 0:
+        devnull = os.open(os.devnull, os.O_RDONLY)
+        os.dup2(devnull, 0)
+        os.execv(sys.executable, [sys.executable, "-c", code,
+                                  str(ROOT / ".claude" / "skills" / "deploy")])
+    out, end = b"", time.monotonic() + 60
+    while b"ANSWER=" not in out and time.monotonic() < end:
+        try:
+            chunk = os.read(fd, 1024)
+        except OSError:
+            break
+        out += chunk
+        if b"Type yes: " in chunk:
+            os.write(fd, b"yes\n")
+    os.waitpid(pid, 0)
+    assert b"ANSWER='yes'" in out, out
+
+
+def test_an_unexpected_error_still_ends_in_the_verdict(world, monkeypatch, capsys):
+    def boom(*a, **k):
+        raise RuntimeError("planted")
+    monkeypatch.setattr(T, "run", boom)
+    assert T.main([PHASE, BRANCH, world["commit"]]) == 1
+    assert capsys.readouterr().out.strip().splitlines()[-1].startswith(T.OFF)
