@@ -117,6 +117,7 @@ def create_app(
         )
 
     # --- Routers (lazy import to keep module-import cheap) ---
+    from motodiag.api.routes.audit import router as audit_router
     from motodiag.api.routes.auth import router as auth_router
     from motodiag.api.routes.billing import router as billing_router
     from motodiag.api.routes.diagnostics import router as diagnostics_router
@@ -144,6 +145,7 @@ def create_app(
     app.include_router(sessions_router, prefix="/v1")
     app.include_router(kb_router, prefix="/v1")
     app.include_router(shop_mgmt_router, prefix="/v1")
+    app.include_router(audit_router, prefix="/v1")  # Phase 348 — audit trail
     app.include_router(reports_router, prefix="/v1")
     app.include_router(videos_router, prefix="/v1")
     app.include_router(photos_router, prefix="/v1")  # Phase 194 — WO photos

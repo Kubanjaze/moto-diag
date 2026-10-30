@@ -450,8 +450,14 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: build), by a diff of collected ids against master at fae8378 (12049):
 #: +6 -0, all in test_phase383_server_writes.py (TestAWholeTableIsSetAside 3,
 #: TestAWholeTableKeepsItsControls 3). Measured: 12055.
+#: Phase 348 (the audit log), by a diff of collected ids against master at
+#: d76b865 (12056 collected there): +77 -0. Added:
+#: test_phase348_audit_log.py (17), test_phase348_audit_middleware.py (17),
+#: test_phase348_audit_api.py (12), test_phase348_audit_cli.py (12),
+#: test_phase348_migration.py (9), test_phase348_wiring.py (6),
+#: test_phase348_server_writes.py (4). Measured on the branch: 12133.
 #:
-COLLECTED_TEST_FLOOR = 12055
+COLLECTED_TEST_FLOOR = 12133
 
 
 def _collected_count() -> int:

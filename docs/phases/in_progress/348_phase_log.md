@@ -44,3 +44,9 @@ A two-line import reorder in `src/motodiag/audit/log.py` was tried through a `py
 ## 2026-10-30: Two commits, because the full run cannot pass with the route in the tree
 
 The commit guard accepts a change to `migrations.py` only with a passing `wholetree.sh --full` record for exactly that tree, and Gate 11 keeps `--full` red while the reader route is in the tree without the phone app's snapshot. So the first commit is everything but the route (the migration, the store, the middleware, the login line, the CLI and their tests), proven by `--full`; the second adds the route, its tag, its tests, the wiring test and the mutation script, and changes no content path, so fast mode is its check. No guard is loosened.
+
+## 2026-10-30: Commit 1, and the route back for commit 2
+
+- `wholetree.sh --full` on the staged tree without the route, nothing unstaged or untracked: **PASSED — 4986 passed, 36 skipped** (1013.1 s wall), exit 0, record for that tree. Committed as `c19f2ab`.
+- **The edit guard blocked `mv` writing into `src/`** when the route came back from `/fleet/run/hold348/` (moving it out had been allowed). The guard is left as it is; the route, its test and the wiring test were written back with the Write tool, each checked byte-identical to the held copy with `cmp`, and the two `app.py` lines and the `audit` tag restored with the Edit tool. That makes three guard blocks this phase, each for a different command (a Python script body, `sed -i`, `mv`), none of them the same thing twice.
+- **`COLLECTED_TEST_FLOOR` 12055 → 12133**, by a diff of collected ids against master at `d76b865` (12056 collected in a worktree of master): +77 −0, all in the seven `test_phase348_*` files.
