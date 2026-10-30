@@ -1,0 +1,70 @@
+Do this: start Phase 395, the fleet hands the operator the database step (row 395, added to docs/ROADMAP.md as 🔲 with this prompt; mark it 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out.
+- **Its place in the order:** row 5 of "Next, in order", after 393 and before 348 (K58). It is built by a builder session; the fleet waits for it.
+- **The row names the first-shop phase it unblocks (K43 rule 4):** 348, the audit log, whose new table needs a live migration. Every later first-shop phase with a migration goes the same way.
+- **348 is held.** Issue #36 has carried needs-admiral since 2026-10-29 20:24, and the advisor's comment there says why. 348's Step 0 (`abbafd4`) and the Captain's v1.0 stay on its branch. Do not touch #36, its branch or its labels until the after-the-merge block below.
+- **Start from master after this prompt's merge.**
+- **You are at ~/Projects/moto-diag on the PC.** This phase changes .claude/skills/fleet/, which the push gate's G3 keeps from the fleet, so a builder session builds it. With 348 held the fleet is idle; check `pgrep -x bwrap` before a regression all the same.
+
+Why this phase (F232): a phase with a migration has no path through the fleet. 303 avoided one by keeping its sessions in the API-key table. 348 cannot: its Step 0 finds no event store to extend, so it needs a new table.
+
+My words, 2026-10-29: "add it altogether to throw at it", then "yes go ahead" to the advisor's reading of it: a builder session gives the fleet the database step, then the fleet builds all of 348, its new table included. The step, as the advisor put it and I approved: the fleet stops at the right point and hands me one paste block for the PC; that block tries the change on a copy, shows me what changes, applies it and checks it; when I say it's done, the fleet carries on.
+
+The facts, read 2026-10-29 on master at 47b93ea. Re-read each one at Step 0.
+- **No live in the fence, by design.** fence.sh mounts no home and sets HOME to /fleet/run/home, so live.json is missing and every deploy.py mode exits 4 inside it (F232; the Quartermaster's fixture pr20). That stays so: the fence never sees live, a backup or a credential.
+- **The dispatcher runs outside the fence,** as the operator's user on the desktop, where ~/.config/motodiag/live.json says where live is. The ranks' models run inside.
+- **The Engineer closes out in the session that builds** (engineer.py's brief, step 7). K18's order (the regression of record, the live apply from the branch, the close-out commit, the merge) needs a point between the regression and the close-out that the Engineer's session cannot give, and deploy.py apply-live refuses any other order.
+- **The Quartermaster refuses any migration.** Q1 (quartermaster.py, `scope`) refuses a pull request that changes src/motodiag/core/migrations.py or carries a _dryrun_diff.md. Its V8 line reads "no live in the fence; Q1 refuses a phase with a migration or a deploy".
+- **The planners treat a migration as a stop.** The Engineer's stop kinds include live-database-change. The Captain's and the Executive Officer's briefs list a live-database change among rule 1's stops, and plan_check's P8 reads "migration" as that kind.
+- **The deploy skill's sequence** (.claude/skills/deploy/SKILL.md, "The sequence"):
+  - the scope file;
+  - dryrun: a backup, a copy migrated and diffed, and <phase>_dryrun_diff.md with the exact diff;
+  - the diff committed and shown to the operator;
+  - apply-live from the branch after the regression of record. It refuses unless the committed diff is unchanged, live still equals the backup, and a fresh run equals the exact diff. It writes <phase>_live_diff.md;
+  - verify-live;
+  - at close-out, the diff files move to completed/.
+- **A stage that waits on the operator and then goes on already exists:** F220's held run (held.json; stage_recheck runs when the operator takes needs-admiral off, and goes on as a pr-ready does).
+
+What to build:
+- **The Engineer's brief.** When the approved plan has a migration, the Engineer writes it, the deploy skill's scope file and the tests on fresh databases, and runs the regression of record. It then ends with a new outcome, deploy, instead of closing out. A deploy is believed only as a pr-ready is: the clone clean, the model-free run counting what the Engineer's line counts.
+- **The pause.** On a believed deploy, the dispatcher pushes the branch, holds the run (held.json, why: deploy), posts one comment on the mission issue and adds needs-hands. The comment is plain English with no internal labels:
+  - which computer and which window (the home desktop, the Ubuntu terminal);
+  - what the change does to the live database, in a sentence;
+  - one paste block.
+- **The paste block,** which I run on the desktop:
+  - the dry run on a copy, at the pushed commit;
+  - the change shown in plain words: tables and columns added, and rows added, changed or removed;
+  - nothing applied until I type yes. My answer is saved where the close-out quotes it in the phase log;
+  - the diff committed to the branch as the deploy skill requires, then apply-live from the branch, then verify-live;
+  - it ends ALL GOOD, or SOMETHING IS OFF with the reason.
+  Whether the dry run runs in the block or in the dispatcher (model-free, before the comment) is your call at Step 0, with the reason in the log. Either way, only my paste changes live, and the deploy skill's refusals stay as they are. Never loosen one.
+- **The resume.** When I take needs-hands off, the dispatcher checks that live equals the approved diff (verify-live). It then gives the Engineer a close-out round in the same clone: the live outcome in the handoff and in v1.1, the diff files moved, the row ✅, closeout_check empty, then pr-ready as today. No code changes after the apply. A Red Team finding that would change an applied migration is a rule-1 stop.
+- **The Quartermaster.** Q1 passes a phase whose migration was applied this way: its dry-run and live diffs are committed, and verify-live agrees. A migration with no live apply still refuses.
+- **The planners.** The Captain's and the Executive Officer's briefs say a migration is in scope when the plan names the database step. A plan that changes or deletes existing live rows still lists that as a rule-1 stop.
+- **The documents.** The fleet skill's SKILL.md and the deploy skill's SKILL.md each get a short "Through the fleet" section. F232 closes.
+
+How it is proven:
+- **Each refusal has a known-bad fixture, seen red:**
+  - a deploy outcome with a dirty clone;
+  - a deploy with no scope file;
+  - a resume with live not equal to the approved diff;
+  - a code change after the apply;
+  - Q1 with a migration and no live diff.
+- **The trial, once, in the real place** (389's rule: no rank goes live on a new check until it has run once against a real artefact in the real place). On the desktop, run the whole path on a planted phase whose migration adds one empty table. Use a copy of live standing in for live, never live itself, and keep the trial's output as a fixture. If the deploy tools cannot be pointed at a stand-in without loosening a refusal, stop and tell me.
+- **The mutations,** red, as in every phase.
+
+Stops, beyond rule 1:
+- any design in which the fence sees live, a backup or a credential;
+- any trial that would touch live;
+- a fork over the order of the Red Team and the live apply. The default is today's order: the Red Team reviews after the close-out.
+
+Out of scope: 348 itself; the phone app's address-list step; finding numbers given out twice (F230); the Engineer's missing cost line; any change to live.
+
+Report, at the end:
+- the design, and why;
+- each known-bad fixture, seen red;
+- the trial's output;
+- the regression line;
+- verify_phase.sh's result;
+- the next step, my call.
+
+After the merge: give me one block for the desktop that puts the fleet on master (as 393's handoff did) and takes needs-admiral off #36, every gh call with -R Kubanjaze/moto-diag. The Executive Officer then reviews 348's v1.0 with the database step in place.
