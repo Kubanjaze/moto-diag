@@ -129,7 +129,7 @@ The build runs in this order. Item 1 is the Chief Engineer's first act, before a
 - [x] The one stop, first: kind `fork`, the four-part question with the Captain's recommendations, the sentence asking for #39's merge only if `audit_events` is missing from `origin/master`'s `deploy.py`, and the operator's way back as one paste block; the operator's words land in `docs/phases/in_progress/348_phase_log.md` and the Engineer's next session reads them
 - [x] Migration 088: the table, the index, the two triggers, the rollback; `348_deploy_scope.json`
 - [x] `audit/log.py`: `HASHED_COLUMNS`, the chain, `verify_chain`, `list_events`, `export_events`
-- [x] `api/middleware.py`: `AuditMiddleware` innermost, and the one db-path helper
+- [x] `api/middleware.py`: `AuditMiddleware`, and the one db-path helper
 - [x] `api/routes/auth.py`: the login sets the caller
 - [x] `api/routes/audit.py`, `app.py`, `openapi.py`: the shop's reader under `manage_users`
 - [x] `cli/audit.py` and its registration: `list`, `verify`, `export`
@@ -153,7 +153,7 @@ What the build did that v1.0 does not say, each with its reason. The phase log h
 - **Three edit-guard blocks**, each a different command (a Python script body, `sed -i` on a docs file, `mv` back into `src/`). The guard was left as it is each time; the Edit and Write tools did the work.
 - **The handoff's server step checks the trail with a refused login, not a real one.** Item 10 says "log in once". A wrong login is recorded as an anonymous 401 event, so it shows the first event and an intact chain without the operator typing a password into a paste block.
 - **`docs/guide/api.md`'s area table is not otherwise corrected.** The item asks for the `audit` tag and the opening counts. The other rows are not all what the schema counts (`videos` 5 against 6; no row for `auth`, 7, or `shops`, 1); left as found, named in the handoff.
-- **No bug fixes and no refute pass.** No defect was found in the phase's own committed code, so there is no bug-fix register; No refute pass ran.
+- **No bug fixes.** No defect was found in the phase's own committed code, so there is no bug-fix register.
 
 ## Results
 
