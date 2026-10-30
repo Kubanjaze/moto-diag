@@ -320,7 +320,7 @@ class TestMigration087:
             assert after[vid]["file_path"] == expected
             assert {k: v for k, v in after[vid].items() if k != "file_path"} == \
                 {k: v for k, v in before[vid].items() if k != "file_path"}
-        assert _cell(db, "select max(version) from schema_version") == 87
+        assert _cell(db, "select count(*) from schema_version where version = 87") == 1
 
     def test_photos_and_transcripts(self, folders, monkeypatch):
         db, a, _ = folders
@@ -349,4 +349,4 @@ class TestMigration087:
     def test_a_fresh_database_is_at_87(self, tmp_path):
         db = str(tmp_path / "fresh.db")
         init_db(db)
-        assert _cell(db, "select max(version) from schema_version") == 87
+        assert _cell(db, "select max(version) from schema_version") >= 87

@@ -21,11 +21,11 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Request, Response
 from pydantic import BaseModel, Field
 
 from motodiag.api.deps import get_db_path
-from motodiag.auth.deps import AuthedUser, get_current_user, require_tier
+from motodiag.auth.deps import AuthedUser, Caller, get_current_user, require_tier
 from motodiag.auth.passwords import hash_password, verify_password
 from motodiag.auth.sessions_repo import (
     LOGIN_FAILED,
@@ -103,12 +103,17 @@ def _memberships(user_id: int, db_path: str) -> list[dict]:
 
 
 @router.post("/login", summary="Log in with a username and password")
-def login(req: LoginRequest, db_path: str = Depends(get_db_path)) -> dict:
+def login(
+    req: LoginRequest, request: Request, db_path: str = Depends(get_db_path),
+) -> dict:
     """A session token, shown once, with the user's shops and roles."""
     user = authenticate(req.username, req.password, db_path=db_path)
     if user is None:
         raise LoginFailedError(LOGIN_FAILED)
     row, token = create_session(int(user["id"]), req.client, db_path=db_path)
+    # Phase 348: the audit log records the login under the person and the
+    # session it made.
+    request.state.caller = Caller(row.user_id, "session", row.id)
     logger.info("login: user id=%d session id=%d", row.user_id, row.id)
     return {
         "token": token,

@@ -323,3 +323,33 @@ between a shop that makes money and one that's busy.
 The iOS app covers the shop-floor half of this — work orders, parts,
 clock in and out, photos, voice notes — over the same HTTP API. See the
 [API guide](api.md) and the mobile repo's README.
+
+## See who did what
+
+Every change made through the API (the app, or anything else with a key
+or a staff login) is written to an activity log that is never changed
+or deleted. On the server:
+
+```bash
+motodiag audit list                    # newest first
+motodiag audit list --shop 1 --since 7d
+motodiag audit list --user tess --json
+motodiag audit verify                  # is the log intact?
+motodiag audit export trail.jsonl      # a copy to keep
+```
+
+On a fresh install:
+
+```
+$ motodiag audit list
+The audit log has no events yet.
+$ motodiag audit verify
+events: 0
+head hash: 0000000000000000000000000000000000000000000000000000000000000000
+chain intact
+```
+
+`verify` exits non-zero and names the first bad row if anything in the
+log was altered or removed. From the app, the shop's owner reads that
+shop's events at `GET /v1/shop/{shop_id}/audit` (see the
+[API guide](api.md)).

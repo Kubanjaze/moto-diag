@@ -7764,6 +7764,55 @@ MIGRATIONS: list[Migration] = [
         """,
         rollback_sql="SELECT 1;",
     ),
+    Migration(
+        version=88,
+        name="audit_events",
+        description=(
+            "Phase 348, the audit log (K58). One row per write request on "
+            "the API: who (user id, username at the time, credential kind "
+            "and id, client address), what (method, path, endpoint, path "
+            "ids, shop, status) and when (UTC). Two triggers refuse UPDATE "
+            "and DELETE, and each row's `row_hash` chains to the row before "
+            "it (`motodiag audit verify`). No foreign key: the trail keeps a "
+            "deleted user's or shop's ids. Adds an empty table, one index "
+            "and two triggers; changes and removes no existing row."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS audit_events (
+                id INTEGER PRIMARY KEY,
+                occurred_at TEXT NOT NULL,
+                request_id TEXT,
+                actor_user_id INTEGER,
+                actor_username TEXT,
+                credential_kind TEXT,
+                credential_id INTEGER,
+                client_address TEXT,
+                forwarded_for TEXT,
+                method TEXT NOT NULL,
+                path TEXT NOT NULL,
+                endpoint TEXT,
+                path_params TEXT,
+                shop_id INTEGER,
+                status INTEGER NOT NULL,
+                prev_hash TEXT NOT NULL,
+                row_hash TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_audit_events_shop
+                ON audit_events(shop_id, id);
+            CREATE TRIGGER IF NOT EXISTS audit_events_no_update
+                BEFORE UPDATE ON audit_events
+                BEGIN SELECT RAISE(ABORT, 'audit_events is append-only'); END;
+            CREATE TRIGGER IF NOT EXISTS audit_events_no_delete
+                BEFORE DELETE ON audit_events
+                BEGIN SELECT RAISE(ABORT, 'audit_events is append-only'); END;
+        """,
+        rollback_sql="""
+            DROP TRIGGER IF EXISTS audit_events_no_delete;
+            DROP TRIGGER IF EXISTS audit_events_no_update;
+            DROP INDEX IF EXISTS idx_audit_events_shop;
+            DROP TABLE IF EXISTS audit_events;
+        """,
+    ),
 ]
 
 

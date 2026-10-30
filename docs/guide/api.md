@@ -1,6 +1,6 @@
 # HTTP API
 
-88 routes over 111 operations. The iOS app runs on this; so can anything
+89 routes over 112 operations. The iOS app runs on this; so can anything
 else.
 
 ## Start it
@@ -197,6 +197,17 @@ you stand; `motodiag subscription show` shows the subscription behind it.
 | `push` | 2 | APNs device registration |
 | `diagnostics` | 1 | OBD adapter failure telemetry |
 | `meta` | 2 | `/healthz`, `/v1/version` |
+| `audit` | 1 | A shop's activity log: who did what, when |
+
+Every request that changes something (POST, PUT, PATCH or DELETE) is
+recorded in the activity log: who made it, the path, the status and
+when. Reads are not. `GET /v1/shop/{shop_id}/audit` is a shop's part of
+it, newest first, for someone who may manage the shop's staff
+(`manage_users`; today the owner). It takes `since`, `until`,
+`user_id`, `limit` (100 by default, at most 500) and `before_id`; a
+full page carries `next_before_id` for the next one. Nothing in the
+log is ever changed or deleted. On the server, `motodiag audit list`,
+`audit verify` and `audit export FILE` read, check and copy all of it.
 
 ## Conditional GET
 

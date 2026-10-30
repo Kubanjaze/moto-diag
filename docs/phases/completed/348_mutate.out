@@ -1,0 +1,13 @@
+M1 the method rule (a GET is recorded too): red
+M2 the query string is kept in the path: red
+M3 a failed audit write fails the request: red
+M4 the login does not set the caller: red
+S1 the prev_hash link (every row links to GENESIS): red
+S2 the order of HASHED_COLUMNS (method and path swapped): red
+S3 verify_chain's comparison (the hash not recomputed): red
+S4 export's refusal (an existing file overwritten): red
+G1 the UPDATE trigger is not created: red
+G2 the DELETE trigger is not created: red
+R1 the manage_users gate: red
+R2 the shop filter: red
+12/12 red

@@ -1,0 +1,9 @@
+**The plan of record's next mission**, opened by the fleet (Phase 392).
+
+The plan of record puts phase 348 next ('Next, in order' #5): 5. 348 (shop, built by fleet); needs the operator: nothing; from: 2026-10-26 · K43
+
+The plan of record on this phase: the plan of record's 'Next, in order' #5; the plan of record, 2026-10-22 to 2026-10-25; the plan of record, 2026-10-26; the plan of record, 2026-10-26, later; the plan of record, 2026-10-27; K43; K44; K54.
+
+The work branch is `phase-348-audit-log-who-did-what-when`: the Science Officer makes it from master once this phase's row is 🚧 there, which the row's pull request does when the operator merges it.
+
+<!-- fleet-next: phase=348 -->

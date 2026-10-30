@@ -230,6 +230,16 @@ TAG_CATALOG: list[dict[str, Any]] = [
         ),
     },
     {
+        "name": "audit",
+        "description": (
+            "Phase 348 — the audit log. `GET /shop/{shop_id}/audit` "
+            "lists the shop's own events, newest first: who made each "
+            "write request, what it was and how it answered. Needs "
+            "`manage_users` at the shop (the owner). Every POST, PUT, "
+            "PATCH and DELETE is recorded; no body or query string is."
+        ),
+    },
+    {
         "name": "voice-transcripts",
         "description": (
             "Voice symptom capture: upload a voice memo to a work "
