@@ -1,0 +1,36 @@
+T1 a branch that changes the deploy tools is not refused: red
+T2 a branch with no scope file is not refused: red
+T3 any answer is a yes: red
+T4 the commit need not be the branch's head: red
+T5 the API is stopped whatever database it serves: red
+T6 the live diff is not committed: red
+T7 verify-live's exit after the apply is ignored: red
+T8 the answer is not saved as typed: red
+T9 a second run applies again: red
+T10 the question opens the terminal once, read-write (bug fix #1 undone): red
+E1 a deploy is believed from a dirty clone: red
+E2 a deploy is believed with no scope file: red
+E3 a deploy's counts are not compared with the model-free run: red
+E4 code may change after the apply: red
+E5 the answer need not be quoted: red
+E6 an applied migration may change: red
+E7 a pr-ready's migration need not have gone through the step: red
+E8 a deploy need not say what it does to live: red
+E9 the brief lets a deploy close out: red
+D1 a deploy is taken for a pr-ready: red
+D2 the deploy is not held: red
+D3 needs-hands is not added: red
+D4 verify-live's exit is ignored on the resume: red
+D5 the step's checkout may change any file: red
+D6 the close-out after the apply is not held to documents: red
+D7 needs-hands off does not release a deploy hold: red
+D8 the close-out round is not told it is one: red
+D9 the block's gh names no repository: red
+D10 the Quartermaster gives Q1 no live check: red
+Q1 a migration passes with no database step: red
+Q2 the live diff's own record is not read: red
+Q3 verify-live's exit is ignored: red
+Q4 with no live in the fence a migration passes: red
+P1 the Captain is not told of the database step: red
+P2 the XO is not told of the database step: red
+35/35 red

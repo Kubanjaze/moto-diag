@@ -12,8 +12,11 @@ fence with no model and no token, `wholetree.sh --full` and `regression.sh`
 on the head, then `verify_phase.sh`. This module reads them, and checks
 what those fourteen miss for a fleet-built PR (391 Step 0, S0-1):
 
-  Q1 scope: extension or greenfield; no migration, content or data path;
-     no deploy. A failure is the verdict, with no run and no model call.
+  Q1 scope: extension or greenfield; no content or data path; a migration
+     or a deploy only through the database step (Phase 395: its three files
+     committed, the live diff clean, and verify-live, run by the dispatcher
+     outside the fence, exiting 0). A failure is the verdict, with no run
+     and no model call.
   Q2 the Captain's newest recommendation is merge
   Q3 the Red Team's newest verdict is clear, after the Engineer's newest
      pull request
@@ -49,6 +52,7 @@ import pathlib
 import re
 import subprocess
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -94,7 +98,8 @@ CHECKS = {
 NOT_READ = {
     "V1": "it reads origin/master, which a pull request is not on yet; Q9 instead",
     "V7": "it prints a line and no verdict; V13 holds the header",
-    "V8": "no live in the fence; Q1 refuses a phase with a migration or a deploy",
+    "V8": "no live in the fence; Q1 runs verify-live outside it for a phase with a "
+          "database step, and refuses any other migration or deploy",
     "V9": "as V8",
 }
 
@@ -145,17 +150,49 @@ def changed(clone: pathlib.Path, base: str) -> list[str]:
     return _git(clone, "diff", "--name-only", f"{base}...HEAD").stdout.split()
 
 
-def scope(clone: pathlib.Path, phase: str, base: str = "master") -> Finding:
+def database_step(clone: pathlib.Path, phase: str,
+                  live_check: Callable[[], tuple[int, str]] | None) -> list[str]:
+    """Why a migration did not go through the database step (Phase 395):
+    the dry-run diff, the operator's answer and the live diff committed,
+    the live diff with no scope problem and equal to the approved diff, and
+    `verify-live`, run by the dispatcher outside the fence, exiting 0. With
+    no `live_check` (in the fence, where live is not) it cannot pass."""
+    why = []
+    for kind in ("dryrun_diff", "deploy_answer", "live_diff"):
+        p = doc(clone, phase, kind)
+        if p is None or _git(clone, "cat-file", "-e",
+                             f"HEAD:{p.relative_to(clone)}").returncode != 0:
+            why.append(f"no committed {phase}_{kind}.md")
+    live = _text(doc(clone, phase, "live_diff"))
+    if live and ("**Scope problems:** `none`" not in live
+                 or "**Equals the approved exact diff:** `yes`" not in live):
+        why.append(f"{phase}_live_diff.md records a scope problem or a live database that is not "
+                   "the approved diff")
+    if live_check is None:
+        why.append("verify-live was not run: no live in the fence")
+    elif not why:
+        rc, said = live_check()
+        if rc != 0:
+            why.append(f"verify-live exits {rc}: {said.strip().splitlines()[-1:] or ''}")
+    return why
+
+
+def scope(clone: pathlib.Path, phase: str, base: str = "master",
+          live_check: Callable[[], tuple[int, str]] | None = None) -> Finding:
     why = []
     word = plan_check.classification(_text(doc(clone, phase, "step0")))
     if word not in ("extension", "greenfield"):
         why.append(f"the Step 0 classification is {word or 'missing'}, not extension or greenfield")
     paths = changed(clone, base)
-    why += [f"it changes {p}, a migration" for p in paths if p == MIGRATIONS]
+    deploys = MIGRATIONS in paths or any(p.endswith("_dryrun_diff.md") for p in paths)
+    step = database_step(clone, phase, live_check) if deploys else []
+    why += [f"it changes {p}, a migration with no database step ({'; '.join(step)})"
+            for p in paths if p == MIGRATIONS and step]
     why += [f"it changes {p}, content" for p in paths
             if p != MIGRATIONS and p.startswith(CONTENT_PATHS)]
     why += [f"it changes {p}, under data/" for p in paths if p.startswith("data/")]
-    why += [f"it carries {p}, a live apply" for p in paths if p.endswith("_dryrun_diff.md")]
+    why += [f"it carries {p}, a live apply with no database step ({'; '.join(step)})"
+            for p in paths if p.endswith("_dryrun_diff.md") and step]
     return Finding("Q1", not why, "; ".join(why))
 
 

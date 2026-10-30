@@ -1,0 +1,4 @@
+{"what": "The resume, after the operator's block: verify-live finds the live database is not the approved change (exit 3). The close-out must not run.",
+ "exit": 3,
+ "printed": "verify-live 990: live against motodiag_pre990_20261029_210000.db (both copied read-only; the copies are deleted)\n  schema added: table trial_empty\n  schema removed: none\n  schema changed: none\n  rows: schema_version +1 ~0 -0\n  rows: known_issues +0 ~1 -0\n  equals the approved exact diff: no\n    /rows/known_issues/changed/12/title: approved '(absent)', live ['a', 'b']\n  live is at schema 88, this phase's own head (88): the difference is not a later migration's\n  integrity: ok; foreign keys: ok\n",
+ "refusal": "the live database does not match the change you approved"}

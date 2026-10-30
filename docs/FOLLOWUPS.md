@@ -4476,7 +4476,7 @@ answer to an Engineer's stop (a comment by the repository's owner, F223's
 rule) into the phase log on the branch and makes the Engineer due again;
 under K43 rule 4, its row names the first-shop phase it unblocks.
 
-### F232
+### F232 — CLOSED by Phase 395
 
 **A phase with a migration has no path through the fleet: the Engineer cannot dry-run, apply live or push between the regression and the close-out**
 
@@ -4494,6 +4494,18 @@ operator's answer, part (a)). What would close it: a fleet deploy stage, or
 a stop kind that pauses the build at K18's point and resumes it after the
 operator's dry run and apply; a plan-of-record change, the operator's under
 K43 rule 4, naming the first-shop phase it unblocks.
+
+**Closed 2026-10-29 by Phase 395** (K58), which unblocks 348. A plan names
+its migration in a section "## The database step"; the Engineer stops after
+the regression of record with the outcome `deploy`; the dispatcher pushes,
+holds the run and hands the operator one paste block for the home desktop
+(`.claude/skills/deploy/through_fleet.py`: the dry run on a copy, the change
+in plain words, nothing applied until the operator types yes, the apply,
+`verify-live`); once the operator's block takes `needs-hands` off, the
+dispatcher runs `verify-live` outside the fence and the Engineer closes out
+in the same clone, documents only. Q1 passes a migration only through that
+step. The fence still never sees live. Proven once on the desktop against a
+copy of live (`.claude/skills/fleet/fixtures/deploy/trial/trial_output.txt`).
 
 ### F233
 

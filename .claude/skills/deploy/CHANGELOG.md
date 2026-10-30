@@ -1,5 +1,15 @@
 # deploy — changelog
 
+## 2026-10-29 — through the fleet (Phase 395, K58, F232)
+
+`through_fleet.py`, new: the work of the paste block the fleet hands the
+operator for a phase with a migration (the dry run on a copy, the change
+in plain words, the operator's yes, `apply-live`, `verify-live`), run with
+master's code against the branch's `src/`. No refusal in `deploy.py`
+changed; `deploy.py` is unchanged. "Through the fleet" in `SKILL.md`.
+Bug fix #1 (the trial): the question opens `/dev/tty` twice, once to write
+and once to read.
+
 ## 2026-10-22 — a dispatcher logs in on the subscription, and the Haiku billing check (Phase 386)
 
 A procedure, not code. It is here because the fleet's dispatcher will run

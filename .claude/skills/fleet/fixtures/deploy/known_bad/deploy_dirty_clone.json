@@ -1,0 +1,4 @@
+{"what": "A deploy outcome with an uncommitted file left in the clone: what the operator would apply is not what was committed and tested.",
+ "write": {"docs/phases/in_progress/990_notes.md": "not committed\n"},
+ "commit": false,
+ "refusal": "uncommitted changes in the clone"}

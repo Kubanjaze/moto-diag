@@ -31,12 +31,14 @@ import test_phase390_resume as R  # noqa: E402
 import test_phase391_dispatcher as R391  # noqa: E402
 import test_phase392_next_mission as R392  # noqa: E402
 import test_phase393_quality_report as R393  # noqa: E402
+import test_phase395_dispatcher_deploy as R395  # noqa: E402
 from test_phase390_resume import ledger, w  # noqa: E402
 
 #: Where a kill point's test may live: 390's file, since Phase 391 the
-#: Quartermaster's, since Phase 392 the next mission's, and since Phase 393
-#: the weekly page's: stages 390 did not have.
-MODULES = (R, R391, R392, R393)
+#: Quartermaster's, since Phase 392 the next mission's, since Phase 393
+#: the weekly page's, and since Phase 395 the close-out after the database
+#: step's: stages 390 did not have.
+MODULES = (R, R391, R392, R393, R395)
 
 assert w and ledger  # the fixtures, imported for their names
 
