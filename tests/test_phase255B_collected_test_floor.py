@@ -446,8 +446,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: (17), test_phase395_dispatcher_deploy.py (12), test_phase395_q1.py (9),
 #: and the new stage's kill point in test_phase390_resume_contract.py (1).
 #: Measured: 12049.
+#: audit_events joins SERVER_WRITES as a whole table (K59, before Phase 348's
+#: build), by a diff of collected ids against master at fae8378 (12049):
+#: +6 -0, all in test_phase383_server_writes.py (TestAWholeTableIsSetAside 3,
+#: TestAWholeTableKeepsItsControls 3). Measured: 12055.
 #:
-COLLECTED_TEST_FLOOR = 12049
+COLLECTED_TEST_FLOOR = 12055
 
 
 def _collected_count() -> int:

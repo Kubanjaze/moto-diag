@@ -1,5 +1,23 @@
 # deploy — changelog
 
+## 2026-10-29 — audit_events joins SERVER_WRITES as a whole table (K59, before Phase 348)
+
+The operator, 2026-10-29: "audit_events joins SERVER_WRITES as a whole
+table: it is append-only and only the server writes it." That changes a
+gate's definition (F212), so it is the operator's (K59). It is built here, on
+master, before 348: 395's database step runs only master's deploy tools, and
+`engineer.verify_deploy` refuses a phase branch that changes
+`.claude/skills/deploy/` (the operator chose "on master first").
+
+`deploy.py`: `WHOLE_TABLE`, and `SERVER_WRITES["audit_events"]` set to it.
+For such a table `server_masked` sets aside each row the running API adds
+(`audit_events <rowid> added`), except one the approved exact diff names as
+added; a changed or removed row stays in the diff and refuses the apply or
+fails verify-live, as before. Until 348's migration makes the table, the
+entry matches nothing. Held by `tests/test_phase383_server_writes.py`
+(the pin, and six tests: three that set aside, three controls), each class
+seen to go red on a planted break.
+
 ## 2026-10-29 — through the fleet (Phase 395, K58, F232)
 
 `through_fleet.py`, new: the work of the paste block the fleet hands the

@@ -131,7 +131,10 @@ through `apply-live`, never through a restart.
      operator's 2A, Phase 383). Each one set aside is printed and named in
      the live diff; any other change refuses. A field the approved diff
      names is never set aside. F210 records where the list stops holding,
-     before onboarding (330);
+     before onboarding (330). Since K59, `audit_events` (Phase 348's trail)
+     is on the list as a whole table: every row the API adds to it is set
+     aside, and a changed or removed row still refuses, since the table is
+     append-only;
    - a fresh dry run on a new copy stays in scope;
    - **that fresh run equals the committed exact diff, field for field**,
      clock values masked (F172, Phase 357). A diff file written before
