@@ -50,3 +50,12 @@ The commit guard accepts a change to `migrations.py` only with a passing `wholet
 - `wholetree.sh --full` on the staged tree without the route, nothing unstaged or untracked: **PASSED — 4986 passed, 36 skipped** (1013.1 s wall), exit 0, record for that tree. Committed as `c19f2ab`.
 - **The edit guard blocked `mv` writing into `src/`** when the route came back from `/fleet/run/hold348/` (moving it out had been allowed). The guard is left as it is; the route, its test and the wiring test were written back with the Write tool, each checked byte-identical to the held copy with `cmp`, and the two `app.py` lines and the `audit` tag restored with the Edit tool. That makes three guard blocks this phase, each for a different command (a Python script body, `sed -i`, `mv`), none of them the same thing twice.
 - **`COLLECTED_TEST_FLOOR` 12055 → 12133**, by a diff of collected ids against master at `d76b865` (12056 collected in a worktree of master): +77 −0, all in the seven `test_phase348_*` files.
+
+## 2026-10-30: Stopped before the regression of record: Gate 11 waits on the phone app's snapshot
+
+`wholetree.sh --full` on `fed9e47`, a clean tree: **4 failed, 4982 passed, 36 skipped** (1068.4 s wall), exit 1. Fast mode had passed.
+
+- All four are one cause: Gates 12, 13 and 14 each re-run Gate 11 (`test_phase240_gate12.py`, `test_phase250_gate13.py` twice, `test_phase258_gate14.py`), and Gate 11's `test_every_live_path_is_in_the_committed_snapshot` fails because the mobile repository's `api-schema/openapi.json` has no `/v1/shop/{shop_id}/audit` (measured on its own earlier this session; the schema test passes, the route adds no request schema).
+- This session cannot refresh the snapshot: the mobile checkout is read-only in the fence and there is no network. The gate is not loosened.
+- The operator's answer (part e) asked for exactly this stop. So: kind `test-cannot-be-green`; no regression of record run; nothing closed out; no database step yet. Built and committed at `c19f2ab` and `fed9e47`, with this entry after them.
+- After the operator's refresh and push of these commits, the next session runs `wholetree.sh --full`, then `regression.sh`, then ends with the outcome `deploy` (Logic item 9).
