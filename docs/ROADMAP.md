@@ -622,7 +622,7 @@ Running MotoDiag as a production service: observability, support, backup, featur
 | 345 | Cloud backup + sync | 🔲 | S3 encrypted backups, automatic sync, point-in-time restore |
 | 346 | Multi-location / franchise support | 🔲 | Shared customers across locations, inter-location parts transfer, centralized reporting |
 | 347 | Real-time sync between devices | 🔲 | Desktop ↔ mobile ↔ web real-time data sync, conflict resolution |
-| 348 | Audit log (who did what, when) | 🔲 | Immutable event log, security audit trail, compliance readiness |
+| 348 | Audit log (who did what, when) | 🚧 | Immutable event log, security audit trail, compliance readiness |
 | 349 | Feature flags / gradual rollout | 🔲 | LaunchDarkly-style feature flags, percentage rollouts, kill switches |
 | 350 | A/B testing framework | 🔲 | Experiment tracking, conversion metrics, feature comparison |
 | 351 | Admin panel for support staff | 🔲 | Customer lookup, account management, subscription changes, impersonation for debugging |
