@@ -206,3 +206,29 @@ The Red Team sent PR #40 back with three findings; each is a document fix, and n
 The Red Team sent PR #40 back with two findings; each is fixed by deleting words, and no code changed, so the regression of record stands.
 - **[factual] The close-out said the Red Team's pass had not happened**, which round 1 made untrue. The sentence is deleted from v1.1's Deviations, from this log's close-out entry and from the handoff; the bug-fix half stays. The table the dispatcher commits when a round clears records the pass.
 - **[wording] "innermost"** deleted from v1.1's ticked item 4, which the Deviation on the middleware's position contradicted.
+
+## Refuter pass
+
+| claim | verdict | quote | source | round · kind · outcome |
+|---|---|---|---|---|
+| The middleware stack, outermost first, is RequestId, RateLimit, AccessLog, Audit, CORS (Deviation) | kept | "app.add_middleware(AuditMiddleware)  # Phase 348 — inside the rate limit" | src/motodiag/api/app.py p. 99 | 3 · none · kept |
+| `_request_db_path(request, resolver=None)` keeps the rate limiter's seam (Deviation) | kept | "def _request_db_path(request: Request, resolver=None) -> str:" | src/motodiag/api/middleware.py p. 81 | 3 · none · kept |
+| The hash is SHA-256 over compact JSON of [prev_hash, *HASHED_COLUMNS], ensure_ascii on (item 3) | kept | "payload = json.dumps([prev_hash, *values], separators=(\",\", \":\"), ensure_ascii=True)" | src/motodiag/audit/log.py p. 77 | 3 · none · kept |
+| HASHED_COLUMNS is the fifteen fields from id to status in column order | kept | "\"method\", \"path\", \"endpoint\", \"path_params\", \"shop_id\", \"status\"," | src/motodiag/audit/log.py p. 32 | 3 · none · kept |
+| A failed audit write is logged at ERROR on motodiag.audit with the request id and never fails the request | kept | "\"audit write failed rid=%s %s %s\", rid, request.method," | src/motodiag/api/middleware.py p. 283 | 3 · none · kept |
+| The login sets the caller to the user and the new session | kept | "request.state.caller = Caller(row.user_id, \"session\", row.id)" | src/motodiag/api/routes/auth.py p. 116 | 3 · none · kept |
+| The reader gates on manage_users and returns items and next_before_id (the last id when the page is full) | kept | "\"next_before_id\": items[-1][\"id\"] if len(items) == limit else None," | src/motodiag/api/routes/audit.py p. 63 | 3 · none · kept |
+| `audit list` shows 50 rows unless --limit says otherwise (Deviation) | kept | "@click.option(\"--limit\", type=int, default=50, show_default=True)" | src/motodiag/cli/audit.py p. 46 | 3 · none · kept |
+| SCHEMA_VERSION = 88 in database.py (Deviation) | kept | "SCHEMA_VERSION = 88  # Phase 348: the audit log, audit_events (migration 088)" | src/motodiag/core/database.py p. 10 | 3 · none · kept |
+| Two schema-head pins in test_phase383_media_paths.py changed: one to "87 recorded once", one to ">= 87" | kept | "assert _cell(db, \"select max(version) from schema_version\") >= 87" | tests/test_phase383_media_paths.py p. 352 | 3 · none · kept |
+| COLLECTED_TEST_FLOOR 12055 → 12133, +77 −0 against master at d76b865 | kept | "COLLECTED_TEST_FLOOR = 12133" | tests/test_phase255B_collected_test_floor.py p. 460 | 3 · none · kept |
+| 12028 passed + 105 skipped = 12133, the floor | kept | "12028 + 105 = 12133, the floor `COLLECTED_TEST_FLOOR` was raised to." | docs/phases/completed/348_phase_log.md p. 173 | 3 · none · kept |
+| Mutations 12/12 red | kept | "12/12 red" | docs/phases/completed/348_mutate.out p. 13 | 3 · none · kept |
+| Live after the apply: scope problems none, equal to the approved diff, 0 set aside, F158 census 41 | kept | "**Equals the approved exact diff:** `yes`" | docs/phases/completed/348_live_diff.md p. 4 | 3 · none · kept |
+| Live gained schema_version 88 and the four objects | kept | "- added rowid 87: (88, '2026-10-30 16:12:25')" | docs/phases/completed/348_live_diff.md p. 56 | 3 · none · kept |
+| SERVER_WRITES carries audit_events as WHOLE_TABLE at deploy.py line 178 (phase log) | kept | "\"audit_events\": WHOLE_TABLE}" | .claude/skills/deploy/deploy.py p. 178 | 3 · none · kept |
+| K59's recorded words are the ones v1.1 quotes | kept | "\"audit_events joins SERVER_WRITES as a whole table: it is append-only and only the server writes it.\"" | docs/decisions.md p. 58 | 3 · none · kept |
+| 348 is row 6 of "Next, in order", and 385 follows it (v1.1, handoff) | kept | "\| 7 \| 385 \| shop \| fleet \| nothing \| 2026-10-21 · K53 \|" | docs/reports/2026-10-12_plan_of_record.md p. 19 | 3 · none · kept |
+| Item 8's test allows api_keys last_used_at lines beside one audit line per event (Deviation) | kept | "assert all(a.startswith(\"api_keys \") and a.endswith(\" last_used_at\")" | tests/test_phase348_server_writes.py p. 73 | 3 · none · kept |
+| A database without the table answers as before, with one ERROR line naming the request id | kept | "assert r.headers[\"X-Request-ID\"] in errors[0].getMessage()" | tests/test_phase348_audit_middleware.py p. 171 | 3 · none · kept |
+| The ROADMAP row is closed with its date and the regression line | kept | "Regression 12028 passed / 0 failed / 105 expected skips at `adc4840`, coverage 87.70%, inside the fence." | docs/ROADMAP.md p. 625 | 3 · none · kept |
