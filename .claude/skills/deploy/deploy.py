@@ -168,21 +168,37 @@ def diff(a: dict, b: dict) -> dict:
 #: (`auth/api_key_repo.py`). Set aside only where LIVE is compared with a
 #: backup; the dry runs diff copies no server writes. F210 records where a
 #: list stops holding: a shop's own traffic.
-SERVER_WRITES: dict[str, frozenset[str]] = {"api_keys": frozenset({"last_used_at"})}
+#:
+#: K59 (Phase 348, the operator): "audit_events joins SERVER_WRITES as a whole
+#: table: it is append-only and only the server writes it." For a WHOLE_TABLE
+#: entry the rows the API adds are set aside; a row changed or removed is not,
+#: since the table's triggers refuse both, so either one is drift.
+WHOLE_TABLE: frozenset[str] = frozenset({"*"})
+SERVER_WRITES: dict[str, frozenset[str]] = {"api_keys": frozenset({"last_used_at"}),
+                                            "audit_events": WHOLE_TABLE}
 
 
 def server_masked(d: dict, approved: dict | None) -> tuple[dict, list[str]]:
     """The diff without the changes confined to SERVER_WRITES, and each one
-    set aside, as `table rowid column`.
+    set aside, as `table rowid column` (`table rowid added` for a row of a
+    WHOLE_TABLE entry).
 
     A row whose other fields changed stays, without the listed field. A field
     the approved exact diff names is never set aside: that change is the
-    migration's, and must equal what was approved.
+    migration's, and must equal what was approved. Nor is a row it names as
+    added to a WHOLE_TABLE entry.
     """
     named = (approved or {}).get("rows", {})
     out, aside = {}, []
     for t, x in d.items():
         listed = SERVER_WRITES.get(t, frozenset())
+        if listed == WHOLE_TABLE:
+            keep = set(named.get(t, {}).get("added", {}))
+            added = [k for k in x["added"] if str(k) in keep]
+            aside += [f"{t} {k} added" for k in x["added"] if str(k) not in keep]
+            if added or x["changed"] or x["removed"]:
+                out[t] = {**x, "added": added}
+            continue
         if not listed or not x["changed"]:
             out[t] = x
             continue

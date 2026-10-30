@@ -159,6 +159,88 @@ class TestAMigrationThatWritesTheColumn:
 
 
 def test_the_list_is_exactly_this():
-    """A column joins the list by a phase that measured the API writing it."""
-    assert D.SERVER_WRITES == {"api_keys": frozenset({"last_used_at"})}
+    """A column joins the list by a phase that measured the API writing it;
+    a whole table by the operator's word (K59, audit_events)."""
+    assert D.SERVER_WRITES == {"api_keys": frozenset({"last_used_at"}),
+                               "audit_events": D.WHOLE_TABLE}
     assert SCOPE["tables"].keys().isdisjoint(D.SERVER_WRITES)
+
+
+def _with_audit(env):
+    """live already carries audit_events, as after Phase 348's migration
+    (its triggers left out, so a control can change and remove a row)."""
+    _sql(env["live"],
+         "create table audit_events (id integer primary key, method text, path text)",
+         "insert into audit_events values (1, 'POST', '/v1/auth/login')")
+
+
+def _audit_request(env, n: int = 2):
+    """What 348's middleware does on a write request: one row appended."""
+    _sql(env["live"], f"insert into audit_events values ({n}, 'POST', '/v1/shop/1/members')")
+
+
+class TestAWholeTableIsSetAside:
+    """K59: the rows the running API adds to audit_events are set aside where
+    live is compared with a backup."""
+
+    def _ready(self, env):
+        _with_audit(env)
+        assert _dryrun(env) == 0
+        _commit_diff(env)
+
+    def test_rows_added_between_the_dry_run_and_the_apply(self, env, capsys):
+        self._ready(env)
+        _audit_request(env, 2)
+        _audit_request(env, 3)
+        assert _apply(env) == 0
+        live_diff = D.diff_path(env["repo"], PHASE, "live").read_text()
+        assert "Equals the approved exact diff:** `yes`" in live_diff
+        assert "audit_events 2 added, audit_events 3 added" in live_diff
+
+    def test_a_row_added_after_the_apply_passes_verify_live(self, env, capsys):
+        self._ready(env)
+        assert _apply(env) == 0
+        _audit_request(env)
+        code, out = _verify(env, capsys)
+        assert code == 0, out
+        assert "audit_events 2 added" in out
+
+    def test_a_row_the_approved_diff_names_as_added_is_kept(self):
+        d = {"audit_events": {"cols": ["id"], "added": [1, 2], "removed": [], "changed": [],
+                              "a": {}, "b": {1: (1, 1), 2: (2, 2)}}}
+        out, aside = D.server_masked(d, {"rows": {"audit_events": {"added": {"1": {"id": 1}}}}})
+        assert out["audit_events"]["added"] == [1]
+        assert aside == ["audit_events 2 added"]
+
+
+class TestAWholeTableKeepsItsControls:
+    """Append-only: a changed or removed audit row is drift, before the apply
+    and after it."""
+
+    def test_a_changed_row_before_the_apply(self, env, capsys):
+        _with_audit(env)
+        assert _dryrun(env) == 0
+        _commit_diff(env)
+        _audit_request(env)
+        _sql(env["live"], "update audit_events set path = '/v1/x' where id = 1")
+        assert "changed since the dry run" in _refusal(env, capsys)
+
+    def test_a_removed_row_after_the_apply(self, env, capsys):
+        _with_audit(env)
+        assert _dryrun(env) == 0
+        _commit_diff(env)
+        assert _apply(env) == 0
+        _sql(env["live"], "delete from audit_events where id = 1")
+        code, out = _verify(env, capsys)
+        assert code == 3, out
+
+    def test_another_table_s_added_row_after_the_apply(self, env, capsys):
+        """The same kind of change, outside the list."""
+        _with_audit(env)
+        _with_keys(env)
+        assert _dryrun(env) == 0
+        _commit_diff(env)
+        assert _apply(env) == 0
+        _sql(env["live"], "insert into devices values (2, null)")
+        code, out = _verify(env, capsys)
+        assert code == 3, out
