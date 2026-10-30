@@ -147,6 +147,7 @@ What the build did that v1.0 does not say, each with its reason. The phase log h
 - **Choices the plan left open, made in the build:** `AuditEvent` is a frozen dataclass of the row's fields; `verify_chain` returns a `ChainReport`; a removed middle row is named at the row after the gap (its `prev_hash` no longer matches); the stored `endpoint` is the handler's `__name__`; `path_params` is compact JSON with sorted keys, null when the path has none; the reader returns `items` and `next_before_id` (the last id when the page is full, else null); `audit list` shows 50 rows unless `--limit` says otherwise.
 - **Two schema-head pins changed in `tests/test_phase383_media_paths.py`.** They asserted `max(version) == 87` and went red with 088 (F124's family). One now asserts that version 87 is recorded once, the other `>= 87`. The plan's Tests section names a test that pins the schema head as the one kind of existing test that may change; no other test pins it (the search is in the phase log).
 - **Item 8's test allows `api_keys … last_used_at` lines.** The keyed 403 request also moves the key's `last_used_at`, which 383's entry already sets aside; the test asserts one audit line per event and that every other line is that one.
+- **`src/motodiag/core/database.py` changed too**, though item 2 names only `migrations.py`: `SCHEMA_VERSION = 88`, which `tests/test_phase240c_severity_ordering.py` holds equal to the last migration.
 - **Two build commits instead of one** (`c19f2ab`, `fed9e47`): the commit guard wants a passing `--full` record to accept a change to `migrations.py`, and Gate 11 kept `--full` red while the reader route was in the tree without the phone app's snapshot. The first commit was everything but the route; the second added it. No guard was loosened.
 - **One commit made without the whole-tree command first** (`adc4840`, a phase-log entry, not pushed), against rule 3. The `--full` run of record covered exactly that tree; every later commit ran it first.
 - **Three edit-guard blocks**, each a different command (a Python script body, `sed -i` on a docs file, `mv` back into `src/`). The guard was left as it is each time; the Edit and Write tools did the work.
@@ -173,5 +174,7 @@ Regression of record: 12028 passed, 0 failed, 105 skipped, 0 errors at `adc4840`
 
 | version | date | what |
 |---|---|---|
-| 1.0 | 2026-10-29 | the plan, approved by the Executive Officer on issue #36 (`85b2db5`) |
+| 1.0 | 2026-10-29 | the first plan (`f1a4146`): the log an append-only SQLite file of its own (`audit_path_for`, `ensure_log`, item 7's `audit_db_path`), item 8's finding on the deploy backup, a five-part stop, and no migration |
+| 1.0 | 2026-10-29 | re-planned to the table design on K58 and K59 (`b992068`): migration 088, new items 8 and 9, the stop's part (a) removed; `audit_db_path` and the backup finding fell with the file; revised for the Executive Officer (`086a29f`, `cb033f9`) and on the operator's word (`22f600b`, `85b2db5`) |
+| 1.0 | 2026-10-30 | `85b2db5`, approved by the Executive Officer on issue #36: the plan built |
 | 1.1 | 2026-10-30 | built, applied to live, closed: Deviations and Results |

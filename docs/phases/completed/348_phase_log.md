@@ -194,3 +194,10 @@ The operator ran the dry run on a copy on the home desktop, and answered (`348_d
 - No refute pass ran: the plan names none for this phase.
 - v1.1 written (Deviations, Results with the regression line and the live outcome, the version history); the ROADMAP row closed; the root `phase_log.md` pointer; the handoff `docs/handoffs/2026-10-30_348_closed.md`, with the operator's steps after the merge (the server restarted and the first event seen, the phone app's snapshot pushed, its types regenerated on the Mac).
 - Moved to `docs/phases/completed/` with `git mv`: the implementation doc, this log, `348_step0.md`, `348_mutate.py`, `348_mutate.out`, `348_deploy_scope.json`, `348_dryrun_diff.md`, `348_deploy_answer.md` and `348_live_diff.md`.
+
+## 2026-10-30: The Red Team's round 1 (documents only)
+
+The Red Team sent PR #40 back with three findings; each is a document fix, and no code changed, so the regression of record stands.
+- **[factual] The version history named one v1.0.** The plan was first written as an append-only file of its own (`f1a4146`) and re-planned to migration 088 on K58 and K59 (`b992068`), then revised (`086a29f`, `cb033f9`, `22f600b`) to `85b2db5`, the approved plan built. v1.1's Version history now has the three rows, from `git log` of the document.
+- **[wording] `src/motodiag/core/database.py` was in no plan section.** A Deviation now names it (`SCHEMA_VERSION = 88`).
+- **[wording] The shop guide.** `docs/guide/shop-workflow.md`: ", 50 at a time" deleted from the `audit list` line, since there is no next page; "the same trail" became "that shop's events", since the route shows one shop's.

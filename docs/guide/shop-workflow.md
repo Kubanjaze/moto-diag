@@ -331,7 +331,7 @@ or a staff login) is written to an activity log that is never changed
 or deleted. On the server:
 
 ```bash
-motodiag audit list                    # newest first, 50 at a time
+motodiag audit list                    # newest first
 motodiag audit list --shop 1 --since 7d
 motodiag audit list --user tess --json
 motodiag audit verify                  # is the log intact?
@@ -350,6 +350,6 @@ chain intact
 ```
 
 `verify` exits non-zero and names the first bad row if anything in the
-log was altered or removed. From the app, the shop's owner reads the
-same trail at `GET /v1/shop/{shop_id}/audit` (see the
+log was altered or removed. From the app, the shop's owner reads that
+shop's events at `GET /v1/shop/{shop_id}/audit` (see the
 [API guide](api.md)).
