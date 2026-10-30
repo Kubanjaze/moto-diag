@@ -622,7 +622,7 @@ Running MotoDiag as a production service: observability, support, backup, featur
 | 345 | Cloud backup + sync | 🔲 | S3 encrypted backups, automatic sync, point-in-time restore |
 | 346 | Multi-location / franchise support | 🔲 | Shared customers across locations, inter-location parts transfer, centralized reporting |
 | 347 | Real-time sync between devices | 🔲 | Desktop ↔ mobile ↔ web real-time data sync, conflict resolution |
-| 348 | Audit log (who did what, when) | 🚧 | Immutable event log, security audit trail, compliance readiness |
+| 348 | Audit log (who did what, when) | ✅ | **CLOSED 2026-10-30.** Migration 088: `audit_events`, append-only by two triggers, each row hash-chained to the one before. Every API write (POST, PUT, PATCH, DELETE) is recorded by one middleware inside the rate limit, with 303's caller; a failed audit write never fails the request. The login records its user. `GET /v1/shop/{shop_id}/audit` under `manage_users`; `motodiag audit list`, `verify`, `export`; nothing ever deleted. Live applied by the operator's yes, equal to the approved diff. 12/12 mutations. Regression 12028 passed / 0 failed / 105 expected skips at `adc4840`, coverage 87.70%, inside the fence. |
 | 349 | Feature flags / gradual rollout | 🔲 | LaunchDarkly-style feature flags, percentage rollouts, kill switches |
 | 350 | A/B testing framework | 🔲 | Experiment tracking, conversion metrics, feature comparison |
 | 351 | Admin panel for support staff | 🔲 | Customer lookup, account management, subscription changes, impersonation for debugging |

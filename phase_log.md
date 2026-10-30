@@ -3882,3 +3882,8 @@ Write-up: [`392_implementation.md`](docs/phases/completed/392_implementation.md)
 
 Log: [`docs/phases/completed/303_phase_log.md`](docs/phases/completed/303_phase_log.md).
 Write-up: [`303_implementation.md`](docs/phases/completed/303_implementation.md).
+
+## Phase 348 — Audit log (who did what, when) — CLOSED 2026-10-30
+
+Log: [`docs/phases/completed/348_phase_log.md`](docs/phases/completed/348_phase_log.md).
+Write-up: [`348_implementation.md`](docs/phases/completed/348_implementation.md).

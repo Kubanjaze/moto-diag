@@ -1,6 +1,6 @@
 # Phase 348 — Audit log (who did what, when)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-29
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-30 (v1.0 `85b2db5`)
 
 ---
 
@@ -21,6 +21,8 @@ This phase ships the row's three promises, as an extension (Step 0's classificat
 A restore of the main database from a backup takes the trail back to the backup's moment with everything else; the deploy skill's backups (`deploy.py backup`, K27) carry it with the rest of the database.
 
 ## Logic
+
+**v1.1:** built in this order, items 1 to 10, with two stops (items 1 and 6's Gate 11) and the database step between the regression of record and the close-out; what differs from the text below is in Deviations, and what came of each item is in Results.
 
 The build runs in this order. Item 1 is the Chief Engineer's first act, before any code, for the reason 303 measured and recorded (`docs/phases/completed/303_implementation.md`, Logic item 1): a stopped Engineer's commits are never pushed, so anything built before a stop is lost to the build.
 
@@ -124,14 +126,52 @@ The build runs in this order. Item 1 is the Chief Engineer's first act, before a
 
 ## Planned items
 
-- [ ] The one stop, first: kind `fork`, the four-part question with the Captain's recommendations, the sentence asking for #39's merge only if `audit_events` is missing from `origin/master`'s `deploy.py`, and the operator's way back as one paste block; the operator's words land in `docs/phases/in_progress/348_phase_log.md` and the Engineer's next session reads them
-- [ ] Migration 088: the table, the index, the two triggers, the rollback; `348_deploy_scope.json`
-- [ ] `audit/log.py`: `HASHED_COLUMNS`, the chain, `verify_chain`, `list_events`, `export_events`
-- [ ] `api/middleware.py`: `AuditMiddleware` innermost, and the one db-path helper
-- [ ] `api/routes/auth.py`: the login sets the caller
-- [ ] `api/routes/audit.py`, `app.py`, `openapi.py`: the shop's reader under `manage_users`
-- [ ] `cli/audit.py` and its registration: `list`, `verify`, `export`
-- [ ] `tests/test_phase348_server_writes.py`: the real writes set aside under K59's entry
-- [ ] Tests, the wiring test, the mutation script, the floor, the ratchet's pins
-- [ ] #39's entry read on the clone's `origin/master` (no fetch and no merge: the branch already carries master and #39), or the stop with kind `test-cannot-be-green` if it lacks the entry; then the regression of record and the outcome `deploy`; the operator's paste block applies 088 to live
-- [ ] The close-out round: `docs/guide/api.md`, `docs/guide/shop-workflow.md`, v1.1, the row, the handoff with the operator's steps (pull, restart, first look at the trail); the merge by the operator's hand and `verify_phase.sh` follow it
+- [x] The one stop, first: kind `fork`, the four-part question with the Captain's recommendations, the sentence asking for #39's merge only if `audit_events` is missing from `origin/master`'s `deploy.py`, and the operator's way back as one paste block; the operator's words land in `docs/phases/in_progress/348_phase_log.md` and the Engineer's next session reads them
+- [x] Migration 088: the table, the index, the two triggers, the rollback; `348_deploy_scope.json`
+- [x] `audit/log.py`: `HASHED_COLUMNS`, the chain, `verify_chain`, `list_events`, `export_events`
+- [x] `api/middleware.py`: `AuditMiddleware` innermost, and the one db-path helper
+- [x] `api/routes/auth.py`: the login sets the caller
+- [x] `api/routes/audit.py`, `app.py`, `openapi.py`: the shop's reader under `manage_users`
+- [x] `cli/audit.py` and its registration: `list`, `verify`, `export`
+- [x] `tests/test_phase348_server_writes.py`: the real writes set aside under K59's entry
+- [x] Tests, the wiring test, the mutation script, the floor, the ratchet's pins
+- [x] #39's entry read on the clone's `origin/master` (no fetch and no merge: the branch already carries master and #39), or the stop with kind `test-cannot-be-green` if it lacks the entry; then the regression of record and the outcome `deploy`; the operator's paste block applies 088 to live
+- [x] The close-out round: `docs/guide/api.md`, `docs/guide/shop-workflow.md`, v1.1, the row, the handoff with the operator's steps (pull, restart, first look at the trail); the merge by the operator's hand and `verify_phase.sh` follow it
+
+## Deviations
+
+What the build did that v1.0 does not say, each with its reason. The phase log has the dated detail.
+
+- **`AuditMiddleware` is inside the rate limit, but not innermost.** Item 4 says "registered innermost". It is registered just before `AccessLogMiddleware`, so outermost first the stack is RequestId, RateLimit, AccessLog, Audit, CORS: CORS stays inside it. What the item needs from the position holds: a request the limiter refuses never reaches it (the 429 test and its control), and every route's response passes through it.
+- **`_request_db_path(request, resolver=None)`.** Item 4 names `_request_db_path(request)`. The optional resolver keeps `RateLimitMiddleware`'s existing seam, so the rate-limit tests pass with no edit, as the item requires.
+- **Choices the plan left open, made in the build:** `AuditEvent` is a frozen dataclass of the row's fields; `verify_chain` returns a `ChainReport`; a removed middle row is named at the row after the gap (its `prev_hash` no longer matches); the stored `endpoint` is the handler's `__name__`; `path_params` is compact JSON with sorted keys, null when the path has none; the reader returns `items` and `next_before_id` (the last id when the page is full, else null); `audit list` shows 50 rows unless `--limit` says otherwise.
+- **Two schema-head pins changed in `tests/test_phase383_media_paths.py`.** They asserted `max(version) == 87` and went red with 088 (F124's family). One now asserts that version 87 is recorded once, the other `>= 87`. The plan's Tests section names a test that pins the schema head as the one kind of existing test that may change; no other test pins it (the search is in the phase log).
+- **Item 8's test allows `api_keys … last_used_at` lines.** The keyed 403 request also moves the key's `last_used_at`, which 383's entry already sets aside; the test asserts one audit line per event and that every other line is that one.
+- **Two build commits instead of one** (`c19f2ab`, `fed9e47`): the commit guard wants a passing `--full` record to accept a change to `migrations.py`, and Gate 11 kept `--full` red while the reader route was in the tree without the phone app's snapshot. The first commit was everything but the route; the second added it. No guard was loosened.
+- **One commit made without the whole-tree command first** (`adc4840`, a phase-log entry, not pushed), against rule 3. The `--full` run of record covered exactly that tree; every later commit ran it first.
+- **Three edit-guard blocks**, each a different command (a Python script body, `sed -i` on a docs file, `mv` back into `src/`). The guard was left as it is each time; the Edit and Write tools did the work.
+- **The handoff's server step checks the trail with a refused login, not a real one.** Item 10 says "log in once". A wrong login is recorded as an anonymous 401 event, so it shows the first event and an intact chain without the operator typing a password into a paste block.
+- **`docs/guide/api.md`'s area table is not otherwise corrected.** The item asks for the `audit` tag and the opening counts. The other rows are not all what the schema counts (`videos` 5 against 6; no row for `auth`, 7, or `shops`, 1); left as found, named in the handoff.
+- **No bug fixes and no refute pass.** No defect was found in the phase's own committed code, so there is no bug-fix register; No refute pass ran.
+
+## Results
+
+- **Shipped.** Migration 088 (`audit_events`, `idx_audit_events_shop`, the triggers `audit_events_no_update` and `audit_events_no_delete`); the store `src/motodiag/audit/log.py` (the hash chain from `GENESIS`, `HASHED_COLUMNS`, `verify_chain`, `list_events`, `export_events`); `AuditMiddleware`, recording every POST, PUT, PATCH and DELETE with its caller, and never failing a request on an audit write that fails; the login's caller line; `GET /v1/shop/{shop_id}/audit` under `manage_users`; `motodiag audit list`, `verify` and `export`; the guides (`docs/guide/api.md`, `docs/guide/shop-workflow.md`).
+- **The operator's answers.** First stop (`fork`): "go with your picks for all four" (the phase log, 22745a8). Second stop (`test-cannot-be-green`, Gate 11): the phone app's snapshot refreshed as moto-diag-mobile `04be61c`, committed on the desktop and not pushed; it is pushed after the merge, and `src/api-types.ts` regenerated on the Mac (the handoff).
+- **Tests.** Seven new files, `tests/test_phase348_*.py`; `COLLECTED_TEST_FLOOR` 12055 → 12133 by a diff of collected ids against master at `d76b865` (+77 −0). The ratchet's counts are all at their pins (ruff 1108, mypy 202, complex 25, big 5, helpers 19, swallowed 22).
+- **Mutations:** 12/12 red (`348_mutate.out`).
+- **`wholetree.sh --full`** on `adc4840`: 4986 passed, 36 skipped, exit 0.
+- **The regression of record**, as `regression.sh` printed it (the skip lines are in the phase log):
+
+Regression of record: 12028 passed, 0 failed, 105 skipped, 0 errors at `adc4840` (36 min 54 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0) (run inside the fleet's fence)
+
+  Line coverage of record: 87.70% at `adc4840` (the pin is 87.50%).
+- **Live.** The operator ran the dry run on a copy (`348_dryrun_diff.md`, sha256 `7a4572ebdd42037ce617a6d39b32c7af1574bdfa1e589a15885f1d97b25b4488`; scope problems none) and answered "yes" (`348_deploy_answer.md`). Live after the apply (`348_live_diff.md`): scope problems `none`; equal to the approved exact diff `yes`; 0 rows set aside as the running API's; F158 census 41, as on the copy. Live gained the table, the index, the two triggers and `schema_version` 88, and no existing row changed. The dispatcher checked it again with `verify-live`. The server still runs master's code, so nothing writes the table until 348 is merged and the service restarted (the handoff's first step).
+- **After the apply:** documents only (`5ce45c5` and the close-out commit), nothing under `src/`, `tests/`, `scripts/` or `.claude/`.
+
+## Version history
+
+| version | date | what |
+|---|---|---|
+| 1.0 | 2026-10-29 | the plan, approved by the Executive Officer on issue #36 (`85b2db5`) |
+| 1.1 | 2026-10-30 | built, applied to live, closed: Deviations and Results |

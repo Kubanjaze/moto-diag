@@ -1,3 +1,8 @@
+# Phase 348 — phase log: audit log (who did what, when)
+
+**Status:** Complete
+
+Built by the Chief Engineer in the fleet's fence, on `phase-348-audit-log-who-did-what-when`; the plan is `348_implementation.md` v1.0, approved by the Executive Officer on issue #36.
 
 ## 2026-10-30: The operator's answers to the Chief Engineer's stop
 
@@ -182,3 +187,10 @@ The operator ran the dry run on a copy on the home desktop, and answered (`348_d
 - **The guides** (Logic item 10). `docs/guide/api.md`: the opening count is now 89 routes over 112 operations, as `create_app().openapi()` counts them in this clone (89 paths, 112 operations; the `audit` tag has 1); the area table gains `audit`, and a paragraph below it names `GET /v1/shop/{shop_id}/audit`, its gate and its parameters, and the three `audit` commands. `docs/guide/shop-workflow.md` gains "See who did what" at its end, with `motodiag audit list` and `audit verify` as run against a fresh database (`MOTODIAG_DB_PATH` under `/fleet/run/g348`, never live). `tests/test_phase208_docs.py`: 20 passed.
 - **Noticed, not changed:** the same table's other rows are not all what the schema counts (`videos` 5 against 6, and no row for `auth`, 7, or `shops`, 1). The plan asks for the `audit` tag and the opening counts only, so the rest is left; the handoff names it.
 - No code changed after the live apply: everything this round commits is under `docs/`.
+
+## 2026-10-30: Close-out
+
+- No bug fixes: no defect was found in the phase's own committed code, so there is no bug-fix register. The one mypy error the new code first added was fixed before any commit (the entry "Items 2 to 8 built").
+- No refute pass ran: the plan names none for this phase.
+- v1.1 written (Deviations, Results with the regression line and the live outcome, the version history); the ROADMAP row closed; the root `phase_log.md` pointer; the handoff `docs/handoffs/2026-10-30_348_closed.md`, with the operator's steps after the merge (the server restarted and the first event seen, the phone app's snapshot pushed, its types regenerated on the Mac).
+- Moved to `docs/phases/completed/` with `git mv`: the implementation doc, this log, `348_step0.md`, `348_mutate.py`, `348_mutate.out`, `348_deploy_scope.json`, `348_dryrun_diff.md`, `348_deploy_answer.md` and `348_live_diff.md`.
