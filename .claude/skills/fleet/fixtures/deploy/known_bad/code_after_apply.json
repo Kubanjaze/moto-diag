@@ -1,0 +1,4 @@
+{"what": "The close-out round after the apply changes code: what reached the live database was tested and approved before this change.",
+ "write": {"src/motodiag/core/trial.py": "TRIAL = 2\n"},
+ "commit": true,
+ "refusal": "code changed after the live apply"}

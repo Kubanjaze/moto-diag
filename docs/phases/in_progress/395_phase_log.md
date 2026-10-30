@@ -38,3 +38,29 @@ stop. **The dry run runs in the block**, not in the dispatcher: the dry
 run's backup and retain-5 change the backup folder, which only the
 operator's paste should do, and a backup taken seconds before the apply is
 the one apply-live's "live still equals the backup" can hold.
+
+## 2026-10-29 — the build
+
+- **Guard blocks, each recorded, no guard changed.**
+  1. `git commit … && git push` in one command: the push guard refused
+     ("it would push a commit it never saw"). Run as two commands.
+  2. A Python script editing `engineer.py`: the edit guard refused ("a
+     Python script body writes to a path the edit guard cannot resolve,
+     and the body names src/ or tests/"); the body held the string
+     `src/motodiag/core/migrations.py`. The same edits made with the Edit
+     tool.
+  3. `sed -i` on `dispatcher.py`: the edit guard refused. Made with Edit.
+- **`through_fleet.py`** and its 14 tests, on a real git mirror and tmp
+  databases.
+- **The Engineer** (`deploy` outcome, `verify_deploy`, `CLOSEOUT`,
+  `verify_after_apply`, `migration_changes`), **the dispatcher**
+  (`engineer_deploy`, `deploy_block`, `fetch_applied`, `stage_deployed`,
+  the `deploy` hold in `held_for`, `resume`, `STAGE_RANK`), **Q1**
+  (`database_step`, `live_check`), **the Captain's and the XO's briefs**.
+- **A contract asked for the new stage's kill point**
+  (`tests/test_phase390_resume_contract.py`: every stage in `STAGE_RANK`
+  has one). `deployed` has one, `test_deployed_cut_in_its_close_out_session`,
+  and the contract's module list names 395's file, as 391–393 did.
+- **A contract kept Q1 read-only** (`tests/test_phase391_contract.py`: the
+  module runs only read-only git verbs). Q1's "committed" check uses
+  `cat-file -e HEAD:<path>`, already allowed, not `ls-files`.

@@ -1,0 +1,4 @@
+{"what": "A deploy outcome whose branch has no scope file: nothing says what the change may touch, and the dry run cannot check it.",
+ "remove": ["docs/phases/in_progress/990_deploy_scope.json"],
+ "commit": true,
+ "refusal": "no committed scope file"}

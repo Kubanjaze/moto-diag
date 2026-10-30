@@ -74,6 +74,15 @@ shape (do not copy its content). The document must have, as ## sections:
   kinds (a real fork, a threshold or rule's definition, a test that
   cannot be made green, a login or credential, a live-database change that
   alters or deletes rows), or "None expected";
+- "## The database step", only when the plan adds a migration to
+  src/motodiag/core/migrations.py: in plain words, what the change does to
+  the live database, each table, column and index it adds, and that it
+  changes or deletes no existing live row. With this section the migration
+  is in scope: the Engineer stops after the regression of record and the
+  operator applies it from one paste block, before the close-out. A
+  migration that changes or deletes existing live rows is still a rule-1
+  stop, listed under "Rule-1 stops anticipated"; a new table or column is
+  not;
 - Tests; Non-goals; Planned items (unticked checkboxes).
 No section may be empty, and no line may start with TBD, TODO, "to be
 written", "placeholder" or an ellipsis. Name no path under data/, no seed

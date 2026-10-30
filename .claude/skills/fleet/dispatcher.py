@@ -68,8 +68,10 @@ a token that is not the fleet's OAuth class, or ANTHROPIC_API_KEY set.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import datetime as dt
 import fcntl
+import io
 import json
 import os
 import pathlib
@@ -88,12 +90,14 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "closeout"))
 sys.path.insert(0, str(HERE.parent / "finding"))
+sys.path.insert(0, str(HERE.parent / "deploy"))
 sys.path.insert(0, str(HERE.parents[2] / "scripts"))
 import captain  # noqa: E402
 import closeout_check  # noqa: E402
 import code_quality  # noqa: E402
-import finding_check  # noqa: E402
+import deploy  # noqa: E402
 import engineer  # noqa: E402
+import finding_check  # noqa: E402
 import fleet_git  # noqa: E402
 import journal  # noqa: E402
 import plan_order  # noqa: E402
@@ -102,6 +106,7 @@ import quartermaster  # noqa: E402
 import red_team  # noqa: E402
 import roadmap_check  # noqa: E402
 import scout  # noqa: E402
+import through_fleet  # noqa: E402
 import xo  # noqa: E402
 import yeoman  # noqa: E402
 from labels import LABELS  # noqa: E402
@@ -181,6 +186,10 @@ STARTED_M = "<!-- fleet-started:"
 #: A hold for free space. Its own prefix, read by no due rule: once the
 #: operator takes `needs-hands` off, the stage it held is due again.
 SPACE_M = "<!-- fleet-space:"
+#: The database step handed to the operator (Phase 395, K58). Its own
+#: prefix, read by no due rule: once the operator takes `needs-hands` off,
+#: the close-out round after the apply is due.
+DEPLOY_M = "<!-- fleet-database-step:"
 #: A stop the record answered (Phase 392, K50): read by the Engineer's due rule.
 ANSWER_M = "<!-- fleet-answered:"
 #: The next mission's own marks (Phase 392, K48, K49): on the issue it opens,
@@ -193,7 +202,7 @@ _STARTED = re.compile(r"^<!-- fleet-started: rank=(\S+) run=(\S+) -->")
 _ENG_STARTED = re.compile(r"^<!-- fleet-engineer: started round=\d+(?: run=(\S+))? -->")
 #: The rank each journal's stage is said as, in markers and stop comments.
 STAGE_RANK = {"scout": "scout", "captain": "captain", "xo": "xo", "engineer": "engineer",
-              "recheck": "engineer",
+              "recheck": "engineer", "deployed": "engineer",
               "red_team": "red-team", "recommend": "captain", "quartermaster": "quartermaster",
               "digest": "digest", "next": "next", "quality": "quality"}
 _RED = re.compile(r"^<!-- fleet-red-team: verdict=(\w+) round=(\d+)", re.M)
@@ -641,6 +650,43 @@ def cut_session(entry: dict, run_dir: pathlib.Path) -> str | None:
         (p.stem for p in reversed(transcripts(run_dir)) if p.stem not in entry["known"]), None)
 
 
+def verify_live_here(clone: pathlib.Path, phase: str) -> tuple[int, str]:
+    """`deploy.verify_live` on the phase's files in `clone`, outside the fence,
+    with the fleet's own (master's) deploy code: live is only read, through
+    a copy (Phase 395). Exit 4 when live is not on this machine."""
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+        try:
+            rc = deploy.verify_live(phase, repo=clone)
+        except deploy.L.LiveElsewhere as e:
+            print(f"REFUSED: {e}")
+            rc = deploy.L.REFUSED
+    return rc, out.getvalue()
+
+
+def deploy_block(phase: str, branch: str, commit: str, issue: int) -> str:
+    """The paste block the operator runs on the home desktop (Phase 395).
+    Master's code runs it (the fleet's own checkout); its last line is
+    ALL GOOD or SOMETHING IS OFF."""
+    return f"""```bash
+bash <<'EOF'
+set -u
+PY=~/.local/state/motodiag/fleet/venv/bin/python
+STEP=~/motodiag/fleet/code/.claude/skills/deploy/through_fleet.py
+bad() {{ echo; echo "SOMETHING IS OFF: $1"; exit 1; }}
+[ -f "$STEP" ] || bad "the fleet's copy of the code has no database step; it is not on master yet"
+"$PY" "$STEP" {phase} {branch} {commit} </dev/null || exit 1
+TOLD="the change is made and checked, but the fleet could not be told"
+gh issue edit {issue} -R {REPO} --remove-label needs-hands </dev/null >/dev/null \\
+  || bad "$TOLD: take the needs-hands label off issue {issue} by hand"
+echo
+echo "The change is on the live database and checked."
+echo "The fleet finishes phase {phase} by itself now."
+echo "ALL GOOD"
+EOF
+```"""
+
+
 def session_ended(out: pathlib.Path) -> bool:
     """The Engineer's session wrote its final JSON: it ended, whatever came after."""
     try:
@@ -679,7 +725,9 @@ class Fleet:
                  check: Callable[..., Check] | None = None, sleep: Callable[[float], None] = time.sleep,
                  disks: dict[str, pathlib.Path] | None = None, trim: list[str] | None = None,
                  disk_usage: Callable[[pathlib.Path], tuple] = shutil.disk_usage,
-                 group_run: Callable[..., subprocess.CompletedProcess] = run_group):
+                 group_run: Callable[..., subprocess.CompletedProcess] = run_group,
+                 live_check: Callable[[pathlib.Path, str], tuple[int, str]] | None = None,
+                 deploy_root: pathlib.Path | None = None):
         self.state_dir, self.token, self.host, self.fence = state, token, host, fence
         self.workspace_docs, self.repo_url, self.sweep_hours = workspace_docs, repo_url, sweep_hours
         self.now = now or (lambda: dt.datetime.now().astimezone())
@@ -692,6 +740,10 @@ class Fleet:
         self.popen, self.sleep = popen, sleep
         self.check = check or self.check_run
         self.group_run = group_run
+        #: `verify-live` outside the fence (Phase 395): (its exit code, what it printed).
+        self.live_check = live_check or verify_live_here
+        #: Where the operator's database step makes each phase's checkout.
+        self.deploy_root = deploy_root or through_fleet.deploy_root()
         #: Free space is watched only where `main` names the disks (the desktop).
         self.disks, self.trim, self.disk_usage = disks or {}, trim, disk_usage
         self._skipped: set[tuple[int, str]] = set()
@@ -1441,7 +1493,73 @@ class Fleet:
                           f"Chief Engineer, phase {phase}: stopped ({result['kind']}). "
                           f"{result['question']}")
             return f"stopped: {result['kind']}"
+        if result["outcome"] == "deploy":
+            return self.engineer_deploy(issue, phase, branch, ident, run, result, rnd)
         return self.engineer_finish(issue, phase, branch, ident, run, result, rnd)
+
+    def engineer_deploy(self, issue: int, phase: str, branch: str, ident: fleet_git.Identity,
+                        run: pathlib.Path, result: dict, rnd: int) -> str:
+        """A `deploy`, checked as a `pr-ready` is (Phase 395, K58): the
+        model-free run on HEAD and `verify_deploy`; then the push, the hold
+        (`why: deploy`), one comment with the operator's paste block, and
+        `needs-hands`. Only the operator's paste reaches live; the fleet
+        waits for the label to come off (`stage_deployed`)."""
+        clone = run / "clone"
+        head = self.git("-C", str(clone), "rev-parse", "HEAD").stdout.strip()
+        self.log(f"issue {issue}: the database step: the model-free run on {head[:12]}")
+        try:
+            check = self.checked(clone, head, full=True)
+        except LowSpace as e:
+            # As engineer_finish's: `needs-hands` off runs it on this commit.
+            self.step("hold", lambda: journal.hold(run, {"issue": issue, "phase": phase,
+                                                         "rnd": rnd, "commit": head,
+                                                         "why": "space"}))
+            self.hold_for_space(issue, "engineer", str(e))
+            return "held: free space"
+        fails = engineer.verify_deploy(clone, phase, result, check.line if check.ok else None)
+        if not check.ok:
+            fails.append(f"the model-free run did not pass: {check.line or check.why}"[:400])
+        if fails:
+            again = not check.ok and not engineer.verify_deploy(clone, phase, result,
+                                                                result["regression_line"])
+            if again:
+                self.step("hold", lambda: journal.hold(run, {"issue": issue, "phase": phase,
+                                                             "rnd": rnd, "commit": head}))
+            self.escalate(issue, "engineer", "needs-admiral",
+                          f"Chief Engineer, phase {phase}: the work says the change to the live "
+                          f"database is ready to try, and the checks say it is not. "
+                          + " ".join(f"({i + 1}) {f}" for i, f in enumerate(fails))[:1500]
+                          + (" Only the run with no model failed: take `needs-admiral` off to "
+                             f"run it again on the same commit ({head[:12]})." if again else ""))
+            return "checks failed"
+        self.push_once(clone, head, rank="engineer", phase=phase, branch=branch, ident=ident,
+                       tested=lambda c: (check.ok and c == check.commit,
+                                         "not the commit the model-free run tested"))
+        self.step("hold", lambda: journal.hold(run, {"issue": issue, "phase": phase, "rnd": rnd,
+                                                     "commit": head, "why": "deploy"}))
+        scope = json.loads((deploy.scope_path(clone, phase)).read_text(encoding="utf-8"))
+        named = [*scope.get("schema", {}).get("added", []),
+                 *(f"{v} row(s) added to {t}" for t, s in scope.get("tables", {}).items()
+                   if (v := s.get("added")))]
+        self.say_once(issue, f"{DEPLOY_M} phase={phase} commit={head} -->",
+                      f"**Phase {phase} is built and tested. Its change to the live database is "
+                      f"your step.**\n\n"
+                      f"What the change does: {result['live_change'].strip()}\n\n"
+                      f"What the phase says it may touch: {'; '.join(named) or 'see the block'}."
+                      f"\n\n**Which computer:** the home desktop. **Which window:** the Ubuntu "
+                      f"terminal. Paste this whole block. It tries the change on a copy of the "
+                      f"live database first and shows you, in plain words, what would change. "
+                      f"Nothing changes until you type yes. Then it makes the change, checks it, "
+                      f"and hands the work back to the fleet, which finishes the phase by itself. "
+                      f"It ends with ALL GOOD or SOMETHING IS OFF.\n\n"
+                      f"{deploy_block(phase, branch, head, issue)}\n\n"
+                      f"If you do not want this change, type anything but yes: nothing changes, "
+                      f"and the phase waits here.", step="database-step")
+        self.step("database-step-label",
+                  lambda: self.gh("issue", "edit", str(issue), "--add-label", "needs-hands"),
+                  lambda: "needs-hands" in self.labels_of(issue))
+        self.log(f"issue {issue}: the database step handed to the operator, {head[:12]}")
+        return "held: the database step"
 
     def answer_stop(self, issue: int, phase: str, kind: str, clone: pathlib.Path) -> bool:
         """A stop the record answers (Phase 392, the operator's K50): one K-id
@@ -1466,14 +1584,18 @@ class Fleet:
         return True
 
     def engineer_finish(self, issue: int, phase: str, branch: str, ident: fleet_git.Identity,
-                        run: pathlib.Path, result: dict, rnd: int) -> str:
+                        run: pathlib.Path, result: dict, rnd: int,
+                        after_apply: str | None = None) -> str:
         """A `pr-ready`, checked: the model-free run on HEAD, then the push,
         the PR and `review:open`. When the model-free run is all that failed
         (the Engineer's own line passes every other check: F220, a run lost
         to load), the run is held (`journal.hold`): the operator taking
-        `needs-admiral` off runs it again on the same commit (`stage_recheck`)."""
+        `needs-admiral` off runs it again on the same commit (`stage_recheck`).
+        `after_apply` (Phase 395): the commit that applied the database step;
+        the close-out round after it changes documents only."""
         clone = run / "clone"
         head = self.git("-C", str(clone), "rev-parse", "HEAD").stdout.strip()
+        kept = {"after_apply": after_apply} if after_apply else {}
         self.log(f"issue {issue}: the model-free run on {head[:12]}")
         try:
             check = self.checked(clone, head, full=True)
@@ -1481,21 +1603,24 @@ class Fleet:
             # Held like F220's run: `needs-hands` off runs it on this commit.
             self.step("hold", lambda: journal.hold(run, {"issue": issue, "phase": phase,
                                                          "rnd": rnd, "commit": head,
-                                                         "why": "space"}))
+                                                         "why": "space", **kept}))
             self.hold_for_space(issue, "engineer", str(e))
             return "held: free space"
         # The close-out's reclaim (the operator: "as a part of the overall
         # process phase to phase"): its line goes in the PR, for the handoff.
         space = self.reclaim(f"phase {phase}'s close-out") if check.ok and self.disks else None
         fails = engineer.verify(clone, phase, result, check.line if check.ok else None)
+        also = engineer.verify_after_apply(clone, phase, after_apply) if after_apply else []
+        fails += also
         if not check.ok:
             fails.append(f"the model-free run did not pass: {check.line or check.why}"[:400])
         if fails:
-            again = not check.ok and not engineer.verify(clone, phase, result,
-                                                         result["regression_line"])
+            again = not check.ok and not also and not engineer.verify(
+                clone, phase, result, result["regression_line"])
             if again:
                 self.step("hold", lambda: journal.hold(run, {"issue": issue, "phase": phase,
-                                                             "rnd": rnd, "commit": head}))
+                                                             "rnd": rnd, "commit": head,
+                                                             **kept}))
             self.escalate(issue, "engineer", "needs-admiral",
                           f"Chief Engineer, phase {phase}: the work says it is ready, and the "
                           f"checks say it is not. " + " ".join(f"({i + 1}) {f}" for i, f in
@@ -1556,11 +1681,112 @@ class Fleet:
         head = self.git("-C", str(held / "clone"), "rev-parse", "HEAD").stdout.strip()
         if head != info["commit"]:
             raise Stop(f"the held clone is at {head[:12]}, not {info['commit'][:12]}")
-        out = self.engineer_finish(issue, phase, branch, ident, held,
-                                   engineer.read_result(held / "run"), info["rnd"])
+        result = engineer.read_result(held / "run")
+        if result["outcome"] == "deploy":     # Phase 395: it holds again, for the operator
+            return self.engineer_deploy(issue, phase, branch, ident, held, result, info["rnd"])
+        out = self.engineer_finish(issue, phase, branch, ident, held, result, info["rnd"],
+                                   after_apply=info.get("after_apply"))
         if out.startswith("PR "):
             self.step("release", lambda: journal.release(held))
             clean_tmp(held)            # F226: released, the held run has ended
+        return out
+
+    def fetch_applied(self, clone: pathlib.Path, phase: str, branch: str, commit: str) -> str:
+        """The database step's commits, from the operator's deploy checkout
+        into the held clone (Phase 395): past the held commit, and changing
+        only the phase's three deploy files, the live diff among them.
+        Returns the commit that added the live diff."""
+        co = self.deploy_root / phase
+        if not (co / ".git").is_dir():
+            raise Stop(f"the database step's checkout ({co}) is not there: the operator's block "
+                       "has not run on this computer")
+        r = self.git("-C", str(clone), "fetch", "-q", str(co), branch)
+        if r.returncode != 0:
+            raise Stop(f"the database step's commits could not be read: {r.stderr.strip()[:200]}")
+        got = self.git("-C", str(clone), "rev-parse", "FETCH_HEAD").stdout.strip()
+        if self.git("-C", str(clone), "merge-base", "--is-ancestor", commit, got).returncode:
+            raise Stop(f"the database step's checkout is not built on {commit[:12]}, the commit "
+                       "the fleet handed over")
+        paths = set(self.git("-C", str(clone), "diff", "--name-only", f"{commit}..{got}")
+                    .stdout.split())
+        allowed = set(through_fleet.deploy_files(phase))
+        if not paths <= allowed or through_fleet.deploy_files(phase)[2] not in paths:
+            extra = sorted(paths - allowed) or "no live diff"
+            raise Stop(f"the database step's checkout changes {extra}: it may add only "
+                       f"{sorted(allowed)}, the live diff among them")
+        r = self.git("-C", str(clone), "merge", "-q", "--ff-only", got)
+        if r.returncode != 0:
+            raise Stop(f"the held clone could not take the database step's commits: "
+                       f"{r.stderr.strip()[:200]}")
+        return engineer.applied_at(clone, phase) or got
+
+    def stage_deployed(self, issue: int, phase: str, body: str, branch: str, held: pathlib.Path,
+                       *, resume: dict | None = None) -> str:
+        """The operator took `needs-hands` off the database step (Phase 395):
+        its commits into the held clone, `verify-live` outside the fence
+        (anything but exit 0 goes to the operator, and no Engineer runs),
+        then the Engineer's close-out round in the same clone, documents
+        only, and the rest of a `pr-ready`."""
+        ident = self.identity_for(issue, body, "engineer")
+        if ident is None:
+            return "needs hands"
+        info = journal.held(held)
+        if info is None or info.get("why") != "deploy":
+            raise Stop(f"the held run {held.name} is not held for the database step")
+        run, j = self.begin(f"deployed_{phase}", {"stage": "deployed", "issue": issue,
+                                                  "phase": phase, "body": body, "branch": branch,
+                                                  "held": str(held)}, resume)
+        self.started(issue, "engineer", f"**Chief Engineer, phase {phase}: the close-out after "
+                                        "the database step**, as the operator took "
+                                        "`needs-hands` off.")
+        clone = held / "clone"
+        applied = self.step("fetch", lambda: self.fetch_applied(clone, phase, branch,
+                                                                info["commit"]))
+        rc, said = self.live_check(clone, phase)
+        self.log(f"issue {issue}: verify-live {phase}: exit {rc}")
+        if rc != 0:
+            self.escalate(issue, "engineer", "needs-admiral",
+                          f"Chief Engineer, phase {phase}: the live database does not match the "
+                          f"change you approved, so the phase does not close (the check exited "
+                          f"{rc}). What the check printed:\n\n```\n{said.strip()[-1500:]}\n```")
+            return f"stopped: verify-live exit {rc}"
+        result_file = held / "run" / engineer.RESULT
+
+        def fresh_result() -> None:
+            """The round writes its own result; the `deploy` one is kept beside it."""
+            kept = result_file.with_name("engineer.deploy.json")
+            if result_file.is_file():
+                if kept.is_file():
+                    result_file.unlink()
+                else:
+                    result_file.replace(kept)
+        self.step("fresh-result", fresh_result)
+        runner = FencedRunner(self, clone, held / "run", journal=j)
+        brief = engineer.session_brief(phase, issue, closeout=True)
+        self.log(f"issue {issue}: the Chief Engineer's close-out on phase {phase}, {clone}")
+        try:
+            r, reason = runner.session(engineer.session_argv(), brief,
+                                       watch=lambda: engineer.watch(clone, held / "run", phase))
+        except RateLimited as e:
+            self.pause(j, e, runner)
+            return "rate-limited"
+        if reason:
+            self.escalate(issue, "engineer", "needs-admiral",
+                          f"Chief Engineer, phase {phase}: the close-out stopped. {reason}")
+            return f"stopped: {reason[:80]}"
+        result = engineer.read_result(held / "run")
+        if result["outcome"] != "pr-ready":
+            self.escalate(issue, "engineer", "needs-admiral",
+                          f"Chief Engineer, phase {phase}: the close-out after the database step "
+                          f"ended {result['outcome']}" + (f" ({result.get('kind')}). "
+                                                          f"{result.get('question', '')}"
+                                                          if result["outcome"] == "stop" else "."))
+            return f"stopped: the close-out ended {result['outcome']}"
+        out = self.engineer_finish(issue, phase, branch, ident, held, result, info["rnd"],
+                                   after_apply=applied)
+        if out.startswith("PR "):
+            self.step("release", lambda: journal.release(held))
+            clean_tmp(held)
         return out
 
     def gh_as(self, ident: fleet_git.Identity, *args: str) -> str:
@@ -1755,7 +1981,7 @@ class Fleet:
                                              "shadow: a verdict, and nothing merged.")
         clone = self.stage_clone(run, branch)
         head = j.value("clone")["base"]
-        q1 = quartermaster.scope(clone, phase)
+        q1 = quartermaster.scope(clone, phase, live_check=lambda: self.live_check(clone, phase))
         judged, call = None, None
         if not q1.ok:
             found = [q1]
@@ -1972,6 +2198,9 @@ class Fleet:
         if s == "recheck":
             return self.stage_recheck(n, ph, paused["body"], paused["branch"],
                                       pathlib.Path(paused["held"]), resume=paused)
+        if s == "deployed":
+            return self.stage_deployed(n, ph, paused["body"], paused["branch"],
+                                       pathlib.Path(paused["held"]), resume=paused)
         if s == "red_team":
             return self.stage_red_team(n, ph, paused["body"], paused["branch"], resume=paused)
         if s == "quartermaster":
@@ -2146,19 +2375,25 @@ class Fleet:
         runs = journal.held_runs(self.runs, n)
         if not runs:
             return None
-        if (journal.held(runs[0]) or {}).get("why") == "space":
-            # Held for free space (F221): the cycle reaches the issue only once
-            # `needs-hands` is off, and the hold is due while its comment is
-            # newer than any rank comment but a `started` one (a recheck that
-            # then stops does not run again every cycle).
-            spaced = self.newest(n, SPACE_M)
-            later = [_time(c["createdAt"]) for c in self.comments(n)
-                     if (b := c.get("body", "").lstrip()).startswith(RANK_PREFIXES)
-                     and not (_STARTED.match(b) or _ENG_STARTED.match(b))]
-            return runs[0] if spaced and (not later or spaced[0] > max(later)) else None
+        why = (journal.held(runs[0]) or {}).get("why")
         ranked = [c["body"].lstrip() for c in self.comments(n)
                   if c.get("body", "").lstrip().startswith(RANK_PREFIXES)]
         stop = f"{MARKER} needs-admiral rank=engineer"
+        if why in ("space", "deploy"):
+            # Held for free space (F221) or for the database step (Phase 395):
+            # the cycle reaches the issue only once `needs-hands` is off, and
+            # the hold is due while its comment is newer than any rank comment
+            # but a `started` one (a recheck that then stops does not run
+            # again every cycle).
+            spaced = self.newest(n, SPACE_M if why == "space" else DEPLOY_M)
+            later = [_time(c["createdAt"]) for c in self.comments(n)
+                     if (b := c.get("body", "").lstrip()).startswith(RANK_PREFIXES)
+                     and not (_STARTED.match(b) or _ENG_STARTED.match(b))]
+            if spaced and (not later or spaced[0] > max(later)):
+                return runs[0]
+            # The close-out after the database step stopped, and the operator
+            # took `needs-admiral` off: it runs again, from the same hold.
+            return runs[0] if why == "deploy" and ranked and ranked[-1].startswith(stop) else None
         return runs[0] if ranked and ranked[-1].startswith(stop) else None
 
     def next_stage(self, n: int, phase: str, labels: set[str], body: str, title: str
@@ -2179,6 +2414,8 @@ class Fleet:
                                                     self.markers(RED_M, "red-team")):
             return "red-team", lambda: self.stage_red_team(n, phase, body, branch())
         if "build:open" in labels and (held := self.held_for(n)) is not None:
+            if (journal.held(held) or {}).get("why") == "deploy":
+                return "engineer", lambda: self.stage_deployed(n, phase, body, branch(), held)
             return "engineer", lambda: self.stage_recheck(n, phase, body, branch(), held)
         if "build:open" in labels:
             back, mine = self.newest(n, f"{RED_M} verdict=back"), self.newest(n, ENGINEER_M)

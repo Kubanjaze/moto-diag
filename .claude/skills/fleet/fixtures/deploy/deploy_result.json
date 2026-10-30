@@ -1,0 +1,4 @@
+{"outcome": "deploy",
+ "summary": "Adds the trial's empty table and its reader. The migration, its scope file and its tests are committed; the regression of record is in the phase log.",
+ "regression_line": "Regression of record: 1234 passed, 0 failed, 0 skipped, 0 errors at `ccccccc` (12 min 0 s wall, `python -m pytest -n auto --dist load`, exit 0)",
+ "live_change": "It adds one new, empty table, trial_empty, and changes no existing row."}
