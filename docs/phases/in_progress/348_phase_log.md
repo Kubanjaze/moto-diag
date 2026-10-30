@@ -71,3 +71,18 @@ Copied verbatim from the comment by Kubanjaze on issue #36:
 - The heading "The operator's answers to the Chief Engineer's stop" (second stop) is on the branch at `bb23ca8`, so this session does not stop again and goes to Logic item 9.
 - The phone app's snapshot is refreshed: `../moto-diag-mobile` is at `04be61c` ("API schema: refresh for backend Phase 348 (audit log) …"), and its `api-schema/openapi.json` carries `/v1/shop/{shop_id}/audit`. Its push and the regeneration of `src/api-types.ts` are for after the merge, in the handoff, as the operator asked.
 - **#39 on master:** `git show origin/master:.claude/skills/deploy/deploy.py` carries `"audit_events": WHOLE_TABLE` in `SERVER_WRITES` (line 178); `origin/master` and `master` are both `d76b865`. `git diff --name-only master...HEAD` names nothing under `.claude/skills/deploy/` or `.claude/skills/closeout/`. No fetch and no merge was run.
+
+## 2026-10-30: A commit made without the whole-tree command first
+
+`adc4840` (the phase-log entry above, a docs-only change) was committed without running `wholetree.sh` on its own first, which breaks rule 3. Nothing was pushed. The `--full` run below covers exactly that tree, and every later commit in this session runs fast mode on its own first.
+
+## 2026-10-30: The full check and the regression of record
+
+- `wholetree.sh --full` on `adc4840`, a clean tree: **PASSED — 4986 passed, 36 skipped** (1094.2 s wall), exit 0; record `93c4476283b15da7070091a057aa4e4c883b2287_full.json` for commit `adc484070b25`. Gate 11 and the three gates that re-run it pass with the phone app's snapshot at `04be61c`.
+- `regression.sh`, exit 0:
+
+Regression of record: 12028 passed, 0 failed, 105 skipped, 0 errors at `adc4840` (36 min 54 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0) (run inside the fleet's fence)
+Line coverage of record: 87.70% at `adc4840` (the pin is 87.50%)
+
+- 12028 + 105 = 12133, the floor `COLLECTED_TEST_FLOOR` was raised to. The 105 skips include the fence-boundary tests, which are proven from the host, not from inside the fence.
+- **Next, the database step:** this session ends with the outcome `deploy`. Every phase document stays in `docs/phases/in_progress/`, and nothing is closed out. The operator applies migration 088 from the dispatcher's paste block on the home desktop; the close-out round follows (Logic item 10).
