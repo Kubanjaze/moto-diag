@@ -160,7 +160,6 @@ Line coverage of record: 87.71% at `4753b2d` (the pin is 87.50%)
 
 12047 passed + 105 skipped = 12152, the new `COLLECTED_TEST_FLOOR`.
 
-No refute pass ran.
 
 No bug fixes: no defect was found in the phase's own committed code, so
 there is no bug-fix register.
@@ -178,3 +177,31 @@ date and the regression line; the root `phase_log.md`'s pointer; the
 handoff `docs/handoffs/2026-10-31_385_closed.md`, with the Mac's
 after-the-merge block (no `gh` in it), K60's live proof (`verify-live 348`
 must exit 0) and `verify-live 384` printed for the record only.
+
+## Refuter pass
+
+| claim | verdict | quote | source | round · kind · outcome |
+|---|---|---|---|---|
+| SERVER_WRITES gains the device_tokens entry, server_masked/WHOLE_TABLE unchanged | kept | "\"device_tokens\": frozenset({\"last_seen_at\"})}" | .claude/skills/deploy/deploy.py p. 186 | 1 · none · kept |
+| The list was at deploy.py line 177 on the base (7 comment lines added since; now 184) | kept | "SERVER_WRITES: dict[str, frozenset[str]] = {\"api_keys\": frozenset({\"last_used_at\"})," | .claude/skills/deploy/deploy.py p. 184 | 1 · none · kept |
+| The writer is register_token's upsert ON CONFLICT(token) DO UPDATE setting user_id, platform, last_seen_at | kept | "ON CONFLICT(token) DO UPDATE SET" | src/motodiag/push/registry.py p. 32 | 1 · none · kept |
+| Migration 044 gives device_tokens six columns | kept | "last_seen_at TEXT NOT NULL" | src/motodiag/core/migrations.py p. 3576 | 1 · none · kept |
+| The pin holds the three entries | kept | "\"device_tokens\": frozenset({\"last_seen_at\"})}" | tests/test_phase383_server_writes.py p. 168 | 1 · none · kept |
+| tests/test_phase385_server_writes.py has 19 tests (3 + 12 controls + 2 + 2) | kept | "TestTheControlsStillFail 12, TestAMigrationThatWritesTheColumn 2," | tests/test_phase255B_collected_test_floor.py p. 462 | 1 · none · kept |
+| COLLECTED_TEST_FLOOR 12133 → 12152 | kept | "COLLECTED_TEST_FLOOR = 12152" | tests/test_phase255B_collected_test_floor.py p. 465 | 1 · none · kept |
+| 12047 passed + 105 skipped = 12152 | kept | "12047 passed + 105 skipped = 12152, the new `COLLECTED_TEST_FLOOR`." | docs/phases/completed/385_phase_log.md p. 161 | 1 · none · kept |
+| TestTheRealRegistration monkeypatches registry._now after the backup | kept | "monkeypatch.setattr(registry, \"_now\", lambda: REGISTERED)" | tests/test_phase385_server_writes.py p. 197 | 1 · none · kept |
+| Each control runs beside a registration and alone | kept | "@pytest.mark.parametrize(\"beside\", [True, False], ids=[\"beside\", \"alone\"])" | tests/test_phase385_server_writes.py p. 122 | 1 · none · kept |
+| E2–E4 each run one control by -k | kept | "T_ADDED = pytest(T385, \"-k\", \"TestTheControlsStillFail and added_row\")" | docs/phases/completed/385_mutate.py p. 36 | 1 · none · kept |
+| Mutations 5/5 red | kept | "5/5 red" | docs/phases/completed/385_mutate.out p. 6 | 1 · none · kept |
+| F212 closed by Phase 385 on 2026-10-31 with the three controls | kept | "**Closed by Phase 385 (2026-10-31).** The operator chose the first (K39," | docs/FOLLOWUPS.md p. 3718 | 1 · none · kept |
+| F210 gains "What the list still cannot cover" naming new token row, rebind, shop writes | kept | "**What the list still cannot cover** (Phase 385, 2026-10-31, after" | docs/FOLLOWUPS.md p. 3654 | 1 · none · kept |
+| K39's cell names the entry, pin and controls | kept | "held by the pin in tests/test_phase383_server_writes.py and the controls in tests/test_phase385_server_writes.py; built in Phase 385." | docs/decisions.md p. 38 | 1 · none · kept |
+| K60 decides (A): verify-live 348 is the proof of record, 384 for the record only | kept | "385's live proof is the newest deployed phase's check, verify-live 348 from the Mac, with verify-live 384 run for the record only" | docs/decisions.md p. 59 | 1 · none · kept |
+| SKILL.md names the second column with F212 and K39 and what stays off | kept | "Since Phase 385 (F212, the operator's K39)," | .claude/skills/deploy/SKILL.md p. 137 | 1 · none · kept |
+| CHANGELOG gains a dated entry at the top | kept | "## 2026-10-31 — device_tokens.last_seen_at joins SERVER_WRITES (Phase 385, K39, F212)" | .claude/skills/deploy/CHANGELOG.md p. 3 | 1 · none · kept |
+| Handoff block's grep -v "set aside" works because set-aside names print on the same line | kept | "print(f\"  set aside: {len(aside)} change(s) the running API writes \"" | .claude/skills/deploy/deploy.py p. 811 | 1 · none · kept |
+| The after-the-merge block runs no gh and ends ALL GOOD / SOMETHING IS OFF | kept | "echo \"ALL GOOD\"" | docs/handoffs/2026-10-31_385_closed.md p. 112 | 1 · none · kept |
+| ROADMAP row closed with CLOSED date, regression line and K60's live proof | kept | "**CLOSED 2026-10-31.** `device_tokens.last_seen_at` joins `SERVER_WRITES`" | docs/ROADMAP.md p. 662 | 1 · none · kept |
+| 385 is row 7 of Next, in order (K53), 345 next | kept | "| 7 | 385 | shop | fleet | nothing | 2026-10-21 · K53 |" | docs/reports/2026-10-12_plan_of_record.md p. 19 | 1 · none · kept |
+| No refute pass ran, no bug fixes | kept | "No refute pass ran." | docs/phases/completed/385_phase_log.md p. 163 | 1 · none · kept |
