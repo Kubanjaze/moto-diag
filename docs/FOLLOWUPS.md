@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F238** (this file). The
+At the time of writing the highest assigned is **F240** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4647,3 +4647,74 @@ What would close it: the operator's choice between splitting the
 migrations into a package of smaller files, or a named, pinned exemption
 for this one file with its own control (a threshold's definition, so the
 operator's call). Out of Phase 396's scope by its prompt.
+
+### F239
+
+**Object Lock is not yet on for bucket motodiag-backups, where 345's offsite backups go**
+
+Filed 2026-10-31 by the advisor session, in the operator's words: "once
+phase 345 is live and its first nightly backup has been verified, turn on
+Backblaze B2 Object Lock on bucket motodiag-backups with about 30 days
+retention."
+
+K62 (`docs/decisions.md`) put 345's offsite backups in one private
+Backblaze B2 bucket, used only for MotoDiag backups, with one application
+key limited to it. Object Lock is what keeps a backup from being deleted
+during its retention period. The operator chose to turn it on only after
+345 is live and its first nightly backup has been verified.
+
+What it affects: every offsite backup 345 writes, from the first, until
+the lock is on.
+
+What would close it: Object Lock on motodiag-backups with a retention of
+about 30 days, turned on after 345 is live and its first nightly backup is
+verified, with the bucket's setting read back from B2 and recorded in the
+handoff or phase log of the work that turns it on.
+
+### F240
+
+**395's and 396's regressions of record ran in 13 minutes where the same command takes about 35, and nothing records why**
+
+Filed 2026-10-31 by the advisor session, in the operator's words: "396's
+regression took 13 minutes instead of the usual 35 on 2026-10-31 and
+nobody explained why; look into it."
+
+What the records show. The handoffs hold eleven regression lines run in
+the fleet's fence since Phase 389 (2026-10-25 to 2026-10-31). Nine took
+between 30 min 19 s and 38 min 13 s, and two took about 13 minutes:
+395's and 396's. The rows below come from the handoffs, all on the home
+desktop and all "(run inside the fleet's fence)":
+
+| phase | date | passed | skipped | wall | how it was run |
+|---|---|---|---|---|---|
+| 393 | 2026-10-29 | 11882 | 105 | 34 min 26 s | `Fleet.check_run`, by a builder session |
+| 394 | 2026-10-29 | 11651 | 105 | 34 min 35 s | `Fleet.check_run`, by a builder session |
+| 395 | 2026-10-29 | 11944 | 105 | 13 min 5 s | `Fleet.check_run`, by a builder session |
+| 348 | 2026-10-30 | 12028 | 105 | 36 min 54 s | `regression.sh`, by the Chief Engineer |
+| 385 | 2026-10-31 | 12047 | 105 | 34 min 21 s | `regression.sh`, by the Chief Engineer |
+| 396 | 2026-10-31 | 12079 | 105 | 13 min 8 s | `Fleet.check_run`, by a builder session |
+
+What this rules out, on those records:
+- **The method.** 395's and 396's phase logs say each ran its run of
+  record the way 393's and 394's were, and 393's and 394's took 35
+  minutes.
+- **The size of the suite.** 396 passed 32 more tests than 385 on the same
+  day.
+- **Skips and coverage.** All six skipped 105. 385 and 396 both measured
+  87.71% line coverage, and 393 and 395 both measured 87.62%. 393 also ran
+  its commit without coverage: 35 min 11 s (its handoff).
+
+The `wholetree.sh --full` inside each run was faster too. 395's and 396's
+runs took 22 minutes from start to end, `--full` included (21:53–22:15
+and 14:03–14:25). 348's `--full` alone took 1094.2 s. Nothing in 395's or
+396's documents comments on the time. A search of them for "faster",
+"slower", "quicker" and "13 min" finds only the regression lines.
+
+What it affects: neither result is known to be wrong. But until the cause
+is known, the time of a run cannot be planned on. A run that did less
+work, or a desktop slowed by something else, would look just like this.
+
+What would close it: the cause, measured and written into this entry.
+Compare 394's run with 395's first: same day, same method, 34 min 35 s
+against 13 min 5 s. For each run, record how many test workers it
+started and what else was running on the desktop at the time.
