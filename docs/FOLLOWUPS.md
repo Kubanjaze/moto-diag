@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F240** (this file). The
+At the time of writing the highest assigned is **F241** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4718,3 +4718,41 @@ What would close it: the cause, measured and written into this entry.
 Compare 394's run with 395's first: same day, same method, 34 min 35 s
 against 13 min 5 s. For each run, record how many test workers it
 started and what else was running on the desktop at the time.
+
+### F241
+
+**A one-second window in test_phase392_check_limit failed the Mac's full parallel run**
+
+Found 2026-10-31 by the advisor session, in the independent check of
+master on the Mac (`docs/reports/2026-10-31_independent_check.md`).
+`regression.sh` at `ce97159` (10 workers, 12,184 tests, coverage on)
+failed one test:
+`tests/test_phase392_check_limit.py::test_run_group_kills_the_whole_group_and_says_what_it_printed`,
+at line 60, `assert "started" in e.value.stdout`, with stdout empty. The
+test gives a planted bash script one second (`timeout=1`, line 58) to
+get through its argument loop and a `mkdir -p` and reach `echo started`,
+before `run_group` kills it. In the full run it had printed nothing by
+then. `run_group` did its job: it kept everything the command had
+printed, and that was nothing.
+
+Measured on the Mac afterwards: the test alone, 10 passed of 10; alone
+with 20 busy `yes` processes, 10 passed of 10. So it fails only under the
+full parallel run's load, which rule 3 calls a bug to fix, never a reason
+to record the serial run. The desktop's fenced runs passed it (396's: 0
+failed).
+
+A second weakness in the same test, read from its code. `alive()` (line
+45) counts a process as alive only if `/proc/<pid>/stat` exists, and
+macOS has no `/proc`. So on the Mac, the check that the planted command's
+child was killed passes whether or not it was. On the desktop (Linux) the
+check holds.
+
+What it affects: any full run on a busy machine can fail on this test,
+and a failed run is not of record. On 2026-10-31 it was the only failure
+in the Mac's independent check.
+
+What would close it: the test stops depending on the machine's speed (for
+example, the limit counts only from the command's first line of output,
+or the window is wide enough that load cannot close it), seen to pass in
+a full parallel run on the Mac. Also, `alive()` gives a real answer on
+macOS, or the test says that it cannot there.
