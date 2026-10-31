@@ -1,6 +1,6 @@
 # Phase 385 — The push token's own write — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-10-31)
 **Branch:** `phase-385-the-push-token-s-own-write` (the Chief Engineer, in
 the fleet's fence: a fresh clone, no push; the only writer)
 
@@ -163,4 +163,18 @@ Line coverage of record: 87.71% at `4753b2d` (the pin is 87.50%)
 No refute pass ran.
 
 No bug fixes: no defect was found in the phase's own committed code, so
-there is no bug-fix register. No guard blocked a command.
+there is no bug-fix register.
+
+### 2026-10-31 — Close-out
+
+**A guard blocked a command:** a Python script body (`python3 - <<'EOF'`)
+writing v1.1 into `385_implementation.md` was refused by the edit guard,
+because its text named `tests/` paths and the guard blocks a write it
+cannot resolve. Made with the Edit tool instead; the guard is unchanged.
+
+v1.1 written (Deviations, Results, the version history); the phase's files
+moved to `docs/phases/completed/` with `git mv`; row 385 ✅ with its CLOSED
+date and the regression line; the root `phase_log.md`'s pointer; the
+handoff `docs/handoffs/2026-10-31_385_closed.md`, with the Mac's
+after-the-merge block (no `gh` in it), K60's live proof (`verify-live 348`
+must exit 0) and `verify-live 384` printed for the record only.

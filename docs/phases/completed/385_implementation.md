@@ -1,6 +1,6 @@
 # Phase 385 — The push token's own write
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-30
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-31 (v1.0 `7a29f36`)
 
 ---
 
@@ -96,7 +96,8 @@ re-verified on this branch's base (`ddcdfd6`):
    above, the mutation record, the regression line, no refute pass unless
    one runs), this document at v1.1, the ROADMAP row's status, the floor
    in `tests/test_phase255B_collected_test_floor.py` raised by a diff of
-   collected ids, and the handoff `docs/handoffs/2026-10-30_385_closed.md`.
+   collected ids, and the handoff `docs/handoffs/2026-10-31_385_closed.md` (dated the day
+   of the close, for R6; see Deviations).
 9. **The handoff's after-the-merge block**, for the operator, in rule 6's
    form: which computer (the Mac), which window (Terminal, in the
    repository folder), one paste block ending in ALL GOOD or SOMETHING IS
@@ -246,12 +247,46 @@ folder; F207, F209 and F211; a regression on the desktop outside the fence.
 
 ## Planned items
 
-- [ ] the entry in `deploy.py`, with its comment
-- [ ] the pin in `tests/test_phase383_server_writes.py`
-- [ ] `tests/test_phase385_server_writes.py`: the set-aside cases, the three controls before and after the apply, the migration case, the real `register_token` case
-- [ ] `385_mutate.py` and `385_mutate.out`, every mutation red
-- [ ] the deploy skill's `SKILL.md` and `CHANGELOG.md`
-- [ ] F212 closed; F210's paragraph on what the list still cannot cover; K39's cell in `docs/decisions.md`
-- [ ] the floor raised by a diff of collected ids
-- [ ] `wholetree.sh --full`, the regression of record, the close-out, this document at v1.1
-- [ ] the handoff with the Mac's after-the-merge block, and the fork named for the operator
+- [x] the entry in `deploy.py`, with its comment
+- [x] the pin in `tests/test_phase383_server_writes.py`
+- [x] `tests/test_phase385_server_writes.py`: the set-aside cases, the three controls before and after the apply, the migration case, the real `register_token` case
+- [x] `385_mutate.py` and `385_mutate.out`, every mutation red
+- [x] the deploy skill's `SKILL.md` and `CHANGELOG.md`
+- [x] F212 closed; F210's paragraph on what the list still cannot cover; K39's cell in `docs/decisions.md`
+- [x] the floor raised by a diff of collected ids
+- [x] `wholetree.sh --full`, the regression of record, the close-out, this document at v1.1
+- [x] the handoff with the Mac's after-the-merge block, and the fork named for the operator
+
+## Deviations
+
+What the build did that v1.0 does not say, each with its reason. The phase log has the dated detail.
+
+- **Each control runs twice, beside a registration and alone** (12 control tests, not the 6 the Tests section implies). With the entry widened to `WHOLE_TABLE` (Logic 4's second mutation), an added-row control made only beside a registration stays green: the registration's changed row is itself drift under a whole-table entry, so the refusal fires anyway (measured: `-k "added_row and beside"`, 2 passed). Alone, the control goes red on that mutation, so the added-row control is seen failing as the row promises.
+- **Each mutation runs against the test it must turn red**, by `-k`: E2 to E4 each select one control, so their red runs are the three controls seen failing, not a set-aside test the same mutation also breaks.
+- **The second table is a fixture table, `phones`**, with a `last_seen_at` column; Logic 4's "listed under the control's second table instead" is that table.
+- **`TestTheRealRegistration` fixes `register_token`'s clock** (`monkeypatch` of `registry._now`) for the second registration, so the refreshed `last_seen_at` differs from the first by construction, not by the clock's resolution. Both users are made before the backup, so the rebind control's diff is `device_tokens` alone.
+- **The handoff is dated 2026-10-31**, not 2026-10-30 as Logic 8 names it: the close is on 2026-10-31, and R6 wants a handoff no earlier than the close. F212's closing paragraph carries the same date.
+- **The after-the-merge block runs no `gh`**: it finds the merge as the Mac's `master` after a fast-forward, and checks that the regression's commit is in it.
+- **One edit-guard block**: a Python script body writing v1.1 into this document was refused, since its text named `tests/`. The guard is unchanged; the Edit tool did the work.
+- **No bug fixes**, no refute pass, no new finding.
+
+## Results
+
+- **Shipped.** `SERVER_WRITES["device_tokens"] = frozenset({"last_seen_at"})` in `.claude/skills/deploy/deploy.py`, with its comment; `server_masked`, `WHOLE_TABLE` and every refusal unchanged. The pin in `tests/test_phase383_server_writes.py` holds the three entries. Nothing under `src/` changed; no migration; no change to live.
+- **Tests.** `tests/test_phase385_server_writes.py`, 19 tests: the registration set aside between the dry run and the apply and after it, and beside 383's request (both set aside, nothing else); the three controls (the rebind of `platform`, an added token row, `last_seen_at` in another table) before and after the apply, beside a registration and alone; a migration whose approved diff names the column; the real `register_token` on a fresh database at the schema head, with the rebind by another user as its control. `COLLECTED_TEST_FLOOR` 12133 → 12152 by a diff of collected ids against `d0c28cc` (+19 −0).
+- **Mutations:** 5/5 red (`385_mutate.out`): the entry removed; widened to `WHOLE_TABLE` (the added-row control red); widened to `platform` (the rebind control red); moved to the other table (the other-table control red); the pin without the entry.
+- **The record.** F212 closed; F210's "What the list still cannot cover"; K39's cell in `docs/decisions.md`; the deploy skill's `SKILL.md` and `CHANGELOG.md`.
+- **`wholetree.sh --full`** on `4753b2d`: 4986 passed, 36 skipped, exit 0.
+- **The regression of record**, as `regression.sh` printed it (the skip lines are in the phase log):
+
+Regression of record: 12047 passed, 0 failed, 105 skipped, 0 errors at `4753b2d` (34 min 21 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0) (run inside the fleet's fence)
+
+  Line coverage of record: 87.71% at `4753b2d` (the pin is 87.50%).
+- **Live.** Nothing applied. The live proof of record (K60) is the operator's step in the handoff, from the Mac after the merge: `verify-live 348` must exit 0, with the phone's registration among its "set aside" lines; `verify-live 384` is printed for the record only.
+
+## Version history
+
+| version | date | what |
+|---|---|---|
+| 1.0 | 2026-10-30 | `7a29f36`, approved by the Executive Officer on issue #41; the fork decided (A) by the operator as K60 (`d0c28cc`) |
+| 1.1 | 2026-10-31 | built and closed: Deviations and Results |
