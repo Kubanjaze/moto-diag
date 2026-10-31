@@ -114,6 +114,9 @@ at startup.
 `serve` applies any pending schema migrations before it binds, so a
 fresh install needs no separate init step.
 
+To keep an encrypted copy of the server's data off the machine every night,
+and to get one back, see [Backups](backups.md).
+
 ```bash
 curl -s localhost:8000/healthz
 ```

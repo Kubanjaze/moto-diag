@@ -464,8 +464,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: Phase 396 (the fleet's four slips, K61), by a diff of collected ids against
 #: master at 8e5f014 (12152): +32 -0, test_phase396_slips.py (31) and
 #: test_phase392_plan_order.py's 396-then-345 test (1). Measured: 12184.
+#: Phase 345 (offsite encrypted backups), by a diff of collected ids against
+#: the branch's base 2df4799 (12184): +107 -0. Added:
+#: test_phase345_backup_settings.py (24), test_phase345_cli.py (26),
+#: test_phase345_crypt.py (13), test_phase345_snapshot_restore.py (26),
+#: test_phase345_store.py (18). Measured: 12291.
 #:
-COLLECTED_TEST_FLOOR = 12184
+COLLECTED_TEST_FLOOR = 12291
 
 
 def _collected_count() -> int:

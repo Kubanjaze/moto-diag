@@ -1,0 +1,25 @@
+# moto-diag's nightly offsite backup on the home desktop (Phase 345).
+# Installed by install_backup_unit.sh as
+# /etc/systemd/system/motodiag-backup.service; started by
+# motodiag-backup.timer.
+#
+# - One snapshot of live (the database by SQLite's backup API, and the
+#   uploads), encrypted here with the operator's passphrase and put in the
+#   private Backblaze B2 bucket.
+# - The key and the passphrase are read by the command itself from
+#   ~/.config/motodiag/backup.env, with its mode check; this unit never
+#   loads that file into its environment. Without the file the unit never
+#   starts.
+[Unit]
+Description=moto-diag offsite backup (one snapshot of live)
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/home/lilcu/.config/motodiag/backup.env
+
+[Service]
+Type=oneshot
+User=lilcu
+WorkingDirectory=/home/lilcu/motodiag/server
+Environment=MOTODIAG_DB_PATH=/home/lilcu/motodiag/live/motodiag.db
+Environment=MOTODIAG_DATA_DIR=/home/lilcu/motodiag/live
+ExecStart=/home/lilcu/motodiag/server/.venv/bin/motodiag backup run --label nightly
