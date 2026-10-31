@@ -207,3 +207,19 @@ Line coverage of record: 87.71% at `c8bd296` (the pin is 87.50%)
   not review.
 - No migration and no change to live.
 - The reclaim line, from `dispatcher.py reclaim` on the desktop: C: 281.4 -> 281.4 GB free (nothing came back to Windows: the disk image is not sparse, so the trim freed space inside Ubuntu only); Ubuntu 1007.2 -> 1007.2 GB free; fstrim: /: 6.7 GiB (7168823296 bytes) trimmed
+
+## 2026-10-31 — after the close-out
+
+- **The close-out commit was amended once, before any push:** between
+  `git add -A` and the commit the index lost the moves out of
+  `in_progress/` and the ROADMAP and root edits (the whole-tree run in
+  between reported "the working copy differs from the index"), so the first
+  commit held only the new files. `git add -A` and `--amend` gave
+  `5874027`; `closeout_check` and `code_after_regression` pass on it.
+- **The push of K61's row to master (`230a077`)** printed "Cannot update
+  this protected ref" and was accepted: it went through as the operator's
+  account's bypass of master's ruleset. Recorded for the operator.
+- **PR #46**: `ratchet` passed; the merge was refused by the ruleset
+  ("the base branch policy prohibits the merge"). Not overridden with
+  `--admin`: the merge is the operator's.
+- `verify_phase.sh 396 c8bd296 5874027`: 13 of 14; check 1 waits on the merge.
