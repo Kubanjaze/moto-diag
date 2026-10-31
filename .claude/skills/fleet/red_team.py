@@ -164,11 +164,28 @@ def _git(clone: pathlib.Path, *args: str) -> str:
     return subprocess.run(["git", "-C", str(clone), *args], capture_output=True, text=True).stdout
 
 
-def plan_commit(clone: pathlib.Path, phase: str) -> str | None:
-    """The commit that first added the phase's plan: the Captain's v1.0."""
-    out = _git(clone, "log", "--diff-filter=A", "--format=%H", "--",
-               f"docs/phases/in_progress/{phase}_implementation.md").split()
-    return out[-1] if out else None
+def plan_commit(clone: pathlib.Path, phase: str, approved_at: str | None = None) -> str | None:
+    """The plan of record (Phase 396, (d)): the newest commit that changed the
+    phase's plan at or before `approved_at`, when `plan:approved` was last
+    applied, by committer date. With no time, the commit that first added it:
+    on 348 that was the Captain's draft, which the operator's commits had
+    rewritten before the approval, so the callers name which one they read."""
+    path = f"docs/phases/in_progress/{phase}_implementation.md"
+    if approved_at is None:
+        out = _git(clone, "log", "--diff-filter=A", "--format=%H", "--", path).split()
+        return out[-1] if out else None
+    out = _git(clone, "log", "-1", f"--before={approved_at}", "--format=%H", "--", path).split()
+    return out[0] if out else None
+
+
+def plan_label(pc: str | None, approved_at: str | None) -> str:
+    """How a brief names the plan it hands on (Phase 396, (d))."""
+    if pc is None:
+        return "not found"
+    if approved_at is None:
+        return (f"{pc[:12]}, the plan's first commit: plan:approved was never applied on the "
+                "issue")
+    return f"{pc[:12]}, the plan when plan:approved was last applied, {approved_at}"
 
 
 def _broad(h: ast.ExceptHandler) -> bool:
@@ -232,11 +249,11 @@ def brief(rnd: int) -> str:
 
 
 def gather(clone: pathlib.Path, phase: str, f9_output: str, base: str = "origin/master",
-           scan: dict | None = None) -> str:
+           scan: dict | None = None, approved_at: str | None = None) -> str:
     """The context the model reads, all of it produced by script."""
     impl_now = next((p for p in (clone / "docs" / "phases" / d / f"{phase}_implementation.md"
                                  for d in ("completed", "in_progress")) if p.is_file()), None)
-    pc = plan_commit(clone, phase)
+    pc = plan_commit(clone, phase, approved_at)
     v10 = _git(clone, "show", f"{pc}:docs/phases/in_progress/{phase}_implementation.md") if pc else ""
     v11 = impl_now.read_text(encoding="utf-8") if impl_now else ""
     a = closeout_check.check(clone, phase)
@@ -252,7 +269,9 @@ def gather(clone: pathlib.Path, phase: str, f9_output: str, base: str = "origin/
             + f"\n\n=== scripts/check_f9_patterns.py --all ===\n{f9_output.strip()}"
             + f"\n\n=== the branch's diff from master, by file ===\n{diff_names.strip()}"
             + (f"\n\n{scan_text(scan)}" if scan is not None else "")
-            + f"\n\n=== v1.0 as approved ({(pc or 'not found')[:12]}) ===\n{v10}"
+            + (f"\n\n=== v1.0 as approved ({plan_label(pc, approved_at)}) ===\n{v10}"
+               if approved_at is not None else
+               f"\n\n=== v1.0 ({plan_label(pc, approved_at)}) ===\n{v10}")
             + f"\n\n=== the diff of v1.0 to v1.1 ===\n{plan_diff}"
             + f"\n\n=== v1.1 as it stands ===\n{v11}"
             + f"\n\n{plan_order.brief_block(clone, phase)}")

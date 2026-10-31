@@ -105,6 +105,12 @@ workspace rules it imports are loaded; follow them. In particular:
    docs/handoffs/YYYY-MM-DD_{N}_closed.md (what shipped, what is open,
    what is next; whoever merges adds the merge's outcome). Then run
    .claude/skills/closeout/closeout_check.py . {N} until it prints nothing.
+   This phase goes to the Red Team after your close-out. Write no sentence
+   saying a refute pass did or did not run, in v1.1, the phase log or the
+   handoff, and leave the word "refute" out of the phase log: the
+   dispatcher commits the Red Team's "## Refuter pass" table to the phase
+   log, and that table is the record (A8). A line saying no refute pass
+   ran is false once the Red Team runs, and closeout_check refuses it.
 8. Traps that cost earlier builders full regressions: the venv at .venv is
    read-only and already installs this clone's src (never pip install);
    never pin the schema head as a literal (F124); no test reads the live

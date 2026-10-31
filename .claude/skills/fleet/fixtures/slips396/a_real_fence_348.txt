@@ -1,0 +1,5 @@
+# Phase 396, (a): the code check in the real fence, phase 348
+# head dd5aed2bed07905ade02795619eb96b1308ffff9, base d76b8654538432de3fc2336f080c8357a5431049, on DESKTOP-76S9BQV
+# ok=True, result read: True
+
+{"Q10": [], "Q12": [{"file": "src/motodiag/core/migrations.py", "bytes": 575007, "base_bytes": 572812, "limit": 100000}]}

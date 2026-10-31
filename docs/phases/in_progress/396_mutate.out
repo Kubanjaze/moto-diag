@@ -1,0 +1,19 @@
+A1 a command joined with spaces again: red
+A2 the reason is the output's tail again: red
+A3 the first error line is not looked for: red
+A4 a time limit is not said first: red
+A5 an empty reason is left bare: red
+B1 the contradiction is not part of A8: red
+B2 a Red Team round in the log is not a record: red
+B3 the checklist's own rows are read: red
+B4 a wrapped line is not found: red
+B5 the handoff is not read: red
+B6 v1.1 is not read: red
+B7 the brief does not tell the Engineer: red
+C1 the mirror is not refreshed before the next mission: red
+D1 the first commit again, whatever the approval: red
+D2 the newest plan commit, whatever the approval: red
+D3 the Red Team is not given the time: red
+D4 the Quartermaster is not given the time: red
+D5 an unapproved plan is called approved: red
+18/18 red

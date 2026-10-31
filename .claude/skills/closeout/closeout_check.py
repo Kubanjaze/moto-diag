@@ -304,6 +304,7 @@ def check(repo: pathlib.Path, phase: str) -> list[str]:
     # line that no refute pass ran (K7, Phase 358)
     if phase not in A8_REFUTE_EXEMPT:
         fails += [f"A8 {f}" for f in refute_record(log_txt, phase)]
+        fails += [f"A8 {f}" for f in refute_contradictions(repo, phase)]
     return fails
 
 
@@ -502,6 +503,46 @@ def refute_record(log_txt: str, phase: str | None = None) -> list[str]:
         return []
     return ["the log mentions refute but has no '## Refuter pass' checklist, and no "
             "line saying 'No refute pass ran'"]
+
+
+#: Phase 396, (b): a claim that no refute pass ran, wherever it wraps.
+_NO_REFUTE_CLAIM = re.compile(r"\bno\s+refute\s+pass\b", re.I)
+#: A dated log entry for one of the Red Team's rounds (303's log had these and
+#: no checklist yet when the Quartermaster read it).
+_RED_TEAM_ROUND = re.compile(r"^#{2,4} .*\bRed Team's round \d", re.I | re.M)
+
+
+def refute_contradictions(repo: pathlib.Path, phase: str) -> list[str]:
+    """A phase whose log records the Red Team's review (the `## Refuter pass`
+    checklist, or a dated entry for one of its rounds) may not also say that no
+    refute pass ran: not in v1.1, not in the log outside the checklist, not in
+    its handoff (Phase 396, (b): 303, 348 and 385 each did). The checklist's own
+    rows are not read, since a row may quote the claim it judged."""
+    repo = pathlib.Path(repo)
+    done = repo / "docs" / "phases" / "completed"
+    log_txt = _read(done / f"{phase}_phase_log.md")
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "refute"))
+    import refute_check
+    block = refute_check.find_block(log_txt)
+    if block is None and not _RED_TEAM_ROUND.search(log_txt):
+        return []
+    if block is not None:
+        rest = log_txt[block.start():]
+        end = rest.find("\n## ", len("## Refuter pass"))
+        table = rest if end == -1 else rest[:end]
+        log_txt = log_txt[:block.start()] + "\n" * table.count("\n") + rest[len(table):]
+    texts = [(done / f"{phase}_phase_log.md", log_txt),
+             (done / f"{phase}_implementation.md", _read(done / f"{phase}_implementation.md"))]
+    texts += [(p, _read(p)) for p in sorted((repo / "docs" / "handoffs")
+                                            .glob(f"*_{phase}_closed.md"))]
+    fails: list[str] = []
+    for path, text in texts:
+        lines = sorted({text.count("\n", 0, m.start()) + 1
+                        for m in _NO_REFUTE_CLAIM.finditer(text)})
+        fails += [f"the log records the Red Team's review, yet {path.relative_to(repo)}:{n} "
+                  "says no refute pass ran: delete it (the dispatcher's committed "
+                  "'## Refuter pass' table is the record)" for n in lines]
+    return fails
 
 
 ASSERTION_IDS = ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8")

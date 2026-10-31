@@ -461,8 +461,11 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: test_phase385_server_writes.py (TestTheTokenColumnIsSetAside 3,
 #: TestTheControlsStillFail 12, TestAMigrationThatWritesTheColumn 2,
 #: TestTheRealRegistration 2). Measured: 12152.
+#: Phase 396 (the fleet's four slips, K61), by a diff of collected ids against
+#: master at 8e5f014 (12152): +32 -0, test_phase396_slips.py (31) and
+#: test_phase392_plan_order.py's 396-then-345 test (1). Measured: 12184.
 #:
-COLLECTED_TEST_FLOOR = 12152
+COLLECTED_TEST_FLOOR = 12184
 
 
 def _collected_count() -> int:

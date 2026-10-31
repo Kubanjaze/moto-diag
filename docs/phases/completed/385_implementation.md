@@ -93,8 +93,7 @@ re-verified on this branch's base (`ddcdfd6`):
    `tests/test_phase385_server_writes.py`, in K59's form.
    Finish line: the cell names paths that exist.
 8. **The phase's own record**: `385_phase_log.md` (the re-verified facts
-   above, the mutation record, the regression line, no refute pass unless
-   one runs), this document at v1.1, the ROADMAP row's status, the floor
+   above, the mutation record, the regression line), this document at v1.1, the ROADMAP row's status, the floor
    in `tests/test_phase255B_collected_test_floor.py` raised by a diff of
    collected ids, and the handoff `docs/handoffs/2026-10-31_385_closed.md` (dated the day
    of the close, for R6; see Deviations).
@@ -268,7 +267,7 @@ What the build did that v1.0 does not say, each with its reason. The phase log h
 - **The handoff is dated 2026-10-31**, not 2026-10-30 as Logic 8 names it: the close is on 2026-10-31, and R6 wants a handoff no earlier than the close. F212's closing paragraph carries the same date.
 - **The after-the-merge block runs no `gh`**: it finds the merge as the Mac's `master` after a fast-forward, and checks that the regression's commit is in it.
 - **One edit-guard block**: a Python script body writing v1.1 into this document was refused, since its text named `tests/`. The guard is unchanged; the Edit tool did the work.
-- **No bug fixes**, no refute pass, no new finding.
+- **No bug fixes**, no new finding.
 
 ## Results
 
