@@ -63,3 +63,13 @@ stop again and goes to item 2. The operator's words, applied literally:
 - `COLLECTED_TEST_FLOOR` 12184 → 12291, by a diff of collected ids against
   the branch's base `2df4799`: +107 −0, all in the five
   `test_phase345_*.py` files.
+
+## 2026-10-31: The mutations, 8/8 red (committed after `47f0a78`)
+
+`docs/phases/in_progress/345_mutate.py`, each mutation reverted on its own;
+its output is `345_mutate.out`: the tag check removed, the host header
+unsigned, the media skip inverted, `pick` after `at`, the over-live refusal
+removed, the mode check removed, the manifest before the database, and a
+folder with no manifest listed. All eight red. The first run stopped at M2
+because its text occurred twice in `store.py` (the harness asserts once);
+the string was anchored on the call in `_request`, and the rerun was 8/8.
