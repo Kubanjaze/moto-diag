@@ -1,6 +1,6 @@
 # Phase 345 — Cloud backup + sync
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-31
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-31 (v1.0 `0fc8ef2`, revised `7d3c73f`)
 
 ---
 
@@ -116,14 +116,105 @@ The build runs in this order. Item 1 is the Chief Engineer's first act, before a
 
 ## Planned items
 
-- [ ] Item 1: the one stop, first, with kind `login-or-credential`, the three parts and the Captain's picks; or, when the phase log already carries the operator's answers, read them and apply them literally
-- [ ] Item 2: `backup/settings.py`, the key file's names, mode and redaction, the work folder's synced-folder refusal, tests
-- [ ] Item 3: `backup/crypt.py`, scrypt and AES-256-GCM streaming, the tamper refusals, tests
-- [ ] Item 4: `backup/store.py`, the SigV4 client over an injectable transport with a delimiter-less `list`, the two known-answer tests, the fake transport and in-memory store in `tests/support/phase345.py`, tests
-- [ ] Item 5: `backup/snapshot.py`, the consistent copy, the media sync, the manifest last, the run log, tests
-- [ ] Item 6: `backup/restore.py`, list by grouping the prefix's keys, pick, restore, verify, never over live, tests
-- [ ] Item 7: `cli/backup.py`, the five commands registered in `cli/main.py`, tests
-- [ ] Item 8: the timer and service units, the installer, the `backup` extra in `server`, `docs/guide/backups.md` on `BACKEND_DOCS` in `tests/test_phase208_docs.py` and the install guide's pointer, tests
-- [ ] The mutations, each red
-- [ ] `COLLECTED_TEST_FLOOR` raised by a diff of collected ids
-- [ ] Item 9: the regression of record, the close-out, the handoff with the desktop's paste block
+- [x] Item 1: the one stop, first, with kind `login-or-credential`, the three parts and the Captain's picks; or, when the phase log already carries the operator's answers, read them and apply them literally
+- [x] Item 2: `backup/settings.py`, the key file's names, mode and redaction, the work folder's synced-folder refusal, tests
+- [x] Item 3: `backup/crypt.py`, scrypt and AES-256-GCM streaming, the tamper refusals, tests
+- [x] Item 4: `backup/store.py`, the SigV4 client over an injectable transport with a delimiter-less `list`, the two known-answer tests, the fake transport and in-memory store in `tests/support/phase345.py`, tests
+- [x] Item 5: `backup/snapshot.py`, the consistent copy, the media sync, the manifest last, the run log, tests
+- [x] Item 6: `backup/restore.py`, list by grouping the prefix's keys, pick, restore, verify, never over live, tests
+- [x] Item 7: `cli/backup.py`, the five commands registered in `cli/main.py`, tests
+- [x] Item 8: the timer and service units, the installer, the `backup` extra in `server`, `docs/guide/backups.md` on `BACKEND_DOCS` in `tests/test_phase208_docs.py` and the install guide's pointer, tests
+- [x] The mutations, each red
+- [x] `COLLECTED_TEST_FLOOR` raised by a diff of collected ids
+- [x] Item 9: the regression of record, the close-out, the handoff with the desktop's paste block
+
+## Deviations
+
+- **Item 1 did not stop.** The operator's answers were already on the
+  branch (`15c8449`), so the Engineer applied them as the plan says: the
+  passphrase is `MOTODIAG_BACKUP_PASSPHRASE` in `backup.env`; every
+  offsite copy is kept (the store has no delete); 03:00 nightly. All three
+  were the Captain's picks.
+- **`take_snapshot` returns a `RunResult`** (the `Manifest` with the media
+  uploaded and skipped and the bytes sent), not the `Manifest` alone,
+  because `backup run` prints those counts; and it takes a `label`
+  keyword, which the manifest and the run log record.
+- **`work_dir()` takes no argument.** The plan wrote `work_dir(settings)`,
+  but the folder comes only from `MOTODIAG_BACKUP_WORK_DIR` or the
+  default; nothing in the key file names it. It is created mode 700.
+- **`names_in(path)`**, a names-only reader of the key file, added for
+  `backup status`, which must say which names the file holds even when
+  `load_backup_settings` refuses it.
+- **The key file's parser** skips blank and `#` lines and removes one pair
+  of matching quotes around a value, so a file written in `server.env`'s
+  quoted style is read the same.
+- **`decrypt_file` refuses a header cost outside 2**10 to 2**22** before
+  deriving a key, so a changed cost byte cannot make it allocate gigabytes
+  before the tag fails. A version other than 1, and a file shorter than a
+  header and a tag, are refused too.
+- **`encrypt_file` returns the ciphertext's sha256** (the payload hash the
+  PUT signs), and its default cost is read at the call, so the tests run
+  at 2**10; the cost is in each header.
+- **The copy of the database is switched out of WAL mode**
+  (`journal_mode=delete`): live's WAL mode carried over, and reading the
+  copy left `-wal` and `-shm` files that can hold plaintext. Seen by the
+  new tests' first run, before any commit (the phase log).
+- **A restore refuses a manifest path that leaves the target folder.** The
+  manifest is authenticated, so this needs the passphrase to exploit; it
+  is one line.
+- **`restore` and `backup restore` take `--db` and `--data-dir`** like
+  `run`, so a test names live's folders; the defaults are the settings'.
+- **The `transport`'s returned body is a binary file object**, not bytes,
+  so `get` streams a large object to disk; the fake returns a `BytesIO`.
+- **The default urllib transport is tested against an HTTP server on
+  127.0.0.1**, which `network_guard` allows. No test reaches the bucket.
+- **The guide asks the operator to set the service's two names first**
+  (`MOTODIAG_DB_PATH`, `MOTODIAG_DATA_DIR`) and the server's `motodiag` on
+  `PATH`: without them `backup run` copies the settings' default database
+  and `restore` cannot tell which folder is live's.
+- **The timer names its unit** (`Unit=motodiag-backup.service`, systemd's
+  default for that name, written out).
+- **The handoff's desktop block restores into a dated folder**,
+  `~/motodiag/restore_check_<date and time>`, not `~/motodiag/restore_check`,
+  because a restore refuses a folder that is not empty and the block may
+  be pasted twice; and it runs `pragma integrity_check` with the server's
+  own Python, since the `sqlite3` program may not be installed there. It
+  also checks that the server's venv loads the new package, and names the
+  reinstall if it does not.
+- **No bug fixes.**
+
+## Results
+
+- **Shipped:** `src/motodiag/backup/` (`settings.py`, `crypt.py`,
+  `store.py`, `snapshot.py`, `restore.py`); `src/motodiag/cli/backup.py`,
+  `motodiag backup run | list | restore | verify | status`, registered in
+  `cli/main.py`; `ops/desktop/motodiag-backup.service`,
+  `motodiag-backup.timer` (03:00, `Persistent=true`),
+  `install_backup_unit.sh`; the `backup` extra, which `server` installs;
+  `docs/guide/backups.md` on `BACKEND_DOCS`, and the install guide's
+  pointer.
+- **SigV4:** both of AWS's published worked examples reproduce their
+  signatures (GET `test.txt`: `f0e8bdb8…bdb41`; listing
+  `max-keys=2&prefix=J`: `34b48302…dc6f7`).
+- **Tests:** 107 in five files, `tests/test_phase345_*.py`, with
+  `tests/support/phase345.py`. Collected floor 12184 → 12291, by a diff
+  of collected ids against the branch's base `2df4799` (+107 −0). None
+  skips, none opens a socket beyond loopback, none reads live.
+- **The docs-drift control:** a planted `motodiag backup prune` in the
+  guide turned `tests/test_phase208_docs.py` red; removed, green.
+- **Mutations:** 8/8 red (`345_mutate.out`).
+- **The code's counts:** the new code is ruff-clean, mypy-clean and has no
+  function over McCabe 20; no pin moved.
+- **Regression of record** (after `wholetree.sh --full`, 5056 passed):
+  Regression of record: 12186 passed, 0 failed, 105 skipped, 0 errors at `c2b0767` (35 min 23 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0) (run inside the fleet's fence)
+- **Line coverage of record:** 87.92% at `c2b0767` (the pin is 87.50%).
+- **Live:** none; nothing here writes to live. The proof against the real
+  bucket is the operator's run on the desktop after the merge (the
+  handoff).
+
+## Version history
+
+| version | date | what |
+|---|---|---|
+| 1.0 | 2026-10-31 | the plan (`0fc8ef2`), revised for the Executive Officer (`7d3c73f`) |
+| 1.1 | 2026-10-31 | built; Deviations and Results |
