@@ -1,5 +1,24 @@
 # deploy — changelog
 
+## 2026-10-31 — device_tokens.last_seen_at joins SERVER_WRITES (Phase 385, K39, F212)
+
+The operator, 2026-10-21: "add device_tokens.last_seen_at to the list as its
+own phase" (K39), scoped to that one column. The app's push registration
+(`POST /v1/push/register`, `push/registry.py` `register_token`) refreshes
+the column on every registration, so 384's check 8 failed on one changed
+row nothing deployed (F212).
+
+`deploy.py`: one line, `SERVER_WRITES["device_tokens"] =
+frozenset({"last_seen_at"})`, and its comment. `server_masked`,
+`WHOLE_TABLE` and every refusal are unchanged. The upsert's rebind of
+`user_id` and `platform`, and a new token row, are not listed (F210).
+Held by the pin in `tests/test_phase383_server_writes.py` and by
+`tests/test_phase385_server_writes.py` (19 tests: the registration set
+aside, the three controls before and after the apply, beside a
+registration and alone, the migration that names the column, the real
+`register_token` on a fresh database). `385_mutate.py`: 5/5 red, each of the
+three controls seen failing on its own mutation.
+
 ## 2026-10-29 — audit_events joins SERVER_WRITES as a whole table (K59, before Phase 348)
 
 The operator, 2026-10-29: "audit_events joins SERVER_WRITES as a whole

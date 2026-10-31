@@ -160,9 +160,12 @@ class TestAMigrationThatWritesTheColumn:
 
 def test_the_list_is_exactly_this():
     """A column joins the list by a phase that measured the API writing it;
-    a whole table by the operator's word (K59, audit_events)."""
+    a whole table by the operator's word (K59, audit_events).
+    `device_tokens.last_seen_at` was measured by 384's check 8 (F212) and
+    joined in Phase 385 (K39)."""
     assert D.SERVER_WRITES == {"api_keys": frozenset({"last_used_at"}),
-                               "audit_events": D.WHOLE_TABLE}
+                               "audit_events": D.WHOLE_TABLE,
+                               "device_tokens": frozenset({"last_seen_at"})}
     assert SCOPE["tables"].keys().isdisjoint(D.SERVER_WRITES)
 
 
