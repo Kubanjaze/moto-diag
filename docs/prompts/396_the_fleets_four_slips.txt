@@ -1,0 +1,32 @@
+Do this: start Phase 396, the fleet's four slips from 348 and 385 (row 396, new: add it to docs/ROADMAP.md as 🔲 with this prompt, then 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out. Built by a builder session (it changes .claude/skills/fleet/, which the push gate keeps from the fleet); the fleet waits for it.
+
+- **Its place in the order:** right after 385 and before 345 in "Next, in order", with a dated entry under "Changes to the order" and the next K-id (fetch master first; the advisor on the Mac may have taken one). Update tests/test_phase392_plan_order.py in the same commit.
+- **The row names the first-shop phase it unblocks (K43 rule 4):** 345, and every first-shop phase after it, whose Quartermaster verdicts are not trustworthy until (a) is fixed.
+- **You are at ~/Projects/moto-diag on the PC.** The fleet is waiting on 345's needs-hands; check `pgrep -x bwrap` before any whole-tree or regression run all the same. Do not touch issue #45.
+
+My words: "fix the four things the fleet got wrong on 348 and 385 before the next phase."
+
+The four slips, measured on real phases. Re-read each one at Step 0.
+
+(a) **The Quartermaster's code-quality check gives no result in the fence.** On 348 (PR #40, 2026-10-30) and 385 (PR #43, 2026-10-31) the Quartermaster refused on Q10 and Q12 with "the fenced code check gave no result" (`quartermaster.code_command`, run by `dispatcher.code_findings` through `self.checked(..., full=False, command=...)`). The same command run by hand outside the fence on 348's head, with the fleet's venv, printed a valid `{"Q10": [], "Q12": [...]}` line and exited 0 (2026-10-30, the overseer). Find why the fenced run returns nothing (the fence's paths, the venv's binding, `git cat-file`/`git show` on the base inside the clone, a time limit, its output being cut), fix it, and prove it on 348's and 385's merged heads in the real fence (389's rule: no rank goes live on a new check until it has run once against a real artefact in the real place). A check that cannot run must say why in its finding, never a bare "no result".
+
+(b) **The close-out writes "No refute pass ran" before the Red Team runs.** 303 (Quartermaster V12), 348 (Red Team round 2) and 385 (Quartermaster Q7) each carried that false line in v1.1, the phase log or the handoff, while the same log records the Red Team's rounds. The Engineer's close-out brief and template should not assert that no refute pass ran when the phase goes to the Red Team; the dispatcher's committed `## Refuter pass` table is the record (A8). Fix the brief/template and add a check that refuses the contradiction.
+
+(c) **The next mission is read from a stale plan after a long stage.** On 2026-10-31 the Quartermaster's stage ran 11:07 to 12:00; 385 was merged at 11:37; at 12:00 the dispatcher opened duplicate issue #44 for 385 from the order it read at the cycle's start ("next: opened issue 44 ... next: the row is on master"). `stage_next` must re-read master's rows (refresh the mirror) after any stage in the same cycle, or run only at a cycle's start.
+
+(d) **The Red Team is handed the Captain's first draft, not the approved plan.** On 348 the plan was rewritten on the branch by the operator's maintenance (b992068, 22f600b, 85b2db5) and approved by label; the Red Team's round 1 was given f1a4146 (the Captain's own-file draft) as "the approved v1.0". The plan of record for the Red Team (and the Quartermaster's v1.0-to-v1.1 diff) is the plan as it stood when `plan:approved` was last applied.
+
+Out of scope, for my decision later, each its own finding if not already filed:
+- Q3's refusal when the operator overrides spent Red Team rounds by a K-id (303's K57): the Quartermaster cannot accept an override today.
+- Q12's file-size rule against src/motodiag/core/migrations.py (575 KB against a 100 KB limit; every migration grows it).
+
+How it is proven:
+- each slip has a known-bad fixture from the real phase (348's and 385's Quartermaster runs; 348's Red Team round 1 brief; the 2026-10-31 12:00 log lines; 303/348/385's false lines), seen red before the fix and green after;
+- (a) once in the real fence on 348's and 385's heads, with the output kept as a fixture;
+- the mutations, red.
+
+Stops beyond rule 1: any change that loosens a Quartermaster check, the push gate, or a deploy refusal.
+
+After the merge: one block for the desktop that moves the fleet's copy (~/motodiag/fleet/code) to master and restarts motodiag-fleet.service, accepting "the search on start:" or a "resume" line, every gh call with -R Kubanjaze/moto-diag.
+
+Report at the end: each slip's cause, its fix and its fixture seen red; (a)'s real-fence output on both heads; the regression line; verify_phase.sh's result; the next step, my call.
