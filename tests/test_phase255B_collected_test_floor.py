@@ -456,8 +456,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: test_phase348_audit_api.py (12), test_phase348_audit_cli.py (12),
 #: test_phase348_migration.py (9), test_phase348_wiring.py (6),
 #: test_phase348_server_writes.py (4). Measured on the branch: 12133.
+#: Phase 385 (device_tokens.last_seen_at joins SERVER_WRITES, K39), by a diff
+#: of collected ids against the branch's base d0c28cc (12133): +19 -0, all in
+#: test_phase385_server_writes.py (TestTheTokenColumnIsSetAside 3,
+#: TestTheControlsStillFail 12, TestAMigrationThatWritesTheColumn 2,
+#: TestTheRealRegistration 2). Measured: 12152.
 #:
-COLLECTED_TEST_FLOOR = 12133
+COLLECTED_TEST_FLOOR = 12152
 
 
 def _collected_count() -> int:

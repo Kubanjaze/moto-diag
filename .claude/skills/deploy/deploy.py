@@ -173,9 +173,17 @@ def diff(a: dict, b: dict) -> dict:
 #: table: it is append-only and only the server writes it." For a WHOLE_TABLE
 #: entry the rows the API adds are set aside; a row changed or removed is not,
 #: since the table's triggers refuse both, so either one is drift.
+#:
+#: F212, K39 (Phase 385, the operator): "add device_tokens.last_seen_at to the
+#: list as its own phase". The app's push registration (`POST
+#: /v1/push/register`, `push/registry.py` `register_token`) refreshes it on
+#: every registration, in its upsert's `ON CONFLICT(token) DO UPDATE`. The
+#: same upsert's rebind of `user_id` and `platform`, and a new token row, are
+#: not listed (F210), so either one is drift.
 WHOLE_TABLE: frozenset[str] = frozenset({"*"})
 SERVER_WRITES: dict[str, frozenset[str]] = {"api_keys": frozenset({"last_used_at"}),
-                                            "audit_events": WHOLE_TABLE}
+                                            "audit_events": WHOLE_TABLE,
+                                            "device_tokens": frozenset({"last_seen_at"})}
 
 
 def server_masked(d: dict, approved: dict | None) -> tuple[dict, list[str]]:

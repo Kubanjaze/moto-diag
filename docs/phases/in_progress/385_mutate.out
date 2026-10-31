@@ -1,0 +1,6 @@
+E1 the entry removed: red
+E2 the entry widened to WHOLE_TABLE (the added token row): red
+E3 the entry widened to last_seen_at and platform (the rebind): red
+E4 last_seen_at listed under the second table instead (another table): red
+P1 the pin's literal without the new entry: red
+5/5 red
