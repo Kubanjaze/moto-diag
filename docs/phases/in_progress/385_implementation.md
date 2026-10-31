@@ -105,15 +105,17 @@ re-verified on this branch's base (`ddcdfd6`):
    The block: brings the Mac's `master` up to date; runs
    `verify_phase.sh 385 <regression hash> <merge>` (385 has no dry-run
    diff, so its check 8 reports no deploy to verify); runs
-   `remote.py verify-live 348`, which must exit 0, and prints its "set
+   `remote.py verify-live 348`, the live proof of record (K60), which must
+   exit 0, and prints its "set
    aside" line, where the token row appears if the phone registered since
    348's backup; runs `remote.py verify-live 384` for the record and prints
    its lines, without judging it, since live is past 384. ALL GOOD rests on
    385's check and 348's verify-live; any `device_tokens` line outside "set
    aside" in either output is SOMETHING IS OFF. Every `gh` call in the
    block names `-R Kubanjaze/moto-diag` (R8).
-   Finish line: the block is in the handoff before the merge; R6 and R8
-   pass.
+   Finish line: the block is in the handoff before the merge, with
+   `verify-live 348` exiting 0 from the Mac as the proof of record (K60);
+   R6 and R8 pass.
 
 Nothing under `src/` changes. The fleet's folder does not change.
 
@@ -166,8 +168,11 @@ deploy, 345 first, as the 2026-10-21 entry says.
 
 ## Rule-1 stops anticipated
 
-- **A real fork:** the row's live proof. The row and the prompt say
-  "`verify_phase.sh 384` passes again from the Mac", but live has been past
+- **A real fork, decided (A)** by the operator, 2026-10-31 (K60): "385's
+  live proof is the newest deployed phase's check, verify-live 348 from the
+  Mac, with verify-live 384 run for the record only; 384 can no longer pass
+  since 348's migration 088." The fork as it was put: the row's live
+  proof. The row and the prompt say "`verify_phase.sh 384` passes again from the Mac", but live has been past
   384 since 2026-10-30 (348's migration 088), so `verify-live 384` exits 3
   on 348's schema objects whatever the list holds, and no change in this
   phase can make 384's check 8 pass. Two plans would ship different things:
