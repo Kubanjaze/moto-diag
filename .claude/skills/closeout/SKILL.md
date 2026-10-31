@@ -22,7 +22,7 @@ and each is a file fact rather than a claim:
 | A5 | A regression line that parses as `regression.sh` prints it: count, commit hash **and** the pytest command (since 358; ten earlier closes are a pinned exemption and keep the hash-and-count rule), recording 0 failed, 0 errors, exit 0 and only the skips `EXPECTED_SKIPS` pins (since 383, F206; 382 is a pinned exemption for its unnamed skip) |
 | A6 | A ROADMAP row whose **body cell** is within 120 words |
 | A7 | An `implementation.md` history row, and a version header naming the phase |
-| A8 | A log that mentions refute carries the `## Refuter pass` checklist (which must pass `refute_check`), or one line reading "No refute pass ran" (since 358; forty earlier closes are a pinned exemption) |
+| A8 | A log that mentions refute carries the `## Refuter pass` checklist (which must pass `refute_check`), or one line reading "No refute pass ran" (since 358; forty earlier closes are a pinned exemption); and a log that records the Red Team (the checklist, or a dated entry for one of its rounds) has no "no refute pass" claim in v1.1, the log outside the checklist or the handoff (since 396) |
 
 `closeout_check.py` decides all eight. The test and the push guard both call
 it, so they cannot drift apart.

@@ -611,6 +611,34 @@ Proven once on the desktop against a copy of live:
 `fixtures/deploy/trial/trial_output.txt`; the known-bad cases are in
 `fixtures/deploy/known_bad/`.
 
+## Four slips from 348 and 385 (Phase 396, K61)
+
+Each was measured on a real phase; its artefact is in `fixtures/slips396/`.
+
+1. **A command reaches the fence as its argv.** `check_run` builds the
+   script with `shlex.join`; a plain join broke the Quartermaster's
+   `sh -c` code check into a bash syntax error on 348 and 385, so Q10 and
+   Q12 never ran. When a run gives no result, `quartermaster.no_result_why`
+   says how it ended and the line that names the error (a time limit
+   first), never a tail of the output. Proven in the real fence on both
+   heads (`a_real_fence_348.txt`, `a_real_fence_385.txt`, by
+   `396_real_fence.py`).
+2. **The close-out says nothing about a refute pass.** A fleet phase goes
+   to the Red Team after its close-out, and the dispatcher's committed
+   `## Refuter pass` table is the record (A8). The Engineer's brief (rule 7)
+   says so; `closeout_check.refute_contradictions`, inside A8, refuses a
+   "no refute pass" claim in v1.1, the log outside the table or the handoff
+   of a phase whose log records the Red Team.
+3. **The next mission reads master as it is.** `cycle()` refreshes the
+   mirror just before `next_due`: on 2026-10-31 385 merged during a
+   53-minute stage and the stale row opened duplicate #44.
+4. **The plan of record is the plan as approved.** `red_team.plan_commit`
+   takes the time `plan:approved` was last applied
+   (`Fleet.plan_approved_at`) and picks the newest plan commit at or before
+   it, for the Red Team's brief and the Quartermaster's v1.0-to-v1.1 diff.
+   Without one, the brief says the plan is its first commit, never "as
+   approved".
+
 ## What is held by a test
 
 `tests/test_phase387_fleet_contract.py` (the checklist, every known-bad

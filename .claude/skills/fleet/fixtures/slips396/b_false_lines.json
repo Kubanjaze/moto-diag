@@ -1,0 +1,16 @@
+{
+  "about": "Phase 396, slip (b): the 'no refute pass' lines each phase carried while its own log recorded the Red Team's rounds, at the commit a rank judged. Each line's text is copied from `git show <commit>:<file>`.",
+  "lines": [
+    {"phase": "303", "commit": "db87313", "file": "docs/phases/completed/303_phase_log.md", "line": 158,
+     "text": "No refute pass ran.", "caught_by": "the Quartermaster's V12 on PR #34"},
+    {"phase": "348", "commit": "8f4e056", "file": "docs/phases/completed/348_implementation.md", "line": 156,
+     "text": "- **No bug fixes and no refute pass.** No defect was found in the phase's own committed code, so there is no bug-fix register; No refute pass ran.",
+     "caught_by": "the Red Team's round 2 on PR #40"},
+    {"phase": "348", "commit": "8f4e056", "file": "docs/phases/completed/348_phase_log.md", "line": 194,
+     "text": "- No refute pass ran: the plan names none for this phase.", "caught_by": "the Red Team's round 2 on PR #40"},
+    {"phase": "348", "commit": "8f4e056", "file": "docs/handoffs/2026-10-30_348_closed.md", "line": 7,
+     "text": "- `348_phase_log.md` (no bug fixes; no refute pass ran);", "caught_by": "the Red Team's round 2 on PR #40"},
+    {"phase": "385", "commit": "46db82e", "file": "docs/phases/completed/385_implementation.md", "line": 271,
+     "text": "- **No bug fixes**, no refute pass, no new finding.", "caught_by": "the Quartermaster's Q7 on PR #43"}
+  ]
+}

@@ -3892,3 +3892,8 @@ Write-up: [`348_implementation.md`](docs/phases/completed/348_implementation.md)
 
 Log: [`docs/phases/completed/385_phase_log.md`](docs/phases/completed/385_phase_log.md).
 Write-up: [`385_implementation.md`](docs/phases/completed/385_implementation.md).
+
+## Phase 396 — The fleet's four slips from 348 and 385 — CLOSED 2026-10-31
+
+Log: [`docs/phases/completed/396_phase_log.md`](docs/phases/completed/396_phase_log.md).
+Write-up: [`396_implementation.md`](docs/phases/completed/396_implementation.md).

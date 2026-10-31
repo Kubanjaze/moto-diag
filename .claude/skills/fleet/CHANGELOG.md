@@ -1,5 +1,24 @@
 # fleet — changelog
 
+## 2026-10-31 — the four slips from 348 and 385 (Phase 396, K61)
+
+The operator, 2026-10-31: "fix the four things the fleet got wrong on 348
+and 385 before the next phase." The prompt is
+`docs/prompts/396_the_fleets_four_slips.txt`; Step 0 is `396_step0.md`.
+
+- **(a)** `dispatcher.check_run`: `shlex.join(command)`;
+  `quartermaster.no_result_why`; `code_findings` passes it.
+- **(b)** `engineer.BRIEF` rule 7: no sentence about a refute pass, the word
+  left out of the log; `closeout_check.refute_contradictions` in A8.
+- **(c)** `dispatcher.cycle`: `update_mirror()` and `master_rows()` before
+  `next_due`.
+- **(d)** `red_team.plan_commit(…, approved_at)`, `red_team.plan_label`,
+  `Fleet.plan_approved_at`; both gathers take `approved_at`.
+- **Fixtures:** `fixtures/slips396/` (385's code-check output, 348's verdict
+  lines, the false refute lines, the 2026-10-31 log, 348's plan history,
+  and the real-fence output on both heads).
+- F237 and F238 filed (out of scope). 18/18 mutations red (`396_mutate.out`).
+
 ## 2026-10-29 — the database step through the fleet (Phase 395, K58, F232)
 
 The operator, 2026-10-29: "add it altogether to throw at it", then "yes go

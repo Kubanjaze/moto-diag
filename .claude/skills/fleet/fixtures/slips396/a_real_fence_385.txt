@@ -1,0 +1,5 @@
+# Phase 396, (a): the code check in the real fence, phase 385
+# head 46db82e1df7a0a293ee0b4486ded5b6e786a18ae, base ddcdfd68472e0a93574226378cda8d30c3354298, on DESKTOP-76S9BQV
+# ok=True, result read: True
+
+{"Q10": [], "Q12": []}

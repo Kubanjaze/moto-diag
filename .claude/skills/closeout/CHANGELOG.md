@@ -1,5 +1,17 @@
 # closeout — changelog
 
+## 2026-10-31 — A8 refuses "no refute pass" beside the Red Team's record (Phase 396, K61)
+
+`closeout_check.refute_contradictions`, run inside A8: a phase whose log
+records the Red Team's review (the `## Refuter pass` checklist, or a dated
+entry for one of its rounds) fails when its v1.1, its log outside the
+checklist, or its handoff says no refute pass ran, naming file and line.
+303, 348 and 385 each carried such a line (`fleet/fixtures/slips396/
+b_false_lines.json`). Nothing A8 accepted before is refused unless it is
+that contradiction: a builder's phase with no Red Team still writes "No
+refute pass ran". Over master's 350 closed logs only 385's v1.1 had it; its
+two fragments are deleted. Held by `tests/test_phase396_slips.py`.
+
 ## 2026-10-29 — the regression of record measures coverage (Phase 393, K54)
 
 `regression.sh` runs the suite with `--cov=motodiag`, writes the data and a

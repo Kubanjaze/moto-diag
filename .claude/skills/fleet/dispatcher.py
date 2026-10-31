@@ -76,6 +76,7 @@ import json
 import os
 import pathlib
 import re
+import shlex
 import shutil
 import signal
 import subprocess
@@ -965,6 +966,12 @@ class Fleet:
                          "no stage")
         return out
 
+    def plan_approved_at(self, issue: int) -> str | None:
+        """When `plan:approved` was last applied here: the plan of record for
+        the Red Team and the Quartermaster is the plan as it stood then
+        (Phase 396, (d))."""
+        return self.last_applied(self.label_events(issue), "plan:approved")
+
     @staticmethod
     def last_applied(events: list[dict], label: str) -> str | None:
         times = [e["at"] for e in events if e["label"] == label]
@@ -1254,7 +1261,10 @@ class Fleet:
             if r.returncode != 0:
                 return Check(False, commit, why=f"the check clone failed: {r.stderr.strip()[:200]}")
         wt = ".claude/skills/closeout/wholetree.sh"
-        script = (" ".join(command) if command else
+        # Quoted, so an argv holding a shell script (the Quartermaster's code
+        # check, `sh -c '<script>'`) reaches the fence as that argv (Phase
+        # 396, (a): a plain join gave bash `sh -c if …; then` on 348 and 385).
+        script = (shlex.join(command) if command else
                   f"{wt} --full && .claude/skills/closeout/regression.sh" if full else wt)
         runner = FencedRunner(self, target, run / "run")
         try:
@@ -1820,8 +1830,9 @@ class Fleet:
         self.log(f"issue {issue}: the Red Team on phase {phase}, round {rnd}")
         try:
             scan = red_team.code_scan(clone)               # Phase 393: the five questions
-            v, call = red_team.review(phase, rnd, red_team.gather(clone, phase, f9.why, scan=scan),
-                                      clone=clone, run=runner, scan=scan)
+            context = red_team.gather(clone, phase, f9.why, scan=scan,
+                                      approved_at=self.plan_approved_at(issue))
+            v, call = red_team.review(phase, rnd, context, clone=clone, run=runner, scan=scan)
         except RateLimited as e:
             self.pause(j, e, runner)
             return "rate-limited"
@@ -1965,7 +1976,9 @@ class Fleet:
         code = self.checked(clone, head, full=False, command=quartermaster.code_command(base))
         pr = quartermaster.code_result(code.out)
         cov = code_quality.q11(kept if kept.is_file() else None, clone, base)
-        return quartermaster.code_checks(pr, cov, code.why[-300:])
+        why = "" if pr is not None else quartermaster.no_result_why(code.out, ok=code.ok,
+                                                                    why=code.why)
+        return quartermaster.code_checks(pr, cov, why)
 
     def stage_quartermaster(self, issue: int, phase: str, body: str, branch: str, *,
                             resume: dict | None = None) -> str:
@@ -2001,7 +2014,8 @@ class Fleet:
             runner = FencedRunner(self, clone, run / "run", journal=j)
             try:
                 judged, call = quartermaster.judge(
-                    phase, quartermaster.gather(clone, phase, found, extra, ver.out, pr_body),
+                    phase, quartermaster.gather(clone, phase, found, extra, ver.out, pr_body,
+                                                approved_at=self.plan_approved_at(issue)),
                     clone=clone, run=runner)
             except RateLimited as e:
                 self.pause(j, e, runner)
@@ -2719,7 +2733,11 @@ class Fleet:
                     continue
                 self.run_stage(n, *chosen)
         if not self.load().get("paused"):
-            entry = self.next_due(rows)
+            # Master as it is now, not as it was when the cycle began (Phase
+            # 396, (c)): on 2026-10-31 385 merged during a 53-minute stage, and
+            # the next mission read its stale 🚧 row and opened #44.
+            self.update_mirror()
+            entry = self.next_due(self.master_rows())
             if entry is not None:
                 why = self.space_refusal()
                 if why:

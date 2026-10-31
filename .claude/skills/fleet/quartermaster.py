@@ -391,6 +391,25 @@ def code_result(out: str) -> dict | None:
     return None
 
 
+_ERROR_LINE = re.compile(r"error|Traceback|fatal:|REFUSED|No such file|not found|"
+                         r"Permission denied|time limit", re.I)
+
+
+def no_result_why(out: str, *, ok: bool, why: str = "") -> str:
+    """Why the fenced code check gave no `pr` result (Phase 396, (a)): how it
+    ended, and the first line of its output that names an error, else its
+    last line. Never a tail of the output, which on 348 and 385 was bash's
+    echo of the command."""
+    ended = "it exited 0" if ok else "it failed"
+    if "time limit" in why:
+        return f"{ended}: {why.strip()[:240]}"
+    lines = [ln.strip() for ln in f"{out}\n{why}".splitlines() if ln.strip()]
+    if not lines:
+        return f"{ended} and printed nothing"
+    said = next((ln for ln in lines if _ERROR_LINE.search(ln)), lines[-1])
+    return f"{ended}, and printed no Q10/Q12 line; it said: {said[:200]}"
+
+
 def _plural(n: int, word: str) -> str:
     return f"{n} {word}" + ("" if n == 1 else "s")
 
@@ -399,7 +418,8 @@ def code_checks(pr: dict | None, cov: dict, why: str = "") -> list[Finding]:
     """Q10, Q11 and Q12 from the scripts' results. Each failure names the
     file and the number (K54)."""
     if pr is None:
-        none = f"the fenced code check gave no result: {why}"[:300]
+        none = (f"the fenced code check gave no result: "
+                f"{why.strip() or 'and no reason was given'}")[:300]
         q10, q12 = Finding("Q10", False, none), Finding("Q12", False, none)
     else:
         names = {"ruff": "ruff finding", "mypy": "mypy error"}
@@ -501,9 +521,9 @@ def brief(phase: str) -> str:
 
 
 def gather(clone: pathlib.Path, phase: str, found: list[Finding], extra: dict[str, object],
-           verify_text: str, pr_body: str) -> str:
+           verify_text: str, pr_body: str, approved_at: str | None = None) -> str:
     """Everything the model reads, all of it produced by script."""
-    pc = red_team.plan_commit(clone, phase)
+    pc = red_team.plan_commit(clone, phase, approved_at)
     plan_diff = (_git(clone, "diff", pc, "HEAD", "-M", "--",
                       f"docs/phases/in_progress/{phase}_implementation.md",
                       f"docs/phases/completed/{phase}_implementation.md").stdout
@@ -516,7 +536,8 @@ def gather(clone: pathlib.Path, phase: str, found: list[Finding], extra: dict[st
             + f"\n\n=== the Captain's newest recommendation ===\n{extra['captain']}"
             + f"\n\n=== the Red Team's newest verdict ===\n{extra['red_team']}"
             + f"\n\n=== the pull request's body ===\n{pr_body.strip()}"
-            + f"\n\n=== the diff of v1.0 ({(pc or 'not found')[:12]}) to v1.1 ===\n{plan_diff}"
+            + f"\n\n=== the diff of v1.0 ({red_team.plan_label(pc, approved_at)}) to v1.1 ===\n"
+              f"{plan_diff}"
             + f"\n\n{plan_order.brief_block(clone, phase)}")
 
 

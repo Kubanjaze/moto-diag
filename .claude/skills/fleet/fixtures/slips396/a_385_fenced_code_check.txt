@@ -1,0 +1,2 @@
+/bin/bash: -c: line 1: syntax error near unexpected token `then'
+/bin/bash: -c: line 1: `/bin/sh -c if git cat-file -e ddcdfd68472e0a93574226378cda8d30c3354298:scripts/code_quality.py 2>/dev/null; then git show ddcdfd68472e0a93574226378cda8d30c3354298:scripts/code_quality.py > /fleet/run/code_quality.py; else cp scripts/code_quality.py /fleet/run/code_quality.py; fi && .venv/bin/python /fleet/run/code_quality.py pr --base ddcdfd68472e0a93574226378cda8d30c3354298 --root .'
