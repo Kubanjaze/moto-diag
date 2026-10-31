@@ -1,6 +1,6 @@
 # Phase 396 — The fleet's four slips from 348 and 385
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-31
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-31 (v1.0 `e06db8c`)
 
 ---
 
@@ -88,19 +88,56 @@ round 1 kept it); the duplicated Q10/Q12 lines in a verdict.
 
 ## Planned items
 
-- [ ] (a) `shlex.join`, `no_result_why`, tests
-- [ ] (b) the brief, A8's contradiction, 385's two lines, tests
-- [ ] (c) the cycle's refresh, test
-- [ ] (d) `plan_commit` and its callers, tests
-- [ ] the real fence on 348's and 385's heads, kept
-- [ ] the mutations, red
-- [ ] skills' SKILL.md and CHANGELOG.md
-- [ ] the regression of record, the close-out, the handoff
+- [x] (a) `shlex.join`, `no_result_why`, tests
+- [x] (b) the brief, A8's contradiction, 385's two lines, tests
+- [x] (c) the cycle's refresh, test
+- [x] (d) `plan_commit` and its callers, tests
+- [x] the real fence on 348's and 385's heads, kept
+- [x] the mutations, red
+- [x] skills' SKILL.md and CHANGELOG.md
+- [x] the regression of record, the close-out, the handoff
 
 ## Deviations
 
-(v1.1)
+- **(b)'s trigger is wider than the checklist.** v1.0's Logic 2 named a
+  log carrying the `## Refuter pass` checklist. 303's log, when the
+  Quartermaster read it, had no checklist yet, only dated entries for the
+  Red Team's rounds; so a dated "Red Team's round N" heading counts too,
+  or 303's real line would have passed.
+- **One test added beyond v1.0's list:** a stage-level test that feeds
+  385's real output through the Quartermaster's stage and reads the
+  comment, so `code_findings` itself is held (mutation A2).
+- **One mutation dropped as equivalent** (C2, the cycle's start-of-cycle
+  rows after the refresh); the phase log says why.
+- **The regression of record ran in the fence**, as 393's to 395's did:
+  this checkout's `regression.sh` failed the four tests that fail on
+  master here too (the phase log). Its driver is `396_regression.py`;
+  the real-fence proof's is `396_real_fence.py`.
+- **No bug fixes.**
 
 ## Results
 
-(v1.1)
+- **Tests:** `tests/test_phase396_slips.py` (31) and one in
+  `tests/test_phase392_plan_order.py`. Collected floor 12152 → 12184, by
+  a diff of collected ids against master at `8e5f014` (+32 −0).
+- **Each slip's real artefact, refused or reproduced before the fix and
+  passing after** (`.claude/skills/fleet/fixtures/slips396/`): 385's
+  fenced code-check output and 348's verdict lines (a); the five false
+  lines of 303, 348 and 385 (b); the 2026-10-31 log (c); 348's plan
+  history and `plan:approved` events (d).
+- **The real fence** (a), on the heads the Quartermaster judged: 348
+  `{"Q10": [], "Q12": [migrations.py, 575,007 bytes]}` (F238), 385
+  `{"Q10": [], "Q12": []}` (`a_real_fence_348.txt`, `a_real_fence_385.txt`).
+- **Mutations:** 18/18 red (`396_mutate.out`).
+- **Regression of record** (inside the fence, after `wholetree.sh --full`
+  5017 passed): Regression of record: 12079 passed, 0 failed, 105 skipped, 0 errors at `c8bd296` (13 min 8 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0) (run inside the fleet's fence)
+- **Line coverage of record:** 87.71% at `c8bd296` (the pin is 87.50%).
+- **Live:** none; this phase changes nothing on live.
+- **F237, F238** filed, for the operator's decision.
+
+## Version history
+
+| version | date | what |
+|---|---|---|
+| 1.0 | 2026-10-31 | the plan (`e06db8c`) |
+| 1.1 | 2026-10-31 | built; Deviations and Results |
