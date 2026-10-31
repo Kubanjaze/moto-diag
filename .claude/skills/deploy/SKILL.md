@@ -134,7 +134,11 @@ through `apply-live`, never through a restart.
      before onboarding (330). Since K59, `audit_events` (Phase 348's trail)
      is on the list as a whole table: every row the API adds to it is set
      aside, and a changed or removed row still refuses, since the table is
-     append-only;
+     append-only. Since Phase 385 (F212, the operator's K39),
+     `device_tokens.last_seen_at` is the second column: the app's push
+     registration refreshes it on every registration. The same upsert's
+     rebind of `user_id` or `platform`, and a new token row, stay off the
+     list and still refuse (F210);
    - a fresh dry run on a new copy stays in scope;
    - **that fresh run equals the committed exact diff, field for field**,
      clock values masked (F172, Phase 357). A diff file written before

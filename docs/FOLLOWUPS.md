@@ -3651,6 +3651,16 @@ fail only where they touch what the approved diff names), or the API
 stopped from the dry run to the apply, with a control that a write outside
 the approved scope by anything but the API still fails.
 
+**What the list still cannot cover** (Phase 385, 2026-10-31, after
+`device_tokens.last_seen_at` joined it under K39, F212):
+- **A new token row**, when the phone's push token changes: the same
+  registration adds a row to `device_tokens`, which the added-row control
+  in `tests/test_phase385_server_writes.py` keeps failing.
+- **A rebind**, when the same token is registered by another user or
+  platform: the upsert changes `user_id` or `platform`, which the
+  other-column control keeps failing.
+- **A shop's ordinary writes**, this finding's own case.
+
 ### F211
 
 **The Mac's fixed list on the desktop cannot run a phase's own deploy script, so a row change with no schema migration has no way to live from the Mac**
@@ -3674,7 +3684,7 @@ script's path held to `docs/phases/in_progress/<phase>_*.py`), added by a
 phase, with a control that a script outside that place is refused, and the
 installer run again on the desktop.
 
-### F212
+### F212 — CLOSED by Phase 385
 
 **The API writes a second column by itself, `device_tokens.last_seen_at`, which `SERVER_WRITES` does not name, so verify-live and check 8 fail on a live nothing deployed to**
 
@@ -3704,6 +3714,18 @@ either `device_tokens.last_seen_at` joins `SERVER_WRITES`, with 383's
 controls (another column of that row, an added token, the same column in
 another table each still fail), or the rule F210 asks for replaces the
 list.
+
+**Closed by Phase 385 (2026-10-31).** The operator chose the first (K39,
+2026-10-21: "add device_tokens.last_seen_at to the list as its own phase").
+`.claude/skills/deploy/deploy.py` `SERVER_WRITES` gains
+`"device_tokens": frozenset({"last_seen_at"})`, pinned by
+`test_the_list_is_exactly_this` in `tests/test_phase383_server_writes.py`.
+`tests/test_phase385_server_writes.py` holds the three controls, before the
+apply and after it: the rebind (`platform` changed on the token row), an
+added token row, and `last_seen_at` changed in another table. Each was seen
+failing on its own mutation in `385_mutate.py` (the entry widened to the
+whole table, widened to `platform`, and moved to the other table; 5/5 red).
+What the list still cannot cover is under F210.
 
 ### F213
 
