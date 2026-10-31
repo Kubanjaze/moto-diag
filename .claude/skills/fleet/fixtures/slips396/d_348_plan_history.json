@@ -1,0 +1,25 @@
+{
+  "about": "Phase 396, slip (d): the commits that changed 348's plan on `phase-348-audit-log-who-did-what-when` (git log, committer dates) and the `plan:approved` events on issue #36 (the GitHub API's issue events), 2026-10-29 to 2026-10-30.",
+  "plan_commits": [
+    {"commit": "f1a4146", "at": "2026-10-29T20:26:25-04:00", "by": "captain", "subject": "Phase 348 v1.0: the plan"},
+    {"commit": "b992068", "at": "2026-10-29T22:43:11-04:00", "by": "operator", "subject": "Phase 348 v1.0: the table design (K58, K59)"},
+    {"commit": "086a29f", "at": "2026-10-29T22:58:20-04:00", "by": "captain", "subject": "Phase 348 v1.0, revised for the Executive Officer (round 1)"},
+    {"commit": "cb033f9", "at": "2026-10-29T23:18:52-04:00", "by": "captain", "subject": "Phase 348 v1.0, revised for the Executive Officer (round 2)"},
+    {"commit": "22f600b", "at": "2026-10-29T23:56:22-04:00", "by": "operator", "subject": "Phase 348 v1.0: the operator's last plan fix (master merged in, one stop kind, item 8's requests)"},
+    {"commit": "85b2db5", "at": "2026-10-30T00:02:01-04:00", "by": "operator", "subject": "Phase 348 v1.0: four sentences brought into line with #39 on master"},
+    {"commit": "436f901", "at": "2026-10-30T12:21:58-04:00", "by": "engineer", "subject": "Phase 348: close-out (v1.1, row closed, handoff)"}
+  ],
+  "plan_approved": [
+    {"event": "labeled", "at": "2026-10-30T02:30:40Z"},
+    {"event": "unlabeled", "at": "2026-10-30T02:44:25Z"},
+    {"event": "labeled", "at": "2026-10-30T04:06:08Z"},
+    {"event": "unlabeled", "at": "2026-10-30T04:06:50Z"},
+    {"event": "labeled", "at": "2026-10-30T04:14:11Z"},
+    {"event": "unlabeled", "at": "2026-10-30T04:18:10Z"},
+    {"event": "labeled", "at": "2026-10-30T12:51:15Z"},
+    {"event": "unlabeled", "at": "2026-10-30T12:56:03Z"}
+  ],
+  "given": "f1a4146",
+  "of_record": "85b2db5",
+  "red_team_round_1": "The approved v1.0 given to this review (f1a4146e6642) is a different plan."
+}

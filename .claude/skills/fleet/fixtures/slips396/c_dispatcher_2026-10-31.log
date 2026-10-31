@@ -1,0 +1,12 @@
+2026-10-31T10:51:52-04:00 issue 41: the Red Team on phase 385, round 1
+2026-10-31T10:55:38-04:00 pushed phase-385-the-push-token-s-own-write at 46db82e1df7a as kubanjazefleet (red-team-record)
+2026-10-31T10:55:39-04:00 issue 41: clear, round 1
+2026-10-31T11:02:07-04:00 issue 41: recommendation: merge
+2026-10-31T11:07:17-04:00 issue 41: the Quartermaster on phase 385, 46db82e1df7a
+2026-10-31T12:00:00-04:00 issue 41: verdict: refuse (Q10 Q12 Q10 Q12 Q7)
+2026-10-31T12:00:02-04:00 next: opened issue 44: Phase 385: The push token's own write
+2026-10-31T12:00:02-04:00 next: the row is on master
+2026-10-31T12:05:08-04:00 reclaim (phase 385 merged): C: 281.4 -> 281.4 GB free (nothing came back to Windows: the disk image is not sparse, so the trim freed space inside Ubuntu only); Ubuntu 1006.9 -> 1006.9 GB free; fstrim: /: 49.1 GiB (52708651008 bytes) trimmed
+2026-10-31T12:05:09-04:00 issue 44: phase 385's row on master is '✅', not 🚧: no stage
+2026-10-31T12:05:11-04:00 next: opened issue 45: Phase 345: Cloud backup + sync
+2026-10-31T12:05:14-04:00 next: asked the operator (needs-hands)

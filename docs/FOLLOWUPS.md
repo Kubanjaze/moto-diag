@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F236** (this file). The
+At the time of writing the highest assigned is **F238** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4607,3 +4607,43 @@ The fix keeps the Linux case byte for byte: on Linux the brief is still
 the control still sees the kernel refuse. No skip was added, so
 `EXPECTED_SKIPS` is unchanged. Seen red on the Mac with `BIG` and green with
 the platform's own limit.
+
+### F237
+
+**The Quartermaster's Q3 cannot accept the operator's override of spent Red Team rounds**
+
+Found on Phase 303 (PR #34, 2026-10-29) and recorded at Phase 396's Step 0
+(2026-10-31). The Red Team's three rounds on 303 were spent, and the
+operator decided by K57 ("the Red Team's rounds are spent") to send it to
+the Captain. Q3 (`quartermaster.py`, `checked_comments`) passes only when
+the Red Team's newest verdict is `clear` after the Engineer's newest pull
+request, so it refused 303 (verdict `refuse`, Q3 among the failures in
+`quartermaster.jsonl`) on a merge the operator had already decided.
+
+What it affects: every phase whose Red Team rounds run out and that the
+operator moves on by a K-id gets a Quartermaster refusal it cannot pass,
+so its verdict says nothing about the rest of the checks.
+
+What would close it: the operator's decision on whether, and how, a K-id
+can stand for the Red Team's clear in Q3 (a change to a Quartermaster
+check's definition, so the operator's call). Out of Phase 396's scope by
+its prompt.
+
+### F238
+
+**Q12's file-size rule refuses every phase that adds a migration**
+
+Found at Phase 396's Step 0 (2026-10-31): `src/motodiag/core/migrations.py`
+is 575,007 bytes (`wc -c`), against Q12's limit of 100 KB per file under
+`src/`. Q12 refuses a pull request that grows a file already over the
+limit, and every new migration grows this one, so every first-shop phase
+with a migration (348's 088 was the first through the fleet) is refused on
+Q12 whatever its code is like.
+
+What it affects: 345 and every later phase with a migration; their Q12
+refusals will be about the file's history, not their change.
+
+What would close it: the operator's choice between splitting the
+migrations into a package of smaller files, or a named, pinned exemption
+for this one file with its own control (a threshold's definition, so the
+operator's call). Out of Phase 396's scope by its prompt.
