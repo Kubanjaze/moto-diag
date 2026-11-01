@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import atexit
 import functools
+import http.client
 import logging
 import queue
 import random
@@ -181,7 +182,9 @@ class Sender:
         try:
             status, reason, answer = self._transport(
                 self.dsn.envelope_url, headers, body)
-        except Exception as exc:  # the product comes before the report
+        except (OSError, http.client.HTTPException) as exc:
+            # refused, unreachable or timed out (OSError), or a broken HTTP
+            # answer; anything else is a bug and is left to raise.
             self.failed += 1
             self.last_error = type(exc).__name__
             self._warn("telemetry: sending to %s failed: %s: %s",

@@ -481,8 +481,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: test_phase343_api.py (18), test_phase343_cli.py (12),
 #: test_phase343_dsn.py (21), test_phase343_events.py (23),
 #: test_phase343_sender.py (20). Measured: 12387.
+#: Phase 343 bug fix #1 (the sender's handler names its errors), by a diff
+#: of collected ids against 58f366a (12387): +2 -0, test_phase343_sender.py's
+#: test_a_broken_http_answer_is_a_failed_send and
+#: test_a_programming_error_is_not_swallowed. Measured: 12389.
 #:
-COLLECTED_TEST_FLOOR = 12387
+COLLECTED_TEST_FLOOR = 12389
 
 
 def _collected_count() -> int:

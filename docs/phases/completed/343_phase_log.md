@@ -5,7 +5,7 @@
 Built 2026-11-01 by the Chief Engineer in a fresh clone of
 `phase-343-telemetry-crash-reporting-sentry`, inside the fleet's fence, the
 only writer. The plan is `343_implementation.md` v1.0, approved on issue
-#50. No bug fixes.
+#50. Fix round 1 (the Red Team's round 1) has two bug fixes.
 
 
 ## 2026-11-01: The operator's answers to the Chief Engineer's stop
@@ -218,3 +218,41 @@ ROADMAP row closed, the root `phase_log.md` pointer and the handoff
 `docs/handoffs/2026-11-01_343_closed.md` written. The proof against the
 real Sentry project is the operator's `motodiag telemetry check` on the
 home desktop after the merge, in the handoff; the fence has no network.
+
+## 2026-11-01: Fix round 1, the Red Team's four points
+
+The Red Team sent PR #52 back with two code points and two wording
+points. The code points are bug fixes #1 and #2; the wording points are
+the entry after them.
+
+Two shell commands were refused by the edit guard in this round, and both
+were redone with the Edit tool; the guard was not touched:
+- `cp` of the round's `sender.py` back over itself after a control run
+  (the guard: "`cp` writes into src/motodiag/telemetry/sender.py");
+- an empty `cat >> tests/test_phase343_api.py` heredoc (the guard: "the
+  redirect `>>` writes into tests/test_phase343_api.py").
+
+### Bug fix #1 — 2026-11-01 — the sender's send loop caught every exception
+
+- **Issue:** `Sender._post` caught `except Exception` around the transport
+  call. A programming error (a `TypeError` from a bad transport or header)
+  was counted as a failed send, warned once, then logged at DEBUG for the
+  rest of the minute.
+- **Root cause:** the handler named no error; the failures plan item 4
+  expects are a refused connection and a timeout.
+- **Fix:** the handler names `OSError` (which covers `URLError` and
+  `socket.timeout`) and `http.client.HTTPException` (a broken answer such
+  as `IncompleteRead`, which `urlopen` raises and which is not an
+  `OSError`). Anything else raises out of the sender's thread and is
+  printed by `threading.excepthook`; `capture` and the API are unaffected,
+  and `close` still returns within its flush limit.
+- **Files:** `src/motodiag/telemetry/sender.py`,
+  `tests/test_phase343_sender.py` (+2:
+  `test_a_broken_http_answer_is_a_failed_send`,
+  `test_a_programming_error_is_not_swallowed`),
+  `tests/test_phase255B_collected_test_floor.py` (12387 → 12389).
+- **Verified:** with the handler put back to `except Exception` by a
+  temporary edit, `test_a_programming_error_is_not_swallowed` failed (1
+  failed, 1 passed); with the fix, `tests/test_phase343_sender.py` 22
+  passed.
+- **Commit:** this entry's commit.

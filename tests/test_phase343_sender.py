@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import http.client
 import http.server
 import json
 import logging
@@ -160,6 +161,30 @@ class TestTheSender:
         assert "OSError" in warnings[0].getMessage()
         assert PLANTED_KEY not in caplog.text
         assert s.failed == 3 and s.last_error == "OSError"
+
+    def test_a_broken_http_answer_is_a_failed_send(self, senders):
+        fake = FakeTransport()
+        fake.raises = http.client.RemoteDisconnected("closed")
+        s = senders(fake, clock=_Clock())
+        s.capture(_event())
+        assert s.flush(5)
+        assert s.failed == 1 and s.last_error == "RemoteDisconnected"
+        fake.raises = http.client.IncompleteRead(b"")
+        s.capture(_event())
+        assert s.flush(5)
+        assert s.failed == 2 and s.last_error == "IncompleteRead"
+
+    def test_a_programming_error_is_not_swallowed(self, senders, monkeypatch):
+        seen: list[BaseException] = []
+        monkeypatch.setattr(threading, "excepthook",
+                            lambda args: seen.append(args.exc_value))
+        fake = FakeTransport()
+        fake.raises = TypeError("bad header")
+        s = senders(fake, clock=_Clock())
+        s.capture(_event())
+        s._thread.join(5)
+        assert [type(e) for e in seen] == [TypeError]
+        assert s.failed == 0 and s.last_error is None
 
     def test_a_non_2xx_is_logged_naming_status_and_host(self, senders, caplog):
         s = senders(FakeTransport(status=401, reason="Unauthorized"), clock=_Clock())
