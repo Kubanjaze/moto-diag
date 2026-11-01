@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F244** (this file). The
+At the time of writing the highest assigned is **F245** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4877,3 +4877,78 @@ What would close it:
   on;
 - the same rule stated in the briefs of the ranks that write operator
   blocks.
+
+### F245
+
+**A fleet-written operator block put `set -e` inside a subshell that `&&` follows, so no failed step could stop it and it would print ALL GOOD**
+
+Found 2026-11-01 by the advisor session, reading the Chief Engineer's stop
+on issue #50 (343; posted 16:00 UTC, run `20261101_105833_engineer_343`)
+before the operator ran it. The block opens `( set -e`, then puts one
+step per line:
+- the checkout and the copy of the answer;
+- `test -n "$ANSWER"`;
+- the commit;
+- `wholetree.sh` and `roadmap_check.py`;
+- the push and the label change.
+
+It closes with `) && echo "ALL GOOD" || echo "SOMETHING IS OFF"`. Bash and
+zsh both ignore `set -e` for a command on the left of `&&` or `||`. That
+includes a subshell that sets it itself: the bash manual says such a
+setting has no effect until the command completes.
+
+Measured on the Mac:
+`( set -e; false; echo "kept going after a failure;" ) && echo ALL GOOD || echo SOMETHING IS OFF`
+printed "kept going after a failure; ALL GOOD" under both `zsh -f -c` and
+`bash -c`. The control, the same subshell with nothing after it, stopped
+at `false` and exited 1.
+
+What it would have done: any failure in it would have been passed over,
+whether a whole-tree or ledger check, the checkout, an empty answer or a
+notes file already there. It would still have committed, pushed to the
+phase branch and taken `needs-admiral` off. Then it would have printed
+ALL GOOD, because the last command, the label change, succeeded. Run
+before the operator had answered, it would have recorded their previous
+comment on the issue, or nothing.
+
+It was not run. The advisor session gave the operator a replacement in
+the handoffs' form (`bash <<'EOF2'`, each step ending `|| bad "…"`). It
+refuses when the answer is older than the stop. It was tested three
+ways, with no push and no label change:
+- with no answer yet, it refused;
+- with a stand-in answer, on a throwaway local branch, it passed end to
+  end;
+- with the whole-tree step forced to fail, it stopped before the push.
+
+The census, 2026-11-01:
+- **On GitHub:** 260 comments by the fleet's account
+  (`gh api 'repos/Kubanjaze/moto-diag/issues/comments?per_page=100' --paginate`,
+  filtered by author). 6 contain "ALL GOOD". 5 of those are operator
+  blocks; the sixth is a Red Team table quoting one (pull request #43).
+  1 has this shape: issue 50's, the positive control. The other four are
+  sound, in three shapes: a one-line `&&` chain (#36 and #45), `|| fail`
+  after each step (#31) and `|| bad` after each step (#36).
+- **In the repository:** the shape is in no file
+  (`rg -l '^\s*\(\s*set -e' docs .claude` finds none).
+- **In the fleet's code:** no operator block is templated
+  (`rg -n 'set -e' .claude/skills/fleet/engineer.py .claude/skills/fleet/captain.py`
+  finds none). Each Engineer writes its block from the plan's prose. 343's
+  plan asked for one that "stops on any nonzero exit"
+  (`docs/phases/in_progress/343_implementation.md`, on its branch, Logic
+  item 1). Nothing checks a block posted to an issue.
+
+What would close it:
+- a check on every operator block a rank writes, run before it is
+  posted, and the same check over the paste blocks in `docs/handoffs/`
+  and `docs/phases/`. It refuses a block whose ALL GOOD does not depend
+  on every step:
+  - `set -e` or `set -o errexit` inside a `( … )` or `{ …; }` that `&&`
+    or `||` follows;
+  - a group of several lines whose steps do not each stop on failure.
+
+  Its known-bad fixture is this block.
+- the rule stated in the brief of every rank that writes operator blocks:
+  each step ends `|| bad "…"`, the form the handoffs use.
+
+F244, the pager, is the same kind of gap. One check over operator blocks
+could hold both.
