@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F242** (this file). The
+At the time of writing the highest assigned is **F243** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4784,3 +4784,40 @@ What would close it: each test made independent of the machine's speed,
 or its window widened until load cannot close it (397's way: windows that
 double until the process gets there), each with a known-bad case that
 waits past the old window, seen red on the old test and green on the new.
+
+### F243 — CLOSED by the commit that filed it (K64)
+
+**The Mac's approved skips did not name 390's sudo test, so no full run on the Mac could be of record**
+
+Found 2026-11-01 by the advisor session, about to record the Mac's full
+run for 397's merge. On the Mac,
+`tests/test_phase390_space.py::test_a_model_in_the_fence_cannot_use_sudo`
+skips with "bubblewrap is the desktop's": it needs bubblewrap, which only
+the desktop has. A5 accepts a regression of record only if every skip it
+names is in `EXPECTED_SKIPS` (`.claude/skills/closeout/closeout_check.py`,
+Phase 383, F206). That list named two skips, not this one. 390's own
+regressions ran in the fleet's fence, where the test runs, so no Mac run
+met the skip until the independent check of 2026-10-31.
+
+Measured with `closeout_check.regression_record` on the Mac's 2026-10-31
+skip lines (35 lines naming 49 skips) under a passing line: refused, "an
+unexpected skip: tests/test_phase390_space.py: "bubblewrap is the
+desktop's"". The same lines without that skip were accepted.
+
+What it affected: every full run on the Mac. The independent check that
+follows each fleet phase could never be of record.
+
+Closed by K64 (the operator, 2026-11-01: "plugged in, go with A"). The
+skip joins `EXPECTED_SKIPS`, held by equality in
+`tests/test_phase383_regression_outcome.py`. The test now skips with
+`pytest.skip("bubblewrap is the desktop's")` in its body instead of a
+`skipif` decorator. That is the form
+`test_each_expected_skip_is_still_in_its_file` reads, so that check stays
+as strict as it was; it would have gone red on the old file, which lacks
+the string. Seen after the change:
+- the same 49 skip lines are accepted;
+- the known-bad fixture `a5_bad_unexpected_skip.md` is still refused;
+- 390's file with any other reason is still refused;
+- `test_phase383_regression_outcome.py`, `test_phase390_space.py` and
+  `test_phase358_closeout_k6_k7.py` give 62 passed and 1 skipped on the
+  Mac (the skip is 390's, now at line 327).

@@ -1,5 +1,18 @@
 # closeout — changelog
 
+## 2026-11-01 — the Mac's approved skips name 390's sudo test (K64, F243)
+
+`EXPECTED_SKIPS` gains `("tests/test_phase390_space.py", "bubblewrap is the
+desktop's")`: the test needs bubblewrap, which only the desktop has. Without
+it, A5 refused every full run on the Mac, because 390's skip was named under
+the line and was not in the list. The test skips with `pytest.skip(...)` in
+its body instead of a `skipif` decorator, the form
+`test_each_expected_skip_is_still_in_its_file` reads, so that check is
+unchanged. The known-bad fixture `a5_bad_unexpected_skip.md` is still
+refused, and so is 390's file with any other reason. Held by
+`tests/test_phase383_regression_outcome.py` (the list, by equality). The
+operator, 2026-11-01: "plugged in, go with A".
+
 ## 2026-10-31 — A8 refuses "no refute pass" beside the Red Team's record (Phase 396, K61)
 
 `closeout_check.refute_contradictions`, run inside A8: a phase whose log
