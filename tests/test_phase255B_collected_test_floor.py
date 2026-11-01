@@ -476,8 +476,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: against master at b08378a (12292: the 397-then-343 test reached master
 #: with 397's row commit 2405758), +1 -0, test_alive_answers_on_this_system.
 #: Measured: 12293.
+#: Phase 343 (crash reports to Sentry), by a diff of collected ids against
+#: the branch's base dc0ab5a (12293): +94 -0. Added:
+#: test_phase343_api.py (18), test_phase343_cli.py (12),
+#: test_phase343_dsn.py (21), test_phase343_events.py (23),
+#: test_phase343_sender.py (20). Measured: 12387.
 #:
-COLLECTED_TEST_FLOOR = 12293
+COLLECTED_TEST_FLOOR = 12387
 
 
 def _collected_count() -> int:

@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F243** (this file). The
+At the time of writing the highest assigned is **F244** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4831,3 +4831,22 @@ the string. Seen after the change:
 - `test_phase383_regression_outcome.py`, `test_phase390_space.py` and
   `test_phase358_closeout_k6_k7.py` give 62 passed and 1 skipped on the
   Mac (the skip is 390's, now at line 327).
+
+### F244
+
+**`motodiag config show` prints `stripe_webhook_secret` in full**
+
+Found 2026-11-01 by Phase 343, widening the same command's mask for the
+Sentry DSN. `config_show` in `src/motodiag/cli/main.py` masks a setting
+only when its name contains one of `SECRET_SETTING_NAMES`, which Phase 343
+made `("api_key", "sentry_dsn")`. `stripe_webhook_secret` matches neither,
+so with `MOTODIAG_STRIPE_WEBHOOK_SECRET` set the command prints the whole
+secret to the terminal, and from there into a paste, a log or a chat. One
+setting is affected; the other secrets (`anthropic_api_key`,
+`openai_api_key`, `stripe_api_key`, `sentry_dsn`) are masked. Phase 343's
+plan kept it out of scope (Step 0 did not support the change).
+
+What would close it: `stripe_webhook_secret` added to the mask (or the
+rule widened to every name containing `secret`), with a test that sets a
+planted value, sees `****` in its row and the value nowhere, and a control
+that goes red with the mask bypassed for that field.

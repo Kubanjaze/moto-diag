@@ -466,6 +466,9 @@ async def _unhandled_handler(request: Request, exc: Exception):
         "unhandled exception in %s %s (request_id=%s): %s",
         request.method, request.url.path, rid, exc,
     )
+    # Phase 343: the crash goes to Sentry when a DSN is set.
+    from motodiag.api.telemetry import capture_crash
+    capture_crash(request, exc)
     return _problem_response(
         request, status=500, type_slug="internal-error",
         title="Internal server error",

@@ -252,6 +252,15 @@ class Settings(BaseSettings):
     # session's expiry at once.
     session_lifetime_days: int = 30
 
+    # Phase 343: crash reports and request timings to Sentry. Empty DSN
+    # means off. The DSN lives only in the desktop's server.env (mode 600);
+    # `config show` masks it. One request in ten is timed (the operator's
+    # pick, 2026-11-01); every crash is sent. An empty environment falls
+    # back to `env`.
+    sentry_dsn: str = ""
+    telemetry_traces_sample_rate: float = 0.1
+    telemetry_environment: str = ""
+
     @field_validator("max_tokens")
     @classmethod
     def validate_max_tokens(cls, v: int) -> int:
@@ -265,6 +274,19 @@ class Settings(BaseSettings):
         if v < 0.0 or v > 1.0:
             raise ValueError("ai_temperature must be between 0.0 and 1.0")
         return v
+
+    @field_validator("telemetry_traces_sample_rate")
+    @classmethod
+    def validate_traces_sample_rate(cls, v: float) -> float:
+        if v < 0.0 or v > 1.0:
+            raise ValueError(
+                "telemetry_traces_sample_rate must be between 0.0 and 1.0")
+        return v
+
+    @property
+    def telemetry_environment_name(self) -> str:
+        """The environment an event names: the setting, else ``env``."""
+        return self.telemetry_environment.strip() or self.env.value
 
     @field_validator("baud_rate")
     @classmethod

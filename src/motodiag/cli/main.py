@@ -30,6 +30,7 @@ from motodiag.cli.subscription import (
     get_enforcement_mode,
     get_tier_features,
 )
+from motodiag.cli.telemetry import register_telemetry
 from motodiag.cli.theme import get_console, status, tier_style
 from motodiag.cli.transcripts import register_transcripts
 from motodiag.cli.user import register_user
@@ -228,6 +229,10 @@ def tier(compare: bool) -> None:
     console.print()
 
 
+#: Settings whose values `config show` masks, matched as substrings.
+SECRET_SETTING_NAMES = ("api_key", "sentry_dsn")
+
+
 @cli.group()
 def config() -> None:
     """Show or inspect configuration settings."""
@@ -245,8 +250,10 @@ def config_show() -> None:
     table.add_column("Value", style="green")
 
     for key, value in settings.model_dump().items():
-        # Mask API key
-        display = "****" + str(value)[-4:] if "api_key" in key and value else str(value)
+        # Phase 343: the Sentry DSN carries its key before the "@", so its
+        # last four characters are the end of the project id.
+        secret = any(name in key for name in SECRET_SETTING_NAMES)
+        display = "****" + str(value)[-4:] if secret and value else str(value)
         table.add_row(key, display)
 
     console.print(table)
@@ -942,6 +949,9 @@ register_reference(cli)
 # <slug>`). Phase 114 built the tables, the models and the CRUD; no
 # command or route ever called any of it until now.
 register_workflow(cli)
+
+# Phase 343: `telemetry` — crash reports to Sentry (status, check).
+register_telemetry(cli)
 
 # Phase 130: register shell completion scripts + dynamic completers.
 register_completion(cli)
