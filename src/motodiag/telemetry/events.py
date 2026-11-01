@@ -6,11 +6,6 @@ stack frames as file, function, line and an in-app flag; the request id,
 the method, the route template, the status, the release, the environment
 and the host name. A transaction: the same route template, method and
 status, and its two times.
-
-Never a header, a body, a query string, a cookie, an API key, a user, a
-customer, a vehicle owner, a local variable, a source line or a
-breadcrumb. The functions take no request, so none can reach an event:
-their signatures are the rule.
 """
 
 from __future__ import annotations

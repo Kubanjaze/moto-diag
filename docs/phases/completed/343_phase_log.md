@@ -385,3 +385,15 @@ Line coverage of record: 88.02% at `805a025` (the pin is 87.50%): 0.52 points ab
 
 12292 passed plus 105 skipped is 12397, the new floor. The coverage line's suggestion is left alone, as before: raising `COVERAGE_PERCENT` would change code after the regression of record.
 
+
+## 2026-11-01: Fix round 2, the Red Team's two points
+
+- **The handoff's record list** said the phase log has no bug fixes; it
+  has two, from fix round 1. The words "no bug fixes;" are deleted.
+- **`events.py`'s module docstring** still said an event never carries a
+  customer or a vehicle owner, the promise fix round 1 removed everywhere
+  else. Its second paragraph is deleted; the first, what an event may
+  carry, stands. This is logged as a wording fix, not a bug fix: only a
+  docstring changed, no behaviour, and the Red Team filed it as wording.
+  Because a file under `src/` changed, the regression of record is run
+  again below.
