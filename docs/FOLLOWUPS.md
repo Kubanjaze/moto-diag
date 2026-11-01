@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F241** (this file). The
+At the time of writing the highest assigned is **F242** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4756,3 +4756,31 @@ example, the limit counts only from the command's first line of output,
 or the window is wide enough that load cannot close it), seen to pass in
 a full parallel run on the Mac. Also, `alive()` gives a real answer on
 macOS, or the test says that it cannot there.
+
+### F242
+
+**Three more tests give a real process a fixed short window and assert on what it did inside it**
+
+Found 2026-10-31 by Phase 397's Step 0 census (`docs/phases/in_progress/397_step0.md`,
+S0-3; the `grep` there finds 19 lines in 9 files, and F241's test among
+them). They share F241's weakness, that a busy machine can close the
+window before the process gets there, and Phase 397 leaves them, as its
+prompt asked:
+- `tests/test_phase360_edit_guard.py::test_the_clock_does_not_fire_on_a_normal_check`
+  (line 295): the real edit-guard check must finish inside the guard's own
+  clock, set to 1 s. It takes 0.4–0.5 ms on the home desktop (5 runs):
+  F241's shape exactly (6 ms of work inside 1 s).
+- `tests/test_phase360_edit_guard.py::test_the_guards_own_clock_blocks_a_slow_check`
+  (lines 288, 291): Python's start, the guard's imports and its 1 s clock
+  must fit in 10 s (0.05–0.07 s here).
+- `tests/test_phase358_wholetree_contract.py::test_the_bounded_run_kills_the_command_and_reports_a_timeout`
+  (lines 258, 260): a 1 s limit, then the kill and the return must fit in
+  10 s.
+
+None is recorded as failing; the last two have about 9 s of slack, the
+first about 1 s.
+
+What would close it: each test made independent of the machine's speed,
+or its window widened until load cannot close it (397's way: windows that
+double until the process gets there), each with a known-bad case that
+waits past the old window, seen red on the old test and green on the new.
