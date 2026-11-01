@@ -4719,7 +4719,7 @@ Compare 394's run with 395's first: same day, same method, 34 min 35 s
 against 13 min 5 s. For each run, record how many test workers it
 started and what else was running on the desktop at the time.
 
-### F241
+### F241 — CLOSED by Phase 397 (merged `023ef74`), passing in the Mac's full run at `47bd256`
 
 **A one-second window in test_phase392_check_limit failed the Mac's full parallel run**
 
@@ -4756,6 +4756,16 @@ example, the limit counts only from the command's first line of output,
 or the window is wide enough that load cannot close it), seen to pass in
 a full parallel run on the Mac. Also, `alive()` gives a real answer on
 macOS, or the test says that it cannot there.
+
+Closed 2026-11-01, by the advisor session on the Mac:
+- **Phase 397** gave the test windows that double from 1 s to 32 s, and
+  made `alive()` ask `ps` on both systems. #49 merged at `023ef74`.
+- **On the Mac, `397_mutate.py`:** 8/8 mutations red, the slow-start
+  known-bad green 3 of 3, and the old test red on it.
+- **The full run at `47bd256`:** 12244 passed, 0 failed, 49 skipped, 0
+  errors, 10 workers, 34 min 1 s, line coverage 87.96%. This test passed
+  in it. `47bd256` is the merge plus K64 (F243), without which A5 accepted
+  no Mac run. The lines are in `docs/phases/completed/397_phase_log.md`.
 
 ### F242
 
