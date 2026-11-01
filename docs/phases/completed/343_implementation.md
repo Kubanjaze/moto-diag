@@ -209,8 +209,8 @@ did that the plan did not say:
   helpers 19, swallowed 22: every one at its pin.
 - **Finding:** F244, `config show` prints `stripe_webhook_secret`.
 - **Regression of record** (after `wholetree.sh --full`, 5057 passed):
-  Regression of record: 12292 passed, 0 failed, 105 skipped, 0 errors at `805a025` (35 min 50 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0) (run inside the fleet's fence)
-- **Line coverage of record:** 88.02% at `805a025` (the pin is 87.50%).
+  Regression of record: 12292 passed, 0 failed, 105 skipped, 0 errors at `ca580f6` (36 min 0 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0) (run inside the fleet's fence)
+- **Line coverage of record:** 88.05% at `ca580f6` (the pin is 87.50%).
 - **Live:** no migration, nothing written to live. The proof against the
   real Sentry project is the operator's `motodiag telemetry check` on the
   desktop after the merge (the handoff).
@@ -220,4 +220,4 @@ did that the plan did not say:
 | version | date | what |
 |---|---|---|
 | 1.0 | 2026-11-01 | the plan, revised on the Executive Officer's three items (round 1) and four items (round 2) before any code |
-| 1.1 | 2026-11-01 | built; Deviations and Results; fix round 1 (two bug fixes, the wording, Deviations 5, 11 and 12, the new regression) |
+| 1.1 | 2026-11-01 | built; Deviations and Results; fix round 1 (two bug fixes, the wording, Deviations 5, 11 and 12, the new regression); fix round 2 (the handoff's bug-fix count, `events.py`'s docstring, the new regression) |
