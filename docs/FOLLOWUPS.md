@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F243** (this file). The
+At the time of writing the highest assigned is **F244** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4831,3 +4831,49 @@ the string. Seen after the change:
 - `test_phase383_regression_outcome.py`, `test_phase390_space.py` and
   `test_phase358_closeout_k6_k7.py` give 62 passed and 1 skipped on the
   Mac (the skip is 390's, now at line 327).
+
+### F244
+
+**An operator step whose `systemctl` or `journalctl` output reaches the terminal without `--no-pager` stops in systemd's pager; 345's install script does**
+
+Found 2026-11-01 by the operator on the home desktop, running 345's block
+"The nightly backup: install it and prove it"
+(`docs/handoffs/2026-10-31_345_closed.md`, which calls
+`ops/desktop/install_backup_unit.sh` at line 94). The script's last line,
+`systemctl list-timers motodiag-backup.timer` (line 11), prints to the
+terminal, so systemd opened its pager and the block stalled there. The
+operator, relayed to the advisor session: "any operator block that calls
+systemctl or journalctl needs --no-pager." The backup itself then proved
+out (345's handoff, "After the merge").
+
+The census, on master at `15e55c3`:
+`rg -n -e 'journalctl|systemctl\s+(--\S+\s+)*(status|list-\S+|show|cat)\b' ops docs/handoffs docs/phases .claude/skills scripts`
+finds 14 lines. 9 of them have no `--no-pager` and no pipe or `$(…)` after
+the command. Read by hand, those 9 are:
+- the backup script's line 11, the one command among them whose output
+  reaches the terminal (the positive control, found);
+- `ops/desktop/install_remote.sh` line 42, sent to `/dev/null`;
+- seven mentions in prose: two phase logs, two Step 0 reports, two
+  implementation documents and the deploy skill's `CHANGELOG.md`.
+
+Reading the other 5 by hand found one more command:
+`docs/phases/completed/388_operator_steps.md` line 64 runs
+`systemctl show motodiag-fleet.service -p …` to the terminal. The
+line-level filter passed it because a later command on the same line says
+`--no-pager`. So two commands in the repository can stop in the pager. The
+backup script's runs on every install of the timer. 388's was a one-time
+step, already run.
+
+Not covered by the census: the blocks the fleet's ranks write into issue
+comments, and blocks given in a chat. Neither is in the repository.
+
+What would close it:
+- `--no-pager` on the backup script's line 11, and on any other
+  `systemctl` or `journalctl` in `ops/` whose output reaches the terminal;
+- a check that refuses one, the way R8 holds `gh`
+  (`.claude/skills/closeout/roadmap_check.py`). It would read the paste
+  blocks in `docs/handoffs/` and `docs/phases/`, and the scripts in `ops/`,
+  per command rather than per line, with a known-bad fixture it must fail
+  on;
+- the same rule stated in the briefs of the ranks that write operator
+  blocks.
