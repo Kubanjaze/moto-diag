@@ -1,6 +1,6 @@
 # Phase 343 — Telemetry + crash reporting (Sentry)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-11-01
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-11-01 (v1.0 `c18d072`, revised `1e9f1fc`, `a17f8ac`)
 
 ---
 
@@ -118,19 +118,93 @@ The build runs in this order. Item 1 is the Chief Engineer's first act, before a
 
 ## Planned items
 
-- [ ] Item 1: the one stop, first, with kind `login-or-credential`, the five parts and the Captain's picks; or, when the phase log already carries the operator's answers, read them and apply them literally; and row 397 checked ✅ on master
-- [ ] Item 2: `telemetry/dsn.py`, the DSN's parts, URL and auth header, the key-free repr, the three settings on `Settings`, the `sentry_dsn` mask in `config show` with its planted-key control, tests
-- [ ] Item 3: `telemetry/events.py`, the error, transaction and message events as part (d) decides, the redaction and the frames, tests
-- [ ] Item 4: `telemetry/envelope.py` and `telemetry/sender.py`, the envelope, the bounded queue and its thread, `sampled()`, the 429 pause, `NullSender`, the fake transport and fake sender in `tests/support/phase343.py`, tests
-- [ ] Item 5: `api/telemetry.py`, the middleware as the first request-scoped middleware added in `app.py`, outside CORS and `ExceptionMiddleware`, reading `app.state.telemetry` at request time, skipping `/healthz` and `OPTIONS`, with the catch-and-re-raise; the seam in `errors.py`; tests
-- [ ] Item 6: `cli/telemetry.py`, `status` and `check` registered in `cli/main.py`, tests
-- [ ] Item 7: `docs/guide/telemetry.md` on `BACKEND_DOCS`, the install guide's sentence, the launch checklist's dated note, the planted-command control
-- [ ] The mutations, each red
-- [ ] `COLLECTED_TEST_FLOOR` raised by a diff of collected ids
-- [ ] Item 8: the regression of record, the close-out, the handoff with the desktop's paste block
+- [x] Item 1: the one stop, first, with kind `login-or-credential`, the five parts and the Captain's picks; or, when the phase log already carries the operator's answers, read them and apply them literally; and row 397 checked ✅ on master
+- [x] Item 2: `telemetry/dsn.py`, the DSN's parts, URL and auth header, the key-free repr, the three settings on `Settings`, the `sentry_dsn` mask in `config show` with its planted-key control, tests
+- [x] Item 3: `telemetry/events.py`, the error, transaction and message events as part (d) decides, the redaction and the frames, tests
+- [x] Item 4: `telemetry/envelope.py` and `telemetry/sender.py`, the envelope, the bounded queue and its thread, `sampled()`, the 429 pause, `NullSender`, the fake transport and fake sender in `tests/support/phase343.py`, tests
+- [x] Item 5: `api/telemetry.py`, the middleware as the first request-scoped middleware added in `app.py`, outside CORS and `ExceptionMiddleware`, reading `app.state.telemetry` at request time, skipping `/healthz` and `OPTIONS`, with the catch-and-re-raise; the seam in `errors.py`; tests
+- [x] Item 6: `cli/telemetry.py`, `status` and `check` registered in `cli/main.py`, tests
+- [x] Item 7: `docs/guide/telemetry.md` on `BACKEND_DOCS`, the install guide's sentence, the launch checklist's dated note, the planted-command control
+- [x] The mutations, each red
+- [x] `COLLECTED_TEST_FLOOR` raised by a diff of collected ids
+- [x] Item 8: the regression of record, the close-out, the handoff with the desktop's paste block
+
+## Deviations
+
+Every section above is the plan as approved, applied with the operator's
+answers (the phase log, "The operator's answers to the Chief Engineer's
+stop"): the Captain's picks on (b) to (e), and (d) widened. What the build
+did that the plan did not say:
+
+1. **(d) widened by the operator.** "Plus blank anything that looks like
+   an email address or phone number": `redact` blanks emails
+   (`local@domain.tld`) and phone numbers (7 to 15 digits, optionally led
+   by `+`, at most one space, dot, dash or bracket between digits,
+   touching no letter or digit), beside the `mds_` token. A date such as
+   2026-11-01 inside a message is blanked too; read as the operator's
+   "anything that looks like". The guide and the checklist's note say so.
+2. **The transport answers three values,** `(status, reason, headers)`,
+   not the plan's `(status, reason_text)`: the 429 pause reads
+   `Retry-After`, which the two-value answer cannot carry.
+3. **A frame outside the package** keeps the part after `site-packages`,
+   else the bare file name, so no home directory reaches an event; the
+   plan named only frames under `motodiag`.
+4. **`check` exits 2 on a malformed DSN** as well as on none; `status`
+   exits 1 on none and 2 on a malformed one, as planned. The plan named
+   only "exit 2 with no DSN" for `check`.
+5. **Small seams the tests needed:** `Settings.telemetry_environment_name`
+   (the fallback to `env`, used by the sender and the commands),
+   `skipped()` in `api/telemetry.py` (the `/healthz` and `OPTIONS` rule in
+   one function, so a control can remove the `OPTIONS` skip),
+   `capture_crash()` (the handler's call, two lines plus a comment in
+   `errors.py`), `SECRET_SETTING_NAMES` as a module constant in
+   `cli/main.py`, and the commands' transport seam as the module's
+   `TRANSPORT`.
+6. **The sender holds `release`, `environment` and `server_name`,** so the
+   middleware and the handler build events without reading settings at
+   request time. The release is `motodiag.__version__`.
+7. **Items 2 to 7 are one commit** (`cddddc8`): the reachability gates
+   (`test_no_new_unreachable_module`, `test_no_new_orphan`) fail until the
+   API and the CLI call the new package.
+8. **The API tests build one database per module** and copy it per test
+   (44 s → 8.6 s for 18 tests).
+9. **The guide's restart command** first said `systemctl --user`; the
+   unit is a system unit, so it says `sudo systemctl restart`
+   (`198066b`), before the regression of record.
+10. **Mutation M4** (a blocking `put`) is red by timing out at the
+    script's 180 s limit rather than by an assertion.
+
+## Results
+
+- **Shipped:** `src/motodiag/telemetry/` (`dsn.py`, `events.py`,
+  `envelope.py`, `sender.py`); `src/motodiag/api/telemetry.py`, called
+  from `create_app` as the first request-scoped middleware, and
+  `capture_crash` from `_unhandled_handler`; three settings
+  (`sentry_dsn`, `telemetry_traces_sample_rate` 0.1,
+  `telemetry_environment`); the `config show` mask; `motodiag telemetry
+  status | check`; `docs/guide/telemetry.md` on `BACKEND_DOCS`, the
+  install guide's sentence, the launch checklist's note dated 2026-11-01.
+  No new dependency; `pyproject.toml` unchanged.
+- **Tests:** 94 in five files, `tests/test_phase343_*.py`, with
+  `tests/support/phase343.py`. Collected floor 12293 → 12387, by a diff of
+  collected ids against `dc0ab5a` (+94 −0). None skips, none opens a
+  socket beyond loopback, none reads live.
+- **The docs-drift control:** a planted `motodiag telemetry prune` turned
+  `tests/test_phase208_docs.py` red; removed, green.
+- **Mutations:** 13/13 red (`343_mutate.out`).
+- **The code's counts:** ruff 1108, mypy 202, complex 25, big 5,
+  helpers 19, swallowed 22: every one at its pin.
+- **Finding:** F244, `config show` prints `stripe_webhook_secret`.
+- **Regression of record** (after `wholetree.sh --full`, 5057 passed):
+  Regression of record: 12282 passed, 0 failed, 105 skipped, 0 errors at `198066b` (36 min 55 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0) (run inside the fleet's fence)
+- **Line coverage of record:** 88.04% at `198066b` (the pin is 87.50%).
+- **Live:** no migration, nothing written to live. The proof against the
+  real Sentry project is the operator's `motodiag telemetry check` on the
+  desktop after the merge (the handoff).
 
 ## Version history
 
 | version | date | what |
 |---|---|---|
 | 1.0 | 2026-11-01 | the plan, revised on the Executive Officer's three items (round 1) and four items (round 2) before any code |
+| 1.1 | 2026-11-01 | built; Deviations and Results |
