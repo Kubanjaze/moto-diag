@@ -464,8 +464,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: Phase 396 (the fleet's four slips, K61), by a diff of collected ids against
 #: master at 8e5f014 (12152): +32 -0, test_phase396_slips.py (31) and
 #: test_phase392_plan_order.py's 396-then-345 test (1). Measured: 12184.
+#: Phase 397 (the one-second window, K63), by a diff of collected ids against
+#: master at 48cf7ca (12184): +2 -0, test_phase392_check_limit.py's
+#: test_alive_answers_on_this_system (1) and test_phase392_plan_order.py's
+#: 397-then-343 test (1). Measured: 12186.
 #:
-COLLECTED_TEST_FLOOR = 12184
+COLLECTED_TEST_FLOOR = 12186
 
 
 def _collected_count() -> int:
