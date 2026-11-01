@@ -319,10 +319,12 @@ def test_the_sudoers_rule_allows_exactly_the_one_command():
     assert D.FSTRIM[:2] == ["sudo", "-n"], "sudo would wait for a password"
 
 
-@pytest.mark.skipif(shutil.which("bwrap") is None, reason="bubblewrap is the desktop's")
 def test_a_model_in_the_fence_cannot_use_sudo():
     """bubblewrap sets no_new_privs, so the one sudoers line is the
-    dispatcher's, never a model's."""
+    dispatcher's, never a model's. Skipped where there is no bubblewrap, in
+    the form EXPECTED_SKIPS pins (F243, K64)."""
+    if shutil.which("bwrap") is None:
+        pytest.skip("bubblewrap is the desktop's")
     r = subprocess.run(["bwrap", "--dev-bind", "/", "/", "grep", "NoNewPrivs", "/proc/self/status"],
                        capture_output=True, text=True)
     assert r.stdout.split() == ["NoNewPrivs:", "1"]

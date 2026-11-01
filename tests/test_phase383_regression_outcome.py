@@ -123,7 +123,9 @@ class TestThePins:
              "no production database on this machine"),
             # Phase 388, the operator: "Mac runs it (Recommended)".
             ("tests/test_phase388_fence_boundary.py",
-             "macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py")})
+             "macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py"),
+            # F243, the operator's K64: "plugged in, go with A".
+            ("tests/test_phase390_space.py", "bubblewrap is the desktop's")})
 
     def test_each_expected_skip_is_still_in_its_file(self):
         for path, reason in C.EXPECTED_SKIPS:

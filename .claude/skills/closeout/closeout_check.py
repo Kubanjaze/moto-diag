@@ -333,6 +333,9 @@ EXPECTED_SKIPS = frozenset({
     # boundary test, on the Mac, where 257's sandbox test is its twin.
     ("tests/test_phase388_fence_boundary.py",
      "macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py"),
+    # F243, the operator's K64: "plugged in, go with A". 390's sudo test needs
+    # bubblewrap, which only the desktop has.
+    ("tests/test_phase390_space.py", "bubblewrap is the desktop's"),
 })
 
 #: Phase 389, the operator, 2026-10-25: "Sandbox counts (Recommended)" — the
