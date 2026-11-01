@@ -1,0 +1,13 @@
+# moto-diag's nightly offsite backup (Phase 345): 03:00 desktop time, the
+# operator's pick. Persistent: a night the desktop was off runs at the next
+# boot.
+[Unit]
+Description=moto-diag offsite backup, nightly at 03:00
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+Persistent=true
+Unit=motodiag-backup.service
+
+[Install]
+WantedBy=timers.target

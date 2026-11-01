@@ -8,6 +8,7 @@ from motodiag import __app_name__, __version__
 from motodiag.cli.advanced import register_advanced
 from motodiag.cli.apikey import register_apikey
 from motodiag.cli.audit import register_audit
+from motodiag.cli.backup import register_backup
 from motodiag.cli.billing import register_subscription
 from motodiag.cli.cache import register_cache
 from motodiag.cli.capture import register_capture
@@ -915,6 +916,9 @@ register_apikey(cli)
 register_user(cli)
 # Phase 348: `audit` — the audit log (list, verify, export).
 register_audit(cli)
+# Phase 345: `backup` — offsite encrypted backups (run, list, restore,
+# verify, status).
+register_backup(cli)
 register_subscription(cli)
 register_payments_check(cli)
 

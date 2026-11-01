@@ -1,0 +1,9 @@
+**The plan of record's next mission**, opened by the fleet (Phase 392).
+
+The plan of record puts phase 345 next ('Next, in order' #8): 8. 345 (shop, built by fleet); needs the operator: an outside account: the offsite backup's service account, which the operator opens; from: Wave 1, item 2 · K48
+
+The plan of record on this phase: the plan of record's 'Next, in order' #8; the plan of record, 2026-10-19; the plan of record, 2026-10-20; the plan of record, 2026-10-21; the plan of record, 2026-10-22 to 2026-10-25; the plan of record, 2026-10-27; K48; K53.
+
+The work branch is `phase-345-cloud-backup-sync`: the Science Officer makes it from master once this phase's row is 🚧 there, which the row's pull request does when the operator merges it.
+
+<!-- fleet-next: phase=345 -->
