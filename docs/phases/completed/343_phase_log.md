@@ -256,3 +256,26 @@ were redone with the Edit tool; the guard was not touched:
   failed, 1 passed); with the fix, `tests/test_phase343_sender.py` 22
   passed.
 - **Commit:** this entry's commit.
+
+### Bug fix #2 — 2026-11-01 — the API tests' sender double could drift from the real Sender
+
+- **Issue:** every API test put the hand-written `FakeSender` at
+  `app.state.telemetry`. No test ran `TelemetryMiddleware` or
+  `capture_crash` against a real `Sender`, and nothing tied
+  `FakeSender`'s attributes to `Sender`'s: a renamed attribute on `Sender`
+  would have broken production with the API tests green.
+- **Root cause:** a self-validating double (the F9 family's
+  mock-versus-runtime drift).
+- **Fix:** `tests/test_phase343_api.py` gains `TestTheDoubleMatchesTheSender`:
+  the names the API module reads from `sender.` are taken from its source
+  and pinned; each is present, and callable alike, on `Sender`,
+  `NullSender` and `FakeSender`; and a crash goes through a real `Sender`
+  with a `FakeTransport`, whose envelopes carry the error event and the
+  500 transaction.
+- **Files:** `tests/test_phase343_api.py` (+8),
+  `tests/test_phase255B_collected_test_floor.py` (12389 → 12397).
+- **Verified:** with `Sender.server_name` renamed by a temporary edit, two
+  of the new tests failed and the 18 that use `FakeSender` passed (2
+  failed, 24 passed); with it put back, 26 passed.
+- **Commit:** this entry's commit.
+

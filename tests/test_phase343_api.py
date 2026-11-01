@@ -3,6 +3,8 @@ sent from ``_unhandled_handler``."""
 
 from __future__ import annotations
 
+import ast
+import inspect
 import shutil
 import threading
 import time
@@ -24,7 +26,9 @@ from motodiag.api.telemetry import TelemetryMiddleware, capture_crash
 from motodiag.core.config import reset_settings
 from motodiag.core.database import init_db
 from motodiag.shop import WorkOrderNotFoundError
-from tests.support.phase343 import FakeSender
+from motodiag.telemetry.dsn import parse_dsn
+from motodiag.telemetry.sender import NullSender, Sender
+from tests.support.phase343 import DSN_TEXT, FakeSender, FakeTransport
 
 REQUEST_ID_HEADER = "X-Request-ID"
 
@@ -225,3 +229,51 @@ class TestNoDsn:
         caplog.set_level("INFO", logger="motodiag.api")
         create_app(db_path_override=api_db)
         assert "telemetry=off" in caplog.text
+
+
+def _names_read_from_sender() -> set[str]:
+    """Every ``sender.<name>`` in ``motodiag.api.telemetry``'s source."""
+    tree = ast.parse(inspect.getsource(api_telemetry))
+    return {node.attr for node in ast.walk(tree)
+            if isinstance(node, ast.Attribute)
+            and isinstance(node.value, ast.Name) and node.value.id == "sender"}
+
+
+class TestTheDoubleMatchesTheSender:
+    def test_the_names_the_api_reads(self):
+        assert _names_read_from_sender() == {
+            "enabled", "sampled", "capture", "release", "environment",
+            "server_name", "dsn"}
+
+    @pytest.mark.parametrize("name", sorted(_names_read_from_sender() - {"dsn"}))
+    def test_the_fake_has_each_as_the_real_sender_does(self, name):
+        real = Sender(parse_dsn(DSN_TEXT), transport=FakeTransport())
+        try:
+            for other in (FakeSender(), NullSender()):
+                assert hasattr(other, name), (type(other).__name__, name)
+                assert callable(getattr(other, name)) == callable(getattr(real, name))
+        finally:
+            real.close()
+
+    def test_a_crash_through_a_real_sender(self, api_db):
+        app = _bench_app(api_db)
+        transport = FakeTransport()
+        real = Sender(parse_dsn(DSN_TEXT), transport=transport, rng=lambda: 0.0,
+                      release="motodiag@test", environment="test",
+                      server_name="test-host")
+        app.state.telemetry = real
+        try:
+            client = TestClient(app, raise_server_exceptions=False)
+            r = client.get("/_bench/boom/98765")
+            assert r.status_code == 500
+            assert real.flush(5) and transport.wait_for(2)
+        finally:
+            real.close()
+        payloads = transport.payloads()
+        [error] = [p for p in payloads if p.get("type") != "transaction"]
+        [tx] = [p for p in payloads if p.get("type") == "transaction"]
+        assert error["tags"]["request_id"] == r.json()["request_id"]
+        assert error["request"]["url"] == "/_bench/boom/{item_id}"
+        assert error["release"] == tx["release"] == "motodiag@test"
+        assert error["server_name"] == "test-host"
+        assert tx["tags"]["status"] == "500"

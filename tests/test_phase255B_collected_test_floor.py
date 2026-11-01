@@ -485,8 +485,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: of collected ids against 58f366a (12387): +2 -0, test_phase343_sender.py's
 #: test_a_broken_http_answer_is_a_failed_send and
 #: test_a_programming_error_is_not_swallowed. Measured: 12389.
+#: Phase 343 bug fix #2 (the API tests' double pinned to the real sender),
+#: by a diff of collected ids against 3b41e2f (12389): +8 -0,
+#: test_phase343_api.py's TestTheDoubleMatchesTheSender (8 ids: the names
+#: the API reads, six parametrized attribute checks, a crash through a real
+#: Sender). Measured: 12397.
 #:
-COLLECTED_TEST_FLOOR = 12389
+COLLECTED_TEST_FLOOR = 12397
 
 
 def _collected_count() -> int:
