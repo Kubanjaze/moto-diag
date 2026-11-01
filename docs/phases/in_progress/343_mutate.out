@@ -1,0 +1,14 @@
+M1 redact made the identity: red
+M2 the actual path sent in place of the route template: red
+M3 the comparison in sampled() inverted: red
+M4 put_nowait replaced by a blocking put: red (timed out)
+M5 the capture removed from _unhandled_handler: red
+M6 the mapped-error handler (the 404) capturing: red
+M7 the key printed by Dsn.__repr__: red
+M8 the item header's length off by one: red
+M9 /healthz no longer skipped: red
+M10 OPTIONS no longer skipped: red
+M11 the catch-and-re-raise removed from TelemetryMiddleware: red
+M12 the middleware closing over the sender at install: red
+M13 sentry_dsn dropped from the config show mask: red
+13/13 red

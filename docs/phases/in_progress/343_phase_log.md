@@ -93,3 +93,11 @@ in one commit, after the wiring.
 - `tests/test_phase343_cli.py`: 12 passed.
 - `COLLECTED_TEST_FLOOR` 12293 → 12387, by a diff of collected ids
   against `dc0ab5a`: +94 -0, all five new files.
+
+## 2026-11-01: The mutations
+
+`docs/phases/in_progress/343_mutate.py`, the thirteen the plan names, each
+reverted on its own; the run's output is `343_mutate.out`: **13/13 red**.
+M4 (a blocking `put`) is red by timing out at the script's 180-second
+limit: with the fake transport held, the 101st capture blocks the test
+instead of failing it, and the script counts a run past its limit as red.
