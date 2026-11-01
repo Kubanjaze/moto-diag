@@ -43,20 +43,53 @@ def planted(tmp_path: pathlib.Path) -> tuple[pathlib.Path, pathlib.Path]:
 
 
 def alive(pid: int) -> bool:
-    try:
-        os.kill(pid, 0)
-    except ProcessLookupError:
-        return False
-    stat = pathlib.Path(f"/proc/{pid}/stat")
-    return stat.exists() and stat.read_text().rsplit(")", 1)[1].split()[0] != "Z"
+    """Whether `pid` has not ended; a zombie has ended and waits only to be
+    reaped. `ps` answers on Linux and on macOS, which has no /proc: there
+    the old answer, read from /proc, was "ended" for every pid (F241)."""
+    r = subprocess.run(["ps", "-o", "stat=", "-p", str(pid)], capture_output=True, text=True)
+    state = r.stdout.strip()
+    if (r.returncode, bool(state)) not in ((0, True), (1, False)):
+        raise AssertionError(f"ps gave no answer for pid {pid}: exit {r.returncode}, "
+                             f"{r.stdout!r} {r.stderr!r}")
+    return bool(state) and not state.startswith("Z")
+
+
+def test_alive_answers_on_this_system():
+    assert alive(os.getpid())
+    child = subprocess.Popen(["/bin/sh", "-c", "exit 0"])
+    for _ in range(100):                 # exited and not reaped: a zombie
+        r = subprocess.run(["ps", "-o", "stat=", "-p", str(child.pid)],
+                           capture_output=True, text=True)
+        if r.stdout.strip().startswith("Z"):
+            break
+        time.sleep(0.05)
+    else:
+        pytest.fail(f"the child never showed as a zombie: {r.stdout!r}")
+    assert not alive(child.pid)
+    child.wait()
+    assert not alive(child.pid)
+
+
+#: The planted command's windows, each double the last (F241). The first is
+#: the old one second, which a busy Mac's full run could not start a shell
+#: in; the test takes the first window in which the command reached its child.
+WINDOWS = (1, 2, 4, 8, 16, 32)
 
 
 def test_run_group_kills_the_whole_group_and_says_what_it_printed(tmp_path):
-    fence, pidfile = planted(tmp_path)
-    t = time.monotonic()
-    with pytest.raises(subprocess.TimeoutExpired) as e:
-        D.run_group([str(fence), "--run", str(tmp_path / "r")], timeout=1, text=True)
-    assert time.monotonic() - t < 30
+    for window in WINDOWS:
+        here = tmp_path / f"window{window}"
+        here.mkdir()
+        fence, pidfile = planted(here)
+        t = time.monotonic()
+        with pytest.raises(subprocess.TimeoutExpired) as e:
+            D.run_group([str(fence), "--run", str(here / "r")], timeout=window, text=True)
+        assert time.monotonic() - t < window + 29
+        if pidfile.is_file() and pidfile.read_text().endswith("\n"):
+            break
+    else:
+        pytest.fail(f"in windows of {WINDOWS} s the planted command never reached its child")
+    # The pid file is written after `echo started`: it was printed, so it is kept.
     assert "started" in e.value.stdout
     pid = int(pidfile.read_text())
     for _ in range(50):
@@ -67,7 +100,7 @@ def test_run_group_kills_the_whole_group_and_says_what_it_printed(tmp_path):
 
 
 def test_run_group_passes_a_run_that_ends(tmp_path):
-    r = D.run_group(["/bin/sh", "-c", "echo hi; echo err >&2; exit 3"], timeout=10, text=True)
+    r = D.run_group(["/bin/sh", "-c", "echo hi; echo err >&2; exit 3"], timeout=120, text=True)
     assert (r.returncode, r.stdout, r.stderr) == (3, "hi\n", "err\n")
 
 

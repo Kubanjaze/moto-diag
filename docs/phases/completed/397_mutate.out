@@ -1,0 +1,13 @@
+linux, /proc present
+M1 what was printed is lost: red (2 s)
+M2 only the direct child is killed: red (301 s)
+M3 the run outlives its bound: red (42 s)
+M4 a child escapes the group (b's known-bad): red (7 s)
+M5 alive() answers 'ended' without asking: red (1 s)
+M6 a zombie counts as alive: red (1 s)
+M7 the windows do not widen, sleep 2 planted: red (2 s)
+M8 a window counts before its child is reached, sleep 2 planted: red (2 s)
+K1 sleep 2 before echo started: 3 of 3 green
+O1 master's old test, sleep 2 planted: red (expected red here)
+O2 master's old test, a child escapes the group: red (expected red here)
+8/8 mutations red; all as expected
