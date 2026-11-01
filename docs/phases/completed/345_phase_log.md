@@ -178,3 +178,32 @@ ROADMAP row closed, the root `phase_log.md` pointer and the handoff
 `docs/handoffs/2026-10-31_345_closed.md` written. The live proof against
 the real bucket is the operator's run on the home desktop after the merge,
 in the handoff; the fence has no network.
+
+## Refuter pass
+
+| claim | verdict | quote | source | round · kind · outcome |
+|---|---|---|---|---|
+| Items 2–4 added 55 tests | kept | "test_phase345_backup_settings.py (24), test_phase345_cli.py (26), test_phase345_crypt.py (13), test_phase345_snapshot_restore.py (26), test_phase345_store.py (18). Measured: 12291." | tests/test_phase255B_collected_test_floor.py p. 469 | 1 · none · kept |
+| Items 5–8 added 52 more tests; 107 in five files | kept | "the branch's base 2df4799 (12184): +107 -0. Added:" | tests/test_phase255B_collected_test_floor.py p. 468 | 1 · none · kept |
+| Collected floor 12184 → 12291 | kept | "COLLECTED_TEST_FLOOR = 12291" | tests/test_phase255B_collected_test_floor.py p. 473 | 1 · none · kept |
+| Regression of record 12186 passed, 105 skipped at c2b0767 (passed + skipped equals the floor) | kept | "Regression of record: 12186 passed, 0 failed, 105 skipped, 0 errors at `c2b0767`" | docs/phases/completed/345_phase_log.md p. 90 | 1 · none · kept |
+| SigV4 GET known answer f0e8bdb8…bdb41 reproduced | kept | "assert _sig(auth) == \"f0e8bdb87c964420e857bd35b5d6ed310bd44f0170aba48dd91039c6036bdb41\"" | tests/test_phase345_store.py p. 45 | 1 · none · kept |
+| SigV4 listing known answer 34b48302…dc6f7 reproduced | kept | "assert _sig(auth) == \"34b48302e7b5fa45bde8084f4b7868a86f0a534bc59db6670ed5711ef69dc6f7\"" | tests/test_phase345_store.py p. 52 | 1 · none · kept |
+| Mutations 8/8 red | kept | "8/8 red" | docs/phases/completed/345_mutate.out p. 9 | 1 · none · kept |
+| backup registered in cli/main.py after audit, before completion | kept | "register_backup(cli)" | src/motodiag/cli/main.py p. 921 | 1 · none · kept |
+| The store has no delete call; nothing offsite is deleted | kept | "There is no delete: nothing offsite is ever removed (the operator's answer at 345's stop)." | src/motodiag/backup/store.py p. 5 | 1 · none · kept |
+| decrypt_file refuses a header cost outside 2**10 to 2**22 | kept | "if not 10 <= log2_cost <= 22:" | src/motodiag/backup/crypt.py p. 110 | 1 · none · kept |
+| A version other than 1 is refused | kept | "raise BackupTampered(f\"unknown backup format version {version}\")" | src/motodiag/backup/crypt.py p. 96 | 1 · none · kept |
+| The database copy is switched out of WAL mode | kept | "target.execute(\"pragma journal_mode=delete\")" | src/motodiag/backup/snapshot.py p. 104 | 1 · none · kept |
+| A restore refuses a manifest path that leaves the target folder | kept | "raise BackupTampered(f\"the manifest names a path outside the folder: {entry.path}\")" | src/motodiag/backup/restore.py p. 165 | 1 · none · kept |
+| work_dir() takes no argument and is created mode 700 | kept | "folder.mkdir(parents=True, exist_ok=True, mode=0o700)" | src/motodiag/backup/settings.py p. 127 | 1 · none · kept |
+| The key file's parser removes one pair of matching quotes | kept | "if len(value) >= 2 and value[0] == value[-1] and value[0] in \"\\\"'\":" | src/motodiag/backup/settings.py p. 72 | 1 · none · kept |
+| The timer names its unit; 03:00; Persistent | kept | "Unit=motodiag-backup.service" | ops/desktop/motodiag-backup.timer p. 10 | 1 · none · kept |
+| The service has ConditionPathExists on backup.env | kept | "ConditionPathExists=/home/lilcu/.config/motodiag/backup.env" | ops/desktop/motodiag-backup.service p. 17 | 1 · none · kept |
+| The server extra installs backup | kept | "\"motodiag[api,ai,vision,push,backup,reports,payments]\"," | pyproject.toml p. 85 | 1 · none · kept |
+| backups.md is on BACKEND_DOCS under a Phase 345 comment | kept | "REPO_ROOT / \"docs\" / \"guide\" / \"backups.md\"," | tests/test_phase208_docs.py p. 50 | 1 · none · kept |
+| The handoff block restores into a dated folder and checks with the server's Python | kept | "TO=~/motodiag/restore_check_$(date +%Y%m%d_%H%M%S)" | docs/handoffs/2026-10-31_345_closed.md p. 103 | 1 · none · kept |
+| The handoff block checks the server's venv loads the new package | kept | "\"$SRV/.venv/bin/python\" -c \"import cryptography, motodiag.backup.crypt\"" | docs/handoffs/2026-10-31_345_closed.md p. 86 | 1 · none · kept |
+| The operator's answers kept all three Captain's picks | kept | "My answers to the Chief Engineer's stop on 345: go with your picks." | docs/phases/completed/345_phase_log.md p. 13 | 1 · none · kept |
+| ROADMAP row closed with CLOSED date and regression line | kept | "**CLOSED 2026-10-31.**" | docs/ROADMAP.md p. 622 | 1 · none · kept |
+| Deviations cover every departure from the plan's signatures | killed | "clock: Callable[[], datetime] \| None = None) -> None:" | src/motodiag/backup/store.py p. 147 | 1 · wording · open |
