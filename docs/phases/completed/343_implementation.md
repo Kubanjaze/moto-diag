@@ -157,9 +157,12 @@ did that the plan did not say:
    `skipped()` in `api/telemetry.py` (the `/healthz` and `OPTIONS` rule in
    one function, so a control can remove the `OPTIONS` skip),
    `capture_crash()` (the handler's call, two lines plus a comment in
-   `errors.py`), `SECRET_SETTING_NAMES` as a module constant in
-   `cli/main.py`, and the commands' transport seam as the module's
-   `TRANSPORT`.
+   `errors.py`, imported inside the handler), `SECRET_SETTING_NAMES` as a
+   module constant in `cli/main.py`, and the commands' transport seam as
+   the module's `TRANSPORT`. `Sender` also keeps `exit_flush_s`, `sent`,
+   `failed`, `last_status` and `last_error`, which `telemetry check` reads
+   for its exit code; `check` builds a `Sender` directly, not through
+   `make_sender`.
 6. **The sender holds `release`, `environment` and `server_name`,** so the
    middleware and the handler build events without reading settings at
    request time. The release is `motodiag.__version__`.
@@ -173,6 +176,15 @@ did that the plan did not say:
    (`198066b`), before the regression of record.
 10. **Mutation M4** (a blocking `put`) is red by timing out at the
     script's 180 s limit rather than by an assertion.
+11. **(d)'s "never a customer name, a vehicle owner"** holds for an
+    event's fields; the error's message is blanked only as `redact` does
+    (tokens, emails, phone numbers), so database text in an exception's
+    message would be sent. The guide says so.
+12. **Fix round 1, two bug fixes** (the phase log): the sender's handler
+    names `OSError` and `http.client.HTTPException` instead of
+    `Exception` (`3b41e2f`), and the API tests gain a crash through a real
+    `Sender` and a pin of the stand-in's attributes against it
+    (`23e0612`).
 
 ## Results
 

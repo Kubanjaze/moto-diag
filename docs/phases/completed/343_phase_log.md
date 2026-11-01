@@ -279,3 +279,17 @@ were redone with the Edit tool; the guard was not touched:
   failed, 24 passed); with it put back, 26 passed.
 - **Commit:** this entry's commit.
 
+## 2026-11-01: Fix round 1, the wording
+
+- **What a report never carries.** The guide, the checklist's note, the
+  handoff and the ROADMAP row said a report never carries a customer's
+  data. `redact` blanks only session tokens, emails and phone numbers in
+  the error's message, so that was a promise the code does not keep. The
+  customer clauses are deleted from the checklist, the handoff and the
+  row; the guide's "Never sent" line loses them and says the message is
+  the one free-text part. Deviations item 11 records it.
+- **Deviations item 5** now names `Sender`'s `exit_flush_s`, `sent`,
+  `failed`, `last_status` and `last_error`, the import inside the
+  handler, and `check` building a `Sender` directly. Item 12 names the two
+  bug fixes.
+

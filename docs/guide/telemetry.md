@@ -25,8 +25,9 @@ Only these, and nothing else:
   the computer's name.
 
 **Never sent:** what a person typed or uploaded, the address's query part,
-login cookies or keys, who was logged in, customer names, bike owners or
-anything else from the database.
+login cookies or keys, or who was logged in. The error's message is the
+one free-text part: only the tokens, emails and phone numbers above are
+blanked in it, so a message that held a name or a VIN would be sent.
 
 ## Request timings
 

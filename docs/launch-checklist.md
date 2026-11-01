@@ -196,8 +196,8 @@ and request timings to **Sentry**, a third party, when the server's
 settings name a Sentry project. A report carries the error's kind, its
 message with session tokens, email addresses and phone numbers blanked, the
 code's file, function and line, the request id, the method, the route's
-pattern, the status, the version and the server's name; never a customer's
-data, a body, a header or who was logged in (`docs/guide/telemetry.md`).
+pattern, the status, the version and the server's name; never a body, a
+header or who was logged in (`docs/guide/telemetry.md`).
 So the policy's "where the data goes" has a third destination beside
 Anthropic and OpenAI. The policy's wording is yours, and possibly
 counsel's. The phone's binary is unchanged: it still has no Sentry or
