@@ -220,3 +220,11 @@ No refute pass ran.
 - Nothing under `.claude/skills/fleet/` changed, so nothing moves on the
   desktop after the merge. F241 stays open until the advisor's full run on
   the Mac passes.
+
+## 2026-11-01 — after the close-out
+
+- PR #49 opened; its `ratchet` check passed (42 s).
+  `verify_phase.sh 397 d8f419c f80557c`: 13 of 14 pass; check 1 (the tip
+  on master) passes once #49 is merged.
+- **Guard block** (recorded, guard unchanged): the push guard refused
+  `git commit … && git push` in one command; they ran separately.
