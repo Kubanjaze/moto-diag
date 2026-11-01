@@ -55,7 +55,7 @@ never type it into a chat, an issue or a command line. To turn reports off,
 delete the line and restart the server:
 
 ```bash
-systemctl --user restart motodiag-api.service
+sudo systemctl restart motodiag-api.service
 ```
 
 `motodiag config show` masks the DSN, so it is safe to run.

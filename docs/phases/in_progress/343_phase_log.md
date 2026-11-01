@@ -101,3 +101,13 @@ reverted on its own; the run's output is `343_mutate.out`: **13/13 red**.
 M4 (a blocking `put`) is red by timing out at the script's 180-second
 limit: with the fake transport held, the 101st capture blocks the test
 instead of failing it, and the script counts a run past its limit as red.
+
+## 2026-11-01: The guide's restart command corrected
+
+`docs/guide/telemetry.md` said `systemctl --user restart`; the API's unit
+is a system unit (`/etc/systemd/system/motodiag-api.service`, installed
+by `install_unit.sh`), restarted with `sudo systemctl restart`, as 345's
+handoff does. A document fix, before the regression of record. The first
+`wholetree.sh --full` attempt was stopped by the session's 10-minute limit
+for a background command, not by a failure; it was started again with a
+longer limit.
