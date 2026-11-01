@@ -1,0 +1,28 @@
+Do this: start Phase 397, the one-second window in a fleet test (F241) (row 397, new: add it to docs/ROADMAP.md as 🔲 with this prompt, then 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out. Built by a builder session, as I asked.
+
+- **Save this prompt** word for word as docs/prompts/397_the_one_second_window.txt, in the commit that adds the row.
+- **Its place in the order:** right after 345 and before 343 in "Next, in order", with a dated entry under "Changes to the order" and the next K-id for my words below. Fetch master first: at the Mac's last look, 397, K63 and F242 were the next free numbers on every branch. Update tests/test_phase392_plan_order.py in the same commit.
+- **The row names what it unblocks (K43):** a clean full run on the Mac, the independent check that follows 345 and every first-shop phase after it.
+- **You are at ~/Projects/moto-diag on the PC.** The fleet's Chief Engineer is building 345 in the fence: do not touch issue #45 or the phase-345 branch. Check `pgrep -x bwrap` before any whole-tree or regression run; if the fleet is busy, wait, or record in the log that your run shared the machine with a fleet stage, and when. Tonight is a month's last evening: a regression of record before midnight needs clock_check.sh first.
+
+My words: "give me the prompt for the builder chat to fix that test"
+
+What is wrong, from F241 in docs/FOLLOWUPS.md and the Mac's run in docs/reports/2026-10-31_independent_check.md. Re-measure both at Step 0.
+
+(a) **A one-second window.** tests/test_phase392_check_limit.py::test_run_group_kills_the_whole_group_and_says_what_it_printed gives a planted bash script `timeout=1` (line 58) to get through its argument loop and a `mkdir -p` and reach `echo started`, then asserts that "started" is in what `D.run_group` kept (line 60). In the Mac's full parallel run at ce97159 (10 workers, coverage on) it failed with stdout empty: the script had printed nothing within its second. Alone it passed 10 of 10, and alone beside 20 busy processes 10 of 10; the desktop's fenced runs pass it. `run_group` (dispatcher.py line 627) did its job, keeping all that was printed, so the fix belongs in the test unless Step 0 shows otherwise. Fix every test in this file that shares the weakness. Count the tests elsewhere that give a real process a window of a few seconds and then assert on its output or its timing (show the command); file one finding for any that share the weakness, and leave them.
+
+(b) **A check that cannot fail on a Mac.** `alive()` (line 45) calls a process alive only if /proc/<pid>/stat exists, and macOS has no /proc, so on the Mac the check that the planted command's child was killed passes whether or not it was. Make it answer on both systems.
+
+How it is proven:
+- a known-bad planted command that waits longer than the old window before it prints (for example `sleep 2` before `echo started`): the test as it stands goes red on it every time, and the fixed test stays green on it;
+- the fixed test still goes red when what was printed is lost, when only the direct child is killed, and when the run outlives its bound;
+- (b)'s known-bad: a child that survives the kill turns the check red, here on Linux and on the Mac (the mutate script must run on both; the advisor runs it on the Mac after the merge);
+- the mutations, red.
+
+Out of scope: F240's cause, and the 47 fence-boundary tests that ran in neither full run (the report's last limit).
+
+Stops beyond rule 1: any change that drops or weakens one of the test's three proofs (the whole group is killed; what was printed is kept; the run ends inside its bound). A longer window is fine; a weaker assertion needs my yes.
+
+After the merge: nothing moves on the desktop unless the fix changed .claude/skills/fleet/. If it did, one block for the desktop that moves the fleet's copy (~/motodiag/fleet/code) to master and restarts motodiag-fleet.service, as 396's did, every gh call with -R Kubanjaze/moto-diag. Then the advisor on the Mac runs the full test run there; F241 closes when it passes, recorded in the handoff's "After the merge".
+
+Report at the end: (a)'s cause as measured; the count of tests with the same weakness and what was done about them; each fix with its known-bad case seen red; the regression line, with the number of test workers and what else ran on the machine during it (F240 asks for both); verify_phase.sh's result; the next step, my call.
