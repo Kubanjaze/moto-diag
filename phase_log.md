@@ -3898,6 +3898,11 @@ Write-up: [`385_implementation.md`](docs/phases/completed/385_implementation.md)
 Log: [`docs/phases/completed/396_phase_log.md`](docs/phases/completed/396_phase_log.md).
 Write-up: [`396_implementation.md`](docs/phases/completed/396_implementation.md).
 
+## Phase 345 — Cloud backup + sync — CLOSED 2026-10-31
+
+Log: [`docs/phases/completed/345_phase_log.md`](docs/phases/completed/345_phase_log.md).
+Write-up: [`345_implementation.md`](docs/phases/completed/345_implementation.md).
+
 ## Phase 397 — The one-second window in a fleet test (F241) — CLOSED 2026-11-01
 
 Log: [`docs/phases/completed/397_phase_log.md`](docs/phases/completed/397_phase_log.md).

@@ -228,3 +228,26 @@ No refute pass ran.
   on master) passes once #49 is merged.
 - **Guard block** (recorded, guard unchanged): the push guard refused
   `git commit … && git push` in one command; they ran separately.
+
+## 2026-11-01 — master merged in after 345 (a note, not a bug fix)
+
+- PR #48 (345) merged first, at `b08378a`, so #49 conflicted. The operator
+  asked for origin/master to be merged into this branch, keeping both
+  phases' entries: 345's as master has them, 397's after them.
+- Three files conflicted; each side had added its own entry in the same
+  place:
+  - `implementation.md`: both took version 0.13.126. 345 keeps 0.13.126 in
+    its history row; 397 becomes **0.13.127** in the header. 345's history
+    row first, then 397's.
+  - `phase_log.md`: 345's entry, then 397's.
+  - `tests/test_phase255B_collected_test_floor.py`: 345's comment as master
+    has it, then 397's. **`COLLECTED_TEST_FLOOR` 12293**, by a diff of
+    collected ids against master at `b08378a`: master collects 12292, not
+    the 12291 345 measured, because the 397-then-343 test reached master
+    with 397's row commit `2405758`. So the merge adds +1 −0:
+    `test_alive_answers_on_this_system`.
+- "Next, in order" needed no change: 397 is still right after 345, and
+  `tests/test_phase392_plan_order.py` matches it. `plan_order.py next` on
+  the merge names 343, because this branch's ROADMAP has 345 and 397 ✅.
+- Nothing under `.claude/skills/fleet/` changed. `pgrep -x bwrap` found no
+  fleet stage before the checks.

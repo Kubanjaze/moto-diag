@@ -82,7 +82,12 @@ vision = [
 # starts, answers /healthz, and can't run a single AI feature. Point every
 # server install here instead of listing extras by hand.
 server = [
-    "motodiag[api,ai,vision,push,reports,payments]",
+    "motodiag[api,ai,vision,push,backup,reports,payments]",
+]
+# Phase 345: offsite encrypted backups (`motodiag backup`). Imported lazily,
+# so a CLI install without it still works.
+backup = [
+    "cryptography>=42.0",
 ]
 # Phase 273: Stripe (Connect, Terminal, invoice payment, subscriptions).
 # Pinned exactly: the SDK fixes the API version it sends

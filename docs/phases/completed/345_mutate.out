@@ -1,0 +1,9 @@
+M1 the tag check removed from decrypt_file: red
+M2 the host header dropped from the signed headers: red
+M3 the media skip inverted: every file re-uploaded: red
+M4 pick chooses the newest after `at`, not before: red
+M5 the over-live refusal removed: red
+M6 the mode check removed: red
+M7 the manifest uploaded before the database: red
+M8 list_snapshots lists a folder that has no manifest: red
+8/8 red

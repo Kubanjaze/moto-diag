@@ -464,12 +464,20 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: Phase 396 (the fleet's four slips, K61), by a diff of collected ids against
 #: master at 8e5f014 (12152): +32 -0, test_phase396_slips.py (31) and
 #: test_phase392_plan_order.py's 396-then-345 test (1). Measured: 12184.
+#: Phase 345 (offsite encrypted backups), by a diff of collected ids against
+#: the branch's base 2df4799 (12184): +107 -0. Added:
+#: test_phase345_backup_settings.py (24), test_phase345_cli.py (26),
+#: test_phase345_crypt.py (13), test_phase345_snapshot_restore.py (26),
+#: test_phase345_store.py (18). Measured: 12291.
 #: Phase 397 (the one-second window, K63), by a diff of collected ids against
 #: master at 48cf7ca (12184): +2 -0, test_phase392_check_limit.py's
 #: test_alive_answers_on_this_system (1) and test_phase392_plan_order.py's
-#: 397-then-343 test (1). Measured: 12186.
+#: 397-then-343 test (1). Measured: 12186. Merged with 345 on 2026-11-01:
+#: against master at b08378a (12292: the 397-then-343 test reached master
+#: with 397's row commit 2405758), +1 -0, test_alive_answers_on_this_system.
+#: Measured: 12293.
 #:
-COLLECTED_TEST_FLOOR = 12186
+COLLECTED_TEST_FLOOR = 12293
 
 
 def _collected_count() -> int:
