@@ -3897,3 +3897,8 @@ Write-up: [`385_implementation.md`](docs/phases/completed/385_implementation.md)
 
 Log: [`docs/phases/completed/396_phase_log.md`](docs/phases/completed/396_phase_log.md).
 Write-up: [`396_implementation.md`](docs/phases/completed/396_implementation.md).
+
+## Phase 397 — The one-second window in a fleet test (F241) — CLOSED 2026-11-01
+
+Log: [`docs/phases/completed/397_phase_log.md`](docs/phases/completed/397_phase_log.md).
+Write-up: [`397_implementation.md`](docs/phases/completed/397_implementation.md).

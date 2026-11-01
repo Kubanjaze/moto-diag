@@ -1,6 +1,6 @@
 # Phase 397 — The one-second window in a fleet test (F241)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-31
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-11-01 (v1.0 `a3bef6b`)
 
 ---
 
@@ -81,13 +81,61 @@ the three tests of F242; any change to `run_group`.
 
 ## Planned items
 
-- [ ] (a) the widening windows; the 120 s window
-- [ ] (b) `alive()` through `ps`; its own test
-- [ ] the mutations, red, and the known-bad green
-- [ ] the regression of record, the close-out, the handoff
+- [x] (a) the widening windows; the 120 s window
+- [x] (b) `alive()` through `ps`; its own test
+- [x] the mutations, red, and the known-bad green
+- [x] the regression of record, the close-out, the handoff
+
+## Deviations
+
+1. **The test change was written before v1.0 was committed**, while the
+   Quartermaster's stage on 345 held the machine. The commits are in
+   order: Step 0 and v1.0 (`a3bef6b`, pushed), then the code (`d8f419c`).
+2. **The census's first pattern missed a case**
+   (`test_phase360_edit_guard.py:295`, a `"` after the number). The
+   corrected command is the one in Step 0, S0-3, and the one counted.
+3. **No clock check.** `clock_check.sh` refused at 23:39 (exit 2,
+   `faketime` not installed; installing it needs `sudo`'s password). The
+   regression of record began after midnight instead, on no month's last
+   evening.
+4. **The regression of record ran in the fence**, as 393's to 396's did.
+   `regression.sh` in this checkout gave 4 failed, the four that read this
+   machine's own tools and profile (the phase log names them), the same
+   four 396 recorded.
+5. **The first fenced attempt was lost**: its state folder was under
+   `/tmp`, a 16 GB RAM disk here, which filled. The second used
+   `~/.cache/motodiag/397_regression/`.
+6. **One fast whole-tree run (23:33) shared the machine** with two short
+   Quartermaster checks on 345 and its model call; it passed, and neither
+   check shows a failure. Recorded in the log.
+7. **The reclaim line is the fleet timer's** (23:40:27), not one taken at
+   close-out: the session's permission check refused
+   `dispatcher.py reclaim` (it trims the disk).
+
+## Results
+
+- (a) Cause, as measured: the planted command needs about 6 ms of its
+  window here (86 ms at most beside 128 busy processes); the Mac's full
+  run did not get a shell to `echo` within 1 s. With `sleep 2` planted the
+  old test is red 10 of 10 (`assert 'started' in ''`, the Mac's
+  failure), the fixed test green 5 of 5 and 3 of 3.
+- (b) `alive()` through `ps`; an escaped child turns the check red here
+  (M4); with `/proc` absent the old `alive()` called a live child ended.
+- The census: 19 lines in 9 files; two tests fixed in this file, three
+  elsewhere filed as F242 and left.
+- `397_mutate.py`: 8/8 mutations red; K1 green 3 of 3; master's old test
+  red on `sleep 2` and, on Linux, on an escaped child. The macOS run is the
+  advisor's, after the merge.
+- `COLLECTED_TEST_FLOOR` 12184 to 12186 (+2 −0).
+- Regression of record: 12081 passed, 0 failed, 105 skipped, 0 errors at
+  `d8f419c`, 32 workers, coverage 87.71%, inside the fence, no fleet stage
+  beside it.
+- Nothing under `.claude/skills/fleet/` changed: nothing moves on the
+  desktop after the merge.
 
 ## Version history
 
 | version | date | what |
 |---|---|---|
-| 1.0 | 2026-10-31 | the plan |
+| 1.0 | 2026-10-31 | the plan (`a3bef6b`) |
+| 1.1 | 2026-11-01 | built; Deviations and Results |
