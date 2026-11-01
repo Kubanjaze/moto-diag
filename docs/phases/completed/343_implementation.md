@@ -199,7 +199,8 @@ did that the plan did not say:
   No new dependency; `pyproject.toml` unchanged.
 - **Tests:** 94 in five files, `tests/test_phase343_*.py`, with
   `tests/support/phase343.py`. Collected floor 12293 → 12387, by a diff of
-  collected ids against `dc0ab5a` (+94 −0). None skips, none opens a
+  collected ids against `dc0ab5a` (+94 −0); fix round 1 added 10 (2 in
+  the sender's tests, 8 in the API's), floor 12397. None skips, none opens a
   socket beyond loopback, none reads live.
 - **The docs-drift control:** a planted `motodiag telemetry prune` turned
   `tests/test_phase208_docs.py` red; removed, green.
@@ -208,8 +209,8 @@ did that the plan did not say:
   helpers 19, swallowed 22: every one at its pin.
 - **Finding:** F244, `config show` prints `stripe_webhook_secret`.
 - **Regression of record** (after `wholetree.sh --full`, 5057 passed):
-  Regression of record: 12282 passed, 0 failed, 105 skipped, 0 errors at `198066b` (36 min 55 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0) (run inside the fleet's fence)
-- **Line coverage of record:** 88.04% at `198066b` (the pin is 87.50%).
+  Regression of record: 12292 passed, 0 failed, 105 skipped, 0 errors at `805a025` (35 min 50 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0) (run inside the fleet's fence)
+- **Line coverage of record:** 88.02% at `805a025` (the pin is 87.50%).
 - **Live:** no migration, nothing written to live. The proof against the
   real Sentry project is the operator's `motodiag telemetry check` on the
   desktop after the merge (the handoff).
@@ -219,4 +220,4 @@ did that the plan did not say:
 | version | date | what |
 |---|---|---|
 | 1.0 | 2026-11-01 | the plan, revised on the Executive Officer's three items (round 1) and four items (round 2) before any code |
-| 1.1 | 2026-11-01 | built; Deviations and Results |
+| 1.1 | 2026-11-01 | built; Deviations and Results; fix round 1 (two bug fixes, the wording, Deviations 5, 11 and 12, the new regression) |
