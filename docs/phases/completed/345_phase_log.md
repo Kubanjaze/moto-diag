@@ -186,7 +186,7 @@ in the handoff; the fence has no network.
 | Items 2–4 added 55 tests | kept | "test_phase345_backup_settings.py (24), test_phase345_cli.py (26), test_phase345_crypt.py (13), test_phase345_snapshot_restore.py (26), test_phase345_store.py (18). Measured: 12291." | tests/test_phase255B_collected_test_floor.py p. 469 | 1 · none · kept |
 | Items 5–8 added 52 more tests; 107 in five files | kept | "the branch's base 2df4799 (12184): +107 -0. Added:" | tests/test_phase255B_collected_test_floor.py p. 468 | 1 · none · kept |
 | Collected floor 12184 → 12291 | kept | "COLLECTED_TEST_FLOOR = 12291" | tests/test_phase255B_collected_test_floor.py p. 473 | 1 · none · kept |
-| Regression of record 12186 passed, 105 skipped at c2b0767 (passed + skipped equals the floor) | kept | "Regression of record: 12186 passed, 0 failed, 105 skipped, 0 errors at `c2b0767`" | docs/phases/completed/345_phase_log.md p. 90 | 1 · none · kept |
+| Regression of record 12186 passed, 105 skipped at c2b0767 (passed + skipped equals the floor) | kept | "12186 passed, 0 failed, 105 skipped, 0 errors at `c2b0767`" | docs/phases/completed/345_phase_log.md p. 90 | 1 · none · kept |
 | SigV4 GET known answer f0e8bdb8…bdb41 reproduced | kept | "assert _sig(auth) == \"f0e8bdb87c964420e857bd35b5d6ed310bd44f0170aba48dd91039c6036bdb41\"" | tests/test_phase345_store.py p. 45 | 1 · none · kept |
 | SigV4 listing known answer 34b48302…dc6f7 reproduced | kept | "assert _sig(auth) == \"34b48302e7b5fa45bde8084f4b7868a86f0a534bc59db6670ed5711ef69dc6f7\"" | tests/test_phase345_store.py p. 52 | 1 · none · kept |
 | Mutations 8/8 red | kept | "8/8 red" | docs/phases/completed/345_mutate.out p. 9 | 1 · none · kept |
