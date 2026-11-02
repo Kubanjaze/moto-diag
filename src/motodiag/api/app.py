@@ -22,6 +22,7 @@ from motodiag.api.middleware import (
     RequestIdMiddleware,
 )
 from motodiag.api.openapi import install_openapi
+from motodiag.api.telemetry import install_telemetry
 from motodiag.core.config import Environment, Settings
 
 APP_VERSION = "v1"
@@ -96,6 +97,7 @@ def create_app(
     )
 
     # --- Request-scoped middleware (innermost first in FastAPI order) ---
+    telemetry = install_telemetry(app, app_settings)  # Phase 343 — innermost
     app.add_middleware(AuditMiddleware)  # Phase 348 — inside the rate limit
     app.add_middleware(AccessLogMiddleware)
     app.add_middleware(RateLimitMiddleware)
@@ -163,10 +165,11 @@ def create_app(
     # --- Startup log ---
     logger = logging.getLogger("motodiag.api")
     logger.info(
-        "motodiag API ready — version=%s, cors=%s, db=%s",
+        "motodiag API ready — version=%s, cors=%s, db=%s, telemetry=%s",
         app_settings.version,
         app_settings.api_cors_origins_list,
         db_path_override or app_settings.db_path,
+        telemetry,
     )
 
     return app

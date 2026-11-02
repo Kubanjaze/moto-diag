@@ -117,6 +117,8 @@ fresh install needs no separate init step.
 To keep an encrypted copy of the server's data off the machine every night,
 and to get one back, see [Backups](backups.md).
 
+To be told when the server crashes, see [Crash reports](telemetry.md).
+
 ```bash
 curl -s localhost:8000/healthz
 ```

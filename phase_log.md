@@ -3907,3 +3907,8 @@ Write-up: [`345_implementation.md`](docs/phases/completed/345_implementation.md)
 
 Log: [`docs/phases/completed/397_phase_log.md`](docs/phases/completed/397_phase_log.md).
 Write-up: [`397_implementation.md`](docs/phases/completed/397_implementation.md).
+
+## Phase 343 — Telemetry + crash reporting (Sentry) — CLOSED 2026-11-01
+
+Log: [`docs/phases/completed/343_phase_log.md`](docs/phases/completed/343_phase_log.md).
+Write-up: [`343_implementation.md`](docs/phases/completed/343_implementation.md).

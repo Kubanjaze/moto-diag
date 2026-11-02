@@ -476,8 +476,22 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: against master at b08378a (12292: the 397-then-343 test reached master
 #: with 397's row commit 2405758), +1 -0, test_alive_answers_on_this_system.
 #: Measured: 12293.
+#: Phase 343 (crash reports to Sentry), by a diff of collected ids against
+#: the branch's base dc0ab5a (12293): +94 -0. Added:
+#: test_phase343_api.py (18), test_phase343_cli.py (12),
+#: test_phase343_dsn.py (21), test_phase343_events.py (23),
+#: test_phase343_sender.py (20). Measured: 12387.
+#: Phase 343 bug fix #1 (the sender's handler names its errors), by a diff
+#: of collected ids against 58f366a (12387): +2 -0, test_phase343_sender.py's
+#: test_a_broken_http_answer_is_a_failed_send and
+#: test_a_programming_error_is_not_swallowed. Measured: 12389.
+#: Phase 343 bug fix #2 (the API tests' double pinned to the real sender),
+#: by a diff of collected ids against 3b41e2f (12389): +8 -0,
+#: test_phase343_api.py's TestTheDoubleMatchesTheSender (8 ids: the names
+#: the API reads, six parametrized attribute checks, a crash through a real
+#: Sender). Measured: 12397.
 #:
-COLLECTED_TEST_FLOOR = 12293
+COLLECTED_TEST_FLOOR = 12397
 
 
 def _collected_count() -> int:

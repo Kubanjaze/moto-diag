@@ -48,6 +48,8 @@ BACKEND_DOCS = [
     REPO_ROOT / "docs" / "launch-checklist.md",
     # Phase 345
     REPO_ROOT / "docs" / "guide" / "backups.md",
+    # Phase 343
+    REPO_ROOT / "docs" / "guide" / "telemetry.md",
 ]
 
 MOBILE_DOCS = [

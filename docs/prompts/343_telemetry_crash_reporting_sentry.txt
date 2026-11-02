@@ -1,0 +1,9 @@
+**The plan of record's next mission**, opened by the fleet (Phase 392).
+
+The plan of record puts phase 343 next ('Next, in order' #11): 11. 343 (shop, built by fleet); needs the operator: an outside account: crash reports (Sentry), which the operator opens; from: Wave 1, item 2 · K48
+
+The plan of record on this phase: the plan of record's 'Next, in order' #11; the plan of record, 2026-10-22 to 2026-10-25; the plan of record, 2026-10-31, later; K48; K63.
+
+The work branch is `phase-343-telemetry-crash-reporting-sentry`: the Science Officer makes it from master once this phase's row is 🚧 there, which the row's pull request does when the operator merges it.
+
+<!-- fleet-next: phase=343 -->
