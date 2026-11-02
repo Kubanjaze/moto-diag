@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F244** (this file). The
+At the time of writing the highest assigned is **F247** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4850,3 +4850,13 @@ What would close it: `stripe_webhook_secret` added to the mask (or the
 rule widened to every name containing `secret`), with a test that sets a
 planted value, sees `****` in its row and the value nowhere, and a control
 that goes red with the mask bypassed for that field.
+
+### F247
+
+**Wording the Red Team left open on phase 343, round 3**
+
+Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 392, F228). K9: "after round 3, remaining wording defects go to one finding". The rows, from the refute table in the Red Team's round 3 on phase 343:
+
+- A phone number allows at most one separator between digits (Deviations 1, phase log): "r\"(?<![\\w+])\\+?\\(?\\d(?:[ .\\-()]?\\(?\\d\\)?){6,14}(?![\\w])\")" (src/motodiag/telemetry/events.py p. 32)
+
+What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).

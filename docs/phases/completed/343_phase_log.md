@@ -489,3 +489,40 @@ Line coverage of record: 88.05% at `ca580f6` (the pin is 87.50%): 0.55 points ab
 12292 passed plus 105 skipped is 12397, the floor as it stands; fix round 2 added no tests.
 
 The edit guard blocked one `sed -i` on the handoff (to change its coverage figure); the edit was made with a short Python replace instead (the file is outside `src/` and `tests/`). The guard is unchanged.
+
+## Refuter pass
+
+| claim | verdict | quote | source | round · kind · outcome |
+|---|---|---|---|---|
+| A phone number allows at most one separator between digits (Deviations 1, phase log) | killed | "r\"(?<![\\w+])\\+?\\(?\\d(?:[ .\\-()]?\\(?\\d\\)?){6,14}(?![\\w])\")" | src/motodiag/telemetry/events.py p. 32 | 3 · wording · open F247 |
+| The transport answers three values (status, reason, headers) (Deviations 2) | kept | "Transport = Callable[[str, dict[str, str], bytes],\n                     tuple[int, str, Mapping[str, str]]]" | src/motodiag/telemetry/sender.py p. 41 | 3 · none · kept |
+| A frame outside the package keeps the part after site-packages, else the bare name (Deviations 3) | kept | "return \"/\".join(parts[idx + 1:]), False\n        return path.name, False" | src/motodiag/telemetry/events.py p. 63 | 3 · none · kept |
+| `check` exits 2 on a malformed DSN as well as on none (Deviations 4) | kept | "except SystemExit as stop:\n            raise SystemExit(2) from stop" | src/motodiag/cli/telemetry.py p. 63 | 3 · none · kept |
+| capture_crash is two lines plus a comment in errors.py, imported inside the handler (Deviations 5) | kept | "# Phase 343: the crash goes to Sentry when a DSN is set.\n    from motodiag.api.telemetry import capture_crash\n    capture_crash(request, exc)" | src/motodiag/api/errors.py p. 469 | 3 · none · kept |
+| SECRET_SETTING_NAMES is a module constant in cli/main.py (Deviations 5) | kept | "SECRET_SETTING_NAMES = (\"api_key\", \"sentry_dsn\")" | src/motodiag/cli/main.py p. 233 | 3 · none · kept |
+| `check` builds a Sender directly, not through make_sender (Deviations 5) | kept | "sender = Sender(dsn, transport=TRANSPORT," | src/motodiag/cli/telemetry.py p. 72 | 3 · none · kept |
+| The sender holds release, environment and server_name (Deviations 6) | kept | "self.release, self.environment = release, environment\n        self.server_name = server_name" | src/motodiag/telemetry/sender.py p. 95 | 3 · none · kept |
+| The API tests build one database per module and copy it (44 s → 8.6 s) (Deviations 8) | kept | "it now builds one per\n  module and copies it (8.6 s)." | docs/phases/completed/343_phase_log.md p. 80 | 3 · none · kept |
+| The guide says `sudo systemctl restart`; the unit is a system unit (Deviations 9) | kept | "install -m 644 \"$(dirname \"$0\")/motodiag-api.service\" /etc/systemd/system/motodiag-api.service" | ops/desktop/install_unit.sh p. 6 | 3 · none · kept |
+| M4 is red by timing out at the 180 s limit (Deviations 10) | kept | "M4 put_nowait replaced by a blocking put: red (timed out)" | docs/phases/completed/343_mutate.out p. 4 | 3 · none · kept |
+| The message is the one free-text part, and database text in it would be sent; the guide says so (Deviations 11) | kept | "The error's message is the\none free-text part: only the tokens, emails and phone numbers above are\nblanked in it" | docs/guide/telemetry.md p. 28 | 3 · none · kept |
+| The sender's handler names OSError and http.client.HTTPException (Deviations 12, bug fix #1) | kept | "except (OSError, http.client.HTTPException) as exc:" | src/motodiag/telemetry/sender.py p. 185 | 3 · none · kept |
+| The API tests gain a crash through a real Sender and a pin of the stand-in's attributes (Deviations 12, bug fix #2) | kept | "def test_a_crash_through_a_real_sender(self, api_db):" | tests/test_phase343_api.py p. 258 | 3 · none · kept |
+| Floor 12293 → 12387 (+94), then 12389, then 12397 (Results) | kept | "COLLECTED_TEST_FLOOR = 12397" | tests/test_phase255B_collected_test_floor.py p. 494 | 3 · none · kept |
+| Per-file counts 18/12/21/23/20 (+2 sender, +8 api) | kept | "test_phase343_dsn.py (21), test_phase343_events.py (23),\n#: test_phase343_sender.py (20). Measured: 12387." | tests/test_phase255B_collected_test_floor.py p. 482 | 3 · none · kept |
+| 13/13 mutations red (Results) | kept | "13/13 red" | docs/phases/completed/343_mutate.out p. 14 | 3 · none · kept |
+| The code's counts are at their pins: ruff 1108, mypy 202, complex 25, big 5, helpers 19, swallowed 22 (Results) | kept | "RUFF_FINDINGS = 1108" | tests/support/quality_counts.py p. 24 | 3 · none · kept |
+| F244: config show prints stripe_webhook_secret (Results, handoff) | kept | "**`motodiag config show` prints `stripe_webhook_secret` in full**" | docs/FOLLOWUPS.md p. 4837 | 3 · none · kept |
+| Regression of record: 12292 passed, 105 skipped at ca580f6, after wholetree --full with 5057 passed (Results, handoff) | kept | "Regression of record: 12292 passed, 0 failed, 105 skipped, 0 errors at `ca580f6` (36 min 0 s wall" | docs/phases/completed/343_phase_log.md p. 405 | 3 · none · kept |
+| Line coverage of record 88.05% at ca580f6, pin 87.50% (Results) | kept | "Line coverage of record: 88.05% at `ca580f6` (the pin is 87.50%)" | docs/phases/completed/343_phase_log.md p. 487 | 3 · none · kept |
+| The docs-drift control: a planted `telemetry prune` went red and then green when removed (Results) | kept | "failed (\"`telemetry` has no subcommand 'prune'\"; 1 failed, 19 passed);\n  with it removed, 20 passed." | docs/phases/completed/343_phase_log.md p. 99 | 3 · none · kept |
+| The guide is on BACKEND_DOCS under a Phase 343 comment after backups.md | kept | "# Phase 343\n    REPO_ROOT / \"docs\" / \"guide\" / \"telemetry.md\"," | tests/test_phase208_docs.py p. 51 | 3 · none · kept |
+| The install guide gains one sentence pointing to the guide | kept | "To be told when the server crashes, see [Crash reports](telemetry.md)." | docs/guide/install.md p. 120 | 3 · none · kept |
+| The launch checklist's note is dated 2026-11-01 and names Phase 343 | kept | "**Added 2026-11-01, Phase 343.** The backend now also sends crash reports" | docs/launch-checklist.md p. 194 | 3 · none · kept |
+| Row 397 is CLOSED on master at ROADMAP line 676 (phase log) | kept | "\| 397 \|" | docs/ROADMAP.md p. 676 | 3 · none · kept |
+| The operator's answers: go with the picks on 2 to 5, and blank emails and phone numbers | kept | "Go with your picks on 2 to 5, plus blank anything that looks like an email address or phone number." | docs/phases/completed/343_phase_log.md p. 13 | 3 · none · kept |
+| The handoff's paste block restarts the service at 127.0.0.1:8000 and loads server.env | kept | "ExecStart=/home/lilcu/motodiag/server/.venv/bin/motodiag serve --host 127.0.0.1 --port 8000 --skip-migrations" | ops/desktop/motodiag-api.service p. 26 | 3 · none · kept |
+| The handoff block pulls and checks the import, as 345's handoff does | kept | "\"$SRV/.venv/bin/python\" -c \"import cryptography, motodiag.backup.crypt\" </dev/null \|\| bad" | docs/handoffs/2026-10-31_345_closed.md p. 86 | 3 · none · kept |
+| The middleware is the first request-scoped middleware added, before AuditMiddleware | kept | "telemetry = install_telemetry(app, app_settings)  # Phase 343 — innermost\n    app.add_middleware(AuditMiddleware)" | src/motodiag/api/app.py p. 100 | 3 · none · kept |
+| The ready line says telemetry=on/off | kept | "\"motodiag API ready — version=%s, cors=%s, db=%s, telemetry=%s\"," | src/motodiag/api/app.py p. 168 | 3 · none · kept |
+| The plan of record puts 343 at row 11 after 397 (K48, K63) | kept | "row 10 of \"Next, in order\" in `docs/reports/2026-10-12_plan_of_record.md`, after 345 and before 343" | docs/decisions.md p. 62 | 3 · none · kept |
