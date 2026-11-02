@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F245** (this file). The
+At the time of writing the highest assigned is **F246** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4952,3 +4952,65 @@ What would close it:
 
 F244, the pager, is the same kind of gap. One check over operator blocks
 could hold both.
+
+### F246
+
+**`test_phase274_quotes_variance.py` reads "today" once, at import, so a run that crosses midnight UTC fails it; the clock census pinned the line as safe**
+
+Found 2026-11-01 by the fleet's model-free run for 343, at `c82de11`
+inside the fleet's fence, and relayed by the operator. The Chief
+Engineer's stop on issue #50 at 19:23 EST (00:23 UTC on 2026-11-02) reads:
+"Regression run FAILED (not of record): 12291 passed, 1 failed, 105
+skipped, 0 errors at `c82de11` (35 min 5 s wall, …)". The stop does not
+name the test. The relay, from the desktop's run log, names
+`tests/test_phase274_quotes_variance.py::TestTheQuoteRecord::test_queuing_an_estimate_records_the_quote`.
+The run was held with `needs-admiral`. The operator took the label off,
+and it started again at 21:01 EST on the same commit.
+
+The cause, read in the file:
+- line 23 sets `NOW = datetime.now(timezone.utc)` when the module is
+  imported, which is at collection, at the start of a 35-minute run;
+- line 106 asserts `quoted_at[:10] == NOW.strftime("%Y-%m-%d")`;
+- `quoted_at` is stamped when the estimate is queued, by
+  `trigger_notification` (`src/motodiag/shop/notifications.py` line 530:
+  `now = datetime.now(timezone.utc).isoformat()`).
+
+So a run collected before 00:00 UTC that reaches the test after it
+compares two different days. Midnight UTC is 19:00 EST, and 20:00 EDT in
+summer.
+
+Reproduced on the Mac with the file unchanged, under libfaketime with the
+clock running 20 times fast, so that the half-second test spans about ten
+fake seconds:
+`TZ=UTC faketime -f "@2026-11-02 23:59:50 x20" .venv/bin/python -B -m pytest -q -p no:cacheprovider tests/test_phase274_quotes_variance.py::TestTheQuoteRecord::test_queuing_an_estimate_records_the_quote`
+- started at 23:59:50 and 23:59:52 UTC, it fails with
+  `AssertionError: assert '2026-11-03' == '2026-11-02'`;
+- started at 23:59:40 to 23:59:48 UTC, it passes: the run ends before
+  midnight;
+- at the same speed from 12:00 UTC, it passes;
+- on the real clock, it passes.
+
+Why nothing caught it: Phase 378's clock census found this line and
+pinned it (`tests/support/clock_census.py`, `PINNED`). It had passed
+`clock_check.sh` at Phase 375's four moments: a month's last evening, an
+ordinary evening, New Year's Eve, and 00:30 the next day. Each moment
+starts the whole process at one fixed time. A single file finishes there
+in under a second, so its import and its check fall on the same day, and
+the run never crosses midnight.
+
+The module-level reads of the clock in `tests/` come to 11 lines
+(`rg -n '^[A-Za-z_][A-Za-z0-9_]*\s*=\s*(datetime\.(now|utcnow|today)|date\.today|_dt\.datetime\.now|dt\.datetime\.now|time\.time)\(' tests/`):
+- 9 are the census test's own planted strings;
+- one is this file's line 23;
+- one is `tests/test_phase387_yeoman.py` line 112,
+  `TZ = dt.datetime.now().astimezone().tzinfo`, the local zone at import.
+  A run that spans the night the clocks change would carry the old
+  offset across it. Not measured.
+
+What would close it:
+- the test takes "today" at the moment it checks, or gets 370's frozen
+  clock (`tests/support/frozen_clock.py`), as the census asks of a new
+  line; its line leaves `PINNED` in the same commit;
+- the reproduction above, red on the old file and green on the new;
+- a moment in `clock_check.sh` that crosses midnight during the run, UTC
+  and New York, so that a reading taken at import shows up.
