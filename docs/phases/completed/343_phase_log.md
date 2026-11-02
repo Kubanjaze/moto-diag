@@ -46,7 +46,7 @@ master:docs/ROADMAP.md`, line 676). Nothing stands in the way.
 `telemetry/dsn.py`, three settings on `Settings` (with the property
 `telemetry_environment_name` for the fallback to `env`), and the mask in
 `config show` widened to `SECRET_SETTING_NAMES = ("api_key", "sentry_dsn")`.
-The `stripe_webhook_secret` gap is filed as F244. `tests/test_phase343_dsn.py`
+The `stripe_webhook_secret` gap is filed as F248. `tests/test_phase343_dsn.py`
 and `tests/test_phase02_config.py`: 34 passed. The two controls (a repr that
 prints the key, a mask bypassed for `sentry_dsn`) each turn the assertion
 they control.
@@ -512,7 +512,7 @@ The edit guard blocked one `sed -i` on the handoff (to change its coverage figur
 | Per-file counts 18/12/21/23/20 (+2 sender, +8 api) | kept | "test_phase343_dsn.py (21), test_phase343_events.py (23),\n#: test_phase343_sender.py (20). Measured: 12387." | tests/test_phase255B_collected_test_floor.py p. 482 | 3 · none · kept |
 | 13/13 mutations red (Results) | kept | "13/13 red" | docs/phases/completed/343_mutate.out p. 14 | 3 · none · kept |
 | The code's counts are at their pins: ruff 1108, mypy 202, complex 25, big 5, helpers 19, swallowed 22 (Results) | kept | "RUFF_FINDINGS = 1108" | tests/support/quality_counts.py p. 24 | 3 · none · kept |
-| F244: config show prints stripe_webhook_secret (Results, handoff) | kept | "**`motodiag config show` prints `stripe_webhook_secret` in full**" | docs/FOLLOWUPS.md p. 4837 | 3 · none · kept |
+| F248: config show prints stripe_webhook_secret (Results, handoff) | kept | "**`motodiag config show` prints `stripe_webhook_secret` in full**" | docs/FOLLOWUPS.md p. 5030 | 3 · none · kept |
 | Regression of record 12292 passed, 105 skipped at ca580f6, after wholetree --full with 5057 passed (Results, handoff) | kept | "12292 passed, 0 failed, 105 skipped, 0 errors at `ca580f6` (36 min 0 s wall" | docs/phases/completed/343_phase_log.md p. 405 | 3 · none · kept |
 | Line coverage of record 88.05% at ca580f6, pin 87.50% (Results) | kept | "Line coverage of record: 88.05% at `ca580f6` (the pin is 87.50%)" | docs/phases/completed/343_phase_log.md p. 487 | 3 · none · kept |
 | The docs-drift control: a planted `telemetry prune` went red and then green when removed (Results) | kept | "failed (\"`telemetry` has no subcommand 'prune'\"; 1 failed, 19 passed);\n  with it removed, 20 passed." | docs/phases/completed/343_phase_log.md p. 99 | 3 · none · kept |

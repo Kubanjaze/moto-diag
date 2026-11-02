@@ -207,7 +207,7 @@ did that the plan did not say:
 - **Mutations:** 13/13 red (`343_mutate.out`).
 - **The code's counts:** ruff 1108, mypy 202, complex 25, big 5,
   helpers 19, swallowed 22: every one at its pin.
-- **Finding:** F244, `config show` prints `stripe_webhook_secret`.
+- **Finding:** F248, `config show` prints `stripe_webhook_secret`.
 - **Regression of record** (after `wholetree.sh --full`, 5057 passed):
   Regression of record: 12292 passed, 0 failed, 105 skipped, 0 errors at `ca580f6` (36 min 0 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0) (run inside the fleet's fence)
 - **Line coverage of record:** 88.05% at `ca580f6` (the pin is 87.50%).

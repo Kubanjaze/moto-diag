@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F247** (this file). The
+At the time of writing the highest assigned is **F248** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -4834,6 +4834,199 @@ the string. Seen after the change:
 
 ### F244
 
+**An operator step whose `systemctl` or `journalctl` output reaches the terminal without `--no-pager` stops in systemd's pager; 345's install script does**
+
+Found 2026-11-01 by the operator on the home desktop, running 345's block
+"The nightly backup: install it and prove it"
+(`docs/handoffs/2026-10-31_345_closed.md`, which calls
+`ops/desktop/install_backup_unit.sh` at line 94). The script's last line,
+`systemctl list-timers motodiag-backup.timer` (line 11), prints to the
+terminal, so systemd opened its pager and the block stalled there. The
+operator, relayed to the advisor session: "any operator block that calls
+systemctl or journalctl needs --no-pager." The backup itself then proved
+out (345's handoff, "After the merge").
+
+The census, on master at `15e55c3`:
+`rg -n -e 'journalctl|systemctl\s+(--\S+\s+)*(status|list-\S+|show|cat)\b' ops docs/handoffs docs/phases .claude/skills scripts`
+finds 14 lines. 9 of them have no `--no-pager` and no pipe or `$(…)` after
+the command. Read by hand, those 9 are:
+- the backup script's line 11, the one command among them whose output
+  reaches the terminal (the positive control, found);
+- `ops/desktop/install_remote.sh` line 42, sent to `/dev/null`;
+- seven mentions in prose: two phase logs, two Step 0 reports, two
+  implementation documents and the deploy skill's `CHANGELOG.md`.
+
+Reading the other 5 by hand found one more command:
+`docs/phases/completed/388_operator_steps.md` line 64 runs
+`systemctl show motodiag-fleet.service -p …` to the terminal. The
+line-level filter passed it because a later command on the same line says
+`--no-pager`. So two commands in the repository can stop in the pager. The
+backup script's runs on every install of the timer. 388's was a one-time
+step, already run.
+
+Not covered by the census: the blocks the fleet's ranks write into issue
+comments, and blocks given in a chat. Neither is in the repository.
+
+What would close it:
+- `--no-pager` on the backup script's line 11, and on any other
+  `systemctl` or `journalctl` in `ops/` whose output reaches the terminal;
+- a check that refuses one, the way R8 holds `gh`
+  (`.claude/skills/closeout/roadmap_check.py`). It would read the paste
+  blocks in `docs/handoffs/` and `docs/phases/`, and the scripts in `ops/`,
+  per command rather than per line, with a known-bad fixture it must fail
+  on;
+- the same rule stated in the briefs of the ranks that write operator
+  blocks.
+
+### F245
+
+**A fleet-written operator block put `set -e` inside a subshell that `&&` follows, so no failed step could stop it and it would print ALL GOOD**
+
+Found 2026-11-01 by the advisor session, reading the Chief Engineer's stop
+on issue #50 (343; posted 16:00 UTC, run `20261101_105833_engineer_343`)
+before the operator ran it. The block opens `( set -e`, then puts one
+step per line:
+- the checkout and the copy of the answer;
+- `test -n "$ANSWER"`;
+- the commit;
+- `wholetree.sh` and `roadmap_check.py`;
+- the push and the label change.
+
+It closes with `) && echo "ALL GOOD" || echo "SOMETHING IS OFF"`. Bash and
+zsh both ignore `set -e` for a command on the left of `&&` or `||`. That
+includes a subshell that sets it itself: the bash manual says such a
+setting has no effect until the command completes.
+
+Measured on the Mac:
+`( set -e; false; echo "kept going after a failure;" ) && echo ALL GOOD || echo SOMETHING IS OFF`
+printed "kept going after a failure; ALL GOOD" under both `zsh -f -c` and
+`bash -c`. The control, the same subshell with nothing after it, stopped
+at `false` and exited 1.
+
+What it would have done: any failure in it would have been passed over,
+whether a whole-tree or ledger check, the checkout, an empty answer or a
+notes file already there. It would still have committed, pushed to the
+phase branch and taken `needs-admiral` off. Then it would have printed
+ALL GOOD, because the last command, the label change, succeeded. Run
+before the operator had answered, it would have recorded their previous
+comment on the issue, or nothing.
+
+It was not run. The advisor session gave the operator a replacement in
+the handoffs' form (`bash <<'EOF2'`, each step ending `|| bad "…"`). It
+refuses when the answer is older than the stop. It was tested three
+ways, with no push and no label change:
+- with no answer yet, it refused;
+- with a stand-in answer, on a throwaway local branch, it passed end to
+  end;
+- with the whole-tree step forced to fail, it stopped before the push.
+
+The census, 2026-11-01:
+- **On GitHub:** 260 comments by the fleet's account
+  (`gh api 'repos/Kubanjaze/moto-diag/issues/comments?per_page=100' --paginate`,
+  filtered by author). 6 contain "ALL GOOD". 5 of those are operator
+  blocks; the sixth is a Red Team table quoting one (pull request #43).
+  1 has this shape: issue 50's, the positive control. The other four are
+  sound, in three shapes: a one-line `&&` chain (#36 and #45), `|| fail`
+  after each step (#31) and `|| bad` after each step (#36).
+- **In the repository:** the shape is in no file
+  (`rg -l '^\s*\(\s*set -e' docs .claude` finds none).
+- **In the fleet's code:** no operator block is templated
+  (`rg -n 'set -e' .claude/skills/fleet/engineer.py .claude/skills/fleet/captain.py`
+  finds none). Each Engineer writes its block from the plan's prose. 343's
+  plan asked for one that "stops on any nonzero exit"
+  (`docs/phases/in_progress/343_implementation.md`, on its branch, Logic
+  item 1). Nothing checks a block posted to an issue.
+
+What would close it:
+- a check on every operator block a rank writes, run before it is
+  posted, and the same check over the paste blocks in `docs/handoffs/`
+  and `docs/phases/`. It refuses a block whose ALL GOOD does not depend
+  on every step:
+  - `set -e` or `set -o errexit` inside a `( … )` or `{ …; }` that `&&`
+    or `||` follows;
+  - a group of several lines whose steps do not each stop on failure.
+
+  Its known-bad fixture is this block.
+- the rule stated in the brief of every rank that writes operator blocks:
+  each step ends `|| bad "…"`, the form the handoffs use.
+
+F244, the pager, is the same kind of gap. One check over operator blocks
+could hold both.
+
+### F246
+
+**`test_phase274_quotes_variance.py` reads "today" once, at import, so a run that crosses midnight UTC fails it; the clock census pinned the line as safe**
+
+Found 2026-11-01 by the fleet's model-free run for 343, at `c82de11`
+inside the fleet's fence, and relayed by the operator. The Chief
+Engineer's stop on issue #50 at 19:23 EST (00:23 UTC on 2026-11-02) reads:
+"Regression run FAILED (not of record): 12291 passed, 1 failed, 105
+skipped, 0 errors at `c82de11` (35 min 5 s wall, …)". The stop does not
+name the test. The relay, from the desktop's run log, names
+`tests/test_phase274_quotes_variance.py::TestTheQuoteRecord::test_queuing_an_estimate_records_the_quote`.
+The run was held with `needs-admiral`. The operator took the label off,
+and it started again at 21:01 EST on the same commit.
+
+The cause, read in the file:
+- line 23 sets `NOW = datetime.now(timezone.utc)` when the module is
+  imported, which is at collection, at the start of a 35-minute run;
+- line 106 asserts `quoted_at[:10] == NOW.strftime("%Y-%m-%d")`;
+- `quoted_at` is stamped when the estimate is queued, by
+  `trigger_notification` (`src/motodiag/shop/notifications.py` line 530:
+  `now = datetime.now(timezone.utc).isoformat()`).
+
+So a run collected before 00:00 UTC that reaches the test after it
+compares two different days. Midnight UTC is 19:00 EST, and 20:00 EDT in
+summer.
+
+Reproduced on the Mac with the file unchanged, under libfaketime with the
+clock running 20 times fast, so that the half-second test spans about ten
+fake seconds:
+`TZ=UTC faketime -f "@2026-11-02 23:59:50 x20" .venv/bin/python -B -m pytest -q -p no:cacheprovider tests/test_phase274_quotes_variance.py::TestTheQuoteRecord::test_queuing_an_estimate_records_the_quote`
+- started at 23:59:50 and 23:59:52 UTC, it fails with
+  `AssertionError: assert '2026-11-03' == '2026-11-02'`;
+- started at 23:59:40 to 23:59:48 UTC, it passes: the run ends before
+  midnight;
+- at the same speed from 12:00 UTC, it passes;
+- on the real clock, it passes.
+
+Why nothing caught it: Phase 378's clock census found this line and
+pinned it (`tests/support/clock_census.py`, `PINNED`). It had passed
+`clock_check.sh` at Phase 375's four moments: a month's last evening, an
+ordinary evening, New Year's Eve, and 00:30 the next day. Each moment
+starts the whole process at one fixed time. A single file finishes there
+in under a second, so its import and its check fall on the same day, and
+the run never crosses midnight.
+
+The module-level reads of the clock in `tests/` come to 11 lines
+(`rg -n '^[A-Za-z_][A-Za-z0-9_]*\s*=\s*(datetime\.(now|utcnow|today)|date\.today|_dt\.datetime\.now|dt\.datetime\.now|time\.time)\(' tests/`):
+- 9 are the census test's own planted strings;
+- one is this file's line 23;
+- one is `tests/test_phase387_yeoman.py` line 112,
+  `TZ = dt.datetime.now().astimezone().tzinfo`, the local zone at import.
+  A run that spans the night the clocks change would carry the old
+  offset across it. Not measured.
+
+What would close it:
+- the test takes "today" at the moment it checks, or gets 370's frozen
+  clock (`tests/support/frozen_clock.py`), as the census asks of a new
+  line; its line leaves `PINNED` in the same commit;
+- the reproduction above, red on the old file and green on the new;
+- a moment in `clock_check.sh` that crosses midnight during the run, UTC
+  and New York, so that a reading taken at import shows up.
+
+### F247
+
+**Wording the Red Team left open on phase 343, round 3**
+
+Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 392, F228). K9: "after round 3, remaining wording defects go to one finding". The rows, from the refute table in the Red Team's round 3 on phase 343:
+
+- A phone number allows at most one separator between digits (Deviations 1, phase log): "r\"(?<![\\w+])\\+?\\(?\\d(?:[ .\\-()]?\\(?\\d\\)?){6,14}(?![\\w])\")" (src/motodiag/telemetry/events.py p. 32)
+
+What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).
+
+### F248
+
 **`motodiag config show` prints `stripe_webhook_secret` in full**
 
 Found 2026-11-01 by Phase 343, widening the same command's mask for the
@@ -4850,13 +5043,3 @@ What would close it: `stripe_webhook_secret` added to the mask (or the
 rule widened to every name containing `secret`), with a test that sets a
 planted value, sees `****` in its row and the value nowhere, and a control
 that goes red with the mask bypassed for that field.
-
-### F247
-
-**Wording the Red Team left open on phase 343, round 3**
-
-Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 392, F228). K9: "after round 3, remaining wording defects go to one finding". The rows, from the refute table in the Red Team's round 3 on phase 343:
-
-- A phone number allows at most one separator between digits (Deviations 1, phase log): "r\"(?<![\\w+])\\+?\\(?\\d(?:[ .\\-()]?\\(?\\d\\)?){6,14}(?![\\w])\")" (src/motodiag/telemetry/events.py p. 32)
-
-What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).
