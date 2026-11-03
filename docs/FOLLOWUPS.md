@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F248** (this file). The
+At the time of writing the highest assigned is **F252** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -5043,3 +5043,222 @@ What would close it: `stripe_webhook_secret` added to the mask (or the
 rule widened to every name containing `secret`), with a test that sets a
 planted value, sees `****` in its row and the value nowhere, and a control
 that goes red with the mask bypassed for that field.
+
+### F249
+
+**The live server names its environment `dev` to Sentry: nothing on the desktop sets one, and `dev` is the fallback**
+
+Found 2026-11-02 in Phase 343's after-merge run on the home desktop,
+relayed by the operator: `motodiag telemetry status` printed
+`environment: dev`.
+
+Where the name comes from, read on the Mac at `e27baab`:
+- `Settings.telemetry_environment_name` (`src/motodiag/core/config.py`
+  line 287) is the `telemetry_environment` setting,
+  `MOTODIAG_TELEMETRY_ENVIRONMENT`, when it is not empty, and otherwise
+  `env`;
+- `env` is `MOTODIAG_ENV`: `dev`, `test` or `prod`, and `dev` when unset
+  (lines 74–78 and 98);
+- the server's reports and the check's test event both send that name
+  (`src/motodiag/telemetry/sender.py` line 232;
+  `src/motodiag/cli/telemetry.py` lines 68 and 73).
+
+Nothing on the desktop sets either:
+- the unit (`ops/desktop/motodiag-api.service`) sets only
+  `MOTODIAG_DB_PATH` and `MOTODIAG_DATA_DIR`, then reads
+  `~/.config/motodiag/server.env`;
+- the after-merge block read that file into its shell before
+  `telemetry status`, and the status still said `dev`;
+- the command and the service also read the same `.env` at the server
+  copy's root (`env_file`, `config.py` line 85).
+
+So the server's own crash reports go to Sentry as `dev` too, and
+Sentry's environment filter cannot tell them from a development
+machine's.
+
+What should set it: `MOTODIAG_TELEMETRY_ENVIRONMENT=live` in
+`~/.config/motodiag/server.env`. That is the file both the service and
+the operator's checks read, and the line changes only the name. `live`
+is this repository's word for the desktop's database (`live.json`,
+`deploy.py apply-live`); `production` is Sentry's usual name. Either
+will do. Choose once, because Sentry files each name separately.
+
+Not `MOTODIAG_ENV=prod`. That setting also switches on the API's
+production rules:
+- the API refuses to start unless `billing_provider` is `stripe`
+  (`src/motodiag/api/app.py` line 63);
+- `serve` refuses to start when `MOTODIAG_PUBLIC_BASE_URL` would leave
+  customer share links unreachable (`src/motodiag/cli/serve.py`
+  line 214);
+- Stripe's live keys and live-mode webhooks are refused in every other
+  environment (`src/motodiag/payments/stripe_api.py` line 73,
+  `src/motodiag/billing/webhook_handlers.py` line 345).
+
+Going to `prod` is its own decision, not a telemetry setting. The guide
+(`docs/guide/telemetry.md`) does not name
+`MOTODIAG_TELEMETRY_ENVIRONMENT`.
+
+What would close it: the line added on the desktop and the server
+restarted. Then `motodiag telemetry status` prints `environment: live`
+(or the word chosen), and one `telemetry check` event arrives in Sentry
+under it. F250's rotation edits the same file and needs the same
+restart, so one sitting can do both. The guide names the setting when a
+phase next touches it.
+
+### F250
+
+**The Sentry DSN was pasted into a chat on 2026-11-01, so it is to be rotated now that the live check has passed**
+
+Filed 2026-11-02 as a dated reminder, at the operator's request. By the
+operator's report, the DSN now in `~/.config/motodiag/server.env` on the
+home desktop was pasted into a chat on 2026-11-01, before it was saved
+there. It is in no tracked file on any of the repository's 94 branches
+(`git grep -c -E '[0-9a-f]{32}@o[0-9]+\.ingest'` over every
+`refs/remotes/origin` ref finds none; the same pattern matches a planted
+stand-in). The key in a DSN can only send events to the project, and
+cannot read anything. Whoever holds it can still fill the project with
+junk and use up its allowance, so it is replaced.
+
+The steps, the operator's next, in this order:
+1. In Sentry, on the Client Keys (DSN) page of `motodiag-api`, make a
+   new key.
+2. On the desktop, replace the `MOTODIAG_SENTRY_DSN=` line in
+   `server.env` with the new DSN: still exactly one such line, still
+   mode 600. The block of 2026-11-01 that saved the first key refuses
+   when a line is already there, so it cannot be reused as it is; the
+   replacement needs its own block.
+3. Restart `motodiag-api.service`.
+4. Run `motodiag telemetry check` again, and find its event in Sentry.
+5. Only then delete the old key on the same page, so there is never a
+   time with no working key.
+
+What would close it: the old key deleted after a check with the new key
+has arrived, recorded here with the new check's event id and the date.
+No key or DSN is recorded.
+
+### F251
+
+**A5 reads the last line that holds "Regression of record:" anywhere in it, so a refuter table that quotes the record, as C3 asks, takes its place and fails the close-out check**
+
+Found on two phases, relayed by the operator on 2026-11-02, and measured
+on the Mac.
+
+How it happens:
+- A5 (`regression_record`, `.claude/skills/closeout/closeout_check.py`
+  line 404) takes the last line of the phase log that contains the
+  prefix anywhere (line 417: `if PREFIX in ln`). That line must parse as
+  `regression.sh` prints it.
+- On a clear verdict, the dispatcher adds the Red Team's table to the end
+  of the branch's phase log (`record_in_log`,
+  `.claude/skills/fleet/red_team.py` line 404).
+- C3 wants "a verbatim quote, in quotation marks" in every claim row
+  (`.claude/skills/refute/refute_check.py` line 21). So the row checking
+  the regression claim quotes the record line, prefix and all, cut off
+  before the command and the exit code.
+- That row is then the last line with the prefix. It does not parse, and
+  A5 fails: "no regression line that parses as regression.sh prints it".
+
+The two times. Each refusal was the push gate's G6, "wholetree fast:
+FAILED — 3 failed". Each hand fix changed one row of the table: the quote,
+without the prefix.
+- **345, round 1:** the Red Team's record commit `9555925`, 2026-10-31
+  20:19 EDT; refused on issue #45 at 00:21:50 UTC on 2026-11-01; fixed by
+  hand in `f2aad4e`, 22:30 EDT.
+- **343, round 3:** the record commit `41370d2`, 2026-11-01 22:00 EST;
+  refused on issue #50 at 03:02:19 UTC on 2026-11-02; fixed by hand in
+  `56f59d6`, 23:00 EST.
+
+Measured on the Mac, each commit checked out in a throwaway worktree
+(`git worktree add --detach`) and run with the main checkout's `.venv`:
+- `closeout_check.py . 345` at `9555925`, and `closeout_check.py . 343`
+  at `41370d2`, print that A5 line and exit 1. At `f2aad4e` and `56f59d6`
+  they print nothing and exit 0.
+- The test files that call A5's code
+  (`rg -l -e regression_record -e 'closeout_check\.check\(' -e A5_UNNAMED_SKIP_EXEMPT tests/`:
+  383's, 389's and 396's), with 358's, give 3 failed and 91 passed at
+  both refused commits, and 94 passed at both fixes. The three that fail:
+  - `test_phase383_regression_outcome.py::TestThePins::test_every_closed_log_still_passes_a5`;
+  - `test_phase383_regression_outcome.py::TestThePins::test_the_unnamed_skip_exemption_is_exactly_what_the_rule_refuses`;
+  - `test_phase358_closeout_k6_k7.py::TestK6TheRegressionLineParses::test_the_exemption_is_exactly_what_the_old_rule_let_through`.
+
+  Both files are in fast mode's set (`wholetree.members("fast")`, 88
+  files), and the count is the gate's.
+
+Why it will come back: nothing tells the Red Team. Its brief never names
+the prefix (`rg -c 'Regression of record' .claude/skills/fleet/red_team.py`
+finds none), and checking the regression claim with a verbatim quote is
+what C3 asks of it.
+
+What would close it, one of:
+- **A5 reads only a line that begins with the prefix,** as
+  `regression.sh` prints it; a table row begins with `|`.
+  - Over the closed logs, 52 of 354 hold the prefix
+    (`rg -l -F 'Regression of record:' docs/phases/completed --glob '*_phase_log.md' | wc -l`).
+    In 49 the last one already begins its line. The other 3 (258, 259
+    and 260, bullets written before `regression.sh`) are on
+    `A5_COMMAND_EXEMPT`.
+  - Emulated on the Mac, by dropping the prefix wherever it does not
+    begin its line, such a rule reads the real record in both refused logs
+    (12186 at `c2b0767`; 12292 at `ca580f6`). With the real line removed
+    as well, it still fails them.
+  - Its test: `9555925`'s refused log, which the new A5 must pass, and a
+    log whose only prefixed line is a table row, which it must still
+    fail.
+- **Or the dispatcher drops the prefix from a quote before it commits the
+  table:** the hand fix, made automatic. That leaves A5 as it is, but it
+  covers only the Red Team's tables.
+
+The first fixes the check for any writer. F252 is what the fleet did once
+the push was refused.
+
+### F252
+
+**When the push gate refuses the Red Team's record commit, the stage ends with the label unchanged and no stage due, so the phase waits until someone notices**
+
+Found 2026-11-02 after F251's two refusals, relayed by the operator; read
+in the code on the Mac at `e27baab`.
+
+On a clear verdict, `stage_red_team` (`.claude/skills/fleet/dispatcher.py`
+line 1813) does three things in order:
+1. it posts the verdict and the table on the pull request and on the
+   issue (from line 1847);
+2. it commits the table into the branch's phase log and pushes it through
+   the push gate, with a fast model-free run (line 1889);
+3. only then does it set `review:clear` (line 1890).
+
+When step 2 is refused, `push_rank` raises `Stop` (line 1310). Then:
+- **The stop names no next step.** The issue gets "the red-team could
+  not finish, label unchanged" and the gate's reasons (`say_stopped`,
+  line 2477). No label is added. The Executive Officer's stop says which
+  label to apply again; this one does not.
+- **Nothing is due.** The issue keeps `review:open`, and the Red Team is
+  not due again: `due_for` (line 980) wants `review:open` applied after
+  the rank's last marker or stop. So nothing runs. Only the 24-hour sweep
+  would speak, and for `review:open` it names the Red Team as next
+  (`NEXT_RANK`, line 168).
+- **Applying `review:open` again starts over.** It would run a fresh Red
+  Team round: another Opus call, and on 343 a fourth round, past K9's
+  three. It would not push the table already cleared.
+
+Both times, the refused commit and a one-line fix were pushed by hand,
+and `review:clear` was set by hand. From the label events
+(`gh api repos/Kubanjaze/moto-diag/issues/<n>/events`):
+- **345, issue #45:** refused at 00:21:50 UTC on 2026-11-01, and moved by
+  hand at 02:30:10 UTC, 2 h 8 min later;
+- **343, issue #50:** refused at 03:02:19 UTC on 2026-11-02, and moved by
+  hand at 12:15:44 UTC, 9 h 13 min later.
+
+All that time, the issue's newest Red Team comment said "clear" while
+its label said `review:open`.
+
+What would close it: a refused record push leaves a step the fleet can
+take after a fix, the way an Engineer's model-free run is held (F220):
+- the stop adds `needs-hands`, which the daily digest lists, keeps the
+  cleared table, and says what to do: fix the branch, then take the
+  label off;
+- taking `needs-hands` off pushes the kept table through the gate again,
+  on the branch as it now stands, and sets `review:clear`, with no new
+  round;
+- a test: a G6 refusal planted on the record push leaves `needs-hands`
+  and the comment. Taking the label off after a fix pushes the same
+  table and sets `review:clear`, and a second refusal holds again.
