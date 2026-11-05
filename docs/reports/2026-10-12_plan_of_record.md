@@ -6,7 +6,7 @@ Written 2026-10-12 by the advisor session that verified Phases 373–381. This c
 
 The fleet reads this table exactly (`.claude/skills/fleet/plan_order.py`): the first row whose ROADMAP row is not ✅ is the next mission. A row built by a builder session is waited for. A row that needs the operator is asked first, in plain English. Otherwise the fleet opens the mission's issue and a one-row pull request that marks its row 🚧, and the operator merges it by hand (K49). The list changes only by a dated entry under "Changes to the order" with a K-id, written on the operator's word (K48).
 
-As of 2026-10-31, K63.
+As of 2026-11-05, K67.
 
 | # | phase | kind | built by | needs the operator | entry |
 |---|---|---|---|---|---|
@@ -21,12 +21,13 @@ As of 2026-10-31, K63.
 | 9 | 345 | shop | fleet | an outside account: the offsite backup's service account, which the operator opens | Wave 1, item 2 · K48 |
 | 10 | 397 | fleet | builder | nothing | 2026-10-31, later · K63 |
 | 11 | 343 | shop | fleet | an outside account: crash reports (Sentry), which the operator opens | Wave 1, item 2 · K48 |
-| 12 | 371 | shop | fleet | a fork: Stripe's production webhooks need an endpoint Stripe can reach, and the backend is tailnet-only (the operator's decision 3 of 2026-09-28); and an outside account, Stripe's live account ("Stripe: the live account, for 371 and 372") | Wave 1, item 4 · K48, K52 |
-| 13 | 372 | shop | fleet | an outside account: Stripe's live account | Wave 1, item 4 · K48 |
-| 14 | 330 | shop | fleet | a rule change: F210's general rule comes first ("F210's general rule is still needed before onboarding (330)", 2026-10-21); it changes the set-aside list's definition, which is the operator's call | Wave 1, item 5 · K48, K52 |
-| 15 | 334 | shop | fleet | an outside person: a lawyer, for the terms a shop signs | Wave 1, item 5 · K48 |
-| 16 | 344 | shop | fleet | nothing | Wave 1, item 5 · K48 |
-| 17 | 210 | shop | fleet | nothing | Wave 1, item 6 · K48 |
+| 12 | 398 | fleet | builder | nothing | 2026-11-05 · K67 |
+| 13 | 371 | shop | fleet | a fork: Stripe's production webhooks need an endpoint Stripe can reach, and the backend is tailnet-only (the operator's decision 3 of 2026-09-28); and an outside account, Stripe's live account ("Stripe: the live account, for 371 and 372") | Wave 1, item 4 · K48, K52 |
+| 14 | 372 | shop | fleet | an outside account: Stripe's live account | Wave 1, item 4 · K48 |
+| 15 | 330 | shop | fleet | a rule change: F210's general rule comes first ("F210's general rule is still needed before onboarding (330)", 2026-10-21); it changes the set-aside list's definition, which is the operator's call | Wave 1, item 5 · K48, K52 |
+| 16 | 334 | shop | fleet | an outside person: a lawyer, for the terms a shop signs | Wave 1, item 5 · K48 |
+| 17 | 344 | shop | fleet | nothing | Wave 1, item 5 · K48 |
+| 18 | 210 | shop | fleet | nothing | Wave 1, item 6 · K48 |
 
 The ROADMAP stays the ledger: this file records the order of the open rows, and why. A Step 0 that measures something new can change the order. Any change is recorded here, dated.
 
@@ -115,6 +116,12 @@ The operator's words:
   - **It unblocks a clean full run on the Mac** (K43 rule 4): the independent check that follows 345, and every first-shop phase after it. A failed run is not of record.
   - **It is built by a builder session, and the fleet waits for it.** 345 stays ahead of it: the fleet's Chief Engineer is building 345 in the fence, and 397 leaves it alone.
   - **Its prompt** is `docs/prompts/397_the_one_second_window.txt`, and its row is on master, 🔲.
+- **2026-11-05: 398 goes after 343 and before 371 (K67).** The two stalls in F251 and F252 held 345 for 2 h 8 min and 343 for 9 h 13 min, each needing a hand push, and 371 would meet both at its Red Team stage.
+  - **The operator's words:** "yes, fix the two stalls now as phase 398".
+  - **It unblocks 371** (K43 rule 4).
+  - **It is built by a builder session, and the fleet waits for it.** It changes `.claude/skills/closeout/` and `.claude/skills/fleet/`, which the push gate keeps from the fleet.
+  - **371 stays held until it is in.** 371's fork is answered (K65) and it may start before the live account (K66), but the hold on issue #54 stays on until 398 is merged and the fleet's copy has moved. Taking it off is the operator's step.
+  - **Its prompt** is `docs/prompts/398_the_two_stalls.txt`, and its row is on master, 🔲.
 
 ## Where the ledger stands
 
