@@ -1,0 +1,27 @@
+Do this: start Phase 398, the two stalls at the Red Team's clear (F251, F252) (row 398, on master as 🔲: make it 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out. Built by a builder session (it changes .claude/skills/closeout/ and .claude/skills/fleet/, which the push gate keeps from the fleet); the fleet waits for it.
+
+- **Already on master:** this prompt, row 398, K67 and its place in "Next, in order", after 343 and before 371. Fetch master first.
+- **The row names what it unblocks (K43):** 371, which would meet both stalls at its Red Team stage.
+- **You are at ~/Projects/moto-diag on the PC.** The fleet is parked on 371 (issue #54, `needs-admiral`): leave that issue and its hold alone. Check `pgrep -x bwrap` before any whole-tree or regression run.
+
+My words: "yes, fix the two stalls now as phase 398"
+
+What is wrong, from F251 and F252 in docs/FOLLOWUPS.md, which hold the evidence. Re-measure both at Step 0. Line numbers are from e27baab. Together the two held 345 for 2 h 8 min and 343 for 9 h 13 min, and each time needed a hand push.
+
+(a) **F251: the close-out check takes a quote for the record.** A5 (`regression_record`, .claude/skills/closeout/closeout_check.py line 404, the test at line 417) takes the last line of the phase log holding "Regression of record:". On a clear verdict, `record_in_log` (.claude/skills/fleet/red_team.py line 404) appends the Red Team's table, and C3 makes that table quote the line. The quote then replaces the real record, and the close-out check fails. F251 names two fixes and prefers A5 reading only a line that begins with the prefix, because that holds for any writer. Build that one unless Step 0 shows a reason not to, and write the reason in the phase log if it does.
+
+(b) **F252: a refused record push leaves nothing due.** When the push gate refuses the Red Team's record commit, `stage_red_team` (.claude/skills/fleet/dispatcher.py line 1813) stops with the label unchanged and nothing due. Applying `review:open` again would run a fresh round, past K9's three, and still not push the cleared table. F252's last section says what would close it: the stop adds `needs-hands`, keeps the cleared table and says what to do; taking the label off pushes the kept table through the gate on the branch as it then stands and sets `review:clear`, with no new round; a second refusal holds again.
+
+How it is proven:
+- both stalls replayed from their real artefacts as fixtures: the refused logs at `9555925` and `41370d2`, and the real stop comments on issues #45 and #50, each test red on the old code and green on the new;
+- (a)'s known-bad: a log whose only prefixed line is a table row still fails A5, and A5's pinned exemptions still hold by equality;
+- (b)'s known-bad: a G6 refusal planted on the record push leaves `needs-hands` and the comment; taking the label off after a fix pushes the same table and sets `review:clear` with no new round; a second refusal holds again; a held table outlives a restart and is never pruned;
+- the mutations, red.
+
+Out of scope: every other finding, and anything else about the fleet. File what you find and leave it.
+
+Stops beyond rule 1: any change that loosens A5, C3, K9's three rounds or the push gate.
+
+After the merge, which is mine: one block for the desktop that checks no fleet job is running, moves the fleet's copy (~/motodiag/fleet/code) to master and restarts motodiag-fleet.service, accepting "the search on start:" or a "resume" line, as 396's did, every gh call with -R Kubanjaze/moto-diag. Issue #54's hold stays on until that block prints ALL GOOD, and taking it off is my step: say so in the handoff.
+
+Report at the end: each stall's cause as re-measured; each fix with its fixture seen red; the regression line; verify_phase.sh's result; the next step, my call.
