@@ -146,3 +146,10 @@ Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:3
 Line coverage of record: 88.12% at `6286d9c` (the pin is 87.50%): 0.62 points above it; raise COVERAGE_PERCENT to lock it in
 
 A later regression of record is copied with every line `regression.sh` prints, the skip lines included.
+
+## 2026-11-08: The branch read at `594062e`, before the database step (K71)
+
+- **The operator's answer (K71), quoted:** "Go with A." Applied literally: this session builds nothing more, appends this one entry, commits it, and ends with the outcome `deploy`.
+- **No code since the record:** `git diff --name-only 6286d9c 594062e -- src tests` prints nothing; only `371_implementation.md` and this log changed since `6286d9c`, so the regression of record at `6286d9c`, held in the entry above with every line `regression.sh` printed, stands and is not run again.
+- **Migration 089:** `Migration(version=89, …)` is in `src/motodiag/core/migrations.py` at line 7817; `371_deploy_scope.json` names the two tables `stripe_event_cursors` and `stripe_feed_notices`, the index `idx_stripe_feed_notices_line` and one added `schema_version` row, and no existing row changes.
+- Next, the database step, as before: the operator applies migration 089 to live; this session does not close out.
