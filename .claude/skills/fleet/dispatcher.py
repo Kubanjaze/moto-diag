@@ -104,6 +104,7 @@ import journal  # noqa: E402
 import plan_order  # noqa: E402
 import quality_report  # noqa: E402
 import quartermaster  # noqa: E402
+import rank_call  # noqa: E402
 import red_team  # noqa: E402
 import roadmap_check  # noqa: E402
 import scout  # noqa: E402
@@ -410,6 +411,31 @@ class FencedRunner:
     def resumed(self) -> bool:
         return self.journal is not None and self.journal.resumed
 
+    def ledger_context(self) -> dict:
+        """What every ledger line of this stage carries (Phase 399, F255): its
+        phase and issue, from the journal, and its run folder."""
+        rec = self.journal.record if self.journal is not None else {}
+        return {"phase": rec.get("phase"), "issue": rec.get("issue"),
+                "run": self.run_dir.parent.name}
+
+    def ledger_session(self, cmd: list[str], out: pathlib.Path, wall_s: float | None) -> None:
+        """The Engineer's session into the ledger, once, when it has ended
+        (Phase 399, F255). Keyed by its run and the bytes it printed, so a
+        resumed stage that reads a finished session back adds nothing. Never
+        raises: a ledger that cannot be written must not end the stage."""
+        try:
+            data = out.read_bytes() if out.is_file() else b""
+            model = cmd[cmd.index("--model") + 1] if "--model" in cmd else ""
+            ctx = self.ledger_context()
+            c = rank_call.session_call(
+                data, model=model, wall_s=wall_s,
+                at=self.fleet.now().astimezone().isoformat(timespec="seconds"),
+                phase=ctx["phase"], issue=ctx["issue"], run=ctx["run"], source="session")
+            rank_call.record_once(c)
+        except (OSError, ValueError, TypeError) as e:     # the stage goes on; the log says why
+            self.fleet.log(f"the ledger: the Engineer's session in {self.run_dir.parent.name} "
+                           f"was not recorded: {e}")
+
     def gate_model(self, model: str | None) -> None:
         """No new Opus or Fable stage over its ceiling; a resumed one is not new."""
         if self.resumed or model not in (OPUS, FABLE):
@@ -493,6 +519,9 @@ class FencedRunner:
             r = subprocess.CompletedProcess(
                 cmd, done["rc"], out.read_text(errors="replace"),
                 err.read_text(errors="replace") if err.is_file() else "")
+            # Read back from its files: in the ledger already, unless the
+            # stage was cut between the end and the write (Phase 399).
+            self.ledger_session(cmd, out, None)
             limited = None if done.get("reason") else rate_limit(r)
             if limited:
                 raise RateLimited(limited[0] or session, limited[1])
@@ -527,6 +556,7 @@ class FencedRunner:
                 break
             self.fleet.sleep(every)
         reason = reason or watch()
+        self.ledger_session(cmd, out, time.monotonic() - start)
         r = subprocess.CompletedProcess(cmd, proc.returncode, out.read_text(errors="replace"),
                                         err.read_text(errors="replace"))
         limited = None if reason else rate_limit(r)
@@ -2669,6 +2699,39 @@ class Fleet:
         except Stop:
             return True
 
+    def ledger_read_in(self, *, dry_run: bool = False) -> int:
+        """Every kept run folder's ended Engineer session into the ledger,
+        once (Phase 399, F255): before this phase no Engineer session reached
+        it. Keyed as `FencedRunner.ledger_session` keys a live one, so a
+        second pass, or a session already recorded as it ended, adds nothing.
+        A session that has not ended (no result line) is left to its stage.
+        Returns how many rows were added; one log line says it."""
+        added = there = 0
+        for p in sorted(self.runs.iterdir()) if self.runs.is_dir() else []:
+            out = p / "run" / "session.json"
+            if not (p.is_dir() and out.is_file() and session_ended(out)):
+                continue
+            j = journal.Journal.load(p)
+            rec = j.record if j is not None else {}
+            data = out.read_bytes()
+            at = dt.datetime.fromtimestamp(out.stat().st_mtime).astimezone()
+            served = sorted((json.loads(data.decode("utf-8", "replace").strip()
+                                        .splitlines()[-1]).get("modelUsage") or {}).keys())
+            c = rank_call.session_call(data, model=served[0] if len(served) == 1 else OPUS,
+                                       wall_s=None, at=at.isoformat(timespec="seconds"),
+                                       phase=rec.get("phase"), issue=rec.get("issue"),
+                                       run=p.name, source="read-in")
+            if any(r.get("key") == c.key for r in rank_call.rows(stand_ins=True)):
+                there += 1
+            elif dry_run:
+                added += 1
+            else:
+                added += rank_call.record_once(c)
+        (self.out if dry_run else self.log)(
+            f"the ledger read-in: {added} Engineer session(s) "
+            f"{'would be ' if dry_run else ''}added, {there} already there")
+        return added
+
     def recover(self, *, dry_run: bool = False) -> list[str]:
         """Before the first cycle: every stage a restart, a power cut or a
         crash cut off. Unfinished journals are resumed (or, when the issue
@@ -2681,6 +2744,7 @@ class Fleet:
             said.append(line)
             (self.out if dry_run else self.log)(("would " if dry_run else "") + line)
 
+        self.ledger_read_in(dry_run=dry_run)
         if not dry_run:
             self.update_mirror()
         rows = self.master_rows()

@@ -39,3 +39,41 @@ filed, left.
   fleet's run folders names its session (Step 0's decision);
 - the code was drafted while the census waited; the plan is committed
   before any code is.
+
+## 2026-11-08 04:13–04:31 UTC — the build
+
+- **(a)** `tests/support/ledger_guard.py`, loaded by `conftest.py`'s
+  `pytest_plugins`: the autouse fixture (a ledger file per test) and the
+  check (controller only; existing bytes unchanged, every appended row's
+  session named in a fleet run folder). `rank_call.STAND_IN_SESSION`,
+  `is_stand_in`, `rows`, `summary`, `rank_call.py ledger`.
+- **(b)** `rank_call.Call` gains `phase`, `issue`, `run`, `source`, `key`;
+  `context(run)`; `session_call`, `session_key`, `record_once`.
+  `dispatcher.py`: `FencedRunner.ledger_context`, `ledger_session` (after
+  the process ends, before a usage limit is raised, and on a read-back);
+  `Fleet.ledger_read_in`, first in `recover`, with its log line.
+- `tests/test_phase399_cost_ledger.py`: 17 passed, under a throwaway HOME.
+- **Red on the old code** (master's `rank_call.py`, `dispatcher.py` and
+  `conftest.py` copied in, then restored), under a throwaway HOME: 12
+  failed, 5 passed. The 5 are the guard module's own tests (the module is
+  new, so it is there either way); the guard broken on purpose is
+  mutations M1–M4. On the old code this file alone wrote 16 rows into that
+  HOME's default ledger: F254, reproduced.
+- `399_mutate.py`, 04:30: **11/11 mutations red**, every run under a
+  throwaway HOME; the real ledger's sha256 the same before and after
+  (`6275db3a…`). Output kept as `399_mutate.out`.
+- The fleet's 973 tests (`test_phase38[7-9]*`, `test_phase39*`) under a
+  throwaway HOME: 969 passed, 4 failed, all four in
+  `test_phase388_fence_boundary.py`, which reads the real HOME's
+  `~/.config`; that file with the real HOME: 47 passed, the real ledger
+  unchanged.
+- **Design choice (recorded):** the Engineer row's key is the run folder
+  and the sha256 of `session.json`, not the session id: `--resume` keeps
+  the id, and each printed part is its own spend.
+- `COLLECTED_TEST_FLOOR` 12416 to 12433, by a diff of collected ids against
+  master at `1222862` (12416): +17 −0.
+- wholetree fast at 04:31 (90 files): 2623 passed, 10 skipped, exit 0.
+  `pgrep -x bwrap` empty before it. No push guard ran on the plan's push:
+  this builder session runs outside the repository root, so the repo's
+  hook is not loaded; wholetree fast was run by hand before each commit
+  and push instead.

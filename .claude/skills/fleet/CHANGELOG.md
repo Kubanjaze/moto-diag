@@ -1,5 +1,30 @@
 # fleet — changelog
 
+## 2026-11-08 — the cost ledger, made true (Phase 399, K69, F254, F255)
+
+The operator: "the cost ledger and Bosun’s watch-only phase may go ahead as
+fleet-only phases, one at a time while a shop phase runs; anything after
+comes back to me". The prompt is `docs/prompts/399_the_cost_ledger.txt`;
+Step 0 is `399_step0.md`.
+
+- `rank_call.Call` gains `phase`, `issue`, `run`, `source` and `key`;
+  `call` takes the first three from the runner's `ledger_context`.
+- `rank_call.session_call`, `session_key`, `record_once`: an Engineer
+  session's row from its `session.json`, written once by its key.
+- `rank_call.STAND_IN_SESSION`, `is_stand_in`, `rows`, `summary`, and
+  `rank_call.py ledger`: the one reader, which skips the tests' `sess-1`
+  rows; the rows themselves stay.
+- `FencedRunner.ledger_context` and `ledger_session` (called when the
+  session's process has ended, and when a resumed stage reads it back);
+  `Fleet.ledger_read_in`, first in `recover`, with its log line.
+- `tests/support/ledger_guard.py` (in `conftest.py`'s `pytest_plugins`):
+  every test's own ledger file, and a suite run that changes the real
+  ledger fails. Held by `tests/test_phase399_cost_ledger.py`; mutations in
+  `399_mutate.py`.
+- **Fixture:** `fixtures/f255/claude_result_scout_371.json`, a real
+  `claude -p --output-format json` result (371's Science Officer), since no
+  real Engineer session survived.
+
 ## 2026-11-08 — a refused record push is held, and released by `needs-hands` off (Phase 398, K67, F252)
 
 The operator: "yes, fix the two stalls now as phase 398". The prompt is
