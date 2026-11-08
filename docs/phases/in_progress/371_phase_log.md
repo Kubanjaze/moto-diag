@@ -45,3 +45,14 @@ Built by the Chief Engineer in the fleet's fence, on `phase-371-live-stripe-paym
 
 - **`371_mutate.py`**, 348's harness, the plan's fifteen mutations. The first run was **14/15**: F6 (a `retry=True` result advancing the cursor) stayed green, because the retry test's round held only the retried event, so nothing could carry the place forward whether or not the hold was honoured. The test now has a later event handled cleanly in the same round, and asserts the place stays put and one event was handled. The code was right; the test could not fail. Then `371_mutate.py F` 8/8 and the full run **15/15 red**, recorded in `371_mutate.out`.
 - **`COLLECTED_TEST_FLOOR` 12416 → 12492**, by a diff of collected ids against master at `3bf657e` (12417 collected in a worktree of master, removed after): +75 −0, all in the five `test_phase371_*` files (cli 23, event_feed 21, limits 14, migration 10, monitor 7).
+
+## 2026-11-08: Item 9, the regression of record
+
+- `wholetree.sh --full` on its own at `6286d9c`, clean tree, exit code 0: `wholetree full: PASSED — 5085 passed, 36 skipped, 33 warnings in 1020.24s (0:17:00) (1022.8 s wall)`, record `2336f2bba0e5…_full.json` for commit `6286d9c`.
+- `regression.sh`, exit code 0, the lines as printed:
+
+Regression of record: 12387 passed, 0 failed, 105 skipped, 0 errors at `6286d9c` (35 min 34 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0) (run inside the fleet's fence)
+Line coverage of record: 88.12% at `6286d9c` (the pin is 87.50%): 0.62 points above it; raise COVERAGE_PERCENT to lock it in
+
+- The coverage line's suggestion to raise `COVERAGE_PERCENT` is not taken here: the plan does not name it, the pin is a floor that 88.12% clears, and a change to `tests/support/quality_counts.py` now would change the tree after the regression of record.
+- Next, the database step: the operator applies migration 089 to live from the dispatcher's paste block; this session does not close out.
