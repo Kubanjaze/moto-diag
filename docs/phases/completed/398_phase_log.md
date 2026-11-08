@@ -186,6 +186,10 @@ Line coverage of record: 88.04% at `e816e02` (the pin is 87.50%): 0.54 points ab
   `implementation.md` and `phase_log.md`, F251 and F252 closed in
   `docs/FOLLOWUPS.md`, the handoff `docs/handoffs/2026-11-08_398_closed.md`.
 - No bug fixes in this phase.
+- `e38572d`, the close-out commit, after wholetree fast (2606 passed, 10
+  skipped, exit 0); pushed, and PR #55 opened with the attribution block.
+  `verify_phase.sh 398 e816e02 e38572d`: 13 of 14 pass; check 1 (the tip
+  on master) waits for the merge.
 - No refute pass ran: the phase changes fleet and close-out code and
   tests, takes no claim from a source, and is held by its tests and
   mutations.
