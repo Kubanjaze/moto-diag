@@ -5301,9 +5301,15 @@ What would close it: Q4 reads the record through the same rule as A5
 after 398 (a line that begins with the prefix), with a test on a log
 whose last prefixed line is a table row with other counts.
 
-### F254
+### F254 — CLOSED by Phase 399
 
 **Tests that call a rank with a stand-in write their rows into the real cost ledger, so the ledger is almost all test data**
+
+Closed 2026-11-08 by Phase 399 (`fdafadc`, bug fix `2bb35de`): every test
+writes a ledger of its own (`tests/support/ledger_guard.py`), and a suite
+run that changes the real ledger fails. The census: 6 files and 57 rows a
+run before, 0 after. The existing rows stay; `rank_call.rows()` skips
+`sess-1` (`tests/test_phase399_cost_ledger.py`).
 
 Found 2026-11-07 by the advisor session on the Mac, at `69ceaf2`.
 
@@ -5333,9 +5339,15 @@ run of the suite changes the real ledger. The existing rows stay as they
 are, and readers skip `sess-1` rows by a named rule with a planted control.
 Phase 399.
 
-### F255
+### F255 — CLOSED by Phase 399
 
 **The Chief Engineer's sessions never reach the cost ledger, so their cost lives only in run folders that the prune removes**
+
+Closed 2026-11-08 by Phase 399 (`fdafadc`): each Engineer session is
+written once when it ends, keyed by its run and the hash of its
+`session.json`; every line names its phase, issue and run; the search on
+start reads kept folders in once. 371's real session replayed read-only:
+one row, then nothing on a second pass.
 
 Found 2026-11-07 by the advisor session, at `69ceaf2`.
 

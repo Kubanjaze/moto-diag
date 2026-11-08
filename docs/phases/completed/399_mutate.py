@@ -1,7 +1,7 @@
 """Phase 399's mutations: each puts one part of F254 or F255 back, and a test
 must go red.
 
-Run from the repository root: `.venv/bin/python docs/phases/in_progress/399_mutate.py`
+Run from the repository root: `.venv/bin/python docs/phases/completed/399_mutate.py`
 (ROOT is three levels up from in_progress/ or completed/). 398's harness:
 exact strings (each must occur once), the tests run after clearing
 `__pycache__`, every file restored whatever happens. Exits 1 if any mutation

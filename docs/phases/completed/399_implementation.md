@@ -1,6 +1,6 @@
 # Phase 399 — The fleet's cost ledger, made true (F254, F255)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-11-08
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-11-08 (v1.0 `6818f99`)
 
 ---
 
@@ -119,14 +119,74 @@ F256 (filed here, left); every other finding.
 
 ## Planned items
 
-- [ ] (a) the fixture, the check, the readers
-- [ ] (b) phase, issue and run on every line; the Engineer's session once
-- [ ] (b) the read-in of kept folders
-- [ ] the census after; the tests red on the old code; the mutations
-- [ ] the regression of record, the close-out, the handoff
+- [x] (a) the fixture, the check, the readers
+- [x] (b) phase, issue and run on every line; the Engineer's session once
+- [x] (b) the read-in of kept folders
+- [x] the census after; the tests red on the old code; the mutations
+- [x] the regression of record, the close-out, the handoff
+
+## Deviations
+
+1. **The census ran in 12 chunks, each started only while no fleet sandbox
+   ran** (F220), not as one run: the fleet was planning 371 throughout,
+   with stages minutes apart. A sandbox still started beside 5 of the
+   before-census's chunks and 1 of the after's (each run says which). Both
+   ran in worktrees (master `1222862`; the fix `fdafadc`), so this checkout
+   could be built meanwhile.
+2. **The replay fixture is not an Engineer's session.json**: none survived
+   anywhere on the machine (Step 0, S0-4), so the tests replay a real
+   result of the same command (371's Science Officer). 371's own Chief
+   Engineer session appeared later, in
+   `runs/20261108_095532_engineer_371`, and was replayed read-only too
+   (Results).
+3. **Bug fix #1** (`2bb35de`): the fixture asked for `monkeypatch`, which
+   broke the database tripwire's teardown order; the first regression, at
+   `fdafadc`, had 819 setup errors and is not of record. The fixture sets
+   and restores the variable itself. One test and one mutation (M12) more
+   than v1.0 listed.
+4. **One test beyond v1.0's list** besides bug fix #1's: a usage limit's
+   part is one row however often it is read back. Writing it found F256.
+5. **No push guard ran on this branch's pushes**: the builder session ran
+   outside the repository root, so the repo's hook was not loaded.
+   `wholetree.sh` fast was run by hand, alone, before each commit.
+
+## Results
+
+- **(a) Cause, re-measured:** nothing kept a test off the default ledger;
+  5,616 of the desktop's 5,726 rows were `sess-1`. **The census before**
+  (`1222862`): 6 files, 57 rows a run, all `sess-1`
+  (`test_phase393_code_checks.py` 21, `test_phase392_answers.py` 16,
+  `test_phase392_red_team_c7.py` 7, `test_phase396_slips.py` 7,
+  `test_phase392_check_limit.py` 4, `test_phase392_next_mission.py` 2);
+  F254 had measured four. **The census after** (`fdafadc`): 0 files, 0
+  rows. The guard broken on purpose goes red (M1–M4, M12), each under a
+  throwaway HOME.
+- **(b) Cause, re-measured:** `Runner.session` wrote only the run folder.
+  Now: the Engineer's session lands once with its phase, issue and run; a
+  resumed stage reading it back adds nothing; a stage cut between the end
+  and the write writes it once on resume; the read-in adds one, then
+  nothing. **371's real session, replayed read-only** (copied to a
+  throwaway state folder): one `read-in` row, Opus, input 234, cache write
+  207,619, cache read 17,685,247, output 79,410, $6.79 at list price, 135
+  turns, 7,013 s, phase 371, issue 54, run `20261108_095532_engineer_371`;
+  the second pass added nothing; the run folder's files hashed the same
+  before and after.
+- `tests/test_phase399_cost_ledger.py`: 18 passed. On master's code: 12 of
+  the first 17 failed; the 5 that passed test the guard module, which is
+  new either way.
+- `399_mutate.py`: **12/12 mutations red**, every one under a throwaway
+  HOME, the real ledger unchanged by them.
+- `COLLECTED_TEST_FLOOR` 12416 to 12434 (+18 −0 against `1222862`).
+- F256 filed (a usage limit read back re-pauses a resumed Engineer), left.
+- **Regression of record:** 12329 passed, 0 failed, 105 skipped, 0 errors at `2bb35de`, coverage 88.04%, inside the fence (wholetree --full first: 5093 passed, 36 skipped); the real ledger across it: 5,521,653 bytes and 5,731 rows before and after, sha256 9ed1861d… both times, 0 rows appended.
+- `dispatcher.py` and `rank_call.py` changed: the fleet's copy moves to
+  master and `motodiag-fleet.service` restarts after the merge (the
+  handoff's block), and the search on start then reads 371's kept session
+  in.
 
 ## Version history
 
 | version | date | what |
 |---|---|---|
-| 1.0 | 2026-11-08 | the plan |
+| 1.0 | 2026-11-08 | the plan (`6818f99`) |
+| 1.1 | 2026-11-08 | built (`fdafadc`, bug fix #1 `2bb35de`); Deviations and Results |
