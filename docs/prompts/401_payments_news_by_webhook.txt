@@ -1,0 +1,8 @@
+Do this: start Phase 401, payments news by webhook, at 100 shops (row 401, on master as ⏸️: make it 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out.
+
+- **Why now:** the payments feed (Phase 371) sent its notice that 100 shops are connected, or the operator said go. K65 (3) paused this row until then.
+- **What exists:** the signed webhook route `stripe_webhook` in src/motodiag/api/routes/billing.py, which verifies the `Stripe-Signature` header and hands the event to `dispatch_event` in src/motodiag/billing/webhook_handlers.py. The feed (`motodiag payments feed run`, src/motodiag/payments/event_feed.py) hands events to the same handler, which records every event id, so an event that arrives both ways is applied once.
+- **The endpoint:** created in Stripe's dashboard at API version `2026-09-30.endive` (the gateway's pinned version), for the eight event types in `HANDLERS`: customer.subscription.created, customer.subscription.updated, customer.subscription.deleted, invoice.paid, invoice.payment_failed, payment_intent.succeeded, payment_intent.payment_failed, charge.refunded; with Connect events on, so shops' payments arrive.
+- **The open question, the operator's:** the public address Stripe calls. The backend is tailnet-only (the operator's decision 3 of 2026-09-28) and no public address exists. This is a fork at Step 0: present the options and stop.
+- **The secret:** the endpoint's signing secret goes in the desktop's server.env as MOTODIAG_STRIPE_WEBHOOK_SECRET, by the operator, never in the repository, a log or a chat.
+- **The feed stays:** motodiag-payments.service keeps running as the safety net; this phase does not remove it.

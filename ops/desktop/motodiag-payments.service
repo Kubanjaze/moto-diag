@@ -1,0 +1,33 @@
+# moto-diag's payments feed on the home desktop (Phase 371). Installed by
+# install_payments_unit.sh as /etc/systemd/system/motodiag-payments.service.
+#
+# - It asks Stripe for new events about every 20 seconds, for the platform
+#   account and each connected shop, and hands each to the same handler the
+#   webhook uses (the operator's K65: the backend stays tailnet-only, so
+#   Stripe cannot reach the webhook). Every 5 minutes it checks in with a
+#   Sentry job monitor; silence makes Sentry email the operator.
+# - Migrations never run through it: `payments feed run` does not open the
+#   database through init_db. Migrations reach live only by deploy.py.
+# - With no Stripe key it exits 2 and says why in the journal; it is tried
+#   again each half minute instead of spinning.
+# - Code from the server's clone (~/motodiag/server); the key lives in
+#   server.env (600), beside the API's.
+[Unit]
+Description=moto-diag payments feed (asks Stripe for events)
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/home/lilcu/motodiag/live/motodiag.db
+
+[Service]
+Type=simple
+User=lilcu
+WorkingDirectory=/home/lilcu/motodiag/server
+Environment=MOTODIAG_DB_PATH=/home/lilcu/motodiag/live/motodiag.db
+Environment=MOTODIAG_DATA_DIR=/home/lilcu/motodiag/live
+EnvironmentFile=-/home/lilcu/.config/motodiag/server.env
+ExecStart=/home/lilcu/motodiag/server/.venv/bin/motodiag payments feed run
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

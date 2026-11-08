@@ -4,22 +4,26 @@
 - ``motodiag shop payments connect|status``: a shop's connected account.
 - ``motodiag shop terminal setup|pay``: the simulated reader.
 - ``motodiag shop invoice pay-link|payments``: an invoice paid online.
+- ``motodiag payments feed run|status`` (Phase 371): the server asks
+  Stripe for its news, and whether it is doing so.
 
-No command marks an invoice paid: Stripe's verified event does, through
-the webhook (``/v1/billing/webhooks/stripe``).
+No command marks an invoice paid: Stripe's event does, when it reaches
+the webhook (``/v1/billing/webhooks/stripe``) or the feed.
 """
 
 from __future__ import annotations
 
+import time
 from typing import Optional
 
 import click
 from rich.table import Table
 
 from motodiag.cli.theme import get_console
+from motodiag.core.config import get_settings
 from motodiag.core.database import init_db
-from motodiag.core.timestamps import local_display
-from motodiag.payments import stripe_api
+from motodiag.core.timestamps import local_display, stored_instant
+from motodiag.payments import event_feed, stripe_api
 from motodiag.payments.connect import (
     ConnectError,
     connect_shop,
@@ -33,10 +37,11 @@ from motodiag.payments.invoice_payments import (
     start_terminal,
 )
 from motodiag.payments.terminal import setup_simulated_reader
+from motodiag.telemetry.sender import make_sender
 
 PAID_BY_EVENT = (
     "The invoice is not paid yet. It becomes paid when Stripe's verified "
-    "payment_intent.succeeded event reaches the webhook."
+    "payment_intent.succeeded event reaches the webhook or the feed."
 )
 
 
@@ -84,6 +89,109 @@ def register_payments_check(cli_group: click.Group) -> None:
         if st.api_key_set and not st.test_mode:
             console.print("[yellow]The key is not a test-mode key. Outside "
                           "env=prod a live key is refused.[/yellow]")
+
+    register_feed(payments_group)
+
+
+# ---------------------------------------------------------------------------
+# Phase 371: the feed. Neither command opens the database through init_db,
+# so no migration ever runs through them (migrations reach live by deploy.py).
+# ---------------------------------------------------------------------------
+
+
+def _alarm_line(settings) -> str:
+    dsn = event_feed.alarm_dsn(settings)
+    if dsn is None:
+        return "Alarm: off: no Sentry DSN"
+    return (f"Alarm: checks in to {dsn} every "
+            f"{settings.stripe_poll_checkin_s // 60} minutes")
+
+
+def _configured_or_exit(console, settings) -> None:
+    """Exit 2, with the gateway's own message, when Stripe cannot be used."""
+    try:
+        stripe_api.client(settings)
+    except (stripe_api.StripeNotConfigured, stripe_api.LiveKeyRefused) as e:
+        console.print(f"[red]{e}[/red]")
+        raise click.exceptions.Exit(2)
+
+
+def _round_line(r: event_feed.RoundResult) -> str:
+    line = (f"{r.account}: {r.seen} seen, {r.handled} handled, "
+            f"largest lag {r.lag_s:.0f} s")
+    return line + (f"; error: {r.error}" if r.error else "")
+
+
+def _stale(row: dict, now: float, interval_s: int) -> bool:
+    asked = stored_instant(row["polled_at"]).timestamp()
+    return now - asked > 2 * interval_s
+
+
+def _status_problems(settings, db_path: str, rows: list[dict], now: float) -> list[str]:
+    by_account = {r["account"]: r for r in rows}
+    problems = []
+    for account in event_feed.accounts(settings, db_path):
+        row = by_account.get(account)
+        if row is None:
+            problems.append(f"{account} has never been asked")
+        elif _stale(row, now, settings.stripe_poll_interval_s):
+            problems.append(f"{account} was not asked within two intervals")
+        elif row["last_error"]:
+            problems.append(f"{account}'s last round ended in an error")
+    return problems
+
+
+def register_feed(payments_group: click.Group) -> None:
+    @payments_group.group("feed")
+    def feed_group() -> None:
+        """The server asks Stripe for its news (Phase 371)."""
+
+    @feed_group.command("run")
+    @click.option("--once", is_flag=True,
+                  help="One round, one line per account, then exit.")
+    def feed_run_cmd(once: bool) -> None:
+        """Ask Stripe for new events every interval and hand each to the handler."""
+        console = get_console()
+        settings = get_settings()
+        _configured_or_exit(console, settings)
+        console.print(_alarm_line(settings))
+        if not once:
+            event_feed.run_forever(settings, settings.db_path, clock=time.time,
+                                   sleep=time.sleep, stop=lambda: False,
+                                   sender=make_sender(settings))
+            return
+        results = event_feed.poll_once(settings, settings.db_path, time.time)
+        for r in results:
+            click.echo(_round_line(r))
+        if any(r.error for r in results):
+            raise click.exceptions.Exit(1)
+
+    @feed_group.command("status")
+    def feed_status_cmd() -> None:
+        """When each account was last asked, the notices sent, and the alarm."""
+        console = get_console()
+        settings = get_settings()
+        _configured_or_exit(console, settings)
+        now = time.time()
+        rows = event_feed.cursor_rows(settings.db_path)
+        for row in rows:
+            ago = now - stored_instant(row["polled_at"]).timestamp()
+            click.echo(
+                f"{row['account']}: last asked {local_display(row['polled_at'])} "
+                f"({ago:.0f} s ago); newest event "
+                f"{local_display(event_feed.stamp(row['last_created']))}; "
+                f"last error: {row['last_error'] or 'none'}")
+        notices = event_feed.notices_since(settings.db_path,
+                                           event_feed.stamp(now - 30 * 86400))
+        click.echo(f"Notices in the last 30 days: {len(notices)}")
+        for n in notices:
+            click.echo(f"  {local_display(n['sent_at'])}: {n['detail']}")
+        click.echo(_alarm_line(settings))
+        problems = _status_problems(settings, settings.db_path, rows, now)
+        for p in problems:
+            click.echo(f"Not right: {p}")
+        if problems:
+            raise click.exceptions.Exit(1)
 
 
 def register_shop_payments(shop_group: click.Group) -> None:
