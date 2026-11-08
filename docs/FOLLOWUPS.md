@@ -5136,9 +5136,14 @@ What would close it: the old key deleted after a check with the new key
 has arrived, recorded here with the new check's event id and the date.
 No key or DSN is recorded.
 
-### F251
+### F251 — CLOSED by Phase 398
 
 **A5 reads the last line that holds "Regression of record:" anywhere in it, so a refuter table that quotes the record, as C3 asks, takes its place and fails the close-out check**
+
+Closed 2026-11-08 by Phase 398 (`e816e02`), the first fix below: A5
+reads only a line that begins with the prefix. Both refused logs pass as
+fixtures; a log whose only prefixed line is a table row still fails
+(`tests/test_phase398_two_stalls.py`). Q4's matching read is F253.
 
 Found on two phases, relayed by the operator on 2026-11-02, and measured
 on the Mac.
@@ -5211,9 +5216,16 @@ What would close it, one of:
 The first fixes the check for any writer. F252 is what the fleet did once
 the push was refused.
 
-### F252
+### F252 — CLOSED by Phase 398
 
 **When the push gate refuses the Red Team's record commit, the stage ends with the label unchanged and no stage due, so the phase waits until someone notices**
+
+Closed 2026-11-08 by Phase 398 (`e816e02`), as the last section below
+says: the refusal holds the cleared table with `needs-hands`; taking it
+off pushes the same table on the branch as it then stands and sets
+`review:clear`, with no new round; a second refusal holds again
+(`tests/test_phase398_two_stalls.py`, with #45's and #50's real stop text).
+The fleet runs it once its copy is moved to master after the merge.
 
 Found 2026-11-02 after F251's two refusals, relayed by the operator; read
 in the code on the Mac at `e27baab`.

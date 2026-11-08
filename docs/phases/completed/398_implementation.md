@@ -1,6 +1,6 @@
 # Phase 398 — The two stalls at the Red Team's clear (F251, F252)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-11-08
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-11-08 (v1.0 `f8c7e62`)
 
 ---
 
@@ -110,14 +110,59 @@ or to C3; anything else about the fleet; issue #54 and its hold.
 
 ## Planned items
 
-- [ ] (a) A5 reads only a line that begins with the prefix
-- [ ] (b) the hold on a refused record push
-- [ ] (b) the release when `needs-hands` comes off
-- [ ] the tests, red on the old code; the mutations
-- [ ] the regression of record, the close-out, the handoff
+- [x] (a) A5 reads only a line that begins with the prefix
+- [x] (b) the hold on a refused record push
+- [x] (b) the release when `needs-hands` comes off
+- [x] the tests, red on the old code; the mutations
+- [x] the regression of record, the close-out, the handoff
+
+## Deviations
+
+1. **Three tests beyond v1.0's list**, each guarding a case the build met:
+   the kept table already on the branch (as the operator pushed it by hand
+   on #45 and #50) commits nothing and sets `review:clear`; a later Red
+   Team verdict or stop ends the hold's due; a later clear releases an
+   older kept table.
+2. **The hold is said through `escalate`**, not a marker of its own
+   (`RECORD_M` in v1.0): `not_resumable` already treats a stage cut off
+   inside an escalation as resumable, and the hold's due rule reads the
+   escalation's marker (`needs-hands rank=red-team`). The resumed stage
+   returns at once when its label step is done.
+3. **The hold's due rule reads comment order, not times**: the verdict
+   marker and the hold can be posted in the same second.
+4. **No `wholetree.sh --full` in this checkout.** The fenced run of record
+   runs it first, in its own clone of `e816e02` (5075 passed, 36 skipped,
+   exit 0), as `Fleet.check_run` always does.
+
+## Results
+
+- (a) Cause, re-measured: A5 took the Red Team table's quote on both
+  refused logs and failed them; it now reads 12186 at `c2b0767` (345) and
+  12292 at `ca580f6` (343). Known-bad: the logs without their record lines,
+  and a log whose only prefixed line is a table row (which the old A5
+  passed), fail. Both pins hold by equality; the line A5 reads changes in
+  no closed log.
+- (b) Cause, re-measured: the stop added no label and nothing was due.
+  With #45's and #50's real refusal planted as G6 on the record push: the
+  issue gets `needs-hands` and the comment, `review:open` stays, the table
+  is in `held.json`; `needs-hands` off after a fix pushes the same table
+  on the fixed branch and sets `review:clear`, with no model call and no
+  new verdict; a second refusal holds again; the hold outlives a restart
+  and `prune_runs`; a cut after the re-push's push resumes.
+- `tests/test_phase398_two_stalls.py`: 17 passed. On master's code: 14
+  failed, the 3 known-bad controls passing (they must fail A5 under
+  either rule).
+- `398_mutate.py`: 8/8 mutations red.
+- `COLLECTED_TEST_FLOOR` 12397 to 12416 (+18 −0 against `f6aead1`).
+- F253 filed (Q4 reads the prefix the old way; harmless on both logs).
+- Regression of record: 12311 passed, 0 failed, 105 skipped, 0 errors at
+  `e816e02`, coverage 88.04%, inside the fence, no fleet stage beside it.
+- `dispatcher.py` changed: the fleet's copy moves to master and
+  `motodiag-fleet.service` restarts after the merge (the handoff's block).
 
 ## Version history
 
 | version | date | what |
 |---|---|---|
-| 1.0 | 2026-11-08 | the plan |
+| 1.0 | 2026-11-08 | the plan (`f8c7e62`) |
+| 1.1 | 2026-11-08 | built (`e816e02`); Deviations and Results |
