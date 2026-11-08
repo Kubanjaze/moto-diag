@@ -185,18 +185,25 @@ class TestThePlace:
         assert results[0].error_kind == "gap"
 
     def test_a_retry_leaves_the_place_where_it_was(self, db, monkeypatch):
+        """A later event handled cleanly in the same round does not carry
+        the place past the one that must be asked for again."""
         _set_place(db, "platform", FROZEN_AT - 1000)
-        evt = succeeded(9, 9, event_id="evt_retry")
+        held = succeeded(9, 9, event_id="evt_retry", created=FROZEN_AT - 500)
+        later = succeeded(9, 9, event_id="evt_later", created=FROZEN_AT)
+        real = feed.dispatch_event
 
-        def retry(event, **kw):
-            return WebhookDispatchResult(True, False, event["id"], event["type"],
-                                         error="BillingProviderError: x", retry=True)
+        def retry_one(event, **kw):
+            if event["id"] == "evt_retry":
+                return WebhookDispatchResult(True, False, event["id"], event["type"],
+                                             error="BillingProviderError: x", retry=True)
+            return real(event, **kw)
 
-        monkeypatch.setattr(feed, "dispatch_event", retry)
-        answer(monkeypatch, [ask([evt])])
+        monkeypatch.setattr(feed, "dispatch_event", retry_one)
+        answer(monkeypatch, [ask([later, held])])
         results = feed.poll_once(stripe_settings(), db, clock)
         assert _cursor(db, "platform")["last_created"] == FROZEN_AT - 1000
         assert results[0].error_kind == "retry"
+        assert results[0].handled == 1
 
     def test_control_a_clean_dispatch_moves_the_place(self, db, monkeypatch):
         _set_place(db, "platform", FROZEN_AT - 1000)

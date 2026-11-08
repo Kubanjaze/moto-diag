@@ -494,8 +494,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: collected ids against master at f6aead1 (12398): +18 -0,
 #: test_phase398_two_stalls.py (17) and test_phase390_resume_contract.py's
 #: kill-point id for the held table's push (1). Measured: 12416.
+#: Phase 371 (the payments feed, K65), by a diff of collected ids against
+#: master at 3bf657e (12417): +75 -0. Added: test_phase371_cli.py (23),
+#: test_phase371_event_feed.py (21), test_phase371_limits.py (14),
+#: test_phase371_migration.py (10), test_phase371_monitor.py (7).
+#: Measured: 12492.
 #:
-COLLECTED_TEST_FLOOR = 12416
+COLLECTED_TEST_FLOOR = 12492
 
 
 def _collected_count() -> int:
