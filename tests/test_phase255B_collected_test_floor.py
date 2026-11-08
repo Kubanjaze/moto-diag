@@ -490,8 +490,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: test_phase343_api.py's TestTheDoubleMatchesTheSender (8 ids: the names
 #: the API reads, six parametrized attribute checks, a crash through a real
 #: Sender). Measured: 12397.
+#: Phase 398 (the two stalls at the Red Team's clear, K67), by a diff of
+#: collected ids against master at f6aead1 (12398): +18 -0,
+#: test_phase398_two_stalls.py (17) and test_phase390_resume_contract.py's
+#: kill-point id for the held table's push (1). Measured: 12416.
 #:
-COLLECTED_TEST_FLOOR = 12397
+COLLECTED_TEST_FLOOR = 12416
 
 
 def _collected_count() -> int:

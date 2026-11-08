@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F252** (this file). The
+At the time of writing the highest assigned is **F253** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -5136,9 +5136,14 @@ What would close it: the old key deleted after a check with the new key
 has arrived, recorded here with the new check's event id and the date.
 No key or DSN is recorded.
 
-### F251
+### F251 — CLOSED by Phase 398
 
 **A5 reads the last line that holds "Regression of record:" anywhere in it, so a refuter table that quotes the record, as C3 asks, takes its place and fails the close-out check**
+
+Closed 2026-11-08 by Phase 398 (`e816e02`), the first fix below: A5
+reads only a line that begins with the prefix. Both refused logs pass as
+fixtures; a log whose only prefixed line is a table row still fails
+(`tests/test_phase398_two_stalls.py`). Q4's matching read is F253.
 
 Found on two phases, relayed by the operator on 2026-11-02, and measured
 on the Mac.
@@ -5211,9 +5216,16 @@ What would close it, one of:
 The first fixes the check for any writer. F252 is what the fleet did once
 the push was refused.
 
-### F252
+### F252 — CLOSED by Phase 398
 
 **When the push gate refuses the Red Team's record commit, the stage ends with the label unchanged and no stage due, so the phase waits until someone notices**
+
+Closed 2026-11-08 by Phase 398 (`e816e02`), as the last section below
+says: the refusal holds the cleared table with `needs-hands`; taking it
+off pushes the same table on the branch as it then stands and sets
+`review:clear`, with no new round; a second refusal holds again
+(`tests/test_phase398_two_stalls.py`, with #45's and #50's real stop text).
+The fleet runs it once its copy is moved to master after the merge.
 
 Found 2026-11-02 after F251's two refusals, relayed by the operator; read
 in the code on the Mac at `e27baab`.
@@ -5262,3 +5274,29 @@ take after a fix, the way an Engineer's model-free run is held (F220):
 - a test: a G6 refusal planted on the record push leaves `needs-hands`
   and the comment. Taking the label off after a fix pushes the same
   table and sets `review:clear`, and a second refusal holds again.
+
+### F253
+
+**The Quartermaster's Q4 reads the last line holding "Regression of record:" anywhere, as A5 did before Phase 398**
+
+Found 2026-11-08 at Phase 398's Step 0, auditing every reader of the
+prefix before F251's fix. Read on the home desktop at `f6aead1`.
+
+- Q4 (`full_run`, `.claude/skills/fleet/quartermaster.py` line 234)
+  compares the full run's counts with those of the last phase-log line
+  that contains the prefix (`if closeout_check.PREFIX in ln`).
+- After a cleared Red Team table is recorded, that line is the table's
+  quote (F251), not the record.
+- Measured on both refused logs (`9555925` for 345, `41370d2` for 343):
+  the quote's counts (`engineer.counts`) equal the record's,
+  (12186, 0, 105) and (12292, 0, 105), because each quote carried the
+  numbers. So no wrong verdict came of it. A quote that left out a number,
+  or a writer that quoted an older run, would make Q4 compare the wrong
+  line.
+
+Not fixed in 398: its prompt builds F251 and F252 only, and Q4 is the
+Quartermaster's, in shadow.
+
+What would close it: Q4 reads the record through the same rule as A5
+after 398 (a line that begins with the prefix), with a test on a log
+whose last prefixed line is a table row with other counts.

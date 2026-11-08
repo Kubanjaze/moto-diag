@@ -1,5 +1,24 @@
 # fleet — changelog
 
+## 2026-11-08 — a refused record push is held, and released by `needs-hands` off (Phase 398, K67, F252)
+
+The operator: "yes, fix the two stalls now as phase 398". The prompt is
+`docs/prompts/398_the_two_stalls.txt`; Step 0 is `398_step0.md`.
+
+- `stage_red_team`: a `Stop` from the clear's record push holds the run
+  (`journal.hold`, `why: record`, the table kept) and `hold_record`
+  escalates with `needs-hands`; `review:open` stays. A later clear releases
+  older record holds.
+- `held_record` (due while the hold's comment is the newest of the Red
+  Team's verdicts, stops and holds) and `stage_red_record` (the kept table on
+  the branch as it stands, the gate, `review:clear`, no model call); a stop
+  holds again. `STAGE_RANK` and `resume` know `red_record`; its kill point is
+  in `fixtures/resume/kill_points.json`.
+- `held_for` skips record holds.
+- **Fixtures:** `fixtures/f252/stops.json`, the real stop comments on #45
+  and #50. Held by `tests/test_phase398_two_stalls.py`. 8/8 mutations red
+  (`398_mutate.out`, with F251's).
+
 ## 2026-10-31 — the four slips from 348 and 385 (Phase 396, K61)
 
 The operator, 2026-10-31: "fix the four things the fleet got wrong on 348

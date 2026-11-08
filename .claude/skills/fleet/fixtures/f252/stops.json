@@ -1,0 +1,11 @@
+{
+ "_what": "The real stop comments of F252: issue #45 (345, round 1) and #50 (343, round 3), read with gh issue view <n> -R Kubanjaze/moto-diag --json comments on 2026-11-08 (Phase 398, Step 0).",
+ "45": {
+  "body": "<!-- fleet-dispatcher: stopped rank=red-team run=20261031_201716_red_team_345 -->\n**Fleet dispatcher: the red-team could not finish, label unchanged.** the push gate refused: G6 9555925b8421 did not pass a model-free run: wholetree fast: FAILED — 3 failed, 2584 passed, 10 skipped, 33 warnings in 125.97s (0:02:05) (127.5 s wall)",
+  "createdAt": "2026-11-01T00:21:50Z"
+ },
+ "50": {
+  "body": "<!-- fleet-dispatcher: stopped rank=red-team run=20261101_215720_red_team_343 -->\n**Fleet dispatcher: the red-team could not finish, label unchanged.** the push gate refused: G6 41370d26c495 did not pass a model-free run: wholetree fast: FAILED — 3 failed, 2585 passed, 10 skipped, 33 warnings in 115.58s (0:01:55) (116.8 s wall)",
+  "createdAt": "2026-11-02T03:02:19Z"
+ }
+}

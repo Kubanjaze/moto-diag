@@ -1,0 +1,9 @@
+M1 A5 reads any line holding the prefix again: red
+M2 the hold adds no needs-hands: red
+M3 the cleared table is not kept: red
+M4 the release runs a new Red Team round: red
+M5 the release sets review:clear without pushing: red
+M6 a second refusal does not hold again: red
+M7 prune_runs deletes a held table: red
+M8 the Engineer's held_for takes a held table: red
+8/8 red

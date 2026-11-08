@@ -204,7 +204,8 @@ _ENG_STARTED = re.compile(r"^<!-- fleet-engineer: started round=\d+(?: run=(\S+)
 #: The rank each journal's stage is said as, in markers and stop comments.
 STAGE_RANK = {"scout": "scout", "captain": "captain", "xo": "xo", "engineer": "engineer",
               "recheck": "engineer", "deployed": "engineer",
-              "red_team": "red-team", "recommend": "captain", "quartermaster": "quartermaster",
+              "red_team": "red-team", "red_record": "red-team",
+              "recommend": "captain", "quartermaster": "quartermaster",
               "digest": "digest", "next": "next", "quality": "quality"}
 _RED = re.compile(r"^<!-- fleet-red-team: verdict=(\w+) round=(\d+)", re.M)
 _XO = re.compile(r"^<!-- xo-verdict: \S+ round=\d+ applied=(\S+)", re.M)
@@ -1821,6 +1822,8 @@ class Fleet:
         run, j = self.begin(f"red_team_{phase}", {"stage": "red_team", "issue": issue,
                                                   "phase": phase, "body": body, "branch": branch,
                                                   "rnd": rnd}, resume)
+        if j.resumed and j.done("escalate-label"):        # cut off after its hold (F252)
+            return f"held: the round-{rnd} record push"
         self.started(issue, "red-team", f"**Red Team, phase {phase}: started**, round {rnd}.")
         clone = self.stage_clone(run, branch)
         head = j.value("clone")["base"]          # the PR's head, before any refute commit
@@ -1885,10 +1888,95 @@ class Fleet:
                                                *(self.write_finding(clone, fnum, phase, rnd, rows)
                                                  if fnum else [])],
                                subject, "red-team-record")
-        self.push_once(clone, new, rank="red-team-record", phase=phase, branch=branch,
-                       ident=ident, tested=self.fast(clone))
+        try:
+            self.push_once(clone, new, rank="red-team-record", phase=phase, branch=branch,
+                           ident=ident, tested=self.fast(clone))
+        except Stop as e:
+            # F252 (Phase 398): the cleared table is kept, and `needs-hands`
+            # off pushes it (`stage_red_record`), with no new round.
+            self.step("hold", lambda: journal.hold(run, {
+                "issue": issue, "phase": phase, "rnd": rnd, "branch": branch, "why": "record",
+                "table": table, "fnum": fnum, "rows": rows}))
+            return self.hold_record(issue, phase, rnd, str(e))
         self.label_once(issue, "review:clear")
+        for h in self.record_holds(issue):        # a kept table this round supersedes
+            journal.release(h)
+            clean_tmp(h)
         return f"clear, round {rnd}"
+
+    def record_holds(self, issue: int) -> list[pathlib.Path]:
+        """The issue's runs holding a cleared Red Team table, newest first."""
+        return [p for p in journal.held_runs(self.runs, issue)
+                if (journal.held(p) or {}).get("why") == "record"]
+
+    def hold_record(self, issue: int, phase: str, rnd: int, why: str) -> str:
+        """A refused record push, held for the operator (F252): `needs-hands`
+        and what to do, the label left at `review:open`."""
+        self.escalate(issue, "red-team", "needs-hands",
+                      f"Red Team, phase {phase}, round {rnd}: clear, but its record is not on "
+                      f"the branch. The cleared table could not be pushed into the phase log: "
+                      f"{why.rstrip('.')}. The table is kept on the home desktop. Fix the branch "
+                      f"so the push gate passes, then take `needs-hands` off: the fleet pushes "
+                      f"the same table on the branch as it then stands and sets `review:clear`, "
+                      f"with no new Red Team round.")
+        return f"held: the round-{rnd} record push"
+
+    def held_record(self, n: int) -> pathlib.Path | None:
+        """The issue's kept table, due once the operator has taken
+        `needs-hands` off its hold: the hold's comment is still the newest of
+        the Red Team's verdicts, stops and holds (a fresh round, or a re-push
+        that stopped, ends it)."""
+        runs = self.record_holds(n)
+        if not runs:
+            return None
+        hold = f"{MARKER} needs-hands rank=red-team"
+        said = [b for c in self.comments(n)
+                if (b := c.get("body", "").lstrip()).startswith(
+                    (RED_M, f"{MARKER} stopped rank=red-team", hold))]
+        return runs[0] if said and said[-1].startswith(hold) else None
+
+    def stage_red_record(self, issue: int, phase: str, body: str, branch: str,
+                         held: pathlib.Path, *, resume: dict | None = None) -> str:
+        """The operator took `needs-hands` off a held record push (F252): the
+        kept table into the branch's phase log as it now stands, through the
+        push gate with a fresh fast run, then `review:clear`. No Red Team call
+        and no verdict marker, so no round is added (K9). A stop holds again."""
+        info = journal.held(held)
+        if info is None or info.get("why") != "record":
+            raise Stop(f"the held run {held.name} is not held for the Red Team's record")
+        rnd = info["rnd"]
+        run, j = self.begin(f"red_record_{phase}", {"stage": "red_record", "issue": issue,
+                                                    "phase": phase, "body": body,
+                                                    "branch": branch, "held": str(held)}, resume)
+        if j.resumed and j.done("escalate-label"):
+            return f"held: the round-{rnd} record push"
+        self.started(issue, "red-team", f"**Red Team, phase {phase}: the round-{rnd} record, "
+                                        f"again**: the table it cleared, pushed on `{branch}` as "
+                                        "it now stands, as the operator took `needs-hands` off. "
+                                        "No new round.")
+        ident = self.identity_for(issue, body, "red-team")
+        if ident is None:
+            return "clear; the refute table waits for a push identity"
+        subject = f"Phase {phase}: the Red Team's refuter pass, round {rnd}"
+        fnum, rows = info.get("fnum"), info.get("rows") or []
+        try:
+            clone = self.stage_clone(run, branch)
+            self.author(clone, "red-team-record", ident if ident.is_fleet else None)
+            paths = [red_team.record_in_log(clone, phase, info["table"]),
+                     *(self.write_finding(clone, fnum, phase, rnd, rows) if fnum else [])]
+            changed = self.git("-C", str(clone), "status", "--porcelain", "--", *paths).stdout
+            if changed.strip() or self.committed(clone, subject):
+                new = self.commit_once(clone, lambda: paths, subject, "red-team-record")
+                self.push_once(clone, new, rank="red-team-record", phase=phase, branch=branch,
+                               ident=ident, tested=self.fast(clone))
+            else:
+                self.log(f"issue {issue}: the kept table is already on {branch}: nothing to push")
+        except Stop as e:
+            return self.hold_record(issue, phase, rnd, str(e))
+        self.label_once(issue, "review:clear")
+        self.step("release", lambda: journal.release(held))
+        clean_tmp(held)
+        return f"clear, round {rnd}: the kept table pushed"
 
     def next_f(self, clone: pathlib.Path) -> str:
         """The next free F-number: one sequence over the branch's, master's and
@@ -2217,6 +2305,9 @@ class Fleet:
                                        pathlib.Path(paused["held"]), resume=paused)
         if s == "red_team":
             return self.stage_red_team(n, ph, paused["body"], paused["branch"], resume=paused)
+        if s == "red_record":
+            return self.stage_red_record(n, ph, paused["body"], paused["branch"],
+                                         pathlib.Path(paused["held"]), resume=paused)
         if s == "quartermaster":
             return self.stage_quartermaster(n, ph, paused["body"], paused["branch"], resume=paused)
         return self.stage_recommend(n, ph, paused["body"], paused["branch"], resume=paused)
@@ -2386,7 +2477,8 @@ class Fleet:
         `needs-admiral` off the stop that held it: that stop is still the
         issue's last rank comment (the cycle never looks at an issue the
         operator holds)."""
-        runs = journal.held_runs(self.runs, n)
+        runs = [p for p in journal.held_runs(self.runs, n)       # a kept Red Team table
+                if (journal.held(p) or {}).get("why") != "record"]  # is not the Engineer's
         if not runs:
             return None
         why = (journal.held(runs[0]) or {}).get("why")
@@ -2424,6 +2516,8 @@ class Fleet:
         if "review:clear" in labels and self.due_for(n, "review:clear",
                                                      self.markers(CAPTAIN_M, "captain")):
             return "captain", lambda: self.stage_recommend(n, phase, body, branch())
+        if "review:open" in labels and (rec := self.held_record(n)) is not None:
+            return "red-team", lambda: self.stage_red_record(n, phase, body, branch(), rec)
         if "review:open" in labels and self.due_for(n, "review:open",
                                                     self.markers(RED_M, "red-team")):
             return "red-team", lambda: self.stage_red_team(n, phase, body, branch())
