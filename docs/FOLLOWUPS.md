@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F255** (this file). The
+At the time of writing the highest assigned is **F256** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -5301,9 +5301,15 @@ What would close it: Q4 reads the record through the same rule as A5
 after 398 (a line that begins with the prefix), with a test on a log
 whose last prefixed line is a table row with other counts.
 
-### F254
+### F254 — CLOSED by Phase 399
 
 **Tests that call a rank with a stand-in write their rows into the real cost ledger, so the ledger is almost all test data**
+
+Closed 2026-11-08 by Phase 399 (`fdafadc`, bug fix `2bb35de`): every test
+writes a ledger of its own (`tests/support/ledger_guard.py`), and a suite
+run that changes the real ledger fails. The census: 6 files and 57 rows a
+run before, 0 after. The existing rows stay; `rank_call.rows()` skips
+`sess-1` (`tests/test_phase399_cost_ledger.py`).
 
 Found 2026-11-07 by the advisor session on the Mac, at `69ceaf2`.
 
@@ -5333,9 +5339,15 @@ run of the suite changes the real ledger. The existing rows stay as they
 are, and readers skip `sess-1` rows by a named rule with a planted control.
 Phase 399.
 
-### F255
+### F255 — CLOSED by Phase 399
 
 **The Chief Engineer's sessions never reach the cost ledger, so their cost lives only in run folders that the prune removes**
+
+Closed 2026-11-08 by Phase 399 (`fdafadc`): each Engineer session is
+written once when it ends, keyed by its run and the hash of its
+`session.json`; every line names its phase, issue and run; the search on
+start reads kept folders in once. 371's real session replayed read-only:
+one row, then nothing on a second pass.
 
 Found 2026-11-07 by the advisor session, at `69ceaf2`.
 
@@ -5363,3 +5375,31 @@ What would close it:
 - any run folder still holding an Engineer `session.json` when the change
   lands is read into the ledger once.
 Phase 399.
+
+### F256
+
+**A resumed Engineer stage reads a usage limit's result back from `session.json` and raises the limit again, so it never runs `--resume`**
+
+Found 2026-11-08 by Phase 399's builder, in the dispatcher's test world,
+at `1222862`. Not seen live: no Engineer stage has paused on a limit since
+the journal (Phase 390), as far as the kept run folders and the log show.
+
+- `FencedRunner.session` (`.claude/skills/fleet/dispatcher.py`, about line
+  510) treats a resumed call whose `session.json` ends in a `"type":
+  "result"` line as finished (`session_ended`) and reads it back.
+- A usage limit's output is such a line (`fixtures/dispatcher/rate_limited.json`:
+  `"type": "result"`, `"is_error": true`). Read back, `rate_limit` finds
+  the limit in it and raises `RateLimited` again, so `pause` sets a new
+  reset and the stage never starts `--resume`.
+- Shown by `tests/test_phase399_cost_ledger.py::test_a_session_a_usage_limit_ended_is_one_row_however_often_it_is_read`:
+  resumed twice, it raises twice (and adds no ledger row, which is what
+  that test is for).
+
+What it affects: a Chief Engineer stopped by a usage limit would pause
+again at each reset instead of going on, until the operator ends the
+stage.
+
+What would close it: a read-back that finds a usage limit is a cut call,
+not a finished one (resume it with `--resume`), with a test that a paused
+Engineer goes on after the reset. Left by 399 (its prompt: "file what you
+find and leave it").

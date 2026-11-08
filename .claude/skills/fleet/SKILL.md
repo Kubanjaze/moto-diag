@@ -108,6 +108,18 @@ recorded per call in `~/.local/state/motodiag/fleet/calls.jsonl` (or
 `$FLEET_LEDGER`). Not `--bare`: it reads only an API key, never the
 subscription login.
 
+**The ledger names every stage, the Chief Engineer's too** (Phase 399,
+F254, F255). Each line carries `phase`, `issue` and `run` (the runner's
+`ledger_context`) and `source`: `call` for a rank's call, `session` for an
+Engineer session written as it ends, `read-in` for one found in a kept run
+folder by the search on start (`ledger_read_in`, one log line: "the ledger
+read-in: N Engineer session(s) added, M already there"). An Engineer row's
+`key` (its run and the hash of its `session.json`) keeps it to one row,
+however often a resumed stage reads it back. Readers use `rank_call.rows()`,
+which skips the stand-in's `sess-1` rows tests wrote before 399; no test
+writes the real ledger now (`tests/support/ledger_guard.py`: a ledger of
+its own per test, and a suite run that changes the real one fails).
+
 **The brief goes on standard input, never in argv** (Phase 394, K55): the
 command is `claude -p --model …` with no prompt argument, and `claude`
 reads the brief from stdin (measured on 2.1.312 with 291094 bytes). Linux
