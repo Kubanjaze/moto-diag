@@ -122,6 +122,12 @@ The operator's words:
   - **It is built by a builder session, and the fleet waits for it.** It changes `.claude/skills/closeout/` and `.claude/skills/fleet/`, which the push gate keeps from the fleet.
   - **371 stays held until it is in.** 371's fork is answered (K65) and it may start before the live account (K66), but the hold on issue #54 stays on until 398 is merged and the fleet's copy has moved. Taking it off is the operator's step.
   - **Its prompt** is `docs/prompts/398_the_two_stalls.txt`, and its row is on master, 🔲.
+- **2026-11-07: the cost ledger (399) and the Bosun watching only (400) run beside this list, not in it (K69).** Neither unblocks a first-shop phase, so each goes ahead only by the operator's exception to K43.
+  - **The operator's words:** "the cost ledger and Bosun’s watch-only phase may go ahead as fleet-only phases, one at a time while a shop phase runs; anything after comes back to me".
+  - **For these two only.** K43 holds for every later fleet-only phase: a board, earlier document checks, hooks and anything else come back to the operator one at a time.
+  - **Built by builder sessions, one at a time, while a shop phase from this list runs.** Both change `.claude/skills/fleet/`, which the push gate keeps from the fleet. If shop work stalls, they stop too.
+  - **Not in the list, so the fleet never waits for them.** A builder's row in the list is waited for; these run beside the shop phase instead. 399 starts once the next shop phase has started, and 400 after 399 closes.
+  - **Prompts:** `docs/prompts/399_the_cost_ledger.txt`; 400's is written after 399 closes. Rows 399 and 400 are on master, 🔲. The rank's name is K68's.
 
 ## Where the ledger stands
 

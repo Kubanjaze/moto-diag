@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F253** (this file). The
+At the time of writing the highest assigned is **F255** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -5300,3 +5300,66 @@ Quartermaster's, in shadow.
 What would close it: Q4 reads the record through the same rule as A5
 after 398 (a line that begins with the prefix), with a test on a log
 whose last prefixed line is a table row with other counts.
+
+### F254
+
+**Tests that call a rank with a stand-in write their rows into the real cost ledger, so the ledger is almost all test data**
+
+Found 2026-11-07 by the advisor session on the Mac, at `69ceaf2`.
+
+- The ledger is `~/.local/state/motodiag/fleet/calls.jsonl`, or
+  `$FLEET_LEDGER` (`.claude/skills/fleet/rank_call.py` line 58). Its one
+  writer is `record` (line 147), called from `rank_call.call` (line 143).
+- On the home desktop, 5,616 of its 5,724 rows carry the stand-in's
+  `"session_id": "sess-1"` (the operator's read-only block, 2026-11-07,
+  after 22:16 EST). On the Mac, 1,967 of 1,971. It was 1,533 of 1,537 on
+  2026-11-05, so 434 such rows came from two days of the Mac's test runs.
+- Four files were run one at a time under a throwaway `HOME`, with
+  `FLEET_LEDGER` unset. Each wrote rows to the default ledger:
+  `tests/test_phase392_answers.py` (16), `tests/test_phase392_red_team_c7.py`
+  (7), `tests/test_phase396_slips.py` (7) and
+  `tests/test_phase392_next_mission.py` (2). That is 32 rows a run, all
+  `sess-1`. This is not a census: the rest of the suite was not run this
+  way, and 434 is not a multiple of 32.
+
+What it affects: any reading of what the fleet spends, by rank or by phase,
+reads mostly test rows and looks right. The desktop's 108 other rows are
+the only cost record of the ranks that call through `rank_call`. The Chief
+Engineer is not in it at all (F255).
+
+What would close it: one autouse fixture in `tests/conftest.py` points
+`FLEET_LEDGER` at a temporary file for every test, and a check fails when a
+run of the suite changes the real ledger. The existing rows stay as they
+are, and readers skip `sess-1` rows by a named rule with a planted control.
+Phase 399.
+
+### F255
+
+**The Chief Engineer's sessions never reach the cost ledger, so their cost lives only in run folders that the prune removes**
+
+Found 2026-11-07 by the advisor session, at `69ceaf2`.
+
+- `rank_call.record` (`.claude/skills/fleet/rank_call.py` line 147) is the
+  ledger's one writer, and only `rank_call.call` calls it (line 143).
+- The Engineer's session runs through the dispatcher's `Runner.session`
+  (`.claude/skills/fleet/dispatcher.py` line 478, called at lines 1488 and
+  1779). It writes `session.json` into the stage's run folder and nothing
+  else.
+- The dispatcher keeps the newest `KEEP_RUNS` = 20 run folders (line 138,
+  `prune_runs` at line 1211).
+- On the home desktop on 2026-11-07, after 22:16 EST, none of the 20 run
+  folders held an Engineer's `session.json`; the oldest was
+  `20261101_183125_check`. The dispatcher's log, which begins on
+  2026-10-22, holds 26 Engineer starts. What those 26 sessions cost is
+  recorded nowhere.
+
+What it affects: the rank that runs longest is missing from every cost
+figure, so the fleet's usage cannot be split by rank.
+
+What would close it:
+- each Engineer session's usage, wall time and cost go into the ledger
+  once when it ends, and a resumed session is not counted twice;
+- every ledger line gains phase, issue and run;
+- any run folder still holding an Engineer `session.json` when the change
+  lands is read into the ledger once.
+Phase 399.

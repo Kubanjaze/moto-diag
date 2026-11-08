@@ -1,0 +1,47 @@
+Do this: start Phase 399, the fleet's cost ledger, made true (F254, F255) (row 399, on master as 🔲: make it 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out. Built by a builder session (it changes .claude/skills/fleet/, which the push gate keeps from the fleet, and tests/conftest.py).
+
+- **Already on master:** this prompt, rows 399 and 400, K68, K69, F254, F255 and the plan of record's dated entry of 2026-11-07. Fetch master first.
+- **Fleet-only by K69's exception to K43,** so the row names nothing it unblocks. It runs while a shop phase runs, and the fleet does not wait for it. If shop work stalls, stop at the next clean point and say so.
+- **You are at ~/Projects/moto-diag on the PC.** The fleet is working a shop phase from its own copy: leave its issues, labels and pull requests alone. Check `pgrep -x bwrap` before any whole-tree or regression run.
+
+My words: "the cost ledger and Bosun’s watch-only phase may go ahead as fleet-only phases, one at a time while a shop phase runs; anything after comes back to me"
+
+What is wrong is in F254 and F255 in docs/FOLLOWUPS.md, which hold the evidence. Re-measure both at Step 0. Line numbers are from 69ceaf2. On 2026-11-07 the desktop's ledger held 5,724 rows, 5,616 of them test rows, and none of the 20 run folders still held a Chief Engineer's session.
+
+(a) **F254: tests write into the real ledger.** Four files were measured writing 32 stand-in rows a run, and the Mac's ledger grew by 434 in two days, so there are more.
+- **Step 0 takes the census:** the whole suite under a throwaway HOME with FLEET_LEDGER unset, naming every file that writes.
+- **The fix:** one autouse fixture in tests/conftest.py points FLEET_LEDGER at a temporary file for every test, and a check fails when a run of the suite changes the real ledger.
+- **The existing rows stay as they are.** Readers skip `sess-1` rows by a named rule with a planted control.
+
+(b) **F255: the Chief Engineer's sessions never reach the ledger.** `Runner.session` (dispatcher.py line 478) writes only the run folder's session.json, and the prune keeps 20 folders.
+- **The fix:** each Engineer session's usage, wall time and cost go into the ledger once when it ends, and a resumed session is not counted twice.
+- **Every ledger line gains phase, issue and run,** for every rank.
+- **Kept folders are read in once:** when this lands, any run folder still holding an Engineer session.json is read into the ledger once, and a second pass adds nothing. The shop phase now running may have one by then.
+
+How it is proven:
+- the census, before and after the fix;
+- the regression of record leaves the real ledger unchanged (its size and hash before and after, in the phase log);
+- the fixture or the check broken on purpose goes red, run under a throwaway HOME, so a broken guard writes nowhere real;
+- an Engineer session replayed from a real session.json lands once with its phase, issue and run, a resumed one is not counted twice, and the read-in of kept folders is seen to add nothing on its second pass;
+- the mutations, red, each under a throwaway HOME.
+
+Out of scope:
+- which model or effort a rank uses: that is 400's, the Bosun watching only, after this phase;
+- the fence and the providers;
+- every other finding: file what you find and leave it.
+
+Stops beyond rule 1: rewriting or deleting existing ledger rows; any change to what a stage runs.
+
+After the merge, which is mine: one block for the desktop, as 398's was:
+- it waits while a fleet job is running (`pgrep -x bwrap`);
+- it moves the fleet's copy (~/motodiag/fleet/code) to master and restarts motodiag-fleet.service, accepting the line "the search on start:";
+- it says how many Engineer sessions the read-in added to the ledger;
+- every gh call carries -R Kubanjaze/moto-diag;
+- it ends in ALL GOOD or SOMETHING IS OFF.
+
+Report at the end:
+- each finding's cause as re-measured, and the census;
+- each fix, with its test seen red;
+- the real ledger's size before and after the regression;
+- the regression line and verify_phase.sh's result;
+- the next step, my call.
