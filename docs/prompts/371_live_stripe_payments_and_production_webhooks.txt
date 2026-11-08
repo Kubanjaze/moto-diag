@@ -1,0 +1,9 @@
+**The plan of record's next mission**, opened by the fleet (Phase 392).
+
+The plan of record puts phase 371 next ('Next, in order' #12): 12. 371 (shop, built by fleet); needs the operator: a fork: Stripe's production webhooks need an endpoint Stripe can reach, and the backend is tailnet-only (the operator's decision 3 of 2026-09-28); and an outside account, Stripe's live account ("Stripe: the live account, for 371 and 372"); from: Wave 1, item 4 · K48, K52
+
+The plan of record on this phase: the plan of record's 'Next, in order' #12; the plan of record, 2026-10-22 to 2026-10-25; the plan of record, 2026-10-27; K48; K52.
+
+The work branch is `phase-371-live-stripe-payments-and-production-webhooks`: the Science Officer makes it from master once this phase's row is 🚧 there, which the row's pull request does when the operator merges it.
+
+<!-- fleet-next: phase=371 -->
