@@ -243,3 +243,7 @@ hashed the same before and after. Issue 54 and the run folder untouched.
   `docs/FOLLOWUPS.md`, the handoff `docs/handoffs/2026-11-08_399_closed.md`.
 - No refute pass ran: the phase changes fleet code and tests, takes no
   claim from a source, and is held by its tests and mutations.
+- `b3e57c9`, the close-out commit, after wholetree fast (2624 passed, 10
+  skipped, exit 0); pushed, and PR #57 opened with the attribution block.
+  `verify_phase.sh 399 2bb35de b3e57c9`: 13 of 14 pass; check 1 (the tip
+  on master) waits for the merge.
