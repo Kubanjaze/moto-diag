@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F255** (this file). The
+At the time of writing the highest assigned is **F256** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -5363,3 +5363,31 @@ What would close it:
 - any run folder still holding an Engineer `session.json` when the change
   lands is read into the ledger once.
 Phase 399.
+
+### F256
+
+**A resumed Engineer stage reads a usage limit's result back from `session.json` and raises the limit again, so it never runs `--resume`**
+
+Found 2026-11-08 by Phase 399's builder, in the dispatcher's test world,
+at `1222862`. Not seen live: no Engineer stage has paused on a limit since
+the journal (Phase 390), as far as the kept run folders and the log show.
+
+- `FencedRunner.session` (`.claude/skills/fleet/dispatcher.py`, about line
+  510) treats a resumed call whose `session.json` ends in a `"type":
+  "result"` line as finished (`session_ended`) and reads it back.
+- A usage limit's output is such a line (`fixtures/dispatcher/rate_limited.json`:
+  `"type": "result"`, `"is_error": true`). Read back, `rate_limit` finds
+  the limit in it and raises `RateLimited` again, so `pause` sets a new
+  reset and the stage never starts `--resume`.
+- Shown by `tests/test_phase399_cost_ledger.py::test_a_session_a_usage_limit_ended_is_one_row_however_often_it_is_read`:
+  resumed twice, it raises twice (and adds no ledger row, which is what
+  that test is for).
+
+What it affects: a Chief Engineer stopped by a usage limit would pause
+again at each reset instead of going on, until the operator ends the
+stage.
+
+What would close it: a read-back that finds a usage limit is a cut call,
+not a finished one (resume it with `--resume`), with a test that a paused
+Engineer goes on after the reset. Left by 399 (its prompt: "file what you
+find and leave it").
