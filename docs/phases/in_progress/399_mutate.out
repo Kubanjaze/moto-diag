@@ -8,5 +8,6 @@ M7 the Engineer's session is not recorded as it ends: red
 M8 a session read back is recorded again (no key check): red
 M9 the search on start does not read kept folders in: red
 M10 the read-in keys a session differently from the live write: red
+M12 the fixture asks for monkeypatch again (its first version): red
 M11 a cut stage's resume does not write the missing row: red
-11/11 red
+12/12 red

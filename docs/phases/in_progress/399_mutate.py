@@ -41,8 +41,8 @@ TESTS = pytest(T)
 
 MUTATIONS = [
     ("M1 the fixture sets no ledger of its own",
-     [(LG, '    monkeypatch.setenv("FLEET_LEDGER", '
-           'str(_cost_ledger_dir / f"calls_{next(_count)}.jsonl"))',
+     [(LG, '    os.environ["FLEET_LEDGER"] = '
+           'str(_cost_ledger_dir / f"calls_{next(_count)}.jsonl")',
        "    pass")], TESTS),
     ("M2 the check never fails the run",
      [(LG, "    session.exitstatus = pytest.ExitCode.TESTS_FAILED", "    pass")], TESTS),
@@ -64,6 +64,9 @@ MUTATIONS = [
     ("M10 the read-in keys a session differently from the live write",
      [(DI, "                                       run=p.name, source=\"read-in\")",
        "                                       run=p.name + \"/\", source=\"read-in\")")], TESTS),
+    ("M12 the fixture asks for monkeypatch again (its first version)",
+     [(LG, "def _never_the_real_cost_ledger(_cost_ledger_dir):",
+       "def _never_the_real_cost_ledger(_cost_ledger_dir, monkeypatch):")], TESTS),
     ("M11 a cut stage's resume does not write the missing row",
      [(DI, "            self.ledger_session(cmd, out, None)\n", "")], TESTS),
 ]

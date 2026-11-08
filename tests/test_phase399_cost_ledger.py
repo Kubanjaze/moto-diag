@@ -71,6 +71,21 @@ def test_two_tests_do_not_share_a_ledger_file(request):
     request.config._399_seen = ledger().name
 
 
+def test_the_fixture_leaves_the_database_tripwire_as_it_was():
+    """Phase 399's first regression: the fixture asked for `monkeypatch`,
+    which moved its teardown after the database tripwire's, and 244H's test
+    that points the setting at production leaked it into every later test on
+    its worker (819 setup errors). These two files, in this order, in one
+    process, are the smallest run that showed it (10 errors)."""
+    r = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider",
+                        "-p", "no:xdist", "-o", "addopts=",
+                        "tests/test_phase244H_test_db_isolation.py",
+                        "tests/test_phase24_honda_cbr600f.py"],
+                       cwd=ROOT, capture_output=True, text=True, timeout=300)
+    assert r.returncode == 0, r.stdout[-2000:]
+    assert " error" not in r.stdout.splitlines()[-1]
+
+
 def test_the_check_takes_appended_fleet_rows_and_refuses_any_other(tmp_path):
     runs = tmp_path / "runs"
     (runs / "20261108_000000_xo_371").mkdir(parents=True)

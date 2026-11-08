@@ -10,7 +10,9 @@ Two parts, imported into `tests/conftest.py` so they run with every suite:
 - **The fixture**, `_never_the_real_cost_ledger`, autouse: every test runs
   with `FLEET_LEDGER` naming a file of its own under the session's
   temporary directory. A test that sets `FLEET_LEDGER` itself still wins
-  (monkeypatch's later `setenv`), and a subprocess inherits the variable.
+  (its `monkeypatch.setenv` comes later and is undone first), and a
+  subprocess inherits the variable. It asks for no `monkeypatch` (see the
+  fixture's own note).
 - **The check**, `pytest_sessionstart` / `pytest_sessionfinish`, on the
   controller only: the real ledger is read before and after the run. The
   run fails when the bytes that were there changed, or when a row was
@@ -105,8 +107,21 @@ def _cost_ledger_dir(tmp_path_factory):
 
 
 @pytest.fixture(autouse=True)
-def _never_the_real_cost_ledger(_cost_ledger_dir, monkeypatch):
-    monkeypatch.setenv("FLEET_LEDGER", str(_cost_ledger_dir / f"calls_{next(_count)}.jsonl"))
+def _never_the_real_cost_ledger(_cost_ledger_dir):
+    """Set and restored by hand, not through `monkeypatch`: an autouse fixture
+    that asks for `monkeypatch` sets it up before conftest's database
+    tripwire, so a test's own `monkeypatch.setenv("MOTODIAG_DB_PATH", …)` is
+    undone after the tripwire's `reset_settings()`, and the settings cache
+    keeps the production path for the next test on that worker (Phase 399's
+    first regression: 819 setup errors, one worker, after
+    `test_the_tripwire_fires_when_the_default_points_at_production`)."""
+    old = os.environ.get("FLEET_LEDGER")
+    os.environ["FLEET_LEDGER"] = str(_cost_ledger_dir / f"calls_{next(_count)}.jsonl")
+    yield
+    if old is None:
+        os.environ.pop("FLEET_LEDGER", None)
+    else:
+        os.environ["FLEET_LEDGER"] = old
 
 
 def _controller(session) -> bool:

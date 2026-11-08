@@ -77,3 +77,46 @@ filed, left.
   this builder session runs outside the repository root, so the repo's
   hook is not loaded; wholetree fast was run by hand before each commit
   and push instead.
+
+## 2026-11-08 05:01–06:19 UTC — the censuses and a first regression, not of record
+
+- **The census before** (`1222862`, worktree of master, throwaway HOME, 12
+  chunks between fleet stages; a fleet sandbox beside chunks 2, 4, 6, 7
+  and 10): 12358 passed, 9 failed, 8 errors, 49 skipped; the failures and
+  errors are tests that need the real HOME or this machine's tools (388's
+  fence boundary, 257's orchestrator guards, 209's packaging, 204's
+  ffmpeg). **6 files wrote to the default ledger, 57 rows a run, every one
+  `sess-1`:** `test_phase393_code_checks.py` 21 (3 tests),
+  `test_phase392_answers.py` 16 (4), `test_phase392_red_team_c7.py` 7 (1),
+  `test_phase396_slips.py` 7 (1), `test_phase392_check_limit.py` 4 (1),
+  `test_phase392_next_mission.py` 2 (1). F254 measured the four in the
+  middle; the first and fifth are new. The real ledger grew by 4 rows
+  meanwhile, all real (2 Captain, 2 XO, 371).
+- **The census after** (`fdafadc`, worktree, the same way; a sandbox
+  beside chunk 10): **0 files, 0 rows**; the real ledger byte for byte the
+  same before and after (5,520,588 bytes, sha256 `41535625…`).
+- **A regression at `fdafadc`, not of record**, inside the fence, 00:28 EST:
+  wholetree --full 5092 passed, 36 skipped; then 11509 passed, 0 failed,
+  105 skipped, **819 errors**, exit 1. The real ledger unchanged across it
+  (0 rows appended). The fleet was quiet (371 on `needs-admiral` from
+  23:51). Every error is the database tripwire, on one worker (gw14), from
+  `test_phase244H_test_db_isolation.py::TestTheTripwireItself::test_the_tripwire_message_names_the_cause`
+  on.
+
+### Bug fix #1 — the fixture's `monkeypatch` moved a teardown
+
+The autouse fixture asked for `monkeypatch`, so `monkeypatch` was set up
+before conftest's tripwire (`_never_the_production_database`) and torn
+down after it. 244H's `test_the_tripwire_fires_when_the_default_points_at_production`
+sets `MOTODIAG_DB_PATH` to production through its own `monkeypatch`: its
+undo now came after the tripwire's `reset_settings()`, so the next test on
+the worker read the production path. Reproduced in one process with
+`test_phase244H_test_db_isolation.py` then `test_phase24_honda_cbr600f.py`
+(10 errors). The census after had more errors than the census before (57
+against 8) for the same reason. **Fix:** the fixture sets and restores
+`FLEET_LEDGER` itself and asks for no `monkeypatch`. The two files: 20
+passed, 1 skipped. New test
+`test_the_fixture_leaves_the_database_tripwire_as_it_was` runs them; new
+mutation M12 (the fixture's first version) is red. `399_mutate.py`:
+**12/12 red**, the real ledger's sha256 the same before and after.
+`COLLECTED_TEST_FLOOR` 12434 (+18 −0 against `1222862`).
