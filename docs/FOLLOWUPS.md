@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F252** (this file). The
+At the time of writing the highest assigned is **F253** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -5262,3 +5262,29 @@ take after a fix, the way an Engineer's model-free run is held (F220):
 - a test: a G6 refusal planted on the record push leaves `needs-hands`
   and the comment. Taking the label off after a fix pushes the same
   table and sets `review:clear`, and a second refusal holds again.
+
+### F253
+
+**The Quartermaster's Q4 reads the last line holding "Regression of record:" anywhere, as A5 did before Phase 398**
+
+Found 2026-11-08 at Phase 398's Step 0, auditing every reader of the
+prefix before F251's fix. Read on the home desktop at `f6aead1`.
+
+- Q4 (`full_run`, `.claude/skills/fleet/quartermaster.py` line 234)
+  compares the full run's counts with those of the last phase-log line
+  that contains the prefix (`if closeout_check.PREFIX in ln`).
+- After a cleared Red Team table is recorded, that line is the table's
+  quote (F251), not the record.
+- Measured on both refused logs (`9555925` for 345, `41370d2` for 343):
+  the quote's counts (`engineer.counts`) equal the record's,
+  (12186, 0, 105) and (12292, 0, 105), because each quote carried the
+  numbers. So no wrong verdict came of it. A quote that left out a number,
+  or a writer that quoted an older run, would make Q4 compare the wrong
+  line.
+
+Not fixed in 398: its prompt builds F251 and F252 only, and Q4 is the
+Quartermaster's, in shadow.
+
+What would close it: Q4 reads the record through the same rule as A5
+after 398 (a line that begins with the prefix), with a test on a log
+whose last prefixed line is a table row with other counts.
