@@ -1,5 +1,19 @@
 # closeout — changelog
 
+## 2026-11-08 — A5 reads only a line that begins with the prefix (Phase 398, K67, F251)
+
+`regression_record` takes the last line that **begins** with "Regression of
+record:", as `regression.sh` prints it, not the last line holding it
+anywhere. A Red Team table row quoting the record (C3 asks for the quote; a
+row begins with `|`) had taken its place and failed 345's and 343's
+close-outs. Everything else A5 checks is unchanged, and so are both pinned
+exemptions (recomputed by equality). Over the 52 closed logs holding the
+prefix, the line A5 reads changes in none. Fixtures: `fixtures/f251/`, the
+two refused logs byte for byte (`9555925`, `41370d2`) and a known-bad log
+whose only prefixed line is a table row. Held by
+`tests/test_phase398_two_stalls.py`. The operator: "yes, fix the two stalls
+now as phase 398".
+
 ## 2026-11-01 — the Mac's approved skips name 390's sudo test (K64, F243)
 
 `EXPECTED_SKIPS` gains `("tests/test_phase390_space.py", "bubblewrap is the

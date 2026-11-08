@@ -406,15 +406,21 @@ def regression_record(log_txt: str, phase: str | None = None
     """((count, hash, command), None) for a passing regression of record, or
     (None, why not).
 
-    The regression line is the LAST line carrying "Regression of record:".
-    A re-run supersedes the run before it (358 recorded two), so the first
-    line is the one run the close-out no longer rests on (Phase 359, bug
-    fix #1). F206 (Phase 383, the operator's 1C): it must record 0 failed,
-    0 errors and exit 0, and the lines right below it must name every skip
-    by its file and reason, each one in EXPECTED_SKIPS.
+    The regression line is the LAST line that BEGINS with "Regression of
+    record:", as `regression.sh` prints it. A re-run supersedes the run
+    before it (358 recorded two), so the first line is the one run the
+    close-out no longer rests on (Phase 359, bug fix #1). F206 (Phase 383,
+    the operator's 1C): it must record 0 failed, 0 errors and exit 0, and
+    the lines right below it must name every skip by its file and reason,
+    each one in EXPECTED_SKIPS.
+
+    F251 (Phase 398): a line that only holds the prefix is a quote, such as
+    the row of a Red Team table checking the regression claim (C3 asks for
+    a verbatim quote; a row begins with `|`). Read as the record, it
+    failed 345's and 343's close-outs.
     """
     lines = log_txt.splitlines()
-    at = [i for i, ln in enumerate(lines) if PREFIX in ln]
+    at = [i for i, ln in enumerate(lines) if ln.startswith(PREFIX)]
     m = _REGRESSION.search(lines[at[-1]]) if at else None
     if m is None:
         return None, ("no regression line that parses as regression.sh prints it: "

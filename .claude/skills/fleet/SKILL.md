@@ -350,6 +350,18 @@ PR, `review:open`, the Red Team. `prune_runs` never removes a held run.
 Other stops are not held: taking the label off them changes nothing, as
 before.
 
+**A refused record push (F252, Phase 398).** When a Red Team clear's table
+cannot be pushed into the phase log (the gate refuses it, the push fails, or
+its fast run is held for space), the run is **held** (`held.json`, `why:
+record`, with the table, the round and any wording finding), the issue gets
+`needs-hands` and one comment saying what to do, and `review:open` stays.
+The operator fixes the branch and takes `needs-hands` off: `stage_red_record`
+writes the kept table into the branch as it then stands, pushes it through
+the gate with a fresh fast run, and sets `review:clear`. No model is called
+and no verdict is said, so no round is added (K9). A second refusal holds
+again. A later Red Team verdict or stop ends the hold's due; a later clear
+releases it. The Engineer's `held_for` never reads a record hold.
+
 One log line per stage. Every rank posts `<!-- fleet-started: rank=<rank>
 run=<run> -->` first (its own prefix: no due rule reads it), and every marker
 a stage writes ends ` run=<run>`. Once per stage run (Phase 394): a stage the
