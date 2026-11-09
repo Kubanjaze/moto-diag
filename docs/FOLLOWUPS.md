@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F259** (this file). The
+At the time of writing the highest assigned is **F262** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -5487,3 +5487,109 @@ not the phase's to change):
 - the deploy's paste block stopping `motodiag-payments.service` beside
   `motodiag-api.service` for the apply, and starting it after; the job
   catches up from its stored place.
+
+### F260
+
+**The push gate refuses a stage whose work GitHub already has ("G3 nothing to push"), so a fresh stage on a branch that already holds its commit cannot finish**
+
+Found 2026-11-08 by the advisor, on Phase 371 (issue #54); K71 left it
+for a finding.
+
+- At 16:07 EST the Chief Engineer's stage (run
+  `20261108_151357_engineer_371`), started on the commit the operator
+  had rescued onto the branch, passed its model-free run and every check
+  of the database step, and stopped: "the push gate refused: G3 nothing
+  to push".
+- `Fleet.push_rank` (`.claude/skills/fleet/dispatcher.py` line 1335)
+  gives `fleet_git.gate` the commit GitHub has for the branch as its
+  base, and `gate` (`.claude/skills/fleet/fleet_git.py` line 137) refuses
+  when `git diff --name-only base..HEAD` names nothing. The rescue had
+  put the whole build on the branch, so the stage committed nothing new.
+- Only a resumed stage asks GitHub whether its push is already done
+  (Phase 390's replay of a journal); a fresh stage never does.
+
+What it affects: any stage started on a branch that already holds its
+commit, such as after the operator's rescue push. On 2026-11-08 it cost
+a decision (K71), a plan note on the branch and the operator approving
+the plan again: 70 minutes, from the stop at 16:07 to the next start at
+17:17.
+
+What would close it: in `push_rank`, a HEAD equal to GitHub's commit for
+the branch counts as pushed once the model-free run has passed on it, as
+a resumed push step already does. This case (HEAD equal to the base) is
+its fixture, and the gate's other refusals (G1, G2, and G3 on a path the
+rank may not touch) are unchanged, each kept by its existing test.
+
+### F261
+
+**The Red Team's brief gives a finding kind, `code`, that its own refute table may not carry, so a code finding written into the table stops the review**
+
+Found 2026-11-08 by the advisor, on Phase 371 (issue #54, PR #58's
+round 2).
+
+- At 22:09 EST the Red Team's stage (run `20261108_220559_red_team_371`)
+  stopped on its own table: "the refute table fails the checklist: C5
+  row 28 (…) has no 'round · kind · outcome' cell that parses: '1 · code
+  · open'".
+- The brief asks for findings of four kinds, `wording`, `factual`,
+  `citation` and `code` (`.claude/skills/fleet/red_team.py` line 90).
+  A "no" to one of Phase 393's code questions is also given as a finding
+  of kind `code` (lines 130–131).
+- The table it asks for takes only "none, wording, factual or citation"
+  as its kind (line 146), which is all that `refute_check`'s C5 reads
+  (`_RKO`, `.claude/skills/refute/refute_check.py` line 58). The model
+  wrote the finding's kind into the table.
+
+What it affects: every review round with a code finding. The stage
+stops, its label stays, and the round waits for the operator to clear
+the stop note. On 2026-11-08 that took one tested block and 15 minutes,
+from the stop at 22:09 to the next start at 22:24. The stop does not use
+up one of K9's three rounds.
+
+What would close it, the operator's choice:
+- the brief's table line says that a code finding's row is written with
+  the kind `factual`, which is what the brief already calls a code "no"
+  (K9), with the stopped table as a fixture if its run folder on the
+  desktop is still kept; or
+- C5 reads `code` as a kind. That changes the refute checklist's
+  definition, so it is a rule-1 stop.
+
+### F262
+
+**A close-out after the database step stops on one unreadable allowance reading, keeps no reason for it, and no label can run it again**
+
+Found 2026-11-08 by the advisor, on Phase 371 (issue #54).
+
+- At 19:02 EST the close-out after the operator's database step (run
+  `20261108_190204_deployed_371`) stopped three seconds after it
+  started: "no new Opus stage: the weekly usage could not be read".
+  At 19:07, on the Mac, the same code read "Current week (all models):
+  18% used".
+- **The reading keeps no reason.** `Fleet.usage`
+  (`.claude/skills/fleet/dispatcher.py` line 881) returns nothing on any
+  error, or on an answer it parses nothing from, and keeps neither the
+  exit code, the error nor the answer, and `gate_model` (line 439) turns
+  the missing reading straight into the stop. Why the 19:02 reading
+  failed is not known.
+- **One failed reading is a stop.** `opus_refusal` (line 286) refuses a
+  new Opus stage when the reading is missing, and the close-out is a new
+  stage. Nothing reads the allowance a second time.
+- **No label runs it again.** `held_for` (line 2505) runs a held
+  close-out again only while the database step's comment is newer than
+  every rank comment but a `started` one, or while the newest rank
+  comment is a `needs-admiral` escalation, which a plain stop is not.
+  The operator had to rewrite the stop note's first line, by a block the
+  advisor wrote and tested, before the fleet would start the close-out
+  again.
+
+What it affects: every phase with a database step (Phase 395's path).
+Phase 371's close-out waited 41 minutes, from the stop at 19:02 to the
+next start at 19:43, three minutes after the note was rewritten.
+
+What would close it:
+- a failed reading kept with its cause (the exit code and the first line
+  of what it printed), in the log and in the stop note;
+- a second reading, a minute later, before any stop;
+- a stopped close-out that a label can run again, for example by
+  escalating to `needs-admiral`, which `held_for` already retries when
+  the operator takes it off.
