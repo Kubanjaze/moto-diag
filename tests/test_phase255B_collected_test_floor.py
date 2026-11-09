@@ -499,8 +499,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: test_phase371_event_feed.py (21), test_phase371_limits.py (14),
 #: test_phase371_migration.py (10), test_phase371_monitor.py (7).
 #: Measured: 12492.
+#: Phase 371's second fix round (the Red Team's round 2), by a diff of
+#: collected ids against the branch at bcc303f: +3 -0. Added:
+#: test_phase371_event_feed.py (1, a retry with no place yet) and
+#: test_phase371_limits.py (2, the notices' times compared parsed).
+#: Measured: 12495.
 #:
-COLLECTED_TEST_FLOOR = 12492
+COLLECTED_TEST_FLOOR = 12495
 
 
 def _collected_count() -> int:

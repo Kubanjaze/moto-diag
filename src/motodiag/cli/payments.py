@@ -22,7 +22,7 @@ from rich.table import Table
 from motodiag.cli.theme import get_console
 from motodiag.core.config import get_settings
 from motodiag.core.database import init_db
-from motodiag.core.timestamps import local_display, stored_instant
+from motodiag.core.timestamps import local_display, stored_instant, utc_at
 from motodiag.payments import event_feed, stripe_api
 from motodiag.payments.connect import (
     ConnectError,
@@ -179,10 +179,10 @@ def register_feed(payments_group: click.Group) -> None:
             click.echo(
                 f"{row['account']}: last asked {local_display(row['polled_at'])} "
                 f"({ago:.0f} s ago); newest event "
-                f"{local_display(event_feed.stamp(row['last_created']))}; "
+                f"{local_display(utc_at(row['last_created']))}; "
                 f"last error: {row['last_error'] or 'none'}")
         notices = event_feed.notices_since(settings.db_path,
-                                           event_feed.stamp(now - 30 * 86400))
+                                           utc_at(now - 30 * 86400))
         click.echo(f"Notices in the last 30 days: {len(notices)}")
         for n in notices:
             click.echo(f"  {local_display(n['sent_at'])}: {n['detail']}")

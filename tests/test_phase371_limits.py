@@ -16,6 +16,7 @@ from support.phase273 import new_db, sql
 from support.stripe_fixtures import FROZEN_AT, stripe_settings
 
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_day
 from motodiag.payments import event_feed as feed
 from motodiag.telemetry.sender import NullSender
 
@@ -52,7 +53,7 @@ def _shops(db, n):
 
 
 def _check(db, sender, *, at=FROZEN_AT, lag=0.0, refusals=0):
-    day = feed.DayStats(feed.utc_day(at), max_lag_s=lag, refusals=refusals)
+    day = feed.DayStats(utc_day(at), max_lag_s=lag, refusals=refusals)
     return feed.limit_check(stripe_settings(), db, day, sender, lambda: float(at))
 
 
@@ -116,7 +117,7 @@ class TestTheNotice:
         assert all("docs/guide/payments.md" in r["detail"] for r in rows)
         assert all(e["level"] == "warning" for e in s.events)
         assert all(r["delivered"] == 1 for r in rows)
-        assert rows[0]["sent_at"].startswith(feed.utc_day(FROZEN_AT))
+        assert rows[0]["sent_at"].startswith(utc_day(FROZEN_AT))
 
     def test_the_plan_text(self, db):
         _shops(db, 50)
@@ -130,6 +131,29 @@ class TestTheNotice:
             assert _check(db, NullSender(), refusals=1) == ["stripe_refused"]
         assert _rows(db)[0]["delivered"] == 0
         assert "Stripe refused or rate-limited 1 asks" in caplog.text
+
+
+class TestStoredTimesCompareParsed:
+    """core/timestamps.py's rule: a stored time is compared parsed, never
+    as text. Each planted row's text says the other thing."""
+
+    def _plant(self, db, sent_at):
+        with get_connection(db) as conn:
+            conn.execute("INSERT INTO stripe_feed_notices (line, sent_at, detail, "
+                         "delivered) VALUES ('stripe_refused', ?, 'x', 1)", (sent_at,))
+
+    def test_a_notice_at_an_offset_counts_on_its_utc_day(self, db):
+        # 20:00 at -05:00 on the day before is 01:00 UTC on FROZEN_AT's day.
+        prev = utc_day(FROZEN_AT - DAY)
+        self._plant(db, f"{prev}T20:00:00.000-05:00")
+        assert feed.already_sent(db, "stripe_refused", utc_day(FROZEN_AT + 3600))
+        assert not feed.already_sent(db, "stripe_refused", prev)
+
+    def test_a_notice_in_sqlites_shape_is_inside_the_window(self, db):
+        day = utc_day(FROZEN_AT)
+        self._plant(db, f"{day} 12:00:00")
+        assert len(feed.notices_since(db, f"{day}T11:00:00.000+00:00")) == 1
+        assert feed.notices_since(db, f"{day}T13:00:00.000+00:00") == []
 
 
 class TestTheJobsDay:
@@ -147,6 +171,6 @@ class TestTheJobsDay:
 
         feed.run_forever(stripe_settings(), db, clock=lambda: now[0], sleep=sleep,
                          stop=lambda: len(waits) >= 4, sender=FakeSender())
-        d0 = feed.utc_day(FROZEN_AT)
+        d0 = utc_day(FROZEN_AT)
         assert calls[0] == d0
         assert len(calls) == 3  # start, then the first round of each new day

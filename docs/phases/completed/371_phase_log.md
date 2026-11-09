@@ -175,3 +175,18 @@ A later regression of record is copied with every line `regression.sh` prints, t
 - **What was wrong:** v1.1 and the entry above cite K71, the operator's "Go with A.", but `docs/decisions.md` on this branch ended at K70. K71 was recorded on `master` (`333d5c4`) after the branch was cut, so on the branch the citation resolved nowhere.
 - **Fix:** `333d5c4` cherry-picked onto the branch as `22bb923`, its one line in `docs/decisions.md` unchanged, so `| K71 |` now resolves here and the merge to `master` meets an identical line. No sentence of v1.1, this log or the handoff was changed.
 - **No code changed:** `git diff --name-only 13542ae HEAD -- src tests scripts .claude` prints nothing, so the regression of record above stands.
+
+## 2026-11-08: The Red Team's round 2
+
+- **The alarm test's timing.** Two sentences of v1.1 read K70 as met by a test that now waits on the public address (F257): the Deviations' "so K70's "right after the merge" is met once the live step can run" and the close-out line's "no stop was raised in the build beyond K70's and K71's answers". Both deleted. K70 approves a test right after the merge; a test behind an undecided address, with no date, is a timing K70 did not approve, so it goes to the operator as a stop. The handoff's "What is open" says it is put to the operator.
+- **A retry on an account with no place yet.** The finding says the next round asks from its own clock less 300 seconds. Measured: on a hold the round writes the place it asked around, the clock's time on a first round, and the next round reads that row and asks from the same second. `test_a_retry_on_the_first_round_is_asked_for_again` plants no place, holds the event at the window's first second, runs a second round 20 seconds later, and sees both asks at `created[gte]` = the first round's clock less 300 and the event handed on twice. Seen red: with `_place` taking the clock always (the behaviour the finding describes), the second ask is 20 seconds later and the test fails. The code was right, so this is a test, not a bug fix.
+- **The floor**, 12492 → 12495, by a diff of collected ids against `bcc303f`: +3 −0.
+
+### Bug fix #1 — 2026-11-08 — the feed kept its own time helpers and compared stored times as text
+
+- **Issue:** `event_feed.stamp` and `event_feed.utc_day` re-made the stored UTC format outside `core/timestamps.py`, which owns it; `already_sent` compared `substr(sent_at, 1, 10)` and `notices_since` compared `sent_at >= ?` as text, against that module's rule that a stored time is compared parsed.
+- **Root cause:** the helpers were written beside their first caller, and the two queries read the column as the feed itself writes it.
+- **Fix:** `utc_at(seconds)` and `utc_day(seconds)` are in `core/timestamps.py`; the feed, `motodiag payments feed status` and the tests call them. `already_sent` compares `date(sent_at) = ?`; `notices_since` compares `datetime(sent_at) >= ?` against `utc_cutoff(since)`.
+- **Files:** `src/motodiag/core/timestamps.py`, `src/motodiag/payments/event_feed.py`, `src/motodiag/cli/payments.py`, `tests/test_phase371_cli.py`, `tests/test_phase371_event_feed.py`, `tests/test_phase371_limits.py`.
+- **Verified:** `TestStoredTimesCompareParsed` plants a notice at a −05:00 offset whose text date is the day before its UTC date, and one in SQLite's space shape inside the window; both tests fail on the text comparisons and pass on the parsed ones. The phase's tests with 370's and 377's: 129 passed.
+- **Commit:** the commit that carries this entry.

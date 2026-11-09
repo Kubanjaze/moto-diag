@@ -27,6 +27,7 @@ from support.stripe_fixtures import (
 
 from motodiag.billing import webhook_handlers
 from motodiag.billing.webhook_handlers import HANDLERS, WebhookDispatchResult
+from motodiag.core.timestamps import utc_at
 from motodiag.payments import event_feed as feed
 
 NOW = FROZEN_AT + 10
@@ -53,7 +54,7 @@ def _cursor(db, account):
 
 def _set_place(db, account, created):
     feed.write_cursor(db, account, last_created=created, last_event_id=None,
-                      polled_at=feed.stamp(NOW), last_error=None, livemode=0)
+                      polled_at=utc_at(NOW), last_error=None, livemode=0)
 
 
 class TestTheTypes:
@@ -204,6 +205,30 @@ class TestThePlace:
         assert _cursor(db, "platform")["last_created"] == FROZEN_AT - 1000
         assert results[0].error_kind == "retry"
         assert results[0].handled == 1
+
+    def test_a_retry_on_the_first_round_is_asked_for_again(self, db, monkeypatch):
+        """No place yet (an install, a newly connected shop): the round
+        asks from 300 seconds back, and after a hold the next round, 20
+        seconds later, asks from the same second, so an event created at
+        the window's start is asked for again."""
+        held = succeeded(9, 9, event_id="evt_retry", created=NOW - 300)
+        calls = []
+        real = feed.dispatch_event
+
+        def retry_first(event, **kw):
+            calls.append(event["id"])
+            if len(calls) == 1:
+                return WebhookDispatchResult(True, False, event["id"], event["type"],
+                                             error="BillingProviderError: x", retry=True)
+            return real(event, **kw)
+
+        monkeypatch.setattr(feed, "dispatch_event", retry_first)
+        http = answer(monkeypatch, [ask([held]), ask([held])])
+        assert feed.poll_once(stripe_settings(), db, clock)[0].error_kind == "retry"
+        feed.poll_once(stripe_settings(), db, lambda: float(NOW + 20))
+        assert [r.params["created[gte]"] for r in http.requests] == [
+            str(NOW - 300), str(NOW - 300)]
+        assert calls == ["evt_retry", "evt_retry"]
 
     def test_control_a_clean_dispatch_moves_the_place(self, db, monkeypatch):
         _set_place(db, "platform", FROZEN_AT - 1000)

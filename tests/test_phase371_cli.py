@@ -19,6 +19,7 @@ from support.phase273 import STRIPE_ENV, answer, cli, new_db, seed_account, seed
 from support.phase371 import ask, refused
 from support.stripe_fixtures import SHOP_ACCOUNT, TEST_KEY, TEST_SECRET
 
+from motodiag.core.timestamps import utc_at
 from motodiag.payments import event_feed
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -96,7 +97,7 @@ class TestFeedStatus:
         self._round(db, monkeypatch)
         import time
         sql(db, "UPDATE stripe_event_cursors SET polled_at = ? WHERE account = 'platform'",
-            (event_feed.stamp(time.time() - 60),))
+            (utc_at(time.time() - 60),))
         out = cli(db, "payments", "feed", "status")
         assert out.exit_code == 1
         assert "platform was not asked within two intervals" in out.output
@@ -106,7 +107,7 @@ class TestFeedStatus:
         self._round(db, monkeypatch)
         import time
         sql(db, "UPDATE stripe_event_cursors SET polled_at = ? WHERE account = 'platform'",
-            (event_feed.stamp(time.time() - 30),))
+            (utc_at(time.time() - 30),))
         assert cli(db, "payments", "feed", "status").exit_code == 0
 
     def test_exit_1_when_the_last_error_is_set(self, db, monkeypatch):

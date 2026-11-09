@@ -29,7 +29,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from typing import Any, Callable, Optional
 
 from motodiag import __version__
@@ -41,6 +40,7 @@ from motodiag.billing.webhook_handlers import (
 )
 from motodiag.core.config import Settings
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_at, utc_cutoff, utc_day
 from motodiag.payments import stripe_api
 from motodiag.telemetry import monitor
 from motodiag.telemetry.dsn import DsnError, parse_dsn
@@ -70,16 +70,6 @@ UPGRADE_SECTION = "'When it is time to upgrade'"
 NOTICES_SECTION = "'The notices'"
 #: The two shop-count lines are sent once ever: a count does not uncross.
 ONCE_EVER = ("shops_plan", "shops_upgrade")
-
-
-def stamp(seconds: float) -> str:
-    """UTC seconds in the stored format (Phase 370)."""
-    return datetime.fromtimestamp(seconds, tz=timezone.utc).isoformat(
-        timespec="milliseconds")
-
-
-def utc_day(seconds: float) -> str:
-    return datetime.fromtimestamp(seconds, tz=timezone.utc).date().isoformat()
 
 
 @dataclass
@@ -216,8 +206,8 @@ def _place(cursor: Optional[_Cursor], now: int) -> tuple[int, int, Optional[str]
     place = cursor.last_created if cursor else now
     gap = None
     if place < floor:
-        gap = (f"the place was {stamp(place)}, older than the 30 days Stripe "
-               f"keeps; events before {stamp(floor)} were not asked for")
+        gap = (f"the place was {utc_at(place)}, older than the 30 days Stripe "
+               f"keeps; events before {utc_at(floor)} were not asked for")
         place = floor + OVERLAP_S
     return place, max(place - OVERLAP_S, floor), gap
 
@@ -269,7 +259,7 @@ def poll_account(client: Any, account: str, settings: Settings,
     if not done.hold and done.newest > place:
         last_created, last_id = done.newest, done.newest_id
     write_cursor(db_path, account, last_created=last_created,
-                 last_event_id=last_id, polled_at=stamp(clock()),
+                 last_event_id=last_id, polled_at=utc_at(clock()),
                  last_error="; ".join(errors) or None,
                  livemode=key_livemode(settings))
     return RoundResult(account, seen=len(events), handled=done.handled,
@@ -294,7 +284,7 @@ def poll_once(settings: Settings, db_path: Optional[str],
                 db_path, account,
                 last_created=cursor.last_created if cursor else int(clock()),
                 last_event_id=cursor.last_event_id if cursor else None,
-                polled_at=stamp(clock()), last_error=exc.message,
+                polled_at=utc_at(clock()), last_error=exc.message,
                 livemode=key_livemode(settings))
             logger.warning("payments feed %s: %s", account, exc.message)
             results.append(RoundResult(account, error_kind=exc.kind,
@@ -342,7 +332,7 @@ def already_sent(db_path: Optional[str], line: str, today: str) -> bool:
         else:
             row = conn.execute(
                 "SELECT 1 FROM stripe_feed_notices WHERE line = ? "
-                "AND substr(sent_at, 1, 10) = ? LIMIT 1",
+                "AND date(sent_at) = ? LIMIT 1",
                 (line, today)).fetchone()
     return row is not None
 
@@ -359,7 +349,7 @@ def limit_check(settings: Settings, db_path: Optional[str], day: DayStats,
         text = notice_text(line, settings, shops, day)
         delivered = sender.capture(message_event(
             text, release=__version__, environment=sender.environment,
-            server_name=sender.server_name, clock=lambda: stamp(now),
+            server_name=sender.server_name, clock=lambda: utc_at(now),
             level="warning"))
         if not sender.enabled:
             logger.warning("%s", text)
@@ -367,7 +357,7 @@ def limit_check(settings: Settings, db_path: Optional[str], day: DayStats,
             conn.execute(
                 "INSERT INTO stripe_feed_notices (line, sent_at, detail, delivered) "
                 "VALUES (?, ?, ?, ?)",
-                (line, stamp(now), text, 1 if delivered else 0))
+                (line, utc_at(now), text, 1 if delivered else 0))
         sent.append(line)
     return sent
 
@@ -376,7 +366,8 @@ def notices_since(db_path: Optional[str], since: str) -> list[dict]:
     with get_connection(db_path) as conn:
         rows = conn.execute(
             "SELECT line, sent_at, detail, delivered FROM stripe_feed_notices "
-            "WHERE sent_at >= ? ORDER BY id", (since,)).fetchall()
+            "WHERE datetime(sent_at) >= ? ORDER BY id",
+            (utc_cutoff(since),)).fetchall()
     return [dict(r) for r in rows]
 
 

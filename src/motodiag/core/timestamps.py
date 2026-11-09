@@ -243,3 +243,15 @@ def convert_shop_times_082(conn) -> int:
                 )
                 changed += len(updates)
     return changed
+
+
+def utc_at(seconds: float) -> str:
+    """Epoch seconds (Stripe's ``created``, a clock's reading) in the stored
+    format (Phase 371)."""
+    return datetime.fromtimestamp(seconds, tz=timezone.utc).isoformat(
+        timespec="milliseconds")
+
+
+def utc_day(seconds: float) -> str:
+    """The UTC date ``YYYY-MM-DD`` of epoch seconds (Phase 371)."""
+    return datetime.fromtimestamp(seconds, tz=timezone.utc).date().isoformat()
