@@ -287,3 +287,11 @@ Line coverage of record: 88.15% at `94e11f1` (the pin is 87.50%): 0.65 points ab
 
 - v1.1's Deviations and Results, its history row, the handoff and row 371 now name `94e11f1`'s record and the one bug fix. No code changed after `94e11f1`.
 - **A guard blocked a command:** a Python heredoc that edited v1.1 and the handoff was refused by the edit guard, because its body named `src/` and wrote to a path the guard could not resolve. The guard is unchanged; the same edits were made one at a time with the Edit tool.
+
+## 2026-11-09: K72 brought onto the branch, and the wording to match (the advisor, for the operator)
+
+- **What happened:** the Engineer's round-2 stage stopped at 23:48 EST on 2026-11-08 (issue #54, `threshold-or-rule`): K70's "right after the merge" cannot hold for the alarm's test, since live Stripe waits on the public address (F257) and on the live key, which is not set up yet. The stop left `94e11f1` and `9bf93ea` only in the stage's run folder; the operator sent them to GitHub from it, once the fleet's own push checks passed on them (all but its full test run, which the fleet makes next).
+- **The operator's answer, 2026-11-08 (K72), quoted character for character:** "Right after live payments go on. Merge 371 once the builder's fixes pass round 3; the alarm test runs the moment I switch live Stripe on, whenever the public address is ready. Stripe is still "open, key not set up", so that is also why it can't be right after the merge."
+- **Brought onto the branch:** K72's row, cherry-picked from `master`'s `fa7e221` as `76691b1`, its one line in `docs/decisions.md` unchanged, so `| K72 |` resolves here and the merge to `master` meets an identical line.
+- **The wording to match:** v1.1's paragraph before item 1 (a dated note for the Engineer), the plan of record's close-out line, "Rule-1 stops anticipated", a Deviations bullet, Results and the history row; the handoff's alarm item and step 4. The two sentences `9bf93ea` deleted stay deleted.
+- **No code changed:** `git diff --name-only 94e11f1 HEAD -- src tests scripts .claude` prints nothing, so the regression of record at `94e11f1` stands.
