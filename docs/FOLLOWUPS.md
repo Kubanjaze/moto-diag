@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F257** (this file). The
+At the time of writing the highest assigned is **F258** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -5433,3 +5433,13 @@ stops there without touching the server.
 What would close it, the operator's choice: the public address decided
 (the fork K65 left open), or a way for the feed alone to run in prod
 while the API keeps its settings, decided as a plan.
+
+### F258
+
+**Wording the Red Team left open on phase 371, round 3**
+
+Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 392, F228). K9: "after round 3, remaining wording defects go to one finding". The rows, from the refute table in the Red Team's round 3 on phase 371:
+
+- The handoff's operator steps carry no internal labels (rule 6): "terminal. Straight after step 3 printed ALL GOOD (K72). It stops the payments feed" (docs/handoffs/2026-11-08_371_closed.md p. 246)
+
+What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).
