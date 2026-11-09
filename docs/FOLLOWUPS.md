@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F262** (this file). The
+At the time of writing the highest assigned is **F268** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -5593,3 +5593,163 @@ What would close it:
 - a stopped close-out that a label can run again, for example by
   escalating to `needs-admiral`, which `held_for` already retries when
   the operator takes it off.
+
+### F263
+
+**The fleet reads no reset time from the weekly line's wording "Nov 11 at 11am", so a pause on the weekly limit ends at the next session reset instead of the week's**
+
+Found 2026-11-09 by the advisor, while measuring F262.
+
+- On 2026-11-08 `/usage` printed two wordings. At 19:07 EST: "Current
+  week (all models): 18% used · resets Nov 11 at 11am (America/New_York)".
+  Later that evening: "Current session: 12% used · resets Nov 8, 6pm
+  (America/New_York)".
+- `parse_reset` (`.claude/skills/fleet/dispatcher.py` line 253) reads
+  only "Oct 28, 12pm" or "10pm", by a full match. Measured with the
+  fleet's code: "Nov 11, 11am" gives 2026-11-11 11:00, and "Nov 11 at
+  11am" gives nothing.
+- The percentage is still read, so the 70% rule is unaffected.
+  `reset_after_limit` (line 307) skips a line at 100% whose reset is
+  unknown and takes the session line's reset instead. `pause` (line 2295)
+  falls back to an hour (`RESET_UNKNOWN`, line 138) when there is none.
+
+What it affects: a stage paused on the weekly limit resumes at the next
+session reset, meets the limit again and pauses again, until the week
+resets. Nothing has hit it yet: the weekly figure read 18% to 25% on
+2026-11-08 and 09.
+
+What would close it: `parse_reset` reading "Mon D at H(am|pm)" as well,
+with both wordings above as fixtures.
+
+### F264
+
+**The Chief Engineer's brief never says that the regression's skip lines belong under its regression line in the phase log, which the live apply requires**
+
+Found 2026-11-08 by the advisor, on Phase 371 (issue #54).
+
+- At 12:46 EST the fleet held issue #54: "the work says the change to the
+  live database is ready to try, and the checks say it is not. (1) the
+  phase log carries no regression of record the live apply can read".
+- The Engineer's phase-log entry had copied the regression line and the
+  coverage line, but not the 81 lines `regression.sh` printed between
+  them, one per skip. `regression_record`
+  (`.claude/skills/closeout/closeout_check.py` line 404) requires the
+  lines right under the regression line to name every skip (F206), and
+  the live apply reads the log with it.
+- The brief's database step (`.claude/skills/fleet/engineer.py` lines
+  125–140) says "Run the regression of record (rule 6) and commit it" and
+  asks for "the Regression of record: line exactly as printed". It never
+  mentions the skip lines.
+
+What it affects: every phase with a database step. On 2026-11-08 the
+operator's block added the 81 lines from the run's own log (`260cf7f`,
+14:35 EST), and the stage started again at 15:13, 2 hours 27 minutes
+after the hold.
+
+What would close it: the brief saying that the phase log carries
+`regression.sh`'s whole record as printed (the regression line, every
+skip line under it, and the coverage line), and the Engineer reading its
+own log with `regression_record` before it ends its turn, with 371's
+first entry as the fixture.
+
+### F265
+
+**`verify_deploy` drops the reason `regression_record` gives, so the hold says only that the record cannot be read**
+
+Found 2026-11-08 by the advisor, on Phase 371 (issue #54).
+
+- The 12:46 EST hold (F264) said "(1) the phase log carries no regression
+  of record the live apply can read", and nothing more.
+- `verify_deploy` (`.claude/skills/fleet/engineer.py` line 367) calls
+  `regression_record` at line 397, which returns either the record or no
+  record with the reason why (`.claude/skills/closeout/closeout_check.py`
+  line 404), and keeps only the first part. Here the reason was the
+  missing skip lines.
+
+What it affects: every refusal of that check. On 2026-11-08 the cause
+was found by reading the run's log by hand.
+
+What would close it: the reason written after the failure ("the phase
+log carries no regression of record the live apply can read: <reason>"),
+with 371's first entry as the fixture.
+
+### F266
+
+**A stage that stops after it has committed leaves its commits only in its run folder: they are neither pushed nor held, and the next round starts without them**
+
+Found 2026-11-08 by the advisor, on Phase 371 (issue #54). It happened
+twice that day:
+- At 12:46 EST the database step's checks refused the Engineer's build
+  (F264). The stage was held for the operator (`needs-admiral`) before
+  its push, so the whole build stayed in its run folder. The operator's
+  block pushed it, with the missing skip lines, as `260cf7f` at 14:35.
+  That rescue is what F260 then met at 16:07.
+- At 23:48 EST the Engineer stopped to ask a rule-1 question (the alarm
+  test's timing, answered as K72) after committing bug fix #1 (`94e11f1`,
+  22:46) and its documents (`9bf93ea`, 23:47). The dispatcher held the
+  issue and pushed nothing (`.claude/skills/fleet/dispatcher.py` lines
+  1530–1536). The operator's rescue block pushed both by 00:01 EST.
+
+A run folder is held (`journal.hold`) only for a lost model-free run,
+for free space, for the database step and for the Red Team's kept table.
+Neither stop is one of these, so taking the label off starts a fresh
+clone of GitHub's branch.
+
+What it affects: any stop after a commit. Without the two rescues, the
+morning's build (its stage started at 09:55) and the evening's fix round
+(22:33 to 23:47) would have been done again.
+
+What would close it: a stop after a commit holds its run (a new hold
+reason), so that the round after the operator's answer starts from those
+commits, and the stop note names them.
+
+### F267
+
+**After the Red Team's round 3 sends a phase back, the fleet has no path for the operator's decision: the fixes, the merge with master and the checks are done by hand, and the Quartermaster never runs**
+
+Found 2026-11-09 by the advisor, on Phase 371 (issue #54, PR #58).
+
+- At 01:32 EST the fleet held issue #54: "under K9 the phase does not ship
+  as it stands. The operator decides." (`.claude/skills/fleet/dispatcher.py`
+  line 1908). A fourth round cannot run: `refute_check`'s C5 refuses round
+  4 (`MAX_ROUNDS`, `.claude/skills/refute/refute_check.py` line 60).
+- The operator decided to merge after the two fixes (K73). Every step from
+  there was by hand: the advisor fixed the two documents (`9850aa1`),
+  merged master in (`37443ed`) and ran the Mac's checks, and the operator
+  merged at 12:38.
+- The Captain's recommendation and the Quartermaster, the last check
+  before a merge (`merge:needs-review`), never ran: issue #54 and PR #58
+  carry no Quartermaster note.
+
+What it affects: every phase whose round 3 comes back with a fixable
+defect. Its merge goes ahead without the fleet's last check.
+
+What would close it, the operator's choice: a label the operator applies
+after the fixes that sends the phase to `merge:needs-review`, so the
+Quartermaster runs before the hand merge; or a recheck stage that checks
+only the named fixes and is not a refute round.
+
+### F268
+
+**A builder session started outside the repository root runs without the repository's hooks, so the edit guard and the push guard never see its commands**
+
+Found 2026-11-08 by the advisor, on Phase 399.
+
+- 399's builder ran as a thread that the desktop's main chat started
+  outside the repository root. Its own phase log says so
+  (`docs/phases/completed/399_phase_log.md` lines 76–79): "No push guard
+  ran on the plan's push: this builder session runs outside the
+  repository root, so the repo's hook is not loaded; wholetree fast was
+  run by hand before each commit and push instead."
+- Hooks and skills are found from the directory a session starts in
+  (CLAUDE.md, "Start sessions at this repository root").
+- The advisor checked PR #57 by hand before its merge. Its close-out,
+  ROADMAP and finding checks, the whole-tree command, its new tests and
+  GitHub's check all passed.
+
+What it affects: every phase built this way. The checks ran only because
+the builder chose to run them.
+
+What would close it: builder threads started at the repository root, and
+a builder prompt that opens with a planted `sed -i` the edit guard must
+refuse, stopping if it is not refused.
