@@ -134,12 +134,14 @@ def transaction_event(*, route: str, method: str, status: int,
 
 def message_event(text: str, *, release: str, environment: str,
                   server_name: str,
-                  clock: Optional[Callable[[], str]] = None) -> dict:
-    """The one event ``motodiag telemetry check`` sends."""
+                  clock: Optional[Callable[[], str]] = None,
+                  level: str = "info") -> dict:
+    """A message event: the one ``motodiag telemetry check`` sends, and the
+    payments feed's notices (Phase 371, ``level="warning"``)."""
     return {
         "event_id": _hex32(),
         "timestamp": (clock or utc_now)(),
-        "level": "info",
+        "level": level,
         "logger": "motodiag.telemetry",
         **_common(release, environment, server_name),
         "message": {"formatted": text[:MESSAGE_LIMIT]},

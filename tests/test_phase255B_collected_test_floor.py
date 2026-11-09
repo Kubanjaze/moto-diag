@@ -498,7 +498,23 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: master at 1222862 (12416): +18 -0, test_phase399_cost_ledger.py (17, and
 #: bug fix #1's test of the database tripwire). Measured: 12434.
 #:
-COLLECTED_TEST_FLOOR = 12434
+#: Phase 371 (the payments feed, K65), by a diff of collected ids against
+#: master at 3bf657e (12417): +75 -0. Added: test_phase371_cli.py (23),
+#: test_phase371_event_feed.py (21), test_phase371_limits.py (14),
+#: test_phase371_migration.py (10), test_phase371_monitor.py (7).
+#: Measured: 12492.
+#: Phase 371's second fix round (the Red Team's round 2), by a diff of
+#: collected ids against the branch at bcc303f: +3 -0. Added:
+#: test_phase371_event_feed.py (1, a retry with no place yet) and
+#: test_phase371_limits.py (2, the notices' times compared parsed).
+#: Measured: 12495.
+#:
+#: The two merged (371 after 399, 2026-11-09), by a diff of collected ids
+#: against master at 6907d28 (12434), each side read with its own src/:
+#: +79 -0, the 78 above and gate 15's rollback case [88], which migration
+#: 089 adds (371's counts of master read the branch's src, so they had that
+#: case already). Measured: 12513.
+COLLECTED_TEST_FLOOR = 12513
 
 
 def _collected_count() -> int:

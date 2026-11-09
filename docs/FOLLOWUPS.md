@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F256** (this file). The
+At the time of writing the highest assigned is **F259** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -5025,9 +5025,15 @@ Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 
 
 What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).
 
-### F248
+### F248 — CLOSED by Phase 371
 
 **`motodiag config show` prints `stripe_webhook_secret` in full**
+
+Closed 2026-11-08 by Phase 371 (`4448850`): `SECRET_SETTING_NAMES` in
+`src/motodiag/cli/main.py` gains `"webhook_secret"`. `config show` with a
+planted `whsec_` value prints `****` and the last four characters, and the
+control (the tuple without the name) prints the planted value
+(`tests/test_phase371_cli.py`).
 
 Found 2026-11-01 by Phase 343, widening the same command's mask for the
 Sentry DSN. `config_show` in `src/motodiag/cli/main.py` masks a setting
@@ -5403,3 +5409,81 @@ What would close it: a read-back that finds a usage limit is a cut call,
 not a finished one (resume it with `--resume`), with a test that a paused
 Engineer goes on after the reset. Left by 399 (its prompt: "file what you
 find and leave it").
+
+### F257
+
+**Switching the server to live payments means `MOTODIAG_ENV=prod`, and in prod the server refuses to start without a public https address, which a tailnet-only server cannot have**
+
+Found 2026-11-08 by Phase 371's close-out, writing the handoff's live
+switch-on step, at `395909a`.
+
+- A live Stripe key is used only with `MOTODIAG_ENV=prod`
+  (`refuse_live_key`, `src/motodiag/payments/stripe_api.py` line 72), and
+  the API and the payments feed both read `~/.config/motodiag/server.env`
+  (`ops/desktop/motodiag-api.service` line 25,
+  `ops/desktop/motodiag-payments.service`).
+- In prod, `motodiag serve` refuses to start when
+  `check_public_base_url` finds an error (`src/motodiag/cli/serve.py`
+  line 218). Measured in this clone's venv with `Environment.PROD`: an
+  empty `MOTODIAG_PUBLIC_BASE_URL`, `http://localhost:3000` and a
+  `*.ts.net` name each give a blocking problem.
+- The backend stays tailnet-only (K65), and the public address is the
+  question K65 left open. So 371's plan's after-merge step (put
+  `MOTODIAG_ENV=prod` in `server.env`, restart the API, install the feed)
+  would leave live without its API.
+
+What it affects: the live key, the payments job on live and the alarm's
+stop-and-watch test (K70: "yes (a), test the alarm right after the
+merge") cannot follow the merge until the public address is decided.
+371's handoff checks the start-up rule before restarting anything, and
+stops there without touching the server.
+
+What would close it, the operator's choice: the public address decided
+(the fork K65 left open), or a way for the feed alone to run in prod
+while the API keeps its settings, decided as a plan.
+
+### F258 — CLOSED by Phase 371
+
+**Wording the Red Team left open on phase 371, round 3**
+
+Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 392, F228). K9: "after round 3, remaining wording defects go to one finding". The rows, from the refute table in the Red Team's round 3 on phase 371:
+
+- The handoff's operator steps carry no internal labels (rule 6): "terminal. Straight after step 3 printed ALL GOOD (K72). It stops the payments feed" (docs/handoffs/2026-11-08_371_closed.md p. 246)
+
+What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).
+
+Closed 2026-11-09 in Phase 371 itself: "(K72)" is deleted from the handoff's step 4, whose reason is already under "What is open".
+
+### F259
+
+**The payments feed writes five live tables while the server runs, and no deploy gate expects it, so the next deploy's "live still equals the backup" check meets them as drift**
+
+Found 2026-11-08 by Phase 371, as its plan's item 10 asks, and foreseen
+in general by F210. Filed as F256 on Phase 371's branch; it became F259
+when master was merged in on 2026-11-09, because Phase 399 had taken F256
+on master first. PR #58's description still calls it F256.
+
+- Phase 371's `motodiag-payments.service` runs `motodiag payments feed
+  run` beside the API. Each round writes `stripe_event_cursors` (one row
+  per account asked, rewritten every 20 seconds), and on news of a payment
+  `stripe_webhook_events`, `invoice_payments` and `invoices`; the limit
+  check writes `stripe_feed_notices`.
+- The deploy skill sets aside only what `SERVER_WRITES`
+  (`.claude/skills/deploy/deploy.py` line 184) names: `api_keys.last_used_at`,
+  `audit_events` as a whole table and `device_tokens.last_seen_at`. None of
+  the five tables is there.
+- So once the unit is installed, any later migration's apply meets a
+  `stripe_event_cursors.polled_at` changed since the backup (within 20
+  seconds, every time), and refuses or fails its after-apply check.
+
+What it affects: every deploy after the feed is switched on on the home
+desktop. Nothing yet: the unit is installed only by the operator's step
+after 371's merge.
+
+What would close it, the operator's choice (the deploy skill is master's,
+not the phase's to change):
+- the five tables, or the columns the feed writes, on `SERVER_WRITES`,
+  with the same proof `audit_events` had (K59); or
+- the deploy's paste block stopping `motodiag-payments.service` beside
+  `motodiag-api.service` for the apply, and starting it after; the job
+  catches up from its stored place.

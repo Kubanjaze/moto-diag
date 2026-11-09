@@ -7813,6 +7813,43 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS audit_events;
         """,
     ),
+    Migration(
+        version=89,
+        name="stripe_event_feed",
+        description=(
+            "Phase 371, the payments feed (K65, option A). The server asks "
+            "Stripe for new events; `stripe_event_cursors` holds its place "
+            "per account (`platform`, else the shop's `acct_` id), so a "
+            "restore from a backup asks again from the older place. "
+            "`stripe_feed_notices` holds each limit notice sent, which is "
+            "how 'once' is known across restarts. Adds two empty tables and "
+            "one index; changes and removes no existing row."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS stripe_event_cursors (
+                account TEXT PRIMARY KEY,
+                last_created INTEGER NOT NULL,
+                last_event_id TEXT,
+                polled_at TEXT NOT NULL,
+                last_error TEXT,
+                livemode INTEGER NOT NULL DEFAULT 0 CHECK (livemode IN (0, 1))
+            );
+            CREATE TABLE IF NOT EXISTS stripe_feed_notices (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                line TEXT NOT NULL,
+                sent_at TEXT NOT NULL,
+                detail TEXT,
+                delivered INTEGER NOT NULL CHECK (delivered IN (0, 1))
+            );
+            CREATE INDEX IF NOT EXISTS idx_stripe_feed_notices_line
+                ON stripe_feed_notices(line, sent_at);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_stripe_feed_notices_line;
+            DROP TABLE IF EXISTS stripe_feed_notices;
+            DROP TABLE IF EXISTS stripe_event_cursors;
+        """,
+    ),
 ]
 
 

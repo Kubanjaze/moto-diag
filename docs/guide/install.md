@@ -119,6 +119,8 @@ and to get one back, see [Backups](backups.md).
 
 To be told when the server crashes, see [Crash reports](telemetry.md).
 
+For how the server hears that a customer has paid, see [Payments](payments.md).
+
 ```bash
 curl -s localhost:8000/healthz
 ```

@@ -50,6 +50,8 @@ BACKEND_DOCS = [
     REPO_ROOT / "docs" / "guide" / "backups.md",
     # Phase 343
     REPO_ROOT / "docs" / "guide" / "telemetry.md",
+    # Phase 371
+    REPO_ROOT / "docs" / "guide" / "payments.md",
 ]
 
 MOBILE_DOCS = [

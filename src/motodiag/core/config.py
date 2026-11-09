@@ -236,6 +236,18 @@ class Settings(BaseSettings):
     # Phase 273: a file each Stripe request appends one JSON line to
     # (time, method, path, status, bytes, request id); never a header or body.
     stripe_call_log: str = ""
+    # Phase 371: the payments feed. The server asks Stripe for new events
+    # (the operator's K65, 2026-11-05: option A). Each number is K65's and
+    # the operator's to change: ask every 20 seconds; check in with the
+    # Sentry job monitor every 5 minutes; a notice at 50 connected shops
+    # (plan the upgrade) and at 100 (upgrade); a notice when news runs more
+    # than 2 minutes late.
+    stripe_poll_interval_s: int = 20
+    stripe_poll_checkin_s: int = 300
+    stripe_poll_monitor_slug: str = "motodiag-payments-feed"
+    stripe_feed_shops_plan: int = 50
+    stripe_feed_shops_upgrade: int = 100
+    stripe_feed_late_s: int = 120
 
     # Rate limiting (Phase 176+)
     rate_limit_anonymous_per_minute: int = 30

@@ -1,0 +1,13 @@
+{
+ "_comment": "Phase 371, migration 089: adds two empty tables (stripe_event_cursors, stripe_feed_notices), one index and one schema_version row. No existing row changes or is removed; every table not named here must not change at all.",
+ "tables": {
+  "schema_version": {"added": 1}
+ },
+ "schema": {
+  "added": [
+   "index idx_stripe_feed_notices_line",
+   "table stripe_event_cursors",
+   "table stripe_feed_notices"
+  ]
+ }
+}

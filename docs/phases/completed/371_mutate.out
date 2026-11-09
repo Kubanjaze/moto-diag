@@ -1,0 +1,16 @@
+F1 the overlap set to 0: red
+F2 types dropped from the ask: red
+F3 Stripe-Account not sent for a shop: red
+F4 the shop's id not written into an event without account: red
+F5 an older event moves last_created backwards: red
+F6 a retry=True result advances the cursor: red
+F7 the 30-day floor removed: red
+F8 the back-off never doubles: red
+A1 the check-in URL without the key segment: red
+A2 the margin set to 0: red
+L1 shops_plan compared with > instead of >=: red
+L2 a notice sent on every check: red
+L3 the guide's page dropped from the notice text: red
+C1 webhook_secret dropped from SECRET_SETTING_NAMES: red
+C2 feed status exits 0 with a stale polled_at: red
+15/15 red

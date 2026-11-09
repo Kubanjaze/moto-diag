@@ -230,7 +230,8 @@ def tier(compare: bool) -> None:
 
 
 #: Settings whose values `config show` masks, matched as substrings.
-SECRET_SETTING_NAMES = ("api_key", "sentry_dsn")
+#: Phase 371 (F248): ``webhook_secret``, before a live secret sits beside it.
+SECRET_SETTING_NAMES = ("api_key", "sentry_dsn", "webhook_secret")
 
 
 @cli.group()
