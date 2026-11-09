@@ -1,6 +1,6 @@
 # Phase 371 — Live Stripe payments and production webhooks
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-11-07
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-11-08 (v1.0 `e3e5853`, last revised at `594062e`)
 
 ---
 
@@ -21,6 +21,8 @@ After this phase:
 5. `motodiag config show` masks `stripe_webhook_secret` (F248), before any live secret sits in `server.env` beside it.
 6. The desktop gets a unit for the job, `ops/desktop/motodiag-payments.service`, installed by one script as 345's backup unit was.
 
+At the close-out (v1.1, 2026-11-08) all six are built and migration 089 is on live. None of them runs on live yet: the unit and the live key are the operator's steps after the merge, and those steps wait on the public address (F257, under Deviations).
+
 ## Logic
 
 The build runs in this order. Items 1 to 7 are code and tests; item 8 is the migration's own proof; item 9 is the regression of record and the stop for the database step; item 10 is the close-out after the apply.
@@ -30,6 +32,8 @@ Before item 1, the Engineer checks that row 398 is ✅ on master (`docs/ROADMAP.
 Also before item 1: the one stop this plan knew it owed the operator, kind `threshold-or-rule`, **when the alarm's stop-and-watch test runs**, is **decided (a)** by the operator, 2026-11-08 (K70): "yes (a), test the alarm right after the merge". The Engineer does not raise it: it quotes K70's words in the phase log, character for character, and builds item 10's alarm step, applying those words literally and to nothing beyond them. The stop as it was put: K65 (1) says the alarm is "tested by stopping the job before the phase closes", and `docs/reports/2026-11-05_stripe_options.md` line 98 says the same. The fleet cannot run that test before the close-out as it stands: the Engineer's fence has no network and no Sentry; the only operator step the fleet holds for between the regression of record and the close-out is the database step, whose paste block applies the migration and then hands the work straight back to the fleet, which closes out by itself (`.claude/skills/deploy/SKILL.md`, "Through the fleet"); the desktop runs master's code in `~/motodiag/server` until the merge fast-forwards it (K18's order: the regression, the apply, the close-out commit, the merge), and the deploy clone at `~/motodiag/deploy/371` is the deploy skill's, with no installed copy of the branch; and the job exits before any check-in without a Stripe key (item 5), which K66 puts after the merge. So the plan as written runs the test from the handoff's "After the merge" block (item 10), after the row is ✅, and that departs from K65's words, which only the operator may change. The question, in plain English, with the Captain's recommendation first: (a) accept the test after the merge, from the handoff's paste block with the live key in place, so it is also the first live check-in, with the email's time written into the handoff's "After the merge" as 343 recorded its first live event; or (b) keep "before the phase closes", which needs the branch's code installed and run on the desktop before the close-out and a hold the fleet's deploy step does not have, so the phase would go back to the Captain for a changed plan and the deploy step's hold would be a builder-session change.
 
 Since 2026-11-08, items 1 to 9 are built, and the Engineer builds nothing more (K71). The items' code is at `f0b3512`; item 9's regression of record ran at `6286d9c`, and the phase log's last entry, added by the operator at `260cf7f`, holds it with every line `regression.sh` printed. Only documents have changed since `6286d9c`, so that regression of record stands and is not run again. On 2026-11-08 the fleet's stage on `260cf7f` passed its model-free run and every check of the database step, and then the push was refused: the stage had nothing new to push (issue #54, 16:07 EST). The operator chose the way past it, 2026-11-08 (K71): "Go with A." So the Engineer reads the branch and appends one dated entry to the phase log, saying what it checked and at which commit and quoting K71's words character for character; no line of the entry begins with "Regression of record:", so the record stays the log's last such line. It commits the entry (the whole-tree command first) and ends with item 9's outcome `deploy`, its regression line that last line, copied exactly. That entry is the commit the push needs.
+
+Since 2026-11-08, item 9's database step is done and item 10 is the close-out. The operator ran the dry run on a copy and answered "yes" (`371_deploy_answer.md`); the dispatcher applied 089 to live and checked it with `verify-live` (`371_live_diff.md`: scope problems none, equal to the approved exact diff). The close-out changes documents only. Writing item 10's live switch-on block found that `MOTODIAG_ENV=prod` makes `motodiag serve` refuse to start without a public https address, so the handoff's live step checks that first and stops before restarting anything (F257, under Deviations).
 
 1. **Migration 089 and its scope file.** `src/motodiag/core/migrations.py` gains `Migration(version=89, name="stripe_event_feed")`, appended after 088, with `upgrade_sql` that creates two tables and one index and `rollback_sql` that drops them:
    - `stripe_event_cursors`: `account TEXT PRIMARY KEY` (the word `platform` for the platform account, else the shop's `acct_…` id), `last_created INTEGER NOT NULL` (Stripe's `created`, UTC seconds, of the newest event seen), `last_event_id TEXT`, `polled_at TEXT NOT NULL` (Phase 370's UTC text), `last_error TEXT`, `livemode INTEGER NOT NULL DEFAULT 0 CHECK (livemode IN (0, 1))`.
@@ -84,6 +88,7 @@ Since 2026-11-08, items 1 to 9 are built, and the Engineer builds nothing more (
 - **What it adds:** the table `stripe_event_cursors` (one row per Stripe account the job asks: the platform and each connected shop, with the newest event's time and id, when it was last asked, the last error and the mode), the table `stripe_feed_notices` (one row per notice sent, with its line, time, detail and whether it was delivered), the index `idx_stripe_feed_notices_line`, and one `schema_version` row. Exactly these, as `371_deploy_scope.json` names them.
 - **What it changes or deletes:** no existing live row is changed or deleted, and no existing table, column, index or trigger is rewritten. So it is not a rule-1 stop, and the operator applies it from the dispatcher's paste block after the regression of record and before the close-out (K18, K58).
 - **The one sentence for the operator** (`live_change`): "Adds two new, empty tables for the payments feed's place in Stripe's events and the notices it has sent, and one index; nothing already in the live database is changed or removed."
+- **Applied 2026-11-08** (v1.1): the operator's answer "yes" on the dry-run diff sha256 `93bff975e2b0f207652c110b9749a1b466fea9eae018cf62f475250680c84360`; live after the apply has scope problems none and equals the approved exact diff; 0 rows set aside; F158 census 41. Results has the detail.
 - **After it:** the running server is still master's code and no feed unit is installed, so nothing writes the tables until 371 merges and the operator's step installs the unit; the first round then writes one cursor row for the platform account, and one per connected shop of the key's mode.
 
 ## The change log's three newest entries
@@ -91,6 +96,7 @@ Since 2026-11-08, items 1 to 9 are built, and the Engineer builds nothing more (
 - **2026-10-29, rule 6: the code's counts only improve, and the weekly page (Phase 393, K54).** The check it became: `tests/test_phase393_quality_ratchet.py`, over the counts pinned in `tests/support/quality_counts.py`, in fast mode and on every push; the coverage gate in `regression.sh`. This phase is built under it: the new module, the monitor and the commands are ruff-clean and mypy-clean, every function under McCabe 20 (`poll_account` splits its paging from its dispatch), no `_now` or `_money` helper added, no `except Exception: pass` (every handler in `run_forever` logs), `BIG_FILES` stays 5 with `migrations.py` already on it, and coverage not below 87.5, which `FixtureHTTP`, the fake transport and the fake sender make reachable for every branch.
 - **2026-10-26, R8: an operator paste block's `gh` names its repository.** The check it became: `.claude/skills/closeout/roadmap_check.py` R8, run by `tests/test_roadmap_continuity.py` and on every push. This phase's handoff blocks (item 10) carry `-R Kubanjaze/moto-diag` on every `gh` call or make none.
 - **2026-10-22, `fleet` joins the procedure folders.** No check: the entry says the row is text only and no check reads the table; the folder is held by its own tests, `tests/test_phase387_fleet_contract.py`. This phase is the fourth first-shop phase the fleet runs end to end, and the second with a database step through `through_fleet.py`.
+- At the close-out (v1.1): no change-log entry was added while the phase ran; the three above are still the newest, and the build met each as written (Results).
 
 ## The plan of record
 
@@ -102,6 +108,7 @@ Since 2026-11-08, items 1 to 9 are built, and the Engineer builds nothing more (
 - **K48** (2026-10-27): "The plan of record stays the single source; add a short "Next, in order" list at its top that the fleet reads exactly; it changes only by a dated entry with a K-id, written on my word." Row 401 is a ROADMAP row K65 (3) asks for; it is not added to "Next, in order", which changes only on the operator's word.
 - **The 2026-10-22 to 2026-10-25 entry** lists this phase among "the ten first-shop rows" that had not started; the 2026-10-27 entry (K48) transcribed the order and K52 corrected this row's needs the same day.
 - **Not fleet-only:** the row's kind is shop, so it names nothing it unblocks; 372 follows it by the same list.
+- At the close-out (v1.1): K70 ("yes (a), test the alarm right after the merge") and K71 ("Go with A.") were the operator's answers while the phase ran; both are in the paragraphs before item 1 and quoted in the phase log.
 
 ## Rule-1 stops anticipated
 
@@ -112,6 +119,7 @@ Since 2026-11-08, items 1 to 9 are built, and the Engineer builds nothing more (
 - **A threshold or a rule's definition, the numbers:** the six numbers (20 seconds, 5 minutes, 50 shops, 100 shops, 2 minutes, and the 15 minutes of silence as 5 plus a margin of 10) are K65's and are built as given; the overlap of 300 seconds, the back-off ceiling of 300 seconds and `Restart=on-failure` at 30 seconds are the Captain's picks and are stated so the operator can change them in review. A later request to change any of them is a stop. F238 (Q12 and the size of `migrations.py`) is open and is the operator's choice; this phase meets it and does not decide it.
 - **A test it cannot make green:** the fence has no network, so the asks against Stripe and the check-ins against Sentry are proven structurally (the paths, parameters and headers at `FixtureHTTP` and the fake transport) and the proof against the real services is the operator's `feed status` and the alarm's email in item 10. Stripe's pages do not promise that a shop's listed events carry the `account` name (the options page, "What wasn't confirmed"), which is why item 2 writes it in; if the operator's live round shows an answer the documentation does not explain, that is a bug fix in a follow-on with the pasted status lines, not a reason to loosen a test to the code's own output.
 - **A live-database change that alters or deletes rows:** none. Migration 089 adds two empty tables and one index and changes no existing row, so it goes through the database step, not a stop.
+- At the close-out (v1.1): no stop was raised in the build beyond K70's and K71's answers. The public return page met the build once more, outside any test: the live switch-on needs `MOTODIAG_ENV=prod`, and in prod the server refuses to start without a public https address (F257). No return URL or `public_base_url` was changed; the handoff's live step stops before touching the server until the operator decides the address.
 
 ## Tests
 
@@ -123,6 +131,7 @@ Since 2026-11-08, items 1 to 9 are built, and the Engineer builds nothing more (
 - `tests/test_phase208_docs.py`, with the guide on its list, resolves every command the guide names; seen red on the planted command and green after its removal, recorded in the phase log. `tests/test_phase02_config.py::test_config_show`, Phase 343's mask test and every Phase 273 test pass unchanged; no test reads the live database (244H), none opens a socket beyond loopback (`tests/support/network_guard.py`), none skips.
 - Mutations, `docs/phases/in_progress/371_mutate.py`, each reverted on its own and seen red: the overlap set to 0; `types` dropped from the ask; `Stripe-Account` not sent for a shop; the shop's id not written into an event without `account`; `last_created` moved backwards by an older event; a `retry=True` result advancing the cursor; the 30-day floor removed; the back-off never doubling; the check-in URL without the trailing slash's key segment; the margin set to 0; the `shops_plan` comparison `>` instead of `>=`; a notice sent on every check; the guide's page dropped from the notice text; `webhook_secret` dropped from `SECRET_SETTING_NAMES`; `feed status` exiting 0 with a stale `polled_at`.
 - `COLLECTED_TEST_FLOOR` raised from 12416 by a diff of collected ids against master, the reason in the commit message.
+- At the close-out (v1.1): built as listed, 75 new tests (cli 23, event_feed 21, limits 14, migration 10, monitor 7) and one shared helper, `tests/support/phase371.py`; the floor is 12492; the mutations 15/15 red.
 
 ## Non-goals
 
@@ -139,26 +148,60 @@ Since 2026-11-08, items 1 to 9 are built, and the Engineer builds nothing more (
 - Adding row 401 to "Next, in order": the list changes only by a dated entry on the operator's word (K48).
 - Sentry's issue alert rules, a second monitor, or the official `sentry-sdk`: Phase 343's client is reused as it is.
 - No path under the repository's data folder is read or written; no seed data, split or eval protocol is touched; the mobile repository is not edited.
+- At the close-out (v1.1): every non-goal held. F256 records the `SERVER_WRITES` need and F257 the public address; neither is changed here.
 
 ## Planned items
 
-- [ ] Row 398 checked ✅ on master before any code
-- [ ] The stop on the alarm test's timing raised before any code, the operator's answer quoted in the phase log and applied literally
-- [ ] Item 1: migration 089 (`stripe_event_cursors`, `stripe_feed_notices`, the index) and `371_deploy_scope.json`, tests
-- [ ] Item 2: `payments/event_feed.py`, the six settings, the asks, the place, the overlap, the 30-day floor, the back-off, tests with event-list pages built in the test module and answered by `FixtureHTTP` as tuples
-- [ ] Item 3: `telemetry/monitor.py`, the check-in URL and body, the transport, tests
-- [ ] Item 4: the daily limit check, the four lines, the notice through the sender, the once-per-line rows, tests
-- [ ] Item 5: `payments feed run` and `payments feed status`, tests
-- [ ] Item 6: the `webhook_secret` mask in `config show` with its control; F248 marked closed
-- [ ] Item 7: `motodiag-payments.service` and its installer; `docs/guide/payments.md` on `BACKEND_DOCS` with the planted-command control; the install guide's sentence; row 401 ⏸️ and `docs/prompts/401_payments_news_by_webhook.txt`; row 371's text updated
-- [ ] The mutations, each red
-- [ ] `COLLECTED_TEST_FLOOR` raised by a diff of collected ids
-- [ ] Item 8: `wholetree.sh --full` before the commit carrying 089
-- [ ] Item 9: the regression of record; the Engineer ends with `deploy`; the operator's paste block applies 089 and `verify-live` exits 0
-- [ ] Item 10: the close-out, the handoff with the desktop's paste blocks (the key's lines, the unit, `feed status`, the alarm's test where the operator's answer puts it), the finding on the feed's tables and `SERVER_WRITES`
+- [x] Row 398 checked ✅ on master before any code
+- [x] The stop on the alarm test's timing raised before any code, the operator's answer quoted in the phase log and applied literally
+- [x] Item 1: migration 089 (`stripe_event_cursors`, `stripe_feed_notices`, the index) and `371_deploy_scope.json`, tests
+- [x] Item 2: `payments/event_feed.py`, the six settings, the asks, the place, the overlap, the 30-day floor, the back-off, tests with event-list pages built in the test module and answered by `FixtureHTTP` as tuples
+- [x] Item 3: `telemetry/monitor.py`, the check-in URL and body, the transport, tests
+- [x] Item 4: the daily limit check, the four lines, the notice through the sender, the once-per-line rows, tests
+- [x] Item 5: `payments feed run` and `payments feed status`, tests
+- [x] Item 6: the `webhook_secret` mask in `config show` with its control; F248 marked closed
+- [x] Item 7: `motodiag-payments.service` and its installer; `docs/guide/payments.md` on `BACKEND_DOCS` with the planted-command control; the install guide's sentence; row 401 ⏸️ and `docs/prompts/401_payments_news_by_webhook.txt`; row 371's text updated
+- [x] The mutations, each red
+- [x] `COLLECTED_TEST_FLOOR` raised by a diff of collected ids
+- [x] Item 8: `wholetree.sh --full` before the commit carrying 089
+- [x] Item 9: the regression of record; the Engineer ends with `deploy`; the operator's paste block applies 089 and `verify-live` exits 0
+- [x] Item 10: the close-out, the handoff with the desktop's paste blocks (the key's lines, the unit, `feed status`, the alarm's test where the operator's answer puts it), the finding on the feed's tables and `SERVER_WRITES` (F256); the live step checks the start-up rule first (F257)
+
+## Deviations
+
+What the build and the close-out did that v1.0 does not say, each with its reason. The phase log has the dated detail.
+
+- **`SCHEMA_VERSION` in `src/motodiag/core/database.py` moved to 89**, though item 1 names only `migrations.py`: `tests/test_phase240c_severity_ordering.py` holds it equal to the last migration, as 348 found.
+- **`tests/support/phase371.py`**, not named by the plan: the event-list page builder and the started-payment seed, shared by four of the new test files. It builds the pages in code, reads or writes no fixture file, and leaves `stripe_fixtures.py` untouched, as the Tests section asks.
+- **`feed status` exits 1 for an account never asked**, a case item 5's list does not name: an account with no cursor row cannot have been asked within two intervals.
+- **Choices the plan left open, made in the build:** with no cursor row the first ask is from the clock's time less the overlap; a place older than 30 days is raised to 30 days back plus the overlap, so the next round does not report the gap again; a `retry=True` result holds the whole account's place for the round; the limit check on a new day's first round measures the day just ended; a round's error kinds are the gateway's plus `live_event`, `retry` and `gap`; the paging, the dispatch and the place are split out of `poll_account` (`fetch_events`, `_handle`, `_place`) to keep every function under McCabe 20; the installer's `systemctl status` carries `--no-pager`.
+- **The guide does not print the webhook route's path.** `tests/test_phase208_docs.py` caught `/v1/billing/webhooks/stripe`, which is not in the OpenAPI schema (`include_in_schema=False`); the guide points to row 401's prompt for the route instead.
+- **The retry test was strengthened** after the first mutation run was 14/15: with only the retried event in the round, the mutation that advances the cursor on `retry=True` could not turn it red. The test now has a later event handled cleanly in the same round. The code was right, so this is not a bug fix; 15/15 after.
+- **`COVERAGE_PERCENT` was not raised**, though `regression.sh` suggested it (88.12% against 87.50%): the plan does not name it, and the change would have moved the tree after the regression of record.
+- **The build ended with one extra phase-log commit** (`313eb2b`), the operator's K71 ("Go with A."), because the fleet's stage on `260cf7f` had nothing new to push.
+- **The handoff's live switch-on stops before restarting the server** unless the start-up check passes (F257). Item 10 asks the block to set `MOTODIAG_ENV=prod` in `server.env`, restart `motodiag-api.service` and install the feed. In prod, `motodiag serve` refuses to start unless `MOTODIAG_PUBLIC_BASE_URL` is a public https address (`src/motodiag/cli/serve.py` line 218); measured in this clone's venv, empty, `http://localhost:3000` and a `*.ts.net` name each block, and the server is tailnet-only (K65). As planned, the block would leave live without its API. So it runs the same check on the settings file first and prints SOMETHING IS OFF without touching the server when the check would refuse. The alarm's test is its own step after that one, so K70's "right after the merge" is met once the live step can run. The public address is the operator's open question, not this phase's.
+- **A second finding, F257**, beside the one item 10 names (F256): the reason above, filed so the handoff can cite it.
+- **No bug fixes.** No defect was found in the phase's committed code, so there is no bug-fix register.
+
+## Results
+
+- **Shipped.** Migration 089 (`stripe_event_cursors`, `stripe_feed_notices`, `idx_stripe_feed_notices_line`); `src/motodiag/payments/event_feed.py` (`FEED_TYPES` read from `HANDLERS`, `accounts`, `poll_account` with the 300-second overlap and the 30-day floor, `poll_once`, `limit_check` and its four lines, `run_forever` with the back-off); `src/motodiag/telemetry/monitor.py` (the Sentry check-in every 5 minutes with a margin of 10); `message_event`'s `level`; the six settings at K65's numbers; `motodiag payments feed run [--once]` and `feed status`; the `webhook_secret` mask (F248, closed); `ops/desktop/motodiag-payments.service` and `install_payments_unit.sh`; `docs/guide/payments.md` on `BACKEND_DOCS` and `install.md`'s sentence; row 401 ⏸️ and `docs/prompts/401_payments_news_by_webhook.txt`.
+- **The operator's answers.** K70: "yes (a), test the alarm right after the merge". K71: "Go with A." The database step: "yes" (below).
+- **Tests.** Five new files, `tests/test_phase371_*.py`, 75 tests; `COLLECTED_TEST_FLOOR` 12416 → 12492 by a diff of collected ids against master at `3bf657e` (+75 −0). The ratchet's counts are at their pins (ruff 1108, mypy 202, complex 25, big 5, helpers 19, swallowed 22).
+- **Mutations:** 15/15 red (`371_mutate.out`).
+- **`wholetree.sh --full`** on `6286d9c`: 5085 passed, 36 skipped, exit 0.
+- **The regression of record**, as `regression.sh` printed it (the skip lines are in the phase log):
+
+Regression of record: 12387 passed, 0 failed, 105 skipped, 0 errors at `6286d9c` (35 min 34 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0) (run inside the fleet's fence)
+
+  Line coverage of record: 88.12% at `6286d9c` (the pin is 87.50%).
+- **Live.** The operator ran the dry run on a copy (`371_dryrun_diff.md`, sha256 `93bff975e2b0f207652c110b9749a1b466fea9eae018cf62f475250680c84360`; migrations applied `[89]`; scope problems none) and answered "yes" (`371_deploy_answer.md`). Live after the apply (`371_live_diff.md`): scope problems `none`; equal to the approved exact diff `yes`; 0 rows set aside as the running API's; F158 census 41, as on the copy. Live gained the two tables, the index and `schema_version` 89, and no existing row changed. The dispatcher checked it again with `verify-live`. The server still runs master's code and no feed unit is installed, so nothing writes the tables until the operator's steps after the merge.
+- **Findings.** F256 (the feed's live writes against the deploy's `SERVER_WRITES`) and F257 (prod needs a public address) filed; F248 closed. F238 (Q12 and the size of `migrations.py`) is open and the operator's; Q12's verdict lands on the pull request.
+- **After the regression of record:** documents only (`f0b3512` onward), nothing under `src/`, `tests/`, `scripts/` or `.claude/`.
 
 ## Version history
 
 | version | date | what |
 |---|---|---|
 | 1.0 | 2026-11-07 | the plan; revised the same day at the Executive Officer's two items (the alarm test's timing is a stop; the feed's test pages are tuples to `FixtureHTTP`); on 2026-11-08 that stop marked decided (a), the operator's K70, in the paragraph before item 1, item 10 and "Rule-1 stops anticipated"; on 2026-11-08 items 1 to 9 marked built, the operator's K71, in the paragraph before item 1 |
+| 1.1 | 2026-11-08 | built, applied to live, closed: every section's close-out line, Deviations and Results; F256 and F257 filed, F248 closed |

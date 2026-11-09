@@ -3917,3 +3917,8 @@ Write-up: [`343_implementation.md`](docs/phases/completed/343_implementation.md)
 
 Log: [`docs/phases/completed/398_phase_log.md`](docs/phases/completed/398_phase_log.md).
 Write-up: [`398_implementation.md`](docs/phases/completed/398_implementation.md).
+
+## Phase 371 — Live Stripe payments and production webhooks — CLOSED 2026-11-08
+
+Log: [`docs/phases/completed/371_phase_log.md`](docs/phases/completed/371_phase_log.md).
+Write-up: [`371_implementation.md`](docs/phases/completed/371_implementation.md).

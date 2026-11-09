@@ -1,6 +1,6 @@
 # Phase 371 — phase log: live Stripe payments and production webhooks
 
-**Status:** In progress
+**Status:** Complete
 
 Built by the Chief Engineer in the fleet's fence, on `phase-371-live-stripe-payments-and-production-webhooks`; the plan is `371_implementation.md` v1.0, approved by the Executive Officer on issue #54.
 
@@ -153,3 +153,19 @@ A later regression of record is copied with every line `regression.sh` prints, t
 - **No code since the record:** `git diff --name-only 6286d9c 594062e -- src tests` prints nothing; only `371_implementation.md` and this log changed since `6286d9c`, so the regression of record at `6286d9c`, held in the entry above with every line `regression.sh` printed, stands and is not run again.
 - **Migration 089:** `Migration(version=89, …)` is in `src/motodiag/core/migrations.py` at line 7817; `371_deploy_scope.json` names the two tables `stripe_event_cursors` and `stripe_feed_notices`, the index `idx_stripe_feed_notices_line` and one added `schema_version` row, and no existing row changes.
 - Next, the database step, as before: the operator applies migration 089 to live; this session does not close out.
+
+## 2026-11-08: The database step, and the close-out
+
+- **The operator's answer to the dry run**, from `371_deploy_answer.md`, on the dry-run diff whose sha256 is `93bff975e2b0f207652c110b9749a1b466fea9eae018cf62f475250680c84360` (`sha256sum 371_dryrun_diff.md` prints the same), quoted:
+
+> yes
+
+- **The dry run on a copy** (`371_dryrun_diff.md`, backup `motodiag_pre371_20261108_185806.db`): migrations applied `[89]`, scope problems none, F158 census 41.
+- **Live after the apply** (`371_live_diff.md`): scope problems none; equal to the approved exact diff: yes; 0 rows set aside as the running API's; F158 census 41. Live gained `stripe_event_cursors`, `stripe_feed_notices`, `idx_stripe_feed_notices_line` and `schema_version` 89 (rowid 88); no existing row changed. The dispatcher checked it again with `verify-live`.
+- **No code since the record:** `git diff --name-only 6286d9c HEAD -- src tests scripts .claude` prints nothing; this close-out changes documents only.
+- **K70's words on the alarm test's timing**, quoted again for the handoff: "yes (a), test the alarm right after the merge".
+- **F256 filed** with the `finding` skill, as item 10 asks: the feed writes `stripe_event_cursors`, `stripe_feed_notices`, `stripe_webhook_events`, `invoice_payments` and `invoices` while the server runs, and `SERVER_WRITES` names none of them, so the next deploy after the unit is installed meets them as drift.
+- **F248 marked closed by this phase** in `docs/FOLLOWUPS.md` (item 6, `4448850`).
+- **Decided here, F257 filed:** writing item 10's live switch-on block found that it cannot succeed as planned. A live key needs `MOTODIAG_ENV=prod`; the API reads the same `server.env`; and in prod `motodiag serve` refuses to start unless `MOTODIAG_PUBLIC_BASE_URL` is a public https address (`src/motodiag/cli/serve.py` line 218). Measured in this clone's venv under `Environment.PROD`: empty, `http://localhost:3000` and a `*.ts.net` name each block. So the block as planned would leave live without its API. The handoff's live step therefore runs the same start-up check on the settings file first, and stops with SOMETHING IS OFF before restarting anything when it would refuse; the alarm's test follows that step. The reason: an operator block must not be able to take live down, and the public address is the operator's open question (K65), not this phase's to answer. Recorded in v1.1's Deviations.
+- **F238** (Q12 and the size of `migrations.py`) is open and the operator's choice; Q12's verdict lands on the pull request, after this close-out, where the Quartermaster records it.
+- **The reclaim line:** this session runs in the fence and cannot run `reclaim`; the fleet's pull request carries the dispatcher's own close-out line.
