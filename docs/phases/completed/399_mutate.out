@@ -1,0 +1,13 @@
+M1 the fixture sets no ledger of its own: red
+M2 the check never fails the run: red
+M3 the check takes every appended row for the fleet's: red
+M4 the check misses a rewrite of the existing rows: red
+M5 readers keep the stand-in's rows: red
+M6 a rank's line names no stage: red
+M7 the Engineer's session is not recorded as it ends: red
+M8 a session read back is recorded again (no key check): red
+M9 the search on start does not read kept folders in: red
+M10 the read-in keys a session differently from the live write: red
+M12 the fixture asks for monkeypatch again (its first version): red
+M11 a cut stage's resume does not write the missing row: red
+12/12 red

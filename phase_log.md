@@ -3918,6 +3918,11 @@ Write-up: [`343_implementation.md`](docs/phases/completed/343_implementation.md)
 Log: [`docs/phases/completed/398_phase_log.md`](docs/phases/completed/398_phase_log.md).
 Write-up: [`398_implementation.md`](docs/phases/completed/398_implementation.md).
 
+## Phase 399 — The fleet's cost ledger, made true (F254, F255) — CLOSED 2026-11-08
+
+Log: [`docs/phases/completed/399_phase_log.md`](docs/phases/completed/399_phase_log.md).
+Write-up: [`399_implementation.md`](docs/phases/completed/399_implementation.md).
+
 ## Phase 371 — Live Stripe payments and production webhooks — CLOSED 2026-11-08
 
 Log: [`docs/phases/completed/371_phase_log.md`](docs/phases/completed/371_phase_log.md).

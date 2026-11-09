@@ -150,7 +150,7 @@ Since 2026-11-09, the alarm test's timing is decided again (K72), and the Engine
 - Adding row 401 to "Next, in order": the list changes only by a dated entry on the operator's word (K48).
 - Sentry's issue alert rules, a second monitor, or the official `sentry-sdk`: Phase 343's client is reused as it is.
 - No path under the repository's data folder is read or written; no seed data, split or eval protocol is touched; the mobile repository is not edited.
-- At the close-out (v1.1): every non-goal held. F256 records the `SERVER_WRITES` need and F257 the public address; neither is changed here.
+- At the close-out (v1.1): every non-goal held. F259 records the `SERVER_WRITES` need and F257 the public address; neither is changed here.
 
 ## Planned items
 
@@ -167,7 +167,7 @@ Since 2026-11-09, the alarm test's timing is decided again (K72), and the Engine
 - [x] `COLLECTED_TEST_FLOOR` raised by a diff of collected ids
 - [x] Item 8: `wholetree.sh --full` before the commit carrying 089
 - [x] Item 9: the regression of record; the Engineer ends with `deploy`; the operator's paste block applies 089 and `verify-live` exits 0
-- [x] Item 10: the close-out, the handoff with the desktop's paste blocks (the key's lines, the unit, `feed status`, the alarm's test where the operator's answer puts it), the finding on the feed's tables and `SERVER_WRITES` (F256); the live step checks the start-up rule first (F257)
+- [x] Item 10: the close-out, the handoff with the desktop's paste blocks (the key's lines, the unit, `feed status`, the alarm's test where the operator's answer puts it), the finding on the feed's tables and `SERVER_WRITES` (F259); the live step checks the start-up rule first (F257)
 
 ## Deviations
 
@@ -182,7 +182,7 @@ What the build and the close-out did that v1.0 does not say, each with its reaso
 - **`COVERAGE_PERCENT` was not raised**, though `regression.sh` suggested it (88.12% against 87.50%): the plan does not name it, and the change would have moved the tree after the regression of record.
 - **The build ended with one extra phase-log commit** (`313eb2b`), the operator's K71 ("Go with A."), because the fleet's stage on `260cf7f` had nothing new to push.
 - **The handoff's live switch-on stops before restarting the server** unless the start-up check passes (F257). Item 10 asks the block to set `MOTODIAG_ENV=prod` in `server.env`, restart `motodiag-api.service` and install the feed. In prod, `motodiag serve` refuses to start unless `MOTODIAG_PUBLIC_BASE_URL` is a public https address (`src/motodiag/cli/serve.py` line 218); measured in this clone's venv, empty, `http://localhost:3000` and a `*.ts.net` name each block, and the server is tailnet-only (K65). As planned, the block would leave live without its API. So it runs the same check on the settings file first and prints SOMETHING IS OFF without touching the server when the check would refuse. The public address is the operator's open question, not this phase's.
-- **A second finding, F257**, beside the one item 10 names (F256): the reason above, filed so the handoff can cite it.
+- **A second finding, F257**, beside the one item 10 names (F259): the reason above, filed so the handoff can cite it.
 - **The alarm's test runs as soon as live Stripe is switched on, not right after the merge** (K72, which replaces K70's timing for that test only). It is the handoff's step 4, straight after step 3's live switch-on, and step 3 waits on the public address (F257) and on the live key, which is not set up yet. The row closes and merges before the test.
 - **One bug fix**, at the Red Team's round 2 (`94e11f1`, bug fix #1 in the phase log): the feed's time helpers moved to `core/timestamps.py` (`utc_at`, `utc_day`, at the module's end, so the chokepoint test's pinned line stays put), and the notices' times are compared parsed (`date(sent_at)`, `datetime(sent_at)` against `utc_cutoff`).
 
@@ -199,7 +199,7 @@ Regression of record: 12390 passed, 0 failed, 105 skipped, 0 errors at `94e11f1`
 
   Line coverage of record: 88.15% at `94e11f1` (the pin is 87.50%). The first record, at `6286d9c` (12387 passed), is in the phase log.
 - **Live.** The operator ran the dry run on a copy (`371_dryrun_diff.md`, sha256 `93bff975e2b0f207652c110b9749a1b466fea9eae018cf62f475250680c84360`; migrations applied `[89]`; scope problems none) and answered "yes" (`371_deploy_answer.md`). Live after the apply (`371_live_diff.md`): scope problems `none`; equal to the approved exact diff `yes`; 0 rows set aside as the running API's; F158 census 41, as on the copy. Live gained the two tables, the index and `schema_version` 89, and no existing row changed. The dispatcher checked it again with `verify-live`. The server still runs master's code and no feed unit is installed, so nothing writes the tables until the operator's steps after the merge.
-- **Findings.** F256 (the feed's live writes against the deploy's `SERVER_WRITES`) and F257 (prod needs a public address) filed; F248 closed. F238 (Q12 and the size of `migrations.py`) is open and the operator's; Q12's verdict lands on the pull request.
+- **Findings.** F259 (the feed's live writes against the deploy's `SERVER_WRITES`) and F257 (prod needs a public address) filed; F248 closed. F238 (Q12 and the size of `migrations.py`) is open and the operator's; Q12's verdict lands on the pull request.
 - **After the regression of record:** documents only, nothing under `src/`, `tests/`, `scripts/` or `.claude/`.
 
 ## Version history
@@ -207,4 +207,4 @@ Regression of record: 12390 passed, 0 failed, 105 skipped, 0 errors at `94e11f1`
 | version | date | what |
 |---|---|---|
 | 1.0 | 2026-11-07 | the plan; revised the same day at the Executive Officer's two items (the alarm test's timing is a stop; the feed's test pages are tuples to `FixtureHTTP`); on 2026-11-08 that stop marked decided (a), the operator's K70, in the paragraph before item 1, item 10 and "Rule-1 stops anticipated"; on 2026-11-08 items 1 to 9 marked built, the operator's K71, in the paragraph before item 1 |
-| 1.1 | 2026-11-08 | built, applied to live, closed: every section's close-out line, Deviations and Results; F256 and F257 filed, F248 closed; on 2026-11-08, at the Red Team's round 2, bug fix #1 and the new regression of record, and two sentences on the alarm test's timing deleted; on 2026-11-09, the operator's K72 (the alarm test's timing) in the paragraph before item 1, the plan of record's close-out line, Rule-1 stops, Deviations and Results; on 2026-11-09, at the Red Team's round 3, the Tests close-out line's counts corrected (78 tests, the floor 12495) and F258 closed |
+| 1.1 | 2026-11-08 | built, applied to live, closed: every section's close-out line, Deviations and Results; F259 and F257 filed, F248 closed; on 2026-11-08, at the Red Team's round 2, bug fix #1 and the new regression of record, and two sentences on the alarm test's timing deleted; on 2026-11-09, the operator's K72 (the alarm test's timing) in the paragraph before item 1, the plan of record's close-out line, Rule-1 stops, Deviations and Results; on 2026-11-09, at the Red Team's round 3, the Tests close-out line's counts corrected (78 tests, the floor 12495) and F258 closed |
