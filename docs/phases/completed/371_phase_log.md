@@ -303,3 +303,9 @@ Line coverage of record: 88.15% at `94e11f1` (the pin is 87.50%): 0.65 points ab
 - **The time helpers and the text comparisons:** fixed by bug fix #1 at `94e11f1`. `stamp` is gone; `utc_day`, `utc_at` and `utc_cutoff` are imported from `core/timestamps.py`; stored times are compared as `date(sent_at)` and `datetime(sent_at)`.
 - **No code changed:** `git diff --name-only 94e11f1 HEAD -- src tests scripts .claude` prints nothing, so the record at `94e11f1` stands.
 - **A guard blocked a command:** a `sed -i` correcting a test-class name in this entry was refused by the edit guard, which blocks `sed -i` wherever it points. The guard is unchanged; the correction was made with the Edit tool.
+
+## 2026-11-09: The Red Team's round 3, its two findings fixed (the advisor, for the operator)
+
+- **What the round found** (PR #58, 01:30 EST): a factual defect, v1.1's Tests close-out line still giving 75 new tests and the floor 12492 where Results gives 78 and 12495; and a wording defect, "(K72)" in the handoff's step 4, an internal label in an operator step (rule 6), which the dispatcher filed as F258. Round 3 is K9's last, so the fleet held issue #54 for the operator (01:32 EST): "under K9 the phase does not ship as it stands. The operator decides."
+- **The fixes:** the Tests line now gives 78 new tests (cli 23, event_feed 22, limits 16, migration 10, monitor 7, each file's collected ids) and the floor 12495, as Results does and as `tests/test_phase255B_collected_test_floor.py` holds; "(K72)" is deleted from step 4, whose reason is already under "What is open"; F258 is closed by that deletion.
+- **No code changed:** `git diff --name-only 94e11f1 HEAD -- src tests scripts .claude` prints nothing, so the record at `94e11f1` stands.

@@ -5434,7 +5434,7 @@ What would close it, the operator's choice: the public address decided
 (the fork K65 left open), or a way for the feed alone to run in prod
 while the API keeps its settings, decided as a plan.
 
-### F258
+### F258 — CLOSED by Phase 371
 
 **Wording the Red Team left open on phase 371, round 3**
 
@@ -5443,3 +5443,5 @@ Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 
 - The handoff's operator steps carry no internal labels (rule 6): "terminal. Straight after step 3 printed ALL GOOD (K72). It stops the payments feed" (docs/handoffs/2026-11-08_371_closed.md p. 246)
 
 What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).
+
+Closed 2026-11-09 in Phase 371 itself: "(K72)" is deleted from the handoff's step 4, whose reason is already under "What is open".
