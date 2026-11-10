@@ -20,6 +20,17 @@ The job is its own service on the home desktop,
 `motodiag-payments.service`. It runs beside the API and starts by itself
 when the desktop starts.
 
+## The thank-you page
+
+After a customer pays through Stripe Checkout, leaves the billing portal
+or pays an invoice online, and after a shop owner finishes Connect
+onboarding, Stripe sends them to a web page. That page is a plain
+thank-you page on getmekno.com, the business's own site. It holds no data:
+it says thank you, and nothing on it comes from the server. The server
+names it in one setting, `MOTODIAG_STRIPE_RETURN_PAGE_URL`, which the six
+return addresses all take unless one is set on its own. If the page ever
+moves, that is the one setting to change.
+
 ## Seeing that it is running
 
 On the home desktop, in the Ubuntu terminal:

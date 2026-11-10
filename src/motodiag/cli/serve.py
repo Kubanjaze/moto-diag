@@ -205,14 +205,21 @@ def register_serve(cli_group: click.Group) -> None:
         # succeeds, the mechanic sends the link, and only the customer
         # finds it does not resolve. So it is checked at startup, and in
         # prod it is fatal rather than advisory.
+        # Phase 402 (K74): with share links switched off there is no
+        # link to reach, so the address is not checked.
         from motodiag.core.public_url import (
-            check_public_base_url,
             has_blocking_problem,
+            startup_public_url_problems,
         )
 
-        url_problems = check_public_base_url(
-            settings.public_base_url, settings.env,
-        )
+        if not settings.share_links_enabled:
+            click.echo(
+                "Customer share links are off "
+                "(MOTODIAG_SHARE_LINKS_ENABLED=false): "
+                "MOTODIAG_PUBLIC_BASE_URL is not checked.",
+                err=True,
+            )
+        url_problems = startup_public_url_problems(settings)
         for problem in url_problems:
             click.echo(problem.render(), err=True)
         if has_blocking_problem(url_problems):

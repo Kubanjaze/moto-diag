@@ -93,7 +93,9 @@ now the deploy ticket.** Full record: 209B implementation doc → *Decisions §2
 
 ```bash
 MOTODIAG_ENV=prod
-MOTODIAG_PUBLIC_BASE_URL=https://<your-host>
+MOTODIAG_PUBLIC_BASE_URL=https://<your-host>   # or, with share links off, not checked:
+# MOTODIAG_SHARE_LINKS_ENABLED=false
+MOTODIAG_STRIPE_RETURN_PAGE_URL=https://<thank-you page>   # the six Stripe return addresses
 MOTODIAG_BILLING_PROVIDER=stripe        # prod REFUSES to start on `fake`
 MOTODIAG_STRIPE_WEBHOOK_SECRET=<secret>
 MOTODIAG_API_CORS_ORIGINS=https://<your-host>   # F69 — default is localhost

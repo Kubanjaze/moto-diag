@@ -31,7 +31,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 from motodiag.api.deps import get_db_path
@@ -57,6 +57,12 @@ router = APIRouter(tags=["share"])
 #: (``_CUSTOMER_HIDDEN_HEADINGS``), not a per-request parameter that a
 #: mechanic could widen by accident.
 SHARE_PRESET = "customer"
+
+#: Phase 402 (K74, K79): the mint's answer while share links are off.
+SHARE_LINKS_OFF_MESSAGE = (
+    "Share links are switched off for now. "
+    "You can still send the report as a PDF."
+)
 
 
 class ShareCreateRequest(BaseModel):
@@ -127,6 +133,9 @@ def _to_response(request: Request, share: dict) -> ShareResponse:
     response_model=ShareResponse,
     status_code=201,
     summary="Mint a customer share link for a session report",
+    responses={
+        403: {"description": SHARE_LINKS_OFF_MESSAGE},
+    },
 )
 def create_session_share(
     session_id: int,
@@ -135,6 +144,10 @@ def create_session_share(
     user: AuthedUser = Depends(get_current_user),
     db_path: str = Depends(get_db_path),
 ) -> ShareResponse:
+    # Phase 402: refused before the ownership check, so the answer is the
+    # same for every session and says nothing about whether one exists.
+    if not get_settings().share_links_enabled:
+        raise HTTPException(status_code=403, detail=SHARE_LINKS_OFF_MESSAGE)
     # Build the document FIRST. It is owner-scoped, so this both proves
     # the caller may read the session (SessionOwnershipError -> 404) and
     # proves the page will actually render — you cannot mint a link to a
@@ -236,7 +249,9 @@ def _message_response(
         200: {"content": {"text/html": {}},
               "description": "The customer-preset report as a web page."},
         404: {"content": {"text/html": {}},
-              "description": "Unknown link. Generic by design."},
+              "description": "Unknown link. Generic by design. While "
+                             "share links are switched off, every link "
+                             "answers 404."},
         410: {"content": {"text/html": {}},
               "description": "The link expired or was revoked."},
     },
@@ -245,6 +260,15 @@ def view_shared_report(
     token: str,
     db_path: str = Depends(get_db_path),
 ) -> Response:
+    # Phase 402 (K79): switched off, every link stops opening, old ones
+    # too. The token is not looked up, so no view is recorded and a real
+    # token gets the same page as a made-up one.
+    if not get_settings().share_links_enabled:
+        return _message_response(
+            404, "Report links are off",
+            "This shop isn&#39;t sending report links right now. Ask them "
+            "for a copy of the report.",
+        )
     status, share = resolve_share(token, db_path=db_path)
 
     if status == "missing":

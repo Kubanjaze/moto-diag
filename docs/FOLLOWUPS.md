@@ -5410,7 +5410,7 @@ not a finished one (resume it with `--resume`), with a test that a paused
 Engineer goes on after the reset. Left by 399 (its prompt: "file what you
 find and leave it").
 
-### F257
+### F257 — CLOSED by Phase 402
 
 **Switching the server to live payments means `MOTODIAG_ENV=prod`, and in prod the server refuses to start without a public https address, which a tailnet-only server cannot have**
 
@@ -5441,6 +5441,13 @@ stops there without touching the server.
 What would close it, the operator's choice: the public address decided
 (the fork K65 left open), or a way for the feed alone to run in prod
 while the API keeps its settings, decided as a plan.
+
+Closed 2026-11-10 by Phase 402 (K74): with `MOTODIAG_SHARE_LINKS_ENABLED=false`
+customer share links are switched off and the prod start-up check no
+longer asks for `MOTODIAG_PUBLIC_BASE_URL`, so the server can run in prod
+tailnet-only; the six Stripe return addresses take
+`MOTODIAG_STRIPE_RETURN_PAGE_URL`. The live switch-on steps are in
+`docs/handoffs/2026-11-10_402_closed.md`.
 
 ### F258 — CLOSED by Phase 371
 

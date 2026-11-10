@@ -1,0 +1,14 @@
+M1 the switch ignored at mint: red
+M2 the switch ignored at open: red
+M3 the open route looks the token up before refusing: red
+M3b a refused open still records a view: red
+M4 the start-up check still runs with the switch off: red
+M5 the new function returns an empty list with the switch on: red
+M6 the switch's default flipped to false: red
+M7 the page ignored: red
+M8 a field given on its own overridden by the page: red
+M9 serve prints nothing when the check is skipped: red
+M10 serve calls the old check directly again: red
+M11 the mint refuses after the ownership check: red
+M12 the mint's 403 is not declared: red
+13/13 red
