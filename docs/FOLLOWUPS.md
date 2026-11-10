@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F268** (this file). The
+At the time of writing the highest assigned is **F269** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -5753,3 +5753,42 @@ the builder chose to run them.
 What would close it: builder threads started at the repository root, and
 a builder prompt that opens with a planted `sed -i` the edit guard must
 refuse, stopping if it is not refused.
+
+### F269
+
+**When the home desktop's Claude sign-in has logged out, the fleet's stop note says "usage could not be read" instead of saying the sign-in is logged out**
+
+Found 2026-11-09 by the operator, on Phase 402 (issue #61). Filed by the
+advisor at the operator's request.
+
+- The Captain's stage stopped twice, at 18:13 and 19:14 EST (runs
+  `20261109_181311_captain_402` and `20261109_191446_captain_402`), each
+  within 5 seconds of starting: "no new Fable stage: Fable's weekly usage
+  could not be read".
+- The operator found the cause on the desktop. The Claude sign-in inside
+  Ubuntu had logged out at 18:13, so the fleet's allowance read came back
+  with no weekly lines. Signed back in at 19:22, the same read gave 28%
+  for all models and 37% for the plan writer.
+- The allowance is read with the operator's own sign-in (`Fleet.usage`,
+  `.claude/skills/fleet/dispatcher.py` line 881). A signed-out answer
+  ends like any unreadable one: the answer is discarded (F262), and
+  `opus_refusal` and `fable_refusal` (lines 286 and 296) report a missing
+  reading as "usage could not be read".
+- From the Mac the same account read fine (36% for the plan writer at
+  18:17), so the advisor's retry block, which checked the allowance on
+  the Mac, passed while the desktop could not read it. That retry, at
+  19:12, stopped the same way.
+
+What it affects: every new Opus or Fable stage on the desktop while its
+sign-in is logged out. On 2026-11-09 it cost 72 minutes, from the first
+stop at 18:13 to the operator's retry at 19:25, and one retry that could
+not work.
+
+What would close it: when the answer says the sign-in is logged out, or
+has no weekly lines at all, the stop note says so in the operator's
+words, "your Claude sign-in is logged out", and says what to do: sign in
+again in the desktop's Ubuntu terminal, then put the label back. The
+signed-out answer, captured on the desktop, is its fixture. A retry
+check runs its allowance read on the desktop, where the fleet reads it.
+Related: F262 (the reading keeps no reason) and F263 (a reset wording it
+cannot read).
