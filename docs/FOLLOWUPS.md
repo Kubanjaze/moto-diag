@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F269** (this file). The
+At the time of writing the highest assigned is **F270** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -5792,3 +5792,45 @@ signed-out answer, captured on the desktop, is its fixture. A retry
 check runs its allowance read on the desktop, where the fleet reads it.
 Related: F262 (the reading keeps no reason) and F263 (a reset wording it
 cannot read).
+
+### F270
+
+**The Shop plan's limit of 50 vehicles counts every bike a person adds, customers' bikes included, so a shop is refused its 51st customer bike**
+
+Found 2026-11-10 by the pricing research,
+`docs/reports/2026-11-10_mekno_pricing_and_tiers.md` (PR #62, merged
+`f6a1e17`), problem 1. Filed by the advisor at the operator's request:
+it "needs a small code fix before the first shop pays".
+
+- The limits are `TIER_VEHICLE_LIMITS`, `src/motodiag/vehicles/registry.py`
+  line 42: individual 5, shop 50, company unlimited (-1).
+- `check_vehicle_quota` (line 391) counts the caller's vehicles with
+  `count_vehicles_for_owner` (line 310, `SELECT COUNT(*) FROM vehicles
+  WHERE owner_user_id = ?`). At the limit it raises
+  `VehicleQuotaExceededError`, which the API returns as HTTP 402
+  `vehicle-quota-exceeded` (`src/motodiag/api/errors.py` line 275).
+- The app adds a bike in one place, `POST /v1/vehicles`
+  (`moto-diag-mobile` `src/screens/NewVehicleScreen.tsx` line 158). Its
+  route runs the check before the insert
+  (`src/motodiag/api/routes/vehicles.py` line 258) and stamps the
+  signed-in user as the owner (line 281). `src/` has two vehicle inserts
+  (`git grep -n 'INSERT INTO vehicles' -- src`, beside one into a
+  migration's rollback table): `add_vehicle`, the CLI's, with no owner
+  and no limit, and `add_vehicle_for_owner`, the route's. A customer's
+  bike added in the app is counted the same as a rider's own.
+- The count is per person, not per shop. A shop member's plan is the
+  shop owner's (`resolve_tier`, `src/motodiag/auth/deps.py` line 129),
+  but the count is the member's own bikes. A one-person shop stops at
+  50 bikes in all.
+
+What it affects: every shop on the Shop plan ($99 a month), from its
+51st bike. The report finds that a small shop sees well over 50 different
+bikes a year, and that no shop software it looked at limits vehicles or
+repair orders. Three test files name the table
+(`git grep -l TIER_VEHICLE_LIMITS -- tests`).
+
+What would close it: the operator decides what the Shop plan limits; the
+report recommends no bike limit, keeping 10 people, 1 location and 500
+diagnoses a month. Then the change, before the first shop pays, with a
+test that a Shop account adds its 51st bike, and the app's quota wording
+checked against it.
