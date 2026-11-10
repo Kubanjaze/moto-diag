@@ -3927,3 +3927,8 @@ Write-up: [`399_implementation.md`](docs/phases/completed/399_implementation.md)
 
 Log: [`docs/phases/completed/371_phase_log.md`](docs/phases/completed/371_phase_log.md).
 Write-up: [`371_implementation.md`](docs/phases/completed/371_implementation.md).
+
+## Phase 402 — Customer share links off, and the Stripe return pages (K74) — CLOSED 2026-11-10
+
+Log: [`docs/phases/completed/402_phase_log.md`](docs/phases/completed/402_phase_log.md).
+Write-up: [`402_implementation.md`](docs/phases/completed/402_implementation.md).

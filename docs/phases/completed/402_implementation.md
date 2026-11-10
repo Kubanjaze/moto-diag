@@ -1,10 +1,12 @@
 # Phase 402 — Customer share links off, and the Stripe return pages (K74)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-11-09
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-11-09 (v1.0), 2026-11-10 (v1.1, built and closed)
 
 ---
 
 ## Goal
+
+*v1.1: built as planned, items 1 to 9; what differs is under Deviations, what was measured under Results.*
 
 Live payments wait on a public web address the server cannot have. A live Stripe key is used only with `MOTODIAG_ENV=prod` (`refuse_live_key`, `src/motodiag/payments/stripe_api.py`), and in prod `motodiag serve` refuses to start unless `MOTODIAG_PUBLIC_BASE_URL` is a public https address a customer's phone can open (`check_public_base_url`, `src/motodiag/core/public_url.py`, called from `src/motodiag/cli/serve.py`). The server stays tailnet-only (K65), so 371's live step stops at its check and live Stripe has not been switched on (F257).
 
@@ -20,6 +22,8 @@ After this phase:
 The two setting names are fixed by the prompt and K76: `MOTODIAG_SHARE_LINKS_ENABLED` and `MOTODIAG_STRIPE_RETURN_PAGE_URL`. The operator writes them in `server.env` from the prompt; this plan does not rename them.
 
 ## Logic
+
+*v1.1: each item below shipped as written. The build's commits are `8414e50` (items 1 to 6) and `4b7a7af` (item 7); the close-out is the commit after them.*
 
 Causes and the census: `402_step0.md`. The row already reads 🚧 on master although the prompt says 🔲; the phase log's first entry records the difference, and quotes K77, K78 and K79 character for character.
 
@@ -66,11 +70,15 @@ No migration: the phase adds no table, column or index, and changes no row.
 
 ## The change log's three newest entries
 
+*v1.1: unchanged by the build. No count rose (ruff 1108, mypy 202, 25 functions over McCabe 20, 5 files over 100 KB, 19 helpers, 22 swallowed, each at its pin) and no pin was lowered.*
+
 - **2026-10-29 — rule 6: the code's counts only improve, and the weekly page (Phase 393, K54).** Became `tests/test_phase393_quality_ratchet.py`: the six measured counts against their pins both ways, and the coverage gate wired into `.claude/skills/closeout/regression.sh`. This phase adds no finding to any count and lowers no pin.
 - **2026-10-26 — R8: an operator paste block's `gh` names its repository (before Phase 391, F222).** Became R8 in `.claude/skills/closeout/roadmap_check.py`, run with every suite and on every push. Item 8's paste blocks are written to it.
 - **2026-10-22 — `fleet` joins the procedure folders (after Phase 387).** No check: the entry says the row is text only and no check reads the table.
 
 ## The plan of record
+
+*v1.1: unchanged.*
 
 402 is not in the plan of record's "Next, in order" (`docs/reports/2026-10-12_plan_of_record.md` does not name 402). The K-id that puts it in order is K76 (2026-11-09), the operator's words: "402: start it now, the fleet builds it." Its record: "Starts Phase 402 (row 402, 🚧 on master from this commit; prompt `docs/prompts/402_share_links_off_and_return_pages.txt`), built by the fleet rather than a builder session. 402 is not in the plan of record's 'Next, in order', so the fleet does not open it by itself: at the operator's request ("Put the plan on the fleet's issue") the advisor opens its mission issue with the prompt on it, and the Science Officer starts at the fleet's next cycle. The prompt fixes the two settings the phase adds, MOTODIAG_SHARE_LINKS_ENABLED and MOTODIAG_STRIPE_RETURN_PAGE_URL, for the operator to write in server.env. The operator merges by hand, as for every phase; issue #59 (372) keeps its hold."
 
@@ -80,6 +88,8 @@ The phase is a shop phase, not fleet-only: it changes `src/motodiag/core`, `src/
 
 ## Rule-1 stops anticipated
 
+*v1.1: none was met. `model_fields_set` does report environment-given fields, so item 1's fallback was not needed, and no existing test had to change.*
+
 - **A real fork: decided.** Whether a link minted before the switch still opens was the fork Step 0 found; K79 (2026-11-09) decides it: "402: while share links are off, every link stops opening, old ones too." Item 4 applies those words literally and the Engineer does not raise it again.
 - **A threshold or a rule's definition: one change, approved in scope; anything beyond it is a stop.** The prod start-up check stops asking for `MOTODIAG_PUBLIC_BASE_URL` while share links are off. K74 is the operator's approval of that change, for share links switched off only, and K78 repeats it. With the switch on, `check_public_base_url` stands exactly as today. Any other change to a check's definition is a stop, and two are foreseeable: making the server refuse to start in prod when `MOTODIAG_STRIPE_RETURN_PAGE_URL` is empty or not https (this plan puts that check in the handoff's paste block only), and refusing the list or revoke routes while the switch is off (this plan leaves them as they are). If the Engineer finds either necessary, it stops with kind `threshold-or-rule`.
 - **A test that cannot be made green: none known.** The one unverified assumption is whether `model_fields_set` reports environment-given fields (item 1 names the fallback, which is a build choice). If an existing test pins a behaviour this phase must change and the Engineer cannot make it green within K74's scope, it stops.
@@ -87,6 +97,8 @@ The phase is a shop phase, not fleet-only: it changes `src/motodiag/core`, `src/
 - **A live-database change that alters or deletes rows: none.** No migration; the switch changes no row in `report_shares`.
 
 ## Tests
+
+*v1.1: as planned: 59 tests in the new file and 13 mutations (Results).*
 
 - `tests/test_phase402_share_links_off.py`, new, every case through a fresh `Settings()` or `reset_settings()` with `monkeypatch.setenv`, and the API through `TestClient(create_app(db_path_override=...))` as `tests/test_f64_public_url.py` does:
   - **The settings.** Defaults: the switch true, the page empty, the six at today's values (the exclusion's control). `MOTODIAG_SHARE_LINKS_ENABLED=false` is read. The page set alone: all six equal it. The page set with one of the six given on its own: that one keeps its own value and the other five take the page. The page empty with one of the six given: that one is as given and the others at their defaults.
@@ -103,6 +115,8 @@ The phase is a shop phase, not fleet-only: it changes `src/motodiag/core`, `src/
 
 ## Non-goals
 
+*v1.1: each held.*
+
 - The thank-you page itself and its wording: it is the live `/thanks/` page on getmekno.com (K77, F272), the operator's site. This phase publishes nothing there and changes nothing on it. If the page ever moves, one setting changes.
 - A public front door for share links or self-booking (option C of 2026-11-09): a later decision of the operator's. The server stays tailnet-only.
 - Switching live Stripe on, the live key, the real prices, the Sentry email rule, the alarm test: the operator's steps after the merge, from the handoff.
@@ -116,19 +130,89 @@ The phase is a shop phase, not fleet-only: it changes `src/motodiag/core`, `src/
 
 ## Planned items
 
-- [ ] The phase log's first entry: the 🚧-versus-🔲 difference, K77, K78 and K79 quoted, the open route named
-- [ ] Item 1: the two settings and the validator in `config.py`
-- [ ] Item 2: `startup_public_url_problems` and `serve.py` calling it
-- [ ] Items 3 and 4: the mint and the open route refused while off, old links too
-- [ ] Item 5: the OpenAPI document and gate 11 checked
-- [ ] Item 6: the tests, the run against master's code, the mutations
-- [ ] Item 7: the documents that name the settings, the page on getmekno.com
-- [ ] `COLLECTED_TEST_FLOOR` raised; `wholetree.sh --full`; the regression of record
-- [ ] Item 8: the handoff with 371's live step rewritten, nine settings lines
-- [ ] Item 9: F257 closed, the close-out, v1.1, the pull request for the operator
+- [x] The phase log's first entry: the 🚧-versus-🔲 difference, K77, K78 and K79 quoted, the open route named
+- [x] Item 1: the two settings and the validator in `config.py`
+- [x] Item 2: `startup_public_url_problems` and `serve.py` calling it
+- [x] Items 3 and 4: the mint and the open route refused while off, old links too
+- [x] Item 5: the OpenAPI document and gate 11 checked
+- [x] Item 6: the tests, the run against master's code, the mutations
+- [x] Item 7: the documents that name the settings, the page on getmekno.com
+- [x] `COLLECTED_TEST_FLOOR` raised; `wholetree.sh --full`; the regression of record
+- [x] Item 8: the handoff with 371's live step rewritten, nine settings lines
+- [x] Item 9: F257 closed, the close-out, v1.1; the pull request is opened by the fleet's script after this build, for the operator to merge by hand (K76)
+
+## Deviations
+
+What the build did that v1.0 did not say, each with its reason:
+
+1. **A module tuple, `STRIPE_RETURN_URL_FIELDS`,** in `config.py`, names
+   the six return settings. The validator loops over it and the tests read
+   the same six from it, so the list exists once.
+2. **The "Report links are off" page writes the apostrophe as `&#39;`**,
+   as the route's other message pages do (they are built by string
+   formatting). It renders as the plan's sentence.
+3. **Thirteen mutations, not nine.** The plan's nine, and four more: a
+   refused open that still records a view, `serve` calling the old check
+   directly, the mint refusing after the ownership check, and the mint's
+   403 not declared. Each guards a sentence of items 2 to 5.
+4. **The run against master's code needs stand-ins.** Master has none of
+   the three names the tests import (the six's tuple, the mint message,
+   `startup_public_url_problems`), so `402_mutate.py --old` appends the
+   smallest definitions that keep master's behaviour (the last is
+   master's direct call). Without them every test, controls included,
+   fails at import, and the control half of item 6 could not be read.
+5. **A first control was split.** The defaults test also asserted the two
+   new settings' defaults, so it went red on master for that reason. It is
+   two tests now, and the six's defaults are green on master.
+6. **The handoff's step 2 asks the operator to add the two new lines by
+   hand first**, then checks them: the plan has step 2 check that the file
+   holds them, and something has to put them there before step 3. Steps 2
+   and 3 also ask `Settings()` that share links read as off and the page
+   as https, so a mistyped value is caught as well as a missing line. Step
+   1 checks that the two new settings are known and `healthz` answers ok;
+   it checks no schema number, since this phase has no migration.
+7. **Closed on 2026-11-10**: the regression ran past midnight. The handoff
+   is `docs/handoffs/2026-11-10_402_closed.md`.
+8. **`COVERAGE_PERCENT` is not raised.** `regression.sh` suggests it
+   (88.16% against 87.50%); the plan does not ask for it.
+
+## Results
+
+- **The settings** (item 1): with no environment, the switch is true, the
+  page empty and the six at their `localhost:3000` defaults; with the page
+  and `MOTODIAG_CHECKOUT_CANCEL_URL` set, five of the six are the page and
+  the cancel address keeps its own.
+- **The start-up rule** (item 2): with the switch off, `serve` in prod with
+  no public address starts and prints the one line; with it on, it refuses
+  with today's message. With the switch on, `startup_public_url_problems`
+  equals `check_public_base_url` for all 16 URLs
+  `tests/test_f64_public_url.py` checks, in prod and in dev.
+- **The routes** (items 3, 4): with the switch off the mint answers 403
+  with the message and writes no row, for a real session and a made-up
+  one. A link minted while on answers the 404 page with its `view_count`
+  unchanged, the same page as a made-up token; on again, it answers 200.
+  List and revoke answer as before.
+- **The document** (item 5): the mint declares its 403 with the message;
+  gate 11 passes against the committed snapshot, unchanged.
+- **Tests** (item 6): `tests/test_phase402_share_links_off.py`, 59 passed.
+  On master's code: 18 failed (every test of a changed behaviour) and 41
+  passed (the controls and pins). `402_mutate.py`: **13/13 red**
+  (`402_mutate.out`). `tests/test_f64_public_url.py`,
+  `tests/test_phase200_share.py`, `tests/test_phase205_gate11.py` and
+  `tests/test_phase191b_serve_migrations.py`: 78 passed, none changed.
+- **The documents** (item 7): the finish line's `git grep` finds every
+  named file.
+- `COLLECTED_TEST_FLOOR` 12513 to 12572 (+59 −0 against master at
+  `67ef2da`).
+- **Regression of record:** 12467 passed, 0 failed, 105 skipped, 0 errors at `4b7a7af` (35 min 51 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0) (run inside the fleet's fence). `wholetree.sh --full` first: 5103 passed, 36 skipped. Line coverage of record 88.16% (the pin is 87.50%). The skip lines are in the phase log.
+- **The handoff** (item 8): `docs/handoffs/2026-11-10_402_closed.md`,
+  371's steps 2 to 4 rewritten; step 3 names nine lines and its block
+  counts nine.
+- **F257 closed** (item 9).
 
 ## Version history
 
 | version | date | what |
 |---|---|---|
 | 1.0 | 2026-11-09 | the plan |
+| 1.1 | 2026-11-10 | built (`8414e50`, `4b7a7af`); Deviations and Results; closed |
