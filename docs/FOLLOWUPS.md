@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F270** (this file). The
+At the time of writing the highest assigned is **F272** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -5822,6 +5822,9 @@ it "needs a small code fix before the first shop pays".
   shop owner's (`resolve_tier`, `src/motodiag/auth/deps.py` line 129),
   but the count is the member's own bikes. A one-person shop stops at
   50 bikes in all.
+- The plan table the CLI shows, `TIER_LIMITS` in
+  `src/motodiag/cli/subscription.py`, carries the same 50 for Shop
+  (line 92), so the change is made in both (added 2026-11-09, with F271).
 
 What it affects: every shop on the Shop plan ($99 a month), from its
 51st bike. The report finds that a small shop sees well over 50 different
@@ -5834,3 +5837,75 @@ report recommends no bike limit, keeping 10 people, 1 location and 500
 diagnoses a month. Then the change, before the first shop pays, with a
 test that a Shop account adds its 51st bike, and the app's quota wording
 checked against it.
+
+### F271
+
+**The Company plan's AI spending figure, $500 a month on a $299 plan, is enforced nowhere, and the plan allows unlimited locations**
+
+Found 2026-11-10 by the pricing research,
+`docs/reports/2026-11-10_mekno_pricing_and_tiers.md` (PR #62, merged
+`f6a1e17`), problem 2. Filed by the advisor at the operator's request:
+"Company's AI spending cap ($500 on a $299 plan; report suggests 3
+locations and a $150 cap)". Documents only; no code yet.
+
+- The plan table, `TIER_LIMITS` in `src/motodiag/cli/subscription.py`,
+  gives Company $299 a month (line 110), unlimited locations (line 115,
+  -1) and an AI figure of $500 a month (line 125). Shop's figure is $50
+  on $99 (lines 90 and 105), Individual's $5 on $19 (lines 70 and 85).
+- The AI figures are only shown. The one reader of
+  `ai_monthly_cost_cap_usd` is the CLI's plan table
+  (`src/motodiag/cli/main.py` line 198;
+  `git grep -n ai_monthly_cost_cap_usd -- src`). The location and user
+  limits are read only by the CLI's tables as well (the same file, lines
+  195 and 196, and `src/motodiag/cli/subscription.py` line 193).
+- The server's own brake on AI spending is one monthly figure per shop,
+  the same for every plan: `MOTODIAG_COST_CAP_MONTHLY_USD_CENTS`
+  (`src/motodiag/core/config.py` line 181, read by `cap_cents` in
+  `src/motodiag/shop/cost_cap.py`). It is 0 by default, which means no
+  cap: Phase 209D built it and left it off until the operator picks a
+  number. It is checked before a paid call in three places
+  (`git grep -n 'check_cost_cap(' -- src`): video questions, the video
+  analysis worker and the CLI's diagnose.
+- Company's diagnoses a month are unlimited (`TIER_SESSION_MONTHLY_LIMITS`,
+  `src/motodiag/core/session_repo.py` line 421), so on Company nothing in
+  the code bounds a month's AI spending while that brake is off.
+
+What it affects: the AI bill of every Company customer, and of every
+shop while the brake is off. The report: a busy customer with several
+shops "could cost more in AI than they pay, before Stripe's fee".
+
+What would close it: the operator decides Company's locations and its
+monthly AI figure (the report recommends 3 locations and $150 a month,
+with a business of more than 3 shops handled by conversation). Then the
+figure each plan shows is one the server enforces, with a test that a
+Company account is refused past it. Until then the server-wide brake is
+the only one; its number is the operator's to choose.
+
+### F272
+
+**The $19 plan is named for a mechanic, "Solo Mechanic", when it is meant for a rider's own bikes**
+
+Found 2026-11-10 by the pricing research (the same report, PR #62,
+merged `f6a1e17`), problem 3. Filed by the advisor at the operator's
+request: "relabelling Individual as "for your own bikes"". Documents
+only; no code yet.
+
+- The plan's name is `display_name="Solo Mechanic"`
+  (`src/motodiag/cli/subscription.py` line 69), and the file describes it
+  as "single mechanic, personal use" (line 4). The CLI's plan tables show
+  the name.
+- The phone app and the website name no plan yet. In the app,
+  `git -C ../moto-diag-mobile grep -n -i -E 'single mechanic|personal use|Solo Mechanic' -- src`
+  finds no line. The live getmekno.com pages (/, /thanks/, /support/,
+  /terms/), read on 2026-11-09, name no plan and no price.
+- The operator's live Stripe price for the plan is named Individual
+  (the operator, 2026-11-09).
+
+What it affects: who picks the $19 plan. The report: a mobile mechanic
+working on other people's bikes should be on Shop, and the 5-bike limit
+already steers them there.
+
+What would close it: wherever the plan is named, it reads "Individual:
+for your own bikes", and the 5-bike limit stays. That means the CLI now,
+and the app, the website and the Stripe product (set in the operator's
+dashboard) once they name it, with a test that the CLI's name says so.
