@@ -6,7 +6,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Four levels up from src/motodiag/core/config.py is the repo root — in a
@@ -78,6 +78,18 @@ class Environment(str, Enum):
     PROD = "prod"
 
 
+#: Phase 402: the six Stripe return settings ``stripe_return_page_url``
+#: stands in for.
+STRIPE_RETURN_URL_FIELDS = (
+    "checkout_success_url",
+    "checkout_cancel_url",
+    "billing_portal_return_url",
+    "invoice_payment_return_url",
+    "connect_return_url",
+    "connect_refresh_url",
+)
+
+
 class Settings(BaseSettings):
     """Global application settings, loaded from .env and environment variables."""
 
@@ -146,6 +158,12 @@ class Settings(BaseSettings):
     #: right for dev/tailnet and wrong behind a proxy that rewrites
     #: Host — set it explicitly in any real deployment.
     public_base_url: str = ""
+
+    #: Phase 402 (K74, K79): false switches customer share links off.
+    #: Minting a link and opening any link, old ones too, are refused, and
+    #: the prod start-up check no longer asks for ``public_base_url``. True
+    #: (default) keeps every share route and the check as they were.
+    share_links_enabled: bool = True
 
     #: User id that receives OBD field-failure alerts. 0 disables them.
     #: This is the MAINTAINER, not a shop owner — the alerts exist so an
@@ -233,6 +251,10 @@ class Settings(BaseSettings):
     invoice_payment_return_url: str = "http://localhost:3000/payments/done"
     connect_return_url: str = "http://localhost:3000/payments/connected"
     connect_refresh_url: str = "http://localhost:3000/payments/connect-again"
+    # Phase 402 (K74, K77): one address for the six return settings above,
+    # the plain thank-you page. Set, each of the six takes it unless that
+    # one is set on its own; empty, the six keep their defaults.
+    stripe_return_page_url: str = ""
     # Phase 273: a file each Stripe request appends one JSON line to
     # (time, method, path, status, bytes, request id); never a header or body.
     stripe_call_log: str = ""
@@ -307,6 +329,18 @@ class Settings(BaseSettings):
         if v not in valid:
             raise ValueError(f"baud_rate must be one of {valid}")
         return v
+
+    @model_validator(mode="after")
+    def apply_stripe_return_page(self) -> "Settings":
+        """Point each return setting not given on its own at the page."""
+        page = self.stripe_return_page_url
+        if not page:
+            return self
+        given = set(self.model_fields_set)
+        for name in STRIPE_RETURN_URL_FIELDS:
+            if name not in given:
+                setattr(self, name, page)
+        return self
 
     def get_data_path(self, *parts: str) -> Path:
         """Get a path relative to the data directory."""

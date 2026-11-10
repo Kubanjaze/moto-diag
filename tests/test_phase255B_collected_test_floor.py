@@ -514,7 +514,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: +79 -0, the 78 above and gate 15's rollback case [88], which migration
 #: 089 adds (371's counts of master read the branch's src, so they had that
 #: case already). Measured: 12513.
-COLLECTED_TEST_FLOOR = 12513
+#:
+#: Phase 402, by a diff of collected ids against master at 67ef2da (12513),
+#: each side read with its own src/: +59 -0, all in the new
+#: test_phase402_share_links_off.py (share links off, the return page, the
+#: start-up rule). Measured: 12572.
+COLLECTED_TEST_FLOOR = 12572
 
 
 def _collected_count() -> int:

@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from typing import Literal, Optional
 from urllib.parse import urlparse
 
-from motodiag.core.config import Environment
+from motodiag.core.config import Environment, Settings
 
 Severity = Literal["error", "warning"]
 
@@ -164,3 +164,15 @@ def check_public_base_url(
 
 def has_blocking_problem(problems: list[PublicUrlProblem]) -> bool:
     return any(p.severity == "error" for p in problems)
+
+
+def startup_public_url_problems(settings: Settings) -> list[PublicUrlProblem]:
+    """What ``motodiag serve`` checks at start-up (Phase 402, K74).
+
+    With customer share links switched off no link is minted or opened,
+    so the public address is not checked; on, the check is exactly
+    :func:`check_public_base_url`.
+    """
+    if not settings.share_links_enabled:
+        return []
+    return check_public_base_url(settings.public_base_url, settings.env)
