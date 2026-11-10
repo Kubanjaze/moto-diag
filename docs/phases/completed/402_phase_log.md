@@ -205,3 +205,30 @@ Only documents change after this commit.
   Steps 1 and 4 were not run: they restart services on the home desktop.
 - The phase's files moved to `docs/phases/completed/`; row 402 ✅; the root
   `phase_log.md` pointer.
+
+## Refuter pass
+
+| claim | verdict | quote | source | round · kind · outcome |
+|---|---|---|---|---|
+| The new test file holds 59 tests (13 settings, 4 mint, 4 open, 1 document, 35 start-up rule, 2 serve) | kept | "def test_on_is_exactly_the_old_check(self, clean_env, url, env):" | tests/test_phase402_share_links_off.py p. 303 | 1 · none · kept |
+| On master's code 18 failed and 41 passed; the 41 are the 32 identity cases and nine named controls | kept | "**18 failed, 41 passed.** The 18 are every test of" | docs/phases/completed/402_phase_log.md p. 58 | 1 · none · kept |
+| startup_public_url_problems equals check_public_base_url for all 16 URLs tests/test_f64_public_url.py checks | kept | "#: Every URL tests/test_f64_public_url.py checks." | tests/test_phase402_share_links_off.py p. 47 | 1 · none · kept |
+| 402_mutate.py: 13/13 red | kept | "13/13 red" | docs/phases/completed/402_mutate.out p. 14 | 1 · none · kept |
+| The mint is refused before the ownership check (build_session_report_doc) | kept | "    if not get_settings().share_links_enabled:" | src/motodiag/api/routes/share.py p. 149 | 1 · none · kept |
+| The open route answers the off page before resolve_share, so no view is recorded | kept | "    status, share = resolve_share(token, db_path=db_path)" | src/motodiag/api/routes/share.py p. 272 | 1 · none · kept |
+| The mint declares its 403 with the message | kept | "        403: {\"description\": SHARE_LINKS_OFF_MESSAGE}," | src/motodiag/api/routes/share.py p. 137 | 1 · none · kept |
+| check_public_base_url unchanged; the new function returns [] only with the switch off | kept | "    return check_public_base_url(settings.public_base_url, settings.env)" | src/motodiag/core/public_url.py p. 178 | 1 · none · kept |
+| serve prints the plan's one line and calls the new function | kept | "        url_problems = startup_public_url_problems(settings)" | src/motodiag/cli/serve.py p. 222 | 1 · none · kept |
+| Deviation 1: STRIPE_RETURN_URL_FIELDS names the six and the validator loops over it | kept | "        for name in STRIPE_RETURN_URL_FIELDS:" | src/motodiag/core/config.py p. 340 | 1 · none · kept |
+| Deviation 2: the off page writes the apostrophe as &#39; | kept | "            \"This shop isn&#39;t sending report links right now. Ask them \"" | src/motodiag/api/routes/share.py p. 269 | 1 · none · kept |
+| Deviation 4: --old appends stand-ins keeping master's behaviour | kept | "#: Appended to master's modules for `--old`: names only, master's behaviour." | docs/phases/completed/402_mutate.py p. 98 | 1 · none · kept |
+| COLLECTED_TEST_FLOOR 12513 to 12572, +59 −0 against master at 67ef2da | kept | "COLLECTED_TEST_FLOOR = 12572" | tests/test_phase255B_collected_test_floor.py p. 522 | 1 · none · kept |
+| No quality count rose: ruff 1108, mypy 202, 25, 5, 19, 22 at their pins | kept | "RUFF_FINDINGS = 1108" | tests/support/quality_counts.py p. 24 | 1 · none · kept |
+| Regression of record 12467 passed, 0 failed, 105 skipped at 4b7a7af, coverage 88.16% | kept | "Regression of record: 12467 passed, 0 failed, 105 skipped, 0 errors at `4b7a7af`" | docs/phases/completed/402_phase_log.md p. 97 | 1 · none · kept |
+| tests/test_f64_public_url.py, test_phase200_share.py, test_phase205_gate11.py, test_phase191b_serve_migrations.py: 78 passed (count not re-run by this read-only pass) | kept | "`tests/test_phase191b_serve_migrations.py`: 78 passed, none changed." | docs/phases/completed/402_phase_log.md p. 54 | 1 · none · kept |
+| The finish line's git grep finds every named file | kept | "docs/launch-checklist.md 1. The finish line's" | docs/phases/completed/402_phase_log.md p. 90 | 1 · none · kept |
+| The handoff's step 3 names nine lines and its block counts nine | kept | "[ \"$N\" = \"9\" ] \|\| bad \"the check counted $N lines, not nine\"" | docs/handoffs/2026-11-10_402_closed.md p. 197 | 1 · none · kept |
+| F257 closed by Phase 402, naming the switch and the handoff | kept | "Closed 2026-11-10 by Phase 402 (K74): with `MOTODIAG_SHARE_LINKS_ENABLED=false`" | docs/FOLLOWUPS.md p. 5445 | 1 · none · kept |
+| F272 records the live getmekno.com /thanks/ page as read on 2026-11-09 | kept | "The live getmekno.com pages (/, /thanks/, /support/," | docs/FOLLOWUPS.md p. 5906 | 1 · none · kept |
+| K77 quoted character for character in the phase log | kept | "\"Mekno, getmekno.com\"" | docs/decisions.md p. 76 | 1 · none · kept |
+| Row 402 closed ✅ with CLOSED 2026-11-10 and the regression line | kept | "\| 402 \| Customer share links off, and the Stripe return pages (K74) \| ✅ \| **CLOSED 2026-11-10.**" | docs/ROADMAP.md p. 681 | 1 · none · kept |
