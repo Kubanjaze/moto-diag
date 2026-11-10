@@ -8,20 +8,20 @@
 
 Live payments wait on a public web address the server cannot have. A live Stripe key is used only with `MOTODIAG_ENV=prod` (`refuse_live_key`, `src/motodiag/payments/stripe_api.py`), and in prod `motodiag serve` refuses to start unless `MOTODIAG_PUBLIC_BASE_URL` is a public https address a customer's phone can open (`check_public_base_url`, `src/motodiag/core/public_url.py`, called from `src/motodiag/cli/serve.py`). The server stays tailnet-only (K65), so 371's live step stops at its check and live Stripe has not been switched on (F257).
 
-The operator answered on 2026-11-09, K74: "The six Stripe return addresses point at a plain public thank-you page; customer share links are switched off until a public front door exists; the server stays tailnet-only." K78 calls the phase an extension: its two settings are new, their defaults keep today's behaviour, and the only rule it changes is the live start-up check, for share links switched off only. K79 answers the one fork Step 0 found: "402: while share links are off, every link stops opening, old ones too."
+The operator answered on 2026-11-09, K74: "The six Stripe return addresses point at a plain public thank-you page; customer share links are switched off until a public front door exists; the server stays tailnet-only." K78 calls the phase an extension: its two settings are new, their defaults keep today's behaviour, and the only rule it changes is the live start-up check, for share links switched off only. K79 answers the one fork Step 0 found: "402: while share links are off, every link stops opening, old ones too." K77 (2026-11-09) names where the thank-you page lives: getmekno.com "serves K74's thank-you page, so it replaces K75's 'free host for now'", and F272 records the live getmekno.com `/thanks/` page as read on 2026-11-09.
 
 After this phase:
 
 1. `MOTODIAG_SHARE_LINKS_ENABLED=false` switches customer share links off. Minting a link (`POST /v1/reports/session/{session_id}/share`) and opening any link (`GET /v1/share/{token}`, old ones included) are refused with a plain message. The prod start-up check no longer asks for `MOTODIAG_PUBLIC_BASE_URL` while the switch is off. With the switch on (the default), every route and the start-up check behave exactly as today.
 2. `MOTODIAG_STRIPE_RETURN_PAGE_URL`, empty by default, is one address for the six Stripe return settings. When it is set, each of the six takes it unless that one is set on its own. Empty, the six keep their defaults.
-3. 371's live step (its handoff's steps 2 to 4) is rewritten in this phase's handoff with the new settings list and a check that reads the new rule, so the operator can switch live Stripe on from one paste block once the thank-you page exists.
+3. 371's live step (its handoff's steps 2 to 4) is rewritten in this phase's handoff with the new settings list and a check that reads the new rule, so the operator can switch live Stripe on from one paste block, pointing the six return addresses at the getmekno.com thank-you page.
 4. F257 is closed by the close-out.
 
 The two setting names are fixed by the prompt and K76: `MOTODIAG_SHARE_LINKS_ENABLED` and `MOTODIAG_STRIPE_RETURN_PAGE_URL`. The operator writes them in `server.env` from the prompt; this plan does not rename them.
 
 ## Logic
 
-Causes and the census: `402_step0.md`. The row already reads 🚧 on master although the prompt says 🔲; the phase log's first entry records the difference, and quotes K78 and K79 character for character.
+Causes and the census: `402_step0.md`. The row already reads 🚧 on master although the prompt says 🔲; the phase log's first entry records the difference, and quotes K77, K78 and K79 character for character.
 
 The open route, named from the code as Step 0 asks: `GET /v1/share/{token}`, `view_shared_report` in `src/motodiag/api/routes/share.py` (line 244). Minting is `create_session_share` in the same file (line 131). The four readers of the six return settings are `src/motodiag/api/routes/billing.py`, `src/motodiag/cli/billing.py`, `src/motodiag/payments/invoice_payments.py` and `src/motodiag/payments/connect.py`; none of them changes.
 
@@ -47,17 +47,17 @@ The open route, named from the code as Step 0 asks: `GET /v1/share/{token}`, `vi
 6. **The tests, the control and the mutations.** `tests/test_phase402_share_links_off.py` and `402_mutate.py` (under Tests). The new tests are run once against master's `config.py`, `public_url.py`, `serve.py` and `share.py`; every test of a changed behaviour is red there and every control is green.
    - **Finish line:** the file passes on the branch; the count of tests red on master's code is in the phase log; `402_mutate.py` prints every mutation red.
 
-7. **The documents that name the settings.** The two new names, the rule for the six, and "with share links off, the public address is not checked" go where `MOTODIAG_PUBLIC_BASE_URL` is named today for an install: `README.md` (the settings table), `docs/guide/install.md` ("Before it faces anything real"), `docs/guide/api.md` ("Share links" and "Deployment"), `docs/launch-checklist.md` (the prod settings block) and `docker-compose.yml` (the commented example). `docs/guide/payments.md` gains one paragraph on the thank-you page: it holds no data, Stripe sends a customer or a shop owner there after Checkout, the portal, an invoice payment and Connect onboarding, and `MOTODIAG_STRIPE_RETURN_PAGE_URL` is the one setting to change when it moves (K75).
+7. **The documents that name the settings.** The two new names, the rule for the six, and "with share links off, the public address is not checked" go where `MOTODIAG_PUBLIC_BASE_URL` is named today for an install: `README.md` (the settings table), `docs/guide/install.md` ("Before it faces anything real"), `docs/guide/api.md` ("Share links" and "Deployment"), `docs/launch-checklist.md` (the prod settings block) and `docker-compose.yml` (the commented example). `docs/guide/payments.md` gains one paragraph on the thank-you page: it holds no data, Stripe sends a customer or a shop owner there after Checkout, the portal, an invoice payment and Connect onboarding, it lives on getmekno.com (K77), and `MOTODIAG_STRIPE_RETURN_PAGE_URL` is the one setting to change if it ever moves.
    - **Finish line:** `git grep -n MOTODIAG_SHARE_LINKS_ENABLED -- README.md docs/guide docs/launch-checklist.md docker-compose.yml` finds each file once at least.
 
 8. **The handoff: 371's live step rewritten.** `docs/handoffs/<close date>_402_closed.md`, written at the close-out before the merge, carries the operator's steps in plain English, each with the computer and the window, one paste block ending in ALL GOOD or SOMETHING IS OFF, no internal labels, and every `gh` call naming `-R Kubanjaze/moto-diag` (R8):
-   - **Before the steps**, what the operator does by hand: publish the thank-you page on a free host (K75) with the wording agreed, and note its https address.
+   - **Before the steps**, what the operator already holds: the thank-you page is the live `/thanks/` page on getmekno.com (K77; read on 2026-11-09, F272). The handoff names its https address as the value for `MOTODIAG_STRIPE_RETURN_PAGE_URL` and asks the operator to open it once in a browser before step 3. No page is published in this phase.
    - **Step 1:** put the server on the merged code and restart it, as 371's step 1 did, checking `healthz` and that the new setting is known to the installed code.
    - **Step 2, changes nothing:** the settings file is private; it has `MOTODIAG_SHARE_LINKS_ENABLED=false` and a `MOTODIAG_STRIPE_RETURN_PAGE_URL=` line whose value starts with `https://`; under `MOTODIAG_ENV=prod` the server's own rule, `startup_public_url_problems(Settings())`, finds no blocking problem. It no longer looks for `MOTODIAG_PUBLIC_BASE_URL`.
-   - **Step 3:** the settings list the operator fills in by hand gains `MOTODIAG_SHARE_LINKS_ENABLED=false`, `MOTODIAG_STRIPE_RETURN_PAGE_URL=` and `MOTODIAG_STRIPE_PRICES_ARE_PLACEHOLDERS=false` (the real prices), and loses `MOTODIAG_PUBLIC_BASE_URL`: ten lines, counted once each by the block, which then runs step 2's check again, restarts the server, installs the payments feed and asks its status, as 371's step 3 did.
+   - **Step 3:** the settings list the operator fills in by hand is 371's seven lines (`MOTODIAG_ENV`, `MOTODIAG_BILLING_PROVIDER`, `MOTODIAG_STRIPE_API_KEY`, the three `MOTODIAG_STRIPE_PRICE_*` lines and `MOTODIAG_PUBLIC_BASE_URL`), less `MOTODIAG_PUBLIC_BASE_URL`, plus `MOTODIAG_SHARE_LINKS_ENABLED=false`, `MOTODIAG_STRIPE_RETURN_PAGE_URL=` and `MOTODIAG_STRIPE_PRICES_ARE_PLACEHOLDERS=false` (the real prices): nine lines, counted once each by the block, which then runs step 2's check again, restarts the server, installs the payments feed and asks its status, as 371's step 3 did.
    - **Step 4:** the alarm test, as 371's step 4, unchanged in substance (K72).
    - "What is open" names the app's own step (item 5), the public front door as option C of 2026-11-09 for a later decision, and F259 as the operator's. "After the merge" is left for whoever merges.
-   - **Finish line:** `roadmap_check.py` R6 and R8 pass with the handoff in place; a reader following the steps needs nothing from this plan.
+   - **Finish line:** `roadmap_check.py` R6 and R8 pass with the handoff in place; the prose count of settings lines equals what the block counts; a reader following the steps needs nothing from this plan.
 
 9. **The close-out.** `docs/FOLLOWUPS.md`: F257 marked closed by Phase 402, with the closing sentence naming the switch and the handoff. `COLLECTED_TEST_FLOOR` in `tests/test_phase255B_collected_test_floor.py` raised by a diff of collected ids, the reason in the commit message. `wholetree.sh` alone before every commit, its exit code read; `wholetree.sh --full` and then `regression.sh` for the regression of record; the phase folder moves to `docs/phases/completed/`; row 402 closes ✅ with `**CLOSED YYYY-MM-DD.**` and the regression line; this document goes to v1.1 with Deviations and Results.
    - **Finish line:** `verify_phase.sh 402` reports every check as it should be; the pull request is opened for the operator to merge by hand (K76).
@@ -74,7 +74,7 @@ No migration: the phase adds no table, column or index, and changes no row.
 
 402 is not in the plan of record's "Next, in order" (`docs/reports/2026-10-12_plan_of_record.md` does not name 402). The K-id that puts it in order is K76 (2026-11-09), the operator's words: "402: start it now, the fleet builds it." Its record: "Starts Phase 402 (row 402, 🚧 on master from this commit; prompt `docs/prompts/402_share_links_off_and_return_pages.txt`), built by the fleet rather than a builder session. 402 is not in the plan of record's 'Next, in order', so the fleet does not open it by itself: at the operator's request ("Put the plan on the fleet's issue") the advisor opens its mission issue with the prompt on it, and the Science Officer starts at the fleet's next cycle. The prompt fixes the two settings the phase adds, MOTODIAG_SHARE_LINKS_ENABLED and MOTODIAG_STRIPE_RETURN_PAGE_URL, for the operator to write in server.env. The operator merges by hand, as for every phase; issue #59 (372) keeps its hold."
 
-What it builds is K74 (2026-11-09): "The six Stripe return addresses point at a plain public thank-you page; customer share links are switched off until a public front door exists; the server stays tailnet-only." K78 (2026-11-09) corrects the classification to extension and lets the fleet build it; K79 (2026-11-09) decides the fork under Rule-1 stops.
+What it builds is K74 (2026-11-09): "The six Stripe return addresses point at a plain public thank-you page; customer share links are switched off until a public front door exists; the server stays tailnet-only." K77 (2026-11-09) names the page's host: getmekno.com "serves K74's thank-you page, so it replaces K75's 'free host for now'". K78 (2026-11-09) corrects the classification to extension and lets the fleet build it; K79 (2026-11-09) decides the fork under Rule-1 stops.
 
 The phase is a shop phase, not fleet-only: it changes `src/motodiag/core`, `src/motodiag/cli` and `src/motodiag/api`, and nothing under `.claude/skills/fleet/`. It unblocks the operator's own step of switching live Stripe on, which 371's handoff left waiting on F257; no "Unblocks:" line under K43 applies.
 
@@ -103,27 +103,28 @@ The phase is a shop phase, not fleet-only: it changes `src/motodiag/core`, `src/
 
 ## Non-goals
 
-- The thank-you page itself, its wording and its host: the operator's, on a free host for now (K75). Moving it later changes one setting.
+- The thank-you page itself and its wording: it is the live `/thanks/` page on getmekno.com (K77, F272), the operator's site. This phase publishes nothing there and changes nothing on it. If the page ever moves, one setting changes.
 - A public front door for share links or self-booking (option C of 2026-11-09): a later decision of the operator's. The server stays tailnet-only.
 - Switching live Stripe on, the live key, the real prices, the Sentry email rule, the alarm test: the operator's steps after the merge, from the handoff.
 - Any change in the mobile repository: how the app shows the 403's message and the snapshot refresh are the app's own session.
 - Refusing the list and revoke routes, or any share route beyond mint and open.
 - A new start-up rule in code for `MOTODIAG_STRIPE_RETURN_PAGE_URL`; the paste block checks it.
 - Any change to `check_public_base_url`, to the four readers of the six return settings, or to `_share_url`.
+- The product's new name and website (K77) beyond the page address: the app's display name, the store listings, the site's other pages and the Stripe business name are later work, and the `MOTODIAG_` setting names stay.
 - A migration, a change to any live row, and any seed data: none. No data path, no split and no eval protocol belong to this phase.
 - Phase 401 (webhooks at 100 shops, paused), F259 (the feed's writes at the next deploy) and F238 (the size of `migrations.py`): left as they are.
 
 ## Planned items
 
-- [ ] The phase log's first entry: the 🚧-versus-🔲 difference, K78 and K79 quoted, the open route named
+- [ ] The phase log's first entry: the 🚧-versus-🔲 difference, K77, K78 and K79 quoted, the open route named
 - [ ] Item 1: the two settings and the validator in `config.py`
 - [ ] Item 2: `startup_public_url_problems` and `serve.py` calling it
 - [ ] Items 3 and 4: the mint and the open route refused while off, old links too
 - [ ] Item 5: the OpenAPI document and gate 11 checked
 - [ ] Item 6: the tests, the run against master's code, the mutations
-- [ ] Item 7: the documents that name the settings
+- [ ] Item 7: the documents that name the settings, the page on getmekno.com
 - [ ] `COLLECTED_TEST_FLOOR` raised; `wholetree.sh --full`; the regression of record
-- [ ] Item 8: the handoff with 371's live step rewritten
+- [ ] Item 8: the handoff with 371's live step rewritten, nine settings lines
 - [ ] Item 9: F257 closed, the close-out, v1.1, the pull request for the operator
 
 ## Version history
