@@ -35,6 +35,13 @@ services:
       # else — a link built from it resolves to the customer's OWN
       # phone. Set it to a host they can actually reach.
       # MOTODIAG_PUBLIC_BASE_URL: https://motodiag.example.com
+      # Or switch share links off; with share links off the public
+      # address is not checked at start-up (Phase 402).
+      # MOTODIAG_SHARE_LINKS_ENABLED: "false"
+
+      # Where Stripe sends a customer or shop owner back to: one address
+      # for the six return settings, unless one is set on its own.
+      # MOTODIAG_STRIPE_RETURN_PAGE_URL: https://example.com/thanks/
 
       # Default is a localhost dev allowlist (see F69).
       # MOTODIAG_API_CORS_ORIGINS: https://app.example.com

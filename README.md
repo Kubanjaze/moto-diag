@@ -200,6 +200,8 @@ gitignored `.env` in the repo root.
 | `MOTODIAG_ENV` | `dev` \| `test` \| `prod` |
 | `MOTODIAG_API_HOST` / `_PORT` | Bind address for `serve` |
 | `MOTODIAG_PUBLIC_BASE_URL` | Public origin, for customer share links |
+| `MOTODIAG_SHARE_LINKS_ENABLED` | `false` switches customer share links off: minting and opening a link are refused, and with share links off the public address is not checked at start-up (default `true`) |
+| `MOTODIAG_STRIPE_RETURN_PAGE_URL` | One address for the six Stripe return settings; each takes it unless that one is set on its own (default empty: the six keep their defaults) |
 | `MOTODIAG_BILLING_PROVIDER` | `fake` \| `stripe`; **must be `stripe` in prod** |
 
 `motodiag config show` prints the resolved values; `motodiag config

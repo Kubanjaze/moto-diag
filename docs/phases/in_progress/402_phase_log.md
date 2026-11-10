@@ -75,3 +75,16 @@
   a folder named by a shell variable ("cannot tell where `cp` `$W/`
   writes"). Re-run with a literal path under `/fleet/run`; the guard is
   unchanged.
+
+## 2026-11-09 — item 7: the documents
+
+`README.md` (two rows in the settings table), `docs/guide/install.md`
+("Before it faces anything real"), `docs/guide/api.md` ("Share links" gains
+a paragraph on the switch; "Deployment" gains both settings),
+`docs/launch-checklist.md` (the prod settings block), `docker-compose.yml`
+(the commented example) and `docs/guide/payments.md` (a new section, "The
+thank-you page"). The finish line's `git grep -n
+MOTODIAG_SHARE_LINKS_ENABLED -- README.md docs/guide
+docs/launch-checklist.md docker-compose.yml` finds README.md 1,
+docker-compose.yml 1, docs/guide/api.md 2, docs/guide/install.md 1 and
+docs/launch-checklist.md 1.

@@ -147,7 +147,12 @@ customer or an employee will touch:
   hardcoded webhook signature on an unauthenticated route.
 - **`MOTODIAG_PUBLIC_BASE_URL`** — the origin customer share links are
   built from. The default is localhost, and a link built from localhost
-  resolves to the *customer's own phone*.
+  resolves to the *customer's own phone*. Or set
+  **`MOTODIAG_SHARE_LINKS_ENABLED=false`** to switch share links off: with
+  share links off, the public address is not checked.
+- **`MOTODIAG_STRIPE_RETURN_PAGE_URL`** — one https address for the six
+  places Stripe sends a customer or shop owner back to; each takes it
+  unless that one is set on its own.
 - **`MOTODIAG_API_CORS_ORIGINS`** — defaults to localhost dev origins.
 - **TLS in front of it.** Note that rate limiting currently keys on the
   socket address, so behind a proxy without forwarded-header handling

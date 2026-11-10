@@ -248,6 +248,13 @@ Set `MOTODIAG_PUBLIC_BASE_URL` to an origin the customer's phone can
 reach before you send any of these. It defaults to localhost, which
 works on your machine and nowhere else.
 
+`MOTODIAG_SHARE_LINKS_ENABLED=false` switches share links off. Minting a
+link then answers `403` with a sentence the app can show, and opening
+any link, old ones too, answers a `404` page saying report links are off;
+the token is not looked up. Listing and revoking still work. Switched on
+again, every link that is still live opens again: the switch changes no
+row.
+
 ## Uploads
 
 Photos and video go up as `multipart/form-data` with a JSON `metadata`
@@ -282,7 +289,11 @@ Beyond `motodiag serve` on a laptop, before it faces anything real:
   billing provider, whose webhook signature check is a hardcoded string
 - `MOTODIAG_BILLING_PROVIDER=stripe` plus `MOTODIAG_STRIPE_WEBHOOK_SECRET`
 - `MOTODIAG_API_CORS_ORIGINS` — the default is localhost dev origins
-- `MOTODIAG_PUBLIC_BASE_URL` — a real reachable origin
+- `MOTODIAG_PUBLIC_BASE_URL` — a real reachable origin, or
+  `MOTODIAG_SHARE_LINKS_ENABLED=false`: with share links off, the public
+  address is not checked
+- `MOTODIAG_STRIPE_RETURN_PAGE_URL` — one https address for the six
+  Stripe return settings; each takes it unless that one is set on its own
 - Terminate TLS in front of it, and know that rate limiting currently
   keys on the socket address: behind a proxy without forwarded-header
   handling, every anonymous caller shares one bucket
