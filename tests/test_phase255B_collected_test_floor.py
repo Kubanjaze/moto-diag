@@ -519,7 +519,15 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: each side read with its own src/: +59 -0, all in the new
 #: test_phase402_share_links_off.py (share links off, the return page, the
 #: start-up rule). Measured: 12572.
-COLLECTED_TEST_FLOOR = 12572
+#:
+#: Phase 371B, by a diff of collected ids against master at 1b7e40d
+#: (12572), each side read with its own src/: +5 -1. Added: the four tests
+#: of the new test_phase371B_checkin_key_once.py (the key sent once, and
+#: the stand-in's three controls) and, in test_phase371_monitor.py,
+#: test_the_post_carries_the_key_once_and_the_schedule, the rename of
+#: test_the_post_carries_the_url_the_header_and_the_schedule, which went.
+#: Measured: 12576.
+COLLECTED_TEST_FLOOR = 12576
 
 
 def _collected_count() -> int:

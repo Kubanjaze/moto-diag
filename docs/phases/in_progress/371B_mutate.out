@@ -1,0 +1,13 @@
+K1 the copy without a mutation: green
+M1 the X-Sentry-Auth header comes back: red
+M2 an Authorization header with the Sentry scheme is added: red
+M3 the key is added to the URL's query as well: red
+M4 the key is left out of the URL: red
+4/4 red
+
+the new tests against src/motodiag/telemetry/monitor.py at 1b7e40d:
+FAILED test_the_check_in_sends_the_key_once_and_is_accepted
+PASSED test_control_371s_request_with_the_key_twice_is_refused
+PASSED test_control_a_request_with_no_key_is_refused
+PASSED test_the_error_reports_send_the_header_alone_and_are_accepted
+1 failed, 3 passed in 2.17s

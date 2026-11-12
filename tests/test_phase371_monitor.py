@@ -1,7 +1,8 @@
 """Phase 371, Logic item 3 — the alarm's check-in to a Sentry job monitor.
 
 The URL from the documentation's example DSN; the body's schedule and
-margin; the auth header; the answers; check-ins at 300-second steps under
+margin; the key once, in the URL (Phase 371B, F273: Sentry refuses it sent
+twice); the answers; check-ins at 300-second steps under
 an injected clock and none without a DSN; no key in a log line. A fake
 transport takes every post: nothing reaches the network.
 """
@@ -40,14 +41,13 @@ def test_the_url_from_the_documentations_dsn():
         "https://o0.ingest.sentry.io/api/0/cron/motodiag-payments-feed/examplePublicKey/")
 
 
-def test_the_post_carries_the_url_the_header_and_the_schedule():
+def test_the_post_carries_the_key_once_and_the_schedule():
     t = FakeTransport()
     assert monitor.checkin(parse_dsn(DOC_DSN), "motodiag-payments-feed", t,
                            interval_minutes=5) is True
     url, headers, body = t.posts[0]
     assert url.endswith("/cron/motodiag-payments-feed/examplePublicKey/")
-    assert "sentry_key=examplePublicKey" in headers["X-Sentry-Auth"]
-    assert headers["Content-Type"] == "application/json"
+    assert headers == {"Content-Type": "application/json"}
     assert body["status"] == "ok"
     cfg = body["monitor_config"]
     assert cfg["schedule"] == {"type": "interval", "value": 5, "unit": "minute"}

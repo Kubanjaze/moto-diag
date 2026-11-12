@@ -10,7 +10,9 @@ Sentry is the email rule.
 The URL is the shape Sentry's HTTP check-in page gives
 (docs.sentry.io/product/crons/getting-started/http/). It carries the
 DSN's public key, so it is never logged: a failure names the status and
-the host only.
+the host only. The key goes once, in the URL, and in no header: Sentry's
+ingest server refuses a request that carries it twice, with 401
+"multiple authorization payloads detected" (F273, Phase 371B).
 """
 
 from __future__ import annotations
@@ -55,8 +57,7 @@ def checkin(dsn: Dsn, slug: str, transport: Optional[Transport] = None, *,
     """Post one check-in; True on a 2xx. Never raises for the network."""
     body = json.dumps(checkin_body(status, interval_minutes,
                                    margin_minutes)).encode("utf-8")
-    headers = {"Content-Type": "application/json",
-               "X-Sentry-Auth": dsn.auth_header}
+    headers = {"Content-Type": "application/json"}
     send = transport or urllib_transport
     try:
         code, reason, _ = send(checkin_url(dsn, slug), headers, body)
