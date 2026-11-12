@@ -1,0 +1,17 @@
+Phase 371B is started by the operator's two messages to the advisor session on the Mac, 2026-11-11, kept here word for word. The one change: the project's Sentry address is replaced by "(the project's Sentry address)", because this repository is public. The advisor session builds the phase.
+
+The first message:
+
+Step 7 is blocked. Sentry has no cron monitor at all (Cron Monitors page empty). The feed's log shows why: every check-in since 21:09:56 EST has failed, one line every 5 minutes:
+  payments feed: the check-in to (the project's Sentry address) answered 401 Unauthorized
+The PC reaches that host (plain curl answers HTTP 404 in 0.24 s). Also, `feed status` reports "last error: none" even though every check-in is refused, so the status hides this.
+
+Please check: (1) how the feed authenticates the check-in (X-Sentry-Auth header with sentry_key from the DSN, or whatever it uses) and whether that matches what Sentry's HTTP check-in endpoint wants; (2) whether the DSN line in server.env is the one Sentry currently lists under Project Settings > Client Keys (I can check the browser side if you tell me where to look); (3) whether the API service's own Sentry errors still get through with the same DSN. Then give me either a code fix as a PR or a one-line settings change, plus a read-only PC block that sends one test check-in and prints Sentry's answer without printing the key. Also file the "status says last error: none while check-ins fail" gap as a finding. I have not run the alarm test.
+
+The second message:
+
+Test block ran on the desktop, ALL GOOD:
+  1. As the feed sends it now, with the key twice: 401 Unauthorized. Sentry says: multiple authorization payloads detected
+  2. As Sentry documents it, with the key once: 202 Accepted.
+  Test message via `motodiag telemetry check`: accepted, status 200, event id d540ea348f094cf9bd5df6dcb59907cc.
+The Mac is plugged in. Go ahead and build 371B. When the PR is up, tell me its number, and give me the one block that updates the server, restarts the payments feed, and checks the feed log for refused check-ins. Also tell me the "Sentry project" line of the test block prints only host and project id, not the key, so it is safe to paste (I checked and it did).
