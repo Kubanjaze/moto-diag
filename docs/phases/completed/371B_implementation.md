@@ -1,6 +1,6 @@
 # Phase 371B — The payments alarm's check-in sends its key once (F273)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-11-11
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-11-12 (v1.0 `8b2fc96`)
 
 ---
 
@@ -138,14 +138,61 @@ row.
 
 ## Planned items
 
-- [ ] the header goes; the docstring
-- [ ] the 371 test turned around; the new stand-in and its four tests
-- [ ] the mutations red, the copy green, master's code red
-- [ ] the floor, the regression of record, the close-out, the handoff with
+- [x] the header goes; the docstring
+- [x] the 371 test turned around; the new stand-in and its four tests
+- [x] the mutations red, the copy green, master's code red
+- [x] the floor, the regression of record, the close-out, the handoff with
   the desktop block
+
+## Deviations
+
+1. **The start went to master before Step 0's commit.** The row as 🚧,
+   the prompt and K80 were merged as `1b7e40d`, so the ledger on master
+   showed 371B in progress from the start. Step 0, v1.0 and the build
+   stayed on the branch.
+2. **The desktop block names the code's commit, `2080643`, not the
+   branch's tip.** The close-out's commits change documents only. The
+   block asks that master hold `2080643` and that no code changed after
+   it, so those document commits do not change what it checks.
+3. **The handoff also carries the alarm test and the Sentry steps,** in
+   place of 402's step 4. The alarm test is the block given to the
+   operator on 2026-11-11, unchanged; the plan named only the desktop
+   block.
+4. **Two refusals by the push guard, and one by the mutation script.**
+   - The push guard refused a combined commit-and-push, and then a fast
+     run that outran 285 s under load. Both are recorded in the log, and
+     the guard is unchanged.
+   - `371B_mutate.py`'s first run lacked `tests/fixtures/`, which the
+     script now copies.
+
+## Results
+
+- **The fix.** `checkin` sends `Content-Type` alone, and the key goes
+  once, in the address.
+- **The tests.** 4 new tests, and 1 renamed with its assertion turned
+  around. With the related suites (the 343 sender and DSN tests), 54
+  pass.
+- **The mutations.** `371B_mutate.py`: 4/4 red, and the copy green with
+  none. Run against 371's `monitor.py` at `1b7e40d`, the check-in test
+  fails, which is the operator's 401, and the three controls pass.
+- **`COLLECTED_TEST_FLOOR` 12572 to 12576**, by a diff of collected ids:
+  +5 -1.
+- **The code's counts** are each at their pin: ruff 1108, mypy 202,
+  25 functions over McCabe 20, 5 files over 100 KB, 19 helpers,
+  22 swallowed. Q10 and Q12 are empty.
+- **The regression of record:** 12527 passed, 0 failed, 49 skipped and
+  0 errors at `2080643`. It took 33 min 10 s wall, ran on the Mac with
+  `python -m pytest -n auto --dist load --cov=motodiag`, and exited 0.
+  Line coverage was 88.20% (the pin is 87.50%). The 49 skips are the
+  Mac's: 47 fence tests that run only on Linux, one that needs the live
+  database, and one that needs bubblewrap.
+- **The desktop block** was tested on the Mac: 23 cases, and 18 planted
+  faults, each caught. F273 closes when it prints ALL GOOD on the
+  desktop.
 
 ## Version history
 
 | version | date | what |
 |---|---|---|
-| 1.0 | 2026-11-11 | the plan |
+| 1.0 | 2026-11-11 | the plan (`8b2fc96`) |
+| 1.1 | 2026-11-12 | built; Deviations and Results |
