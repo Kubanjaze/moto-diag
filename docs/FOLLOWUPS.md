@@ -5917,7 +5917,7 @@ for your own bikes", and the 5-bike limit stays. That means the CLI now,
 and the app, the website and the Stripe product (set in the operator's
 dashboard) once they name it, with a test that the CLI's name says so.
 
-### F273
+### F273 — CLOSED by Phase 371B
 
 **The payments alarm's check-in carries the Sentry key twice, so Sentry refuses every check-in with 401 and the alarm has never worked**
 
@@ -5958,6 +5958,18 @@ What would close it: the check-in sends the key once, in the path, as
 Sentry's page shows. A test's stand-in refuses a request that carries
 the key twice, as Relay does. Then a check-in from the desktop is
 accepted, and the monitor is seen in Sentry.
+
+Closed 2026-11-12 by Phase 371B, merged at `125c93b`.
+- The check-in now sends the key once, in the path.
+- `tests/test_phase371B_checkin_key_once.py`'s stand-in refuses 371's
+  request, with the key twice, as Relay does.
+- On the home desktop, the step that put the fix on the server printed
+  ALL GOOD. Sentry accepted a check-in sent by the new code. The payments
+  feed's log after its restart holds no failed check-in.
+
+The monitor itself is seen in Sentry when the operator connects it to the
+email alert, by name. That outcome goes in
+`docs/handoffs/2026-11-12_371B_closed.md`, "After the merge".
 
 ### F274
 
