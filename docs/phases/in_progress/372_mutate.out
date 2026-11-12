@@ -1,0 +1,14 @@
+R1 the membership check removed (the account read): red
+R2 connect's permission dropped to manage_shop: red
+R3 a start's permission dropped to membership (checkout): red
+R4 the invoice's shop not checked: red
+R5 user_id not passed to the start (checkout): red
+R6 refresh=true ignored: red
+R7 the 403 reference dropped from connect's responses: red
+O1 a payments route added to PUBLIC_PATH_PREFIXES: red
+O2 payments missing from TAG_CATALOG: red
+O3 payments missing from _ALWAYS_TIER_GATED_TAGS (no 402 envelope): red
+E1 the ConnectError row reverted (a paid invoice answers 400): red
+E2 the StripeUnavailable row reverted (Stripe down answers 500): red
+E3 the LiveKeyRefused row reverted (a live key out of prod answers 500): red
+13/13 red

@@ -1,0 +1,114 @@
+Phase 372, the app half: the phone app's payment screens.
+
+You are working in the mobile repository, moto-diag-mobile, on the branch
+phase-372-payment-api-routes-and-the-app. The backend repository's Phase
+372 (same branch name, Kubanjaze/moto-diag) added five server routes for a
+shop's card payments. Your job is the app screens that call them, and a
+plan screen for the subscription tiers. Read the backend's plan,
+docs/phases/in_progress/372_implementation.md (or completed/ once it
+closes), item 7, before you start. Build what it says and nothing more.
+
+This prompt applies only if the operator chose to keep the app screens in
+Phase 372 (option A of the plan's fork). If you were not told that, stop
+and ask.
+
+THE ORDER OF COMMITS ON THIS BRANCH
+
+1. Already there, from the operator's desktop: "API schema: refresh for
+   backend Phase 372 (payment routes)", which writes api-schema/openapi.json
+   from the backend branch. Check it is the branch's first commit after
+   main, and that the file names the five routes below. If it is missing,
+   stop and say so; do not write the snapshot yourself.
+2. Run `npm run generate-api-types` and commit only src/api-types.ts as
+   "API types: regenerate for backend Phase 372".
+3. Then the screens, in small commits, each with its tests.
+
+THE FIVE SERVER ROUTES (all need the shop tier and an active membership)
+
+- GET  /v1/shop/{shop_id}/payments/account[?refresh=true]
+  The shop's Stripe account: stripe_account_id, card_payments_status,
+  requirements_due, status_checked_at, livemode, can_take_payments.
+  Any member may read it. 404 when the shop has no Stripe account yet.
+  refresh=true asks Stripe first.
+- POST /v1/shop/{shop_id}/payments/connect
+  Body: contact_email (needed the first time), country, currency
+  (optional). Answers stripe_account_id, created, onboarding_url,
+  expires_at, card_payments_status; 201 when the account was made now,
+  200 when it existed and only a fresh link was made. Needs
+  manage_billing (the owner). The link is used once, by the owner, opened
+  from the app, and never sent by email or text.
+- POST /v1/shop/{shop_id}/invoices/{invoice_id}/payments/checkout
+  Starts an online payment: answers payment_id, invoice_number,
+  amount_cents, currency, channel, checkout_url, paid_when. Needs
+  manage_shop (the owner and the service writer).
+- POST /v1/shop/{shop_id}/invoices/{invoice_id}/payments/terminal
+  Sends the invoice to the shop's card reader: answers payment_id,
+  invoice_number, amount_cents, currency, channel, payment_intent_id,
+  reader_action_status, paid_when. Needs manage_shop.
+- GET  /v1/shop/{shop_id}/invoices/{invoice_id}/payments
+  The invoice's payments, oldest first: items of id, channel,
+  amount_cents, currency, status (started, failed, succeeded), outcome,
+  outcome_reason, failure_message, refunded_cents, started_at,
+  settled_at, started_by_user_id; and total. Needs manage_shop.
+
+Refusals are problem documents with a `detail` sentence meant for people:
+403 (not allowed at this shop), 404 (no such invoice at this shop), 409
+(Stripe cannot be asked yet: no account, onboarding not finished, invoice
+not sent or overdue, no reader, no email), 503 (payments not set up on the
+server, or Stripe unreachable). Show the server's detail; do not invent
+your own reason.
+
+Starting a payment never pays the invoice. It becomes paid only when
+Stripe's verified news reaches the server, usually within half a minute.
+
+THE SCREENS (item 7 of the plan)
+
+- src/hooks/useShopPayments.ts: the account read (with refresh), connect,
+  the two starts and the payments list, over api.GET and api.POST from the
+  openapi-fetch client in src/api/client.ts. 403, 409 and 503 come out as
+  typed errors carrying the server's detail, as useWorkOrderParts does and
+  as src/hooks/shopAccessErrors.ts and src/screens/shopAccessErrorCopy.ts
+  do for shop access.
+- PaymentsSetupScreen in ShopStack, titled "Card payments": the account's
+  state in words (not connected; onboarding not finished, with how many
+  things are still due; ready). "Connect with Stripe" or "Continue
+  onboarding" calls connect and opens onboarding_url with Linking.openURL.
+  When the app comes back to the front (AppState "active"), read the
+  account again with refresh=true, as useTier.ts does for the portal.
+- InvoicesScreen and InvoicePaymentScreen in ShopStack: the shop's sent
+  and overdue invoices from the existing GET /v1/shop/{shop_id}/invoices
+  with status=; an invoice's total; "Send to card reader" and "Pay-link"
+  call the two starts; the pay-link goes to the Share sheet
+  (react-native-share). The screen then reads the payments list every five
+  seconds until the newest payment is succeeded or failed, and shows the
+  outcome and the reason, with the sentence that the invoice is paid only
+  when Stripe confirms.
+- PlanScreen in HomeStack, reached from SettingsScreen: the tier from
+  useTier; the three tiers, each with "Choose", which calls
+  POST /v1/billing/checkout-session and opens checkout_url; "Manage plan",
+  which calls POST /v1/billing/portal-session and opens portal_url. A 402
+  from the portal route (no subscription yet) reads "Choose a plan first".
+  The existing AppState refetch in useTier flips the Shop tab when the tier
+  changes.
+
+KEEP THE APP'S CONVENTIONS
+
+- One hook per route family in src/hooks/; typed errors at the hook
+  boundary; the openapi-fetch client; a Jest test per hook and per screen
+  against a mocked fetch, each screen's test exercising the route it
+  calls.
+- `npx tsc --noEmit` and `npx eslint .` clean; `npx jest` green.
+- The app shows no price anywhere. Stripe's own pages show prices; the
+  backend's setting stripe_prices_are_placeholders is not the app's
+  concern.
+- No login screen, no display of roles, no change to the app's name or
+  the store listings, and no share links: those are other phases.
+
+FINISHING
+
+- Open the pull request in Kubanjaze/moto-diag-mobile from this branch to
+  main, with the Jest count and the tsc and eslint results in its
+  description. Do not merge it: the operator merges it by hand, after the
+  backend's pull request is merged.
+- Tell the operator, in plain English, the branch's last commit hash, so
+  the backend's close-out can name it.
