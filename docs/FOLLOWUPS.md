@@ -5971,6 +5971,10 @@ The monitor itself is seen in Sentry when the operator connects it to the
 email alert, by name. That outcome goes in
 `docs/handoffs/2026-11-12_371B_closed.md`, "After the merge".
 
+It was seen on 2026-11-12: `motodiag-payments-feed` was in Sentry's list
+when the operator connected the email alert. In the alarm test that
+followed, Sentry's email came 12 minutes after the feed was stopped.
+
 ### F274
 
 **`payments feed status` says "last error: none" and shows the alarm as on while Sentry refuses every check-in**
