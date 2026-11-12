@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F272** (this file). The
+At the time of writing the highest assigned is **F274** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -5916,3 +5916,80 @@ What would close it: wherever the plan is named, it reads "Individual:
 for your own bikes", and the 5-bike limit stays. That means the CLI now,
 and the app, the website and the Stripe product (set in the operator's
 dashboard) once they name it, with a test that the CLI's name says so.
+
+### F273
+
+**The payments alarm's check-in carries the Sentry key twice, so Sentry refuses every check-in with 401 and the alarm has never worked**
+
+Found 2026-11-11 by the operator on the home desktop, after live payments
+went on at 21:10 EST. Sentry's list of cron monitors is empty. The
+payments feed's log has one line every 5 minutes since 21:09:56 EST:
+"payments feed: the check-in to (the project's Sentry address) answered
+401 Unauthorized". The desktop reaches that host: a plain request answers
+404 in 0.24 s. Filed by the advisor.
+
+- **Where the key is sent twice.** `monitor.checkin`
+  (`src/motodiag/telemetry/monitor.py` line 52) posts to `checkin_url`
+  (line 33). That address carries the DSN's public key in its path,
+  `/api/<project>/cron/<slug>/<key>/`, which is the shape Sentry's HTTP
+  check-in page gives. The post also sends
+  `X-Sentry-Auth: dsn.auth_header` (line 59), which carries the same key.
+- **Why Sentry refuses it.** Sentry's ingest server is Relay. Its
+  `auth_from_parts` (`relay-server/src/extractors/request_meta.rs`, read
+  on 2026-11-11) takes the key from the header first. On finding a key in
+  the path as well, it refuses with `MultipleAuth`, "multiple
+  authorization payloads detected", which it answers as 401. It does not
+  compare the two keys. Sentry's page puts the key in the path and sends
+  no auth header.
+- **The server's error reports are not affected.** `Sender._post`
+  (`src/motodiag/telemetry/sender.py` line 181) sends the header alone,
+  to `envelope_url`, an address with no key in it.
+- **Why the tests passed.** In `tests/test_phase371_monitor.py`,
+  `FakeTransport` answers 202 to any post. Line 49 asserts that the
+  header holds the key. The stand-in was written from the same picture as
+  the code, and no check-in reached Sentry before go-live.
+
+What it affects: the payments alarm (K65 (1)). Every check-in is refused,
+so Sentry has no monitor. A stopped feed, a dark desktop or a lost
+connection emails no one. The feed's own work, asking Stripe for news, is
+not affected.
+
+What would close it: the check-in sends the key once, in the path, as
+Sentry's page shows. A test's stand-in refuses a request that carries
+the key twice, as Relay does. Then a check-in from the desktop is
+accepted, and the monitor is seen in Sentry.
+
+### F274
+
+**`payments feed status` says "last error: none" and shows the alarm as on while Sentry refuses every check-in**
+
+Found 2026-11-11 by the operator, with F273. The status printed "last
+error: none" and "Alarm: checks in to (the project's Sentry address)
+every 5 minutes", while every check-in since the feed started had been
+answered 401. Filed by the advisor at the operator's request: "file the
+"status says last error: none while check-ins fail" gap as a finding".
+
+- **What the status reads.** `feed status` (`feed_status_cmd`,
+  `src/motodiag/cli/payments.py` line 170) reads only the Stripe place
+  rows, `stripe_event_cursors`. Its "last error" (line 183) is the last
+  Stripe round's error.
+- **What the alarm line means.** `_alarm_line` (line 102) says only that
+  `MOTODIAG_SENTRY_DSN` is set and can be parsed.
+- **Where a check-in's result goes.** Into a log line and nowhere else.
+  `monitor.checkin` logs a warning (`monitor.py` lines 64 and 69) and
+  returns False. `_Job.checkin` (`src/motodiag/payments/event_feed.py`
+  line 418) drops that result.
+- **Who believed it.** The go-live block that switched live payments on,
+  written by the advisor, looked for the alarm line in the status and
+  printed ALL GOOD on it. A set Sentry address was taken for a working
+  alarm.
+
+What it affects: whoever reads `feed status`, the operator's blocks
+among them. They see a healthy alarm that has never delivered a
+check-in.
+
+What would close it: the feed records each check-in's outcome where
+`feed status` can read it. The status names the last check-in's time and
+Sentry's answer. It exits 1 when the last one failed, or when none
+succeeded within two intervals. A test shows that a refused check-in
+turns the status red.
