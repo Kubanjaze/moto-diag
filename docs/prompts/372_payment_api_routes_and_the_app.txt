@@ -1,0 +1,9 @@
+**The plan of record's next mission**, opened by the fleet (Phase 392).
+
+The plan of record puts phase 372 next ('Next, in order' #14): 14. 372 (shop, built by fleet); needs the operator: an outside account: Stripe's live account; from: Wave 1, item 4 · K48
+
+The plan of record on this phase: the plan of record's 'Next, in order' #14; the plan of record, 2026-10-22 to 2026-10-25; K48; K52; K66.
+
+The work branch is `phase-372-payment-api-routes-and-the-app`: the Science Officer makes it from master once this phase's row is 🚧 there, which the row's pull request does when the operator merges it.
+
+<!-- fleet-next: phase=372 -->
