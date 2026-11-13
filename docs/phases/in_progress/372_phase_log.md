@@ -77,3 +77,21 @@ Written by the advisor session on the Mac, from the operator's answer and their 
   - The standing test is not changed.
   - Next come `wholetree.sh --full`, the regression of record, and the close-out. There is no migration, so there is no database step.
   - Regenerating `src/api-types.ts` and merging the mobile branch are the handoff's steps for after this phase merges.
+
+## 2026-11-13: The operator's answers to the Chief Engineer's stop (second stop, guard-blocked-twice)
+
+Written by the advisor session on the Mac. The ranks read no comment of the operator's on issue #59 (F223), so the answer is here.
+
+- **The stop.**
+  - The second session was run `20261112_225609_engineer_372`, from `ef8bacc`. It ended at 23:56 EST on 2026-11-12 with kind `guard-blocked-twice`.
+  - The edit guard twice refused the redirect `> $b.inner`: "the edit guard cannot tell where the redirect `>` `$b.inner` writes (a variable, substitution, glob or unknown directory), and blocks what it cannot resolve. Use a literal path."
+  - Nothing that session made was pushed: this branch stayed at `ef8bacc`. The next session starts again from the answers above.
+- **The guard is right, and it stays as it is** (CLAUDE.md rule 6).
+  - It refuses any write whose target it cannot read, wherever the write would land, not only under `src/` and `tests/`. A redirect, `tee`, `cp` or `mv` to `$var…`, `$(…)` or a glob is refused.
+  - The brief's rule 3 says less than that. F275 records the gap, for a fleet phase.
+- **So, in every session from here:**
+  - Write each scratch file to a literal path in a literal directory, for example `> /fleet/run/base.inner` and `> /fleet/run/head.inner`, never `> $b.inner` in a loop; or use the Write tool.
+  - Do not retry a refused command in the same form.
+- **The operator's words,** 2026-11-13, asking for the restart: "Then give me the block that gets the build going again."
+- **A guard block while this entry was written.** The advisor ran `git commit` and `git push` in one command. The push guard refused it, because it judges a push before the commit exists. Both were run again as separate commands, and nothing was loosened.
+- **Unchanged:** K81's (B) above, and the phone app's snapshot at moto-diag-mobile `993fadc`. Next come `wholetree.sh --full`, the regression of record, and the close-out.
