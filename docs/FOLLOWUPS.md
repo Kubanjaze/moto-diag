@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F274** (this file). The
+At the time of writing the highest assigned is **F275** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -6009,3 +6009,50 @@ What would close it: the feed records each check-in's outcome where
 Sentry's answer. It exits 1 when the last one failed, or when none
 succeeded within two intervals. A test shows that a refused check-in
 turns the status red.
+
+### F275
+
+**The Chief Engineer's brief says the edit guard blocks redirects under `src/` and `tests/`, but the guard refuses any write whose target it cannot read, wherever it lands, so a session can end on guard-blocked-twice**
+
+Found 2026-11-13 by the advisor, on Phase 372 (issue #59). The operator
+asked whether it was "a fleet guard bug to file as F275".
+
+- **What happened.**
+  - The Engineer's second session on 372 was run
+    `20261112_225609_engineer_372`. It started at 22:56 EST on 2026-11-12
+    and ended at 23:56 EST with kind `guard-blocked-twice`.
+  - The edit guard twice refused the redirect `> $b.inner`, saying it
+    "cannot tell where the redirect `>` `$b.inner` writes (a variable,
+    substitution, glob or unknown directory), and blocks what it cannot
+    resolve. Use a literal path."
+- **The guard did as it is built to.** `_target` in
+  `.claude/skills/closeout/_edit_guard.py` blocks a write whose target has
+  no fixed leading directory that it can resolve, wherever the write
+  would land. That is fail-closed by design, and it is not to be loosened
+  (CLAUDE.md rule 6). So this is not a guard defect.
+- **The brief says less than the guard does.**
+  - Rule 3 of the Engineer's brief (`.claude/skills/fleet/engineer.py`)
+    reads: "Change files under src/ and tests/ only with the Edit and
+    Write tools: the edit guard blocks sed -i and shell redirects there."
+  - Nothing tells the model that a redirect, `tee` or copy target must be
+    a literal path everywhere. A scratch write through a variable looks
+    allowed, and the same refusal twice ends the session (`watch`,
+    `guard_blocks`).
+  - The fleet skill's own lesson from Phase 389 is that where a check and
+    a brief could disagree, the brief states the check's rule. F228 was
+    the same kind of gap, in the Red Team's brief.
+- **What it cost.** The session ended after an hour. Nothing was pushed:
+  GitHub's branch stayed at `ef8bacc`. Whatever the session made is only
+  in that run's clone on the home desktop, so the restart begins again
+  from `ef8bacc`.
+
+What it affects: every Engineer session. Any scratch write through a
+variable costs a session and a stop for the operator.
+
+What would close it, in a fleet phase (no rank may change
+`.claude/skills/fleet/`):
+- rule 3 states the guard's rule in its own words: a write's target must
+  be a literal path the guard can read, so scratch files go to a literal
+  directory such as `/fleet/run/`;
+- a test reads the brief for that rule, against a fixture taken from this
+  run's transcript.
