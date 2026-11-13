@@ -1,6 +1,6 @@
 # Phase 372 — Payment API routes and the app's payment screens
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-11-12 (v1.0, the plan)
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-11-12 (v1.0 `5a1e6e9`, revised `62c9f3c`; v1.1 the close-out)
 
 ---
 
@@ -14,7 +14,7 @@ After this phase:
 
 1. Five routes under `/v1/shop/{shop_id}/…` call the Phase 273 functions as they are: read the shop's Stripe account, connect it and get its onboarding link, start a Checkout payment of an invoice, send an invoice to the shop's reader, and list an invoice's Stripe payments. Each checks the caller's tier, the shop's membership and the permission the verb needs. Not one line of `src/motodiag/payments/` changes, and the invoice is still paid only by Stripe's verified news (the payments feed of Phase 371).
 2. The OpenAPI document carries them under a `payments` tag, and the phone app's snapshot is refreshed from this branch, as Phases 303 and 348 did.
-3. The app gains three screens in a session rooted in the mobile repository, from a prompt this phase writes: card-payments setup for a shop, an invoice's payment (reader or pay-link, with the outcome), and the plan screen for the tiers (checkout and portal through the existing billing routes).
+3. (Moved to 372B by the operator's choice, K81.) The app gains three screens in a session rooted in the mobile repository, from a prompt this phase writes: card-payments setup for a shop, an invoice's payment (reader or pay-link, with the outcome), and the plan screen for the tiers (checkout and portal through the existing billing routes).
 4. The operator's steps after the merge are one handoff in plain English: the server on the new code, the app's snapshot pushed and its types regenerated, the app's pull request merged.
 
 Classification: extension (`372_step0.md`). It becomes a reshape only if an existing route or the live-key refusal changes, and this plan changes neither.
@@ -54,10 +54,10 @@ Causes and the census: `372_step0.md`. The phase log's first entry records how t
 5. **The guide.** `docs/guide/api.md`, "The routes": a `payments` row (five operations: a shop's Stripe account, onboarding, an invoice paid online or at the reader, its payments) and one sentence under "Tiers and limits" naming the two permissions. `docs/guide/payments.md` gains a section "From the app": a shop connects from its phone with a link Stripe opens, the service writer sends an invoice to the reader or shares a pay-link, and the invoice shows as paid within about half a minute of Stripe's news, never on the tap itself. `README.md`'s route count, if it states one, moves with it.
    - **Finish line:** `git grep -n "payments" -- docs/guide/api.md docs/guide/payments.md` finds the new row and the new section.
 
-6. **The app's prompt.** `docs/prompts/372_the_apps_payment_screens.txt`, committed in this repository (the rule "Phase prompts live in `docs/prompts/`"), for a session the operator starts rooted in `../moto-diag-mobile` on the branch of item 3. It fixes, in plain words: the branch and the commit order (the snapshot commit from the desktop first, then `npm run generate-api-types` committed as "API types: regenerate for backend Phase 372", then the screens); the three screens of item 7 with their routes; the app's conventions it must keep (a hook per route family in `src/hooks/`, typed errors at the hook boundary as `useWorkOrderParts` does, the `openapi-fetch` client in `src/api/client.ts`, a Jest test per hook and screen, `tsc --noEmit` and `eslint .` clean); that the app shows no price (Stripe's page does, and the backend's `stripe_prices_are_placeholders` is not the app's concern); and that the mobile pull request is merged by the operator by hand after the backend's.
+6. **The app's prompt.** (Written here, under option A; under K81's B it is kept for 372B, Deviation 2.) `docs/prompts/372_the_apps_payment_screens.txt`, committed in this repository (the rule "Phase prompts live in `docs/prompts/`"), for a session the operator starts rooted in `../moto-diag-mobile` on the branch of item 3. It fixes, in plain words: the branch and the commit order (the snapshot commit from the desktop first, then `npm run generate-api-types` committed as "API types: regenerate for backend Phase 372", then the screens); the three screens of item 7 with their routes; the app's conventions it must keep (a hook per route family in `src/hooks/`, typed errors at the hook boundary as `useWorkOrderParts` does, the `openapi-fetch` client in `src/api/client.ts`, a Jest test per hook and screen, `tsc --noEmit` and `eslint .` clean); that the app shows no price (Stripe's page does, and the backend's `stripe_prices_are_placeholders` is not the app's concern); and that the mobile pull request is merged by the operator by hand after the backend's.
    - **Finish line:** the file exists, names the five routes by path, and `docs/prompts/README.md` lists it.
 
-7. **The screens** (built in the mobile session, not by the Engineer). In `moto-diag-mobile`:
+7. **The screens** (built in the mobile session, not by the Engineer; under K81's B, row 372B). In `moto-diag-mobile`:
    - `src/hooks/useShopPayments.ts`: the account read (with refresh), connect, the two starts and the payments list, over `api.GET` and `api.POST`; 403, 409 and 503 surface as typed errors with the server's `detail`, as `shopAccessErrorCopy.ts` does for shop access.
    - `PaymentsSetupScreen` in `ShopStack` ("Card payments"): the account's state in words (not connected, onboarding not finished with the count still due, ready); "Connect with Stripe" or "Continue onboarding" calls connect and opens `onboarding_url` with `Linking.openURL`; on the next AppState `active` it re-reads with `refresh=true`, the pattern `useTier.ts` already uses for the portal.
    - `InvoicesScreen` and `InvoicePaymentScreen` in `ShopStack`: the shop's `sent` and `overdue` invoices from the existing `GET /v1/shop/{shop_id}/invoices?status=`; an invoice's total; "Send to card reader" and "Pay-link" call the two starts; the pay-link is handed to the Share sheet (`react-native-share`, in the app since 192B); the screen then polls the payments list every five seconds until the newest payment is `succeeded` or `failed` and shows the outcome and the reason, with the sentence that the invoice is paid only when Stripe confirms.
@@ -67,7 +67,7 @@ Causes and the census: `372_step0.md`. The phase log's first entry records how t
 
 8. **The handoff.** `docs/handoffs/<close date>_372_closed.md`, written at the close-out before the merge, plain English, each step with the computer and the window, one paste block ending in ALL GOOD or SOMETHING IS OFF, no internal labels, every `gh` call naming `-R Kubanjaze/moto-diag` or `-R Kubanjaze/moto-diag-mobile` (R8):
    - **Step 1, the server:** the home desktop, the Ubuntu window, after the backend pull request is merged: bring the server's copy to master as 371B's step 1 did (checks first, fast-forward only, put back on failure), restart the API, and check `healthz` and that `/openapi.json` names the five new routes. The payments feed is not touched: its code does not change.
-   - **Step 2, the app:** the Mac, Terminal: pull the mobile branch, check the three commits are there, and merge its pull request by hand with `gh pr merge -R Kubanjaze/moto-diag-mobile`; then, the home desktop, the Ubuntu window: put `~/Projects/moto-diag-mobile` back on `main` and pull, so the fence's read-only copy carries the snapshot master's Gate 11 expects.
+   - **Step 2, the app:** (under B: the types commit and the merge of the snapshot branch, Deviation 3) the Mac, Terminal: pull the mobile branch, check the three commits are there, and merge its pull request by hand with `gh pr merge -R Kubanjaze/moto-diag-mobile`; then, the home desktop, the Ubuntu window: put `~/Projects/moto-diag-mobile` back on `main` and pull, so the fence's read-only copy carries the snapshot master's Gate 11 expects.
    - "What is open" names what the app still cannot do (the Non-goals below) and F274 and F259 as they stand. "After the merge" is left for whoever merges.
    - **Finish line:** `roadmap_check.py` R6 and R8 pass with the handoff in place; a reader following the steps needs nothing from this plan.
 
@@ -138,20 +138,48 @@ The phase is a shop phase, not fleet-only: it changes `src/motodiag/api`, `docs/
 
 ## Planned items
 
-- [ ] The phase log's first entry: how the record answers Step 0's (a), (b), (c) and (e), with K48, K66 and K76 quoted; (d) left as the fork
-- [ ] Item 1: `src/motodiag/api/routes/payments.py`, the five routes, registered in `app.py`; the four rows in `_exc_class_chain` in `src/motodiag/api/errors.py`
-- [ ] Item 2: `payments` in `TAG_CATALOG` and in `_ALWAYS_TIER_GATED_TAGS`; 403, 409 and 503 declared on each route
-- [ ] Item 4: `tests/test_phase372_payment_routes.py`, `tests/test_phase372_wiring.py`, the run against master's code, `372_mutate.py` with thirteen mutations
-- [ ] Item 5: `docs/guide/api.md` and `docs/guide/payments.md`
-- [ ] Item 6: `docs/prompts/372_the_apps_payment_screens.txt`, listed in `docs/prompts/README.md`
-- [ ] Item 3: the Gate 11 stop, kind `test-cannot-be-green`; the operator's refresh of the phone app's snapshot on the mobile branch; the operator's pick on the fork
-- [ ] Item 7: the screens on the mobile branch, in the operator's mobile session (under option A)
-- [ ] `COLLECTED_TEST_FLOOR` raised; `wholetree.sh --full`; the regression of record inside the fence
-- [ ] Item 8: the handoff with the server step and the app step, two repositories named
-- [ ] Item 9: the close-out, row 372 ✅ naming the mobile commit, v1.1; the backend pull request opened for the operator to merge by hand (K49)
+- [x] The phase log's first entry: how the record answers Step 0's (a), (b), (c) and (e), with K48, K66 and K76 quoted; (d) left as the fork
+- [x] Item 1: `src/motodiag/api/routes/payments.py`, the five routes, registered in `app.py`; the four rows in `_exc_class_chain` in `src/motodiag/api/errors.py`
+- [x] Item 2: `payments` in `TAG_CATALOG` and in `_ALWAYS_TIER_GATED_TAGS`; 403, 409 and 503 declared on each route
+- [x] Item 4: `tests/test_phase372_payment_routes.py`, `tests/test_phase372_wiring.py`, the run against master's code, `372_mutate.py` with thirteen mutations
+- [x] Item 5: `docs/guide/api.md` and `docs/guide/payments.md`
+- [x] Item 6: `docs/prompts/372_the_apps_payment_screens.txt`, listed in `docs/prompts/README.md`
+- [x] Item 3: the Gate 11 stop, kind `test-cannot-be-green`; the operator's refresh of the phone app's snapshot on the mobile branch; the operator's pick on the fork
+- [x] Item 7: not built here; the operator chose B (K81), so the screens are row 372B, 🔲
+- [x] `COLLECTED_TEST_FLOOR` raised; `wholetree.sh --full`; the regression of record inside the fence
+- [x] Item 8: the handoff with the server step and the app step, two repositories named
+- [x] Item 9: the close-out, row 372 ✅ naming the mobile commit, v1.1; the backend pull request is opened by the fleet's script after this build, for the operator to merge by hand (K49)
+
+## Deviations
+
+1. **The fork went to (B)** (K81, 2026-11-12: "B, give me the desktop block"). The routes ship here; the three screens are row 372B, added 🔲 to the ROADMAP. Item 7 is not built, and row 372 names the snapshot commit on the mobile branch (`993fadc`), since no screens commit exists.
+2. **The app's prompt is kept as written for option A.** It was written before the operator's answer. It already says it applies only under (A) and tells a session not told that to stop and ask, so it cannot mislead 372B's session; 372B writes its own prompt from it when it starts.
+3. **The handoff's app step is the types and the merge of the snapshot branch,** as the plan's (B) says; the snapshot itself was pushed by the operator's desktop block. A third step puts the desktop's copy of the app back on `main`, which item 8's step 2 already asked for.
+4. **The handoff's server block names the code's commit, `4e46bcf`, not the branch's tip:** the close-out's commits change documents only.
+5. **`README.md`'s route count** said 80 (from Phase 208, already wrong); it now says 117, the measured count on this branch, rather than 80 moved by five.
+6. **Decided in the build, recorded in the phase log:** the answers are pydantic models; an invoice not at the shop raises `InvoiceNotFoundError`, which the chain already answers 404 `invoice-not-found`; three private helpers besides `_invoice_shop_id` (`_require_invoice_at_shop`, `_account`, `_started_fields`), none of which writes.
+7. **The Gate 11 stop went as the plan says,** with the snapshot refreshed by the operator's desktop block and the branch's commits through `cbfa766` pushed by hand. No gate was loosened.
+
+No bug fixes.
+
+## Results
+
+- **The routes.** Five, under the `payments` tag, each on `require_tier("shop")` and `require_shop_access`; four rows in `_exc_class_chain` (409 `payment-refused`; 503 `payments-not-configured` for two; 503 `stripe-unavailable`). Each operation documents 401, 402, 403, 404, 409 and 503.
+- **The tests.** `tests/test_phase372_payment_routes.py` (26) and `tests/test_phase372_wiring.py` (18). On master's `app.py`, `errors.py` and `openapi.py`, all 26 route tests are red, and the two 273 CLI suites are green (12 and 35 passed).
+- **The mutations.** `372_mutate.py`: 13/13 red (`372_mutate.out`).
+- **Gate 11** against the refreshed snapshot (moto-diag-mobile `993fadc`, branch `phase-372-payment-api-routes-and-the-app`): 21 passed, in the fence.
+- **`COLLECTED_TEST_FLOOR` 12576 to 12620**, by a diff of collected ids: +44 −0.
+- **The code's counts** at their pins: ruff 1108, mypy 202, complex 25, big 5, helpers 19, swallowed 22.
+- **`wholetree.sh --full`** on `4e46bcf`: 5103 passed, 36 skipped, exit 0.
+- **The regression of record:**
+
+Regression of record: 12515 passed, 0 failed, 105 skipped, 0 errors at `4e46bcf` (35 min 25 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0) (run inside the fleet's fence)
+
+  Line coverage of record: 88.20% at `4e46bcf` (the pin is 87.50%). The 105 skips are named in the phase log.
 
 ## Version history
 
 | version | date | what |
 |---|---|---|
 | 1.0 | 2026-11-12 | the plan |
+| 1.1 | 2026-11-12 | built; the fork answered B (K81); Deviations and Results |

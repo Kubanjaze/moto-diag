@@ -3932,3 +3932,8 @@ Write-up: [`371_implementation.md`](docs/phases/completed/371_implementation.md)
 
 Log: [`docs/phases/completed/402_phase_log.md`](docs/phases/completed/402_phase_log.md).
 Write-up: [`402_implementation.md`](docs/phases/completed/402_implementation.md).
+
+## Phase 372 — Payment API routes and the app's payment screens — CLOSED 2026-11-12
+
+Log: [`docs/phases/completed/372_phase_log.md`](docs/phases/completed/372_phase_log.md).
+Write-up: [`372_implementation.md`](docs/phases/completed/372_implementation.md).
