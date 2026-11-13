@@ -224,5 +224,11 @@ The 105 skips are the fence's: each is named above, by file and reason. `COVERAG
 - **Root cause:** the models were written from the dataclass fields, and the lint was not run before the close-out; no test in the suite runs it over `src/`.
 - **Fix:** both fields typed `Literal[...]` with the CHECK's values. New test `test_the_payment_list_emits_channel_and_status_as_their_check_enums` in `tests/test_phase372_wiring.py` reads the two enums from `create_app().openapi()`. `COLLECTED_TEST_FLOOR` 12620 → 12621, by a diff of collected ids against `9e9709c`: +1 -0.
 - **Files:** `src/motodiag/api/routes/payments.py`, `tests/test_phase372_wiring.py`, `tests/test_phase255B_collected_test_floor.py`.
-- **Verified:** `check_f9_patterns.py --all` prints "F9 lint: clean". The new test failed with the fix stashed and passes with it; `test_phase372_*`, `test_phase195c_pydantic_literal_lint.py` and `test_phase183_openapi.py`: 113 passed. Gate 11 compares paths only, so the app's snapshot at moto-diag-mobile `993fadc` still passes it, but its two fields are still `string` until the snapshot is refreshed (372B).
-- **Commit:** the bug-fix commit after `9e9709c`; its hash is in the next entry.
+- **Verified:** `check_f9_patterns.py --all` prints "F9 lint: clean". The new test failed with the fix stashed and passes with it; `test_phase372_*`, `test_phase195c_pydantic_literal_lint.py` and `test_phase183_openapi.py`: 113 passed.
+- **Commit:** `c0133a2`.
+
+## 2026-11-13: Gate 11 is red after bug fix #1
+
+- `wholetree.sh --full` at `c0133a2`, on its own, on a clean tree: exit 1. It printed "wholetree full: FAILED — 4 failed, 5099 passed, 36 skipped, 33 warnings in 995.33s (0:16:35) (997.5 s wall)". `regression.sh` then refused to start (exit 2): "no passing `wholetree.sh --full` record for HEAD c0133a2df007".
+- The four failures are one cause: `tests/test_phase205_gate11.py::TestContractSnapshot::test_shared_schemas_have_not_drifted` reports "InvoicePayment.channel: changed; InvoicePayment.status: changed", and gates 12, 13 and 14 re-run Gate 11. The app's snapshot at moto-diag-mobile `993fadc` was written from `cbfa766`, where both fields were `string`; the gate rightly sees the enums as a contract change.
+- The app's copy at `../moto-diag-mobile` is read-only inside the fence. No gate is loosened. As on 2026-11-12, the Engineer commits this record and stops with kind `test-cannot-be-green`: the snapshot on the mobile branch `phase-372-payment-api-routes-and-the-app` needs writing again from `c0133a2`. The regression of record and the close-out documents' new line wait for that.
