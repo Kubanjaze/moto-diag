@@ -100,3 +100,20 @@ Written by the advisor session on the Mac. The ranks read no comment of the oper
 - **The operator's words,** 2026-11-13, asking for the restart: "Then give me the block that gets the build going again."
 - **A guard block while this entry was written.** The advisor ran `git commit` and `git push` in one command. The push guard refused it, because it judges a push before the commit exists. Both were run again as separate commands, and nothing was loosened.
 - **Unchanged:** K81's (B) above, and the phone app's snapshot at moto-diag-mobile `993fadc`. Next come `wholetree.sh --full`, the regression of record, and the close-out.
+
+## 2026-11-13: The stopped session's commit is carried; its close-out is done again
+
+Written by the advisor session on the Mac, after the operator copied the stopped session's work from the home desktop to GitHub.
+
+- **What the stopped session made.** Run `20261112_225609_engineer_372` pushed nothing, as the entry above says. In its own folder it had made one commit, `4e46bcf`, at 23:01 EST, and after it most of a close-out, never committed.
+- **Carried: `4e46bcf`,** merged into this branch as `df88d09`. Its entry is the 2026-11-12 one above, and row 372B came with it.
+- **Not carried: the close-out.** It is kept as it was left, as `1b59a8d` on the branch `carry-372-stopped-build`: a record of what that session wrote, not a draft for the next one. It is not carried because:
+  - its whole-tree record and regression of record are of `4e46bcf`, not of the tree this branch closes on;
+  - it is dated 2026-11-12, in row 372's CLOSED date and in the handoff's name, and the phase closes later;
+  - it never reached its end: its last command was the refused `$b.inner` write.
+- **For the next session: the close-out, from this branch as it stands.** `wholetree.sh --full`, the regression of record, v1.1, row 372 and the handoff, dated the day the phase closes.
+  - For comparison only, and not of record here, the stopped session measured at `4e46bcf`: `wholetree.sh --full` 5103 passed, 36 skipped (981 s wall); the regression 12515 passed, 0 failed, 105 skipped (35 min 25 s wall, inside the fence); line coverage 88.20%.
+  - Change a file's text with the Edit and Write tools, never with a script or `sed -i`. That session's Python edit of v1.1 through a variable path was refused, and so was its `sed -i` on this log; the same edits then went through with the Edit tool.
+  - Send shell output only to a literal path, as the entry above says.
+- **The operator's words,** 2026-11-13: "Please do your Mac step now (join 4e46bcf to the 372 branch, whole-tree check, the note for the builder) and then give me the restart block."
+- **A guard block** (CLAUDE.md rule 6). At 07:12 EST on 2026-11-13, after the entry above was pushed, the edit guard refused one of the advisor's commands: a Python script body writing to a path the guard could not resolve, while the advisor made a stand-in to test the operator's read-only step on the home desktop. It did not run, and nothing was loosened.
