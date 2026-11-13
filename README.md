@@ -134,7 +134,7 @@ a scenario file, and the diagnostic side does not need hardware at all.
 motodiag serve
 ```
 
-Serves 80 routes on `127.0.0.1:8000` and applies any pending schema
+Serves 117 routes on `127.0.0.1:8000` and applies any pending schema
 migrations first. Interactive docs at `/docs`, and `/healthz` for a
 liveness check. Authentication is an API key in an `X-API-Key` header:
 

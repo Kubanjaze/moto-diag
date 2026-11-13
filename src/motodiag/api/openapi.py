@@ -240,6 +240,22 @@ TAG_CATALOG: list[dict[str, Any]] = [
         ),
     },
     {
+        "name": "payments",
+        "description": (
+            "Phase 372 — a shop's card payments through Stripe. "
+            "`GET /shop/{shop_id}/payments/account` reads the shop's "
+            "Stripe account (any member; `refresh=true` asks Stripe); "
+            "`POST /shop/{shop_id}/payments/connect` creates it and "
+            "returns a one-time onboarding link (`manage_billing`); "
+            "`POST /shop/{shop_id}/invoices/{invoice_id}/payments/"
+            "checkout` and `.../terminal` start a payment online or at "
+            "the shop's reader, and `GET /shop/{shop_id}/invoices/"
+            "{invoice_id}/payments` lists the invoice's payments "
+            "(`manage_shop`). Starting a payment never pays the "
+            "invoice: it is paid only by Stripe's verified news."
+        ),
+    },
+    {
         "name": "voice-transcripts",
         "description": (
             "Voice symptom capture: upload a voice memo to a work "
@@ -557,7 +573,7 @@ def _enrich_operation(path: str, operation: dict) -> None:
 
 _ALWAYS_TIER_GATED_TAGS = {
     "shop-management", "reports", "live",
-    "vehicles", "sessions",
+    "vehicles", "sessions", "payments",
 }
 # `vehicles` + `sessions` aren't strictly tier-gated (individual
 # tier users can use them) but they enforce *quotas* that map to
