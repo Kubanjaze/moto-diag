@@ -21,7 +21,7 @@ does (the webhook or the payments feed). The refusals are mapped in
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
@@ -118,10 +118,10 @@ class TerminalStarted(BaseModel):
 
 class InvoicePayment(BaseModel):
     id: int
-    channel: str
+    channel: Literal["checkout", "terminal"]
     amount_cents: int
     currency: str
-    status: str
+    status: Literal["started", "failed", "succeeded"]
     outcome: Optional[str]
     outcome_reason: Optional[str]
     failure_message: Optional[str]

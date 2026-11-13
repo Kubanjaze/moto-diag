@@ -532,7 +532,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: branch's base at 62c9f3c (12576, master's code), each side read with its
 #: own src/: +44 -0. Added: test_phase372_payment_routes.py (26) and
 #: test_phase372_wiring.py (18). Measured: 12620.
-COLLECTED_TEST_FLOOR = 12620
+#:
+#: Phase 372 bug fix #1 (the Red Team's round 1), by a diff of collected ids
+#: against 9e9709c (12620): +1 -0. Added, in test_phase372_wiring.py:
+#: test_the_payment_list_emits_channel_and_status_as_their_check_enums.
+#: Measured: 12621.
+COLLECTED_TEST_FLOOR = 12621
 
 
 def _collected_count() -> int:

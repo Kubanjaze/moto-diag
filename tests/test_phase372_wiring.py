@@ -91,5 +91,11 @@ def test_the_starts_pass_the_caller():
     assert "user_id=user.id" in code_of(routes.payments_connect)
 
 
+def test_the_payment_list_emits_channel_and_status_as_their_check_enums(spec):
+    props = spec["components"]["schemas"]["InvoicePayment"]["properties"]
+    assert set(props["channel"]["enum"]) == {"checkout", "terminal"}
+    assert set(props["status"]["enum"]) == {"started", "failed", "succeeded"}
+
+
 def test_the_route_module_catches_nothing():
     assert "except" not in code_of(routes)

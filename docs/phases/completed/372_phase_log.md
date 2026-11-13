@@ -217,3 +217,12 @@ The 105 skips are the fence's: each is named above, by file and reason. `COVERAG
 - v1.1 written: every section brought to what was built, Deviations (the fork answered B, the prompt kept, the handoff's app steps, the server block's commit, `README.md`'s count, the build's own decisions, the Gate 11 stop, the build over three sessions) and Results. No bug fixes.
 - Row 372 closed ✅, dated today, with the regression line above; row 372B stays 🔲. The handoff is `docs/handoffs/2026-11-13_372_closed.md`. The root `phase_log.md` points at the completed documents.
 - Text was changed with the Edit and Write tools; the regression's lines were copied by appending the printed output to this file's literal path. No guard blocked a command in this session.
+
+### Bug fix #1 — 2026-11-13 — the payments list typed channel and status as free strings
+
+- **Issue:** the Red Team (pull request #66, round 1) ran `scripts/check_f9_patterns.py --all`, which reported two findings in this phase's code: `InvoicePayment.channel` and `InvoicePayment.status` in `src/motodiag/api/routes/payments.py` were typed `str`, while `invoice_payments` holds them to `CHECK (channel IN ('checkout', 'terminal'))` and `CHECK (status IN ('started', 'failed', 'succeeded'))`. The document gave the app a free `string` for the two fields its invoice screen will read for `succeeded` or `failed`.
+- **Root cause:** the models were written from the dataclass fields, and the lint was not run before the close-out; no test in the suite runs it over `src/`.
+- **Fix:** both fields typed `Literal[...]` with the CHECK's values. New test `test_the_payment_list_emits_channel_and_status_as_their_check_enums` in `tests/test_phase372_wiring.py` reads the two enums from `create_app().openapi()`. `COLLECTED_TEST_FLOOR` 12620 → 12621, by a diff of collected ids against `9e9709c`: +1 -0.
+- **Files:** `src/motodiag/api/routes/payments.py`, `tests/test_phase372_wiring.py`, `tests/test_phase255B_collected_test_floor.py`.
+- **Verified:** `check_f9_patterns.py --all` prints "F9 lint: clean". The new test failed with the fix stashed and passes with it; `test_phase372_*`, `test_phase195c_pydantic_literal_lint.py` and `test_phase183_openapi.py`: 113 passed. Gate 11 compares paths only, so the app's snapshot at moto-diag-mobile `993fadc` still passes it, but its two fields are still `string` until the snapshot is refreshed (372B).
+- **Commit:** the bug-fix commit after `9e9709c`; its hash is in the next entry.
