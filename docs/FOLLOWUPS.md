@@ -6025,6 +6025,16 @@ asked whether it was "a fleet guard bug to file as F275".
     "cannot tell where the redirect `>` `$b.inner` writes (a variable,
     substitution, glob or unknown directory), and blocks what it cannot
     resolve. Use a literal path."
+  - Two refusals of other kinds came first, so the session went on after
+    them. Added 2026-11-13: the times are from the run's transcript, read
+    on the home desktop; the commands are named in the session's own log
+    (`docs/phases/completed/372_phase_log.md` line 181, in its unfinished
+    close-out, kept as `1b59a8d` on the branch `carry-372-stopped-build`):
+    - 23:54 EST: a Python script body that wrote `372_implementation.md`
+      (v1.1) through a variable path, and named `src/` in its text;
+    - 23:55 EST: `sed -i` on the phase log's status line, a file under
+      `docs/`.
+    - That log says the same edits were then made with the Edit tool.
 - **The guard did as it is built to.** `_target` in
   `.claude/skills/closeout/_edit_guard.py` blocks a write whose target has
   no fixed leading directory that it can resolve, wherever the write
@@ -6038,13 +6048,25 @@ asked whether it was "a fleet guard bug to file as F275".
     a literal path everywhere. A scratch write through a variable looks
     allowed, and the same refusal twice ends the session (`watch`,
     `guard_blocks`).
+  - It says less about `sed -i` too. The guard blocks `sed -i` "in every
+    spelling, anywhere, whatever the path" (`_edit_guard.py`'s
+    docstring), and rule 3 names it only under `src/` and `tests/`. The
+    refused `sed -i` above was on a file under `docs/`.
   - The fleet skill's own lesson from Phase 389 is that where a check and
     a brief could disagree, the brief states the check's rule. F228 was
     the same kind of gap, in the Red Team's brief.
 - **What it cost.** The session ended after an hour. Nothing was pushed:
-  GitHub's branch stayed at `ef8bacc`. Whatever the session made is only
-  in that run's clone on the home desktop, so the restart begins again
-  from `ef8bacc`.
+  GitHub's branch stayed at `ef8bacc`. Whatever the session made was left
+  only in that run's clone on the home desktop.
+  - Corrected 2026-11-13: this entry first said the restart would begin
+    again from `ef8bacc`. It did not. The session had made one commit,
+    `4e46bcf`, at 23:01 EST. The operator copied it to GitHub, and it was
+    merged into the 372 branch as `df88d09`. Its unfinished close-out is
+    kept as `1b59a8d` (above), as a record only.
+  - The restart, run `20261113_155404_engineer_372`, started at 15:54 EST
+    on 2026-11-13 from `d10da9a`, and does the close-out again. So the
+    close-out's work is done twice, most of it its two test runs (16 and
+    35 minutes in the stopped session).
 
 What it affects: every Engineer session. Any scratch write through a
 variable costs a session and a stop for the operator.
@@ -6054,5 +6076,7 @@ What would close it, in a fleet phase (no rank may change
 - rule 3 states the guard's rule in its own words: a write's target must
   be a literal path the guard can read, so scratch files go to a literal
   directory such as `/fleet/run/`;
+- it says too that `sed -i` is refused wherever it points, not only under
+  `src/` and `tests/`;
 - a test reads the brief for that rule, against a fixture taken from this
   run's transcript.
