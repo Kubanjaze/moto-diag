@@ -77,3 +77,8 @@ Written by the advisor session on the Mac, from the operator's answer and their 
   - The standing test is not changed.
   - Next come `wholetree.sh --full`, the regression of record, and the close-out. There is no migration, so there is no database step.
   - Regenerating `src/api-types.ts` and merging the mobile branch are the handoff's steps for after this phase merges.
+
+## 2026-11-12: Carrying on after the operator's answers
+
+- **Gate 11 in the fence.** The fence's read-only `../moto-diag-mobile` stands on `phase-372-payment-api-routes-and-the-app` at `993fadc`. `tests/test_phase205_gate11.py`: 21 passed.
+- **Option (B) applied.** Row 372B is added to the ROADMAP, 🔲, for the three screens; it is the next free letter after 372 and names the prompt it starts from. The prompt `docs/prompts/372_the_apps_payment_screens.txt` is kept as written: it already says it applies only under option (A) and tells a session not told that to stop and ask, so 372B's session is not misled by it; 372B's own prompt is written when that phase starts. Item 7 is not built here.
