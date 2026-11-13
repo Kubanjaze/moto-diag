@@ -53,3 +53,27 @@ The decisions, character for character from `docs/decisions.md`:
 - `test_every_live_schema_is_in_the_committed_snapshot`: missing `CheckoutStarted`, `ConnectAnswer`, `ConnectRequest`, `InvoicePayment`, `InvoicePayments`, `PaymentAccount` and `TerminalStarted`, this phase's seven models, and nothing else.
 
 The phone app's copy at `../moto-diag-mobile` is read-only inside the fence and stands at `04be61c` on `main` (348's refresh). No gate is loosened. As for 303 and 348, the Engineer commits what is built and stops with kind `test-cannot-be-green`; the operator refreshes the app's snapshot on the mobile branch `phase-372-payment-api-routes-and-the-app` and picks between the plan's options (A) and (B). The regression of record and the close-out wait for that.
+
+## 2026-11-12: The operator's answers to the Chief Engineer's stop
+
+Written by the advisor session on the Mac, from the operator's answer and their desktop block's output. The ranks read no comment of the operator's on issue #59 (F223), so the answer is here and in `docs/decisions.md` (K81, merged into this branch at `024b4e8`).
+
+- **The fork, (d): (B).** K81, 2026-11-12, the operator's words, character for character:
+
+  > B, give me the desktop block
+
+  So the routes ship in this phase, and the phone app's three screens become a letter follow-on, 372B, built later by a session in the mobile repository. As the plan's "A real fork" says for (B), items 6 and 7 move there, and the handoff's step 2 shrinks to the snapshot push and the types.
+- **Gate 11, the phone app's snapshot: refreshed.** The operator's desktop block printed ALL GOOD at 22:22 EST. It did three things.
+  - **It pushed this branch's commits through `cbfa766` to GitHub by hand,** as for 348. The fleet's own push check (G1 to G5) passed first; G6 could not pass while Gate 11 was red.
+  - **It wrote the app's snapshot, `api-schema/openapi.json`, from `cbfa766`,** by `create_app().openapi()`, as for 303 and 348.
+    - The commit is moto-diag-mobile `993fadcdde68`, "API schema: refresh for backend Phase 372 (payment routes)", on that repository's branch `phase-372-payment-api-routes-and-the-app`.
+    - The branch starts from `main` at `0773f91` and is pushed. `main` is not touched.
+  - **It left the desktop's `~/Projects/moto-diag-mobile` on that branch,** so the fence's read-only copy carries the five operations and the seven models.
+- **The advisor checked it on the Mac,** with this branch at `cbfa766` and the mobile branch at `993fadc` side by side.
+  - The snapshot is byte for byte what `create_app().openapi()` gives on `cbfa766`.
+  - 120 passed: `tests/test_phase205_gate11.py`, the two `test_phase372_*` files, and the OpenAPI suites 183, 184 and 204.
+  - 287 passed: gates 12, 13 and 14.
+- **What follows is unchanged.**
+  - The standing test is not changed.
+  - Next come `wholetree.sh --full`, the regression of record, and the close-out. There is no migration, so there is no database step.
+  - Regenerating `src/api-types.ts` and merging the mobile branch are the handoff's steps for after this phase merges.
