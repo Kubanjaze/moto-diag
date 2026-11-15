@@ -6,7 +6,7 @@ Written 2026-10-12 by the advisor session that verified Phases 373–381. This c
 
 The fleet reads this table exactly (`.claude/skills/fleet/plan_order.py`): the first row whose ROADMAP row is not ✅ is the next mission. A row built by a builder session is waited for. A row that needs the operator is asked first, in plain English. Otherwise the fleet opens the mission's issue and a one-row pull request that marks its row 🚧, and the operator merges it by hand (K49). The list changes only by a dated entry under "Changes to the order" with a K-id, written on the operator's word (K48).
 
-As of 2026-11-05, K67.
+As of 2026-11-15, K84.
 
 | # | phase | kind | built by | needs the operator | entry |
 |---|---|---|---|---|---|
@@ -24,10 +24,12 @@ As of 2026-11-05, K67.
 | 12 | 398 | fleet | builder | nothing | 2026-11-05 · K67 |
 | 13 | 371 | shop | fleet | a fork: Stripe's production webhooks need an endpoint Stripe can reach, and the backend is tailnet-only (the operator's decision 3 of 2026-09-28); and an outside account, Stripe's live account ("Stripe: the live account, for 371 and 372") | Wave 1, item 4 · K48, K52 |
 | 14 | 372 | shop | fleet | an outside account: Stripe's live account | Wave 1, item 4 · K48 |
-| 15 | 330 | shop | fleet | a rule change: F210's general rule comes first ("F210's general rule is still needed before onboarding (330)", 2026-10-21); it changes the set-aside list's definition, which is the operator's call | Wave 1, item 5 · K48, K52 |
-| 16 | 334 | shop | fleet | an outside person: a lawyer, for the terms a shop signs | Wave 1, item 5 · K48 |
-| 17 | 344 | shop | fleet | nothing | Wave 1, item 5 · K48 |
-| 18 | 210 | shop | fleet | nothing | Wave 1, item 6 · K48 |
+| 15 | 403 | fleet | builder | nothing | 2026-11-15 · K84 |
+| 16 | 404 | shop | fleet | nothing | 2026-11-15 · K84 |
+| 17 | 334 | shop | fleet | nothing | Wave 1, item 5 · K48, K84 |
+| 18 | 330 | shop | fleet | a rule change: F210's general rule comes first ("F210's general rule is still needed before onboarding (330)", 2026-10-21); it changes the set-aside list's definition, which is the operator's call | Wave 1, item 5 · K48, K52 |
+| 19 | 344 | shop | fleet | nothing | Wave 1, item 5 · K48 |
+| 20 | 210 | shop | fleet | nothing | Wave 1, item 6 · K48 |
 
 The ROADMAP stays the ledger: this file records the order of the open rows, and why. A Step 0 that measures something new can change the order. Any change is recorded here, dated.
 
@@ -128,6 +130,12 @@ The operator's words:
   - **Built by builder sessions, one at a time, while a shop phase from this list runs.** Both change `.claude/skills/fleet/`, which the push gate keeps from the fleet. If shop work stalls, they stop too.
   - **Not in the list, so the fleet never waits for them.** A builder's row in the list is waited for; these run beside the shop phase instead. 399 starts once the next shop phase has started, and 400 after 399 closes.
   - **Prompts:** `docs/prompts/399_the_cost_ledger.txt`; 400's is written after 399 closes. Rows 399 and 400 are on master, 🔲. The rank's name is K68's.
+- **2026-11-15: 403, 404 and 334 go after 372 and before 330 (K84).** Phase 372 lost more than two days to stops that left its commits behind and to two refreshes of the phone app's copy by hand (F266, F231, F276). The pricing report asks for its step 2 before the first shop pays (F270, F271, F272, F274). And Mekno shows a user no terms yet.
+  - **The operator's words:** "yes go with templates, and approve both drafts".
+  - **403, the fleet's stops, unblocks 404, 334 and 330** (K43 rule 4), and every later shop phase that changes what the server tells the phone app. It is a fleet-only phase, which K69 says comes back to the operator: K84 is that answer. It is built by a builder session, and the fleet waits for it: it changes `.claude/skills/fleet/`, which the push gate keeps from the fleet. 400, the Bosun, stays as K69 sets it and is not built while 403 is.
+  - **404, what the plans limit, is built by the fleet.** Its four plan decisions, and that they change limits, are in K84 and in its prompt.
+  - **334 needs no outside person now.** Its terms and privacy policy come from templates, and a lawyer's review comes later, as a new version. It goes before 330, so that 330's onboarding can include the step.
+  - **Prompts:** `docs/prompts/403_the_fleets_stops.txt`, `docs/prompts/404_the_plans_limits_and_the_feed_status.txt` and `docs/prompts/334_the_terms_from_templates.txt`. Rows 403 and 404 are on master, 🔲, and row 334 says templates.
 
 ## Where the ledger stands
 
@@ -193,7 +201,7 @@ A finding joins the wave whose code it touches.
 ## The operator's steps outside the code
 
 - **Stripe:** the live account, for 371 and 372.
-- **A lawyer,** for 334's terms.
+- **A lawyer,** for 334's terms: since K84 (2026-11-15), later, as a review of the template terms that becomes a new version.
 - **The shop's accountant** confirms the Massachusetts warranty readings (373–375) before a real warranty job.
 - **Accounts** for offsite backup (345) and crash reports (343).
 - **K11:** decide the Subconscious plan before it cancels on 2026-10-23.
