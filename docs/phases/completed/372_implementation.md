@@ -86,7 +86,7 @@ No migration: the phase adds no table, column or index, and changes no row. The 
 
 ## The plan of record
 
-372 is row 14 of "Next, in order" in `docs/reports/2026-10-12_plan_of_record.md`: "14. 372 (shop, built by fleet); needs the operator: an outside account: Stripe's live account; from: Wave 1, item 4 · K48". K48 (2026-10-27), the operator's words: "1: The plan of record stays the single source; add a short "Next, in order" list at its top that the fleet reads exactly; it changes only by a dated entry with a K-id, written on my word."
+372 is row 14 of "Next, in order" in `docs/reports/2026-10-12_plan_of_record.md`. K48 (2026-10-27), the operator's words: "1: The plan of record stays the single source; add a short "Next, in order" list at its top that the fleet reads exactly; it changes only by a dated entry with a K-id, written on my word."
 
 The dated entry that names it, "2026-10-22 to 2026-10-25: the fleet went before the first shop": "None of the ten first-shop rows has started: 345, 343, 303, 348, 371, 372, 330, 334, 344 and 210." and "The next phase is a first-shop row, run through the fleet: staff logins with roles and the activity log (303 and 348), which need no outside account." Both have since closed, as have 345, 343 and 371, which is why `plan_order.py bearing 372` finds this row next; the sequencing question Step 0 raises as (c) is answered by the ledger.
 

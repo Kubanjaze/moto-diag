@@ -363,3 +363,8 @@ The 105 skips are the fence's, the same 105 as at `d10da9a`. 12516 is one more t
 - **Verified:** with the fix stashed the two new tests fail (2 failed); with it they pass (2 passed), the file restored byte for byte. `test_phase372_*`, `test_phase195c_pydantic_literal_lint.py`, `test_phase183_openapi.py`, `test_phase184_gate9.py`, `test_phase204_gate10.py`, `test_phase255B_collected_test_floor.py` and both `test_phase273_*` files: 176 passed. `scripts/code_quality.py counts` equals the pins: ruff 1108, mypy 202, complex 25, big 5, helpers 19, swallowed 22. Gate 11 with the change, against the app's snapshot at moto-diag-mobile `d292eef`: 1 failed, 20 passed, the failure naming exactly "CheckoutStarted.channel: changed", "InvoicePayment.outcome: changed" and "TerminalStarted.channel: changed". The snapshot is written again from this commit, as on 2026-11-14, before the regression of record.
 
 **Commit.** the commit after `47f5b00` that carries this entry; the close-out entry names it by hash.
+
+## 2026-11-15: The fourth round's wording finding
+
+- `372_implementation.md` line 89 quoted row 14 of the plan of record as a sentence in quotation marks, in a form the document does not hold: the source is a table row (`docs/reports/2026-10-12_plan_of_record.md` line 26). The quotation is deleted; the sentence keeps the row's number and the document.
+- Documents only; no file under `src/` or `tests/` changed after bug fix #2's commit.
