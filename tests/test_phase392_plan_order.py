@@ -43,15 +43,18 @@ class TestTheRealRecord:
         order = P.parse_order((ROOT / P.PLAN).read_text(encoding="utf-8"))
         assert [e.phase for e in order.entries] == ["392", "303", "394", "393", "395", "348",
                                                       "385", "396", "345", "397", "343", "398",
-                                                      "371", "372", "330", "334", "344", "210"]
-        assert order.as_of == ("2026-11-05", "K67")
+                                                      "371", "372", "403", "404", "334", "330",
+                                                      "344", "210"]
+        assert order.as_of == ("2026-11-15", "K84")
 
     def test_392_is_a_builders_and_303_348_need_nothing(self):
         e = {x.phase: x for x in P.parse_order((ROOT / P.PLAN).read_text()).entries}
         assert (e["392"].kind, e["392"].built_by) == ("fleet", "builder")
         assert e["303"].need is None and e["348"].need is None
         assert e["345"].need == "an outside account" and e["371"].need == "a fork"
-        assert e["334"].need == "an outside person"
+        # K84: 334's terms come from templates, so it no longer waits on a lawyer.
+        assert e["334"].need is None and e["404"].need is None
+        assert (e["403"].kind, e["403"].built_by) == ("fleet", "builder")
         # K52: 371 needs the Stripe account too; 330 waits on F210's rule.
         assert "Stripe's live account" in e["371"].needs
         assert e["330"].need == "a rule change" and "F210" in e["330"].needs
@@ -70,23 +73,23 @@ class TestTheRealRecord:
 class TestCheckRefuses:
     @pytest.mark.parametrize("rel,old,new,why", [
         (P.PLAN, "## Next, in order\n", "## The order\n", "has no '## Next, in order'"),
-        (P.PLAN, "As of 2026-11-05, K67.", "As of now.", "no 'As of"),
-        (P.PLAN, "As of 2026-11-05, K67.", "As of 2026-11-06, K67.", "no entry under"),
-        (P.PLAN, "As of 2026-11-05, K67.", "As of 2026-11-05, K99.", "K99, which does not"),
-        (P.PLAN, "As of 2026-11-05, K67.", "As of 2026-11-05, K47.", "does not cite K47"),
+        (P.PLAN, "As of 2026-11-15, K84.", "As of now.", "no 'As of"),
+        (P.PLAN, "As of 2026-11-15, K84.", "As of 2026-11-16, K84.", "no entry under"),
+        (P.PLAN, "As of 2026-11-15, K84.", "As of 2026-11-15, K99.", "K99, which does not"),
+        (P.PLAN, "As of 2026-11-15, K84.", "As of 2026-11-15, K47.", "does not cite K47"),
         (P.PLAN, "| 2 | 303 | shop | fleet | nothing |", "| 2 | 303 | shop | robots | nothing |",
          "its builder 'robots'"),
         (P.PLAN, "| 6 | 348 | shop | fleet | nothing |", "| 6 | 348 | store | fleet | nothing |",
          "its kind 'store'"),
-        (P.PLAN, "| 17 | 344 | shop | fleet | nothing |", "| 17 | 344 | shop | fleet | a favour |",
+        (P.PLAN, "| 19 | 344 | shop | fleet | nothing |", "| 19 | 344 | shop | fleet | a favour |",
          "its need 'a favour'"),
-        (P.PLAN, "| 17 | 344 | shop | fleet | nothing |",
-         "| 17 | 344 | shop | fleet | an outside account |", "its need"),
-        (P.PLAN, "| 18 | 210 | shop | fleet | nothing | Wave 1, item 6 · K48 |",
-         "| 18 | 210 | shop | fleet | nothing | Wave 1, item 6 |", "cites no K-id"),
-        (P.PLAN, "| 18 | 210 |", "| 18 | 999 |", "phase 999 has no ROADMAP row"),
-        (P.PLAN, "| 18 | 210 |", "| 18 | 303 |", "phase 303 is listed twice"),
-        (P.PLAN, "| 18 | 210 |", "| 19 | 210 |", "not numbered"),
+        (P.PLAN, "| 19 | 344 | shop | fleet | nothing |",
+         "| 19 | 344 | shop | fleet | an outside account |", "its need"),
+        (P.PLAN, "| 20 | 210 | shop | fleet | nothing | Wave 1, item 6 · K48 |",
+         "| 20 | 210 | shop | fleet | nothing | Wave 1, item 6 |", "cites no K-id"),
+        (P.PLAN, "| 20 | 210 |", "| 20 | 999 |", "phase 999 has no ROADMAP row"),
+        (P.PLAN, "| 20 | 210 |", "| 20 | 303 |", "phase 303 is listed twice"),
+        (P.PLAN, "| 20 | 210 |", "| 21 | 210 |", "not numbered"),
         (P.PLAN, "Wave 1, item 6 · K48", "Wave 1, item 6 · K98", "cites K98"),
         (P.DECISIONS, "| K51 | 2026-10-27 |", "| K51 | 2026-10-27 |", None),
     ], ids=["no-section", "no-as-of", "as-of-undated", "as-of-unresolved", "as-of-uncited",
@@ -154,6 +157,16 @@ class TestNext:
         e = P.next_entry(order, done)
         assert (e.phase, e.built_by) == ("398", "builder")               # K67: a builder's
         assert P.next_entry(order, {**done, "398": ("✅", "")}).phase == "371"
+
+    def test_after_372_closes_403_is_next_then_404_then_334(self):
+        order = P.parse_order((ROOT / P.PLAN).read_text())
+        done = {p: ("✅", "") for p in ("392", "303", "394", "393", "395", "348", "385", "396",
+                                        "345", "397", "343", "398", "371", "372")}
+        e = P.next_entry(order, done)
+        assert (e.phase, e.built_by) == ("403", "builder")               # K84: a builder's
+        done = {**done, "403": ("✅", "")}
+        assert P.next_entry(order, done).phase == "404"
+        assert P.next_entry(order, {**done, "404": ("✅", "")}).phase == "334"
 
     def test_all_done_is_none(self):
         order = P.parse_order((ROOT / P.PLAN).read_text())

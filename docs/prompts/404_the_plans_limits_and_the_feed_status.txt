@@ -1,0 +1,26 @@
+Do this: start Phase 404, what the plans limit, and a payments status that tells the truth (row 404, on master as 🔲: make it 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out.
+
+My words: "yes go with templates, and approve both drafts"
+
+- **Why:** live payments have been on since 21:10 EST on 2026-11-11 (docs/handoffs/2026-11-10_402_closed.md, "Live payments went on"). The pricing report (docs/reports/2026-11-10_mekno_pricing_and_tiers.md, "What happens next", step 2) asks for "a small code phase, before the first shop pays". And the payments feed's status said all was well through the failure of 2026-11-11 (F273, F274).
+- **Built by the fleet,** after Phase 403 and before 334 and 330 ('Next, in order' #16, K84).
+- **The operator's decisions, carried by K84:**
+  1. **Shop:** no limit on bikes. 10 people, 1 location and 500 diagnoses a month stay. (F270)
+  2. **Company:** up to 3 locations, and an AI figure of $150 a month, down from $500. (F271)
+  3. **Each plan's AI figure becomes a limit the server keeps:** Individual $5, Shop $50, Company $150 a month, per shop, per calendar month. Past it, the server refuses further paid AI calls with a plain message that names the plan and the date the month turns. The server-wide brake (`MOTODIAG_COST_CAP_MONTHLY_USD_CENTS`, 0, off) stays as it is. (F271)
+  4. **Names:** the $19 plan reads "Individual: for your own bikes", and its five bikes stay (F272). The other two read "Shop" and "Company", as the report and Stripe name them.
+- **What exists,** from the findings (re-measure each at Step 0):
+  - `TIER_VEHICLE_LIMITS` (src/motodiag/vehicles/registry.py, line 42) and `check_vehicle_quota` (line 391), which counts `vehicles WHERE owner_user_id = ?`; at the limit, HTTP 402 `vehicle-quota-exceeded` (src/motodiag/api/errors.py, line 275), checked by `POST /v1/vehicles` (src/motodiag/api/routes/vehicles.py, line 258);
+  - `TIER_LIMITS` (src/motodiag/cli/subscription.py): the names `Solo Mechanic`, `Shop (per location)` and `Multi-Location / Enterprise` (lines 69, 89 and 109), Shop's 50 bikes (line 92), Company's unlimited locations (line 115), and the AI figures $5, $50 and $500 (lines 85, 105 and 125), which only the CLI's tables read;
+  - `check_cost_cap`, the one server-wide brake (src/motodiag/shop/cost_cap.py), called in three places: src/motodiag/api/routes/videos.py line 541, src/motodiag/cli/diagnose.py line 424 and src/motodiag/media/analysis_worker.py line 84 (`git grep -n 'check_cost_cap(' -- src`);
+  - `feed status` (`feed_status_cmd`, src/motodiag/cli/payments.py, line 170), its alarm line (`_alarm_line`, line 102), and `_Job.checkin` (src/motodiag/payments/event_feed.py, line 418), which drops each check-in's result.
+- **What it ships:**
+  1. F270: a Shop account adds its 51st bike, with a test; Individual's five stay; the CLI's table and the server's limit agree; the app's quota wording is checked against it, and any change to the app's own text is named at Step 0 for its own session.
+  2. F271: Step 0 lists every paid AI call the app or the CLI can reach (the three above, and any other); each is held to the plan's figure, with tests that a Company account is refused past $150 and a Shop past $50. Company's 3 locations are kept where a location is added; if no code adds one, Step 0 says so, the limit is written where it is shown, and a finding is filed.
+  3. F272: the three names, in every table that shows them, with a test that each says so.
+  4. F274: as F274's closing condition says: the feed records each check-in's outcome where `feed status` reads it; the status names the last check-in's time and Sentry's answer; it exits 1 when the last one failed, or when none succeeded within two intervals; a test shows that a refused check-in turns the status red.
+- **The rule-1 stops it carries, answered:** items 1 to 4 change a threshold or a limit's definition, and K84's words are the operator's approval of exactly these. Any other change to a limit, a price or a check is a stop.
+- **The phone app:** if the API's description changes (the new refusal, for one), the app's copy is refreshed by Phase 403's step, which this phase follows.
+- **Not in this phase:** the people limit, which today is shown and kept nowhere (file a finding if Step 0 finds it matters); the names in Stripe's dashboard, which are the operator's; the website's pricing section; the app's screens (372B); the Mekno name in what customers see (K77, later work).
+- **The live step,** in the handoff: the server and the payments feed restarted on the new code (the feed's code changes here), then `motodiag payments feed status` printed and read.
+- **Closes** F270, F271, F272 and F274, once merged and live.

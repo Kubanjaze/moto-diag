@@ -1,0 +1,43 @@
+Do this: start Phase 403, the fleet's stops: work kept, the answer carried, the app's copy refreshed (row 403, on master as 🔲: make it 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out. Built by a builder session: it changes .claude/skills/fleet/, which the push gate keeps from the fleet. The fleet waits for it ('Next, in order' #15).
+
+- **Already on master:** this prompt, row 403, K84 and its place in "Next, in order", before 404, 334 and 330. Fetch master first.
+- **The row names what it unblocks (K43):** 404, 334 and 330, and every later shop phase. Phase 372 lost more than two days to the stops below, for about seven hours of the fleet's own work; any phase that changes what the server tells the phone app meets them again.
+- **You are at ~/Projects/moto-diag on the PC**, where the fleet runs and bubblewrap exists for the fence's tests. That folder is on `phase-399-the-cost-ledger`, clean: branch from master. Check `pgrep -x bwrap` before any whole-tree or regression run (F220). The fleet is idle while it waits for this phase: leave its service and its folders alone, except to copy the fixtures named below.
+
+My words: "yes go with templates, and approve both drafts"
+
+What is wrong. Each finding in docs/FOLLOWUPS.md holds its evidence; re-measure each at Step 0. Line numbers are from 1c3bc05.
+
+(a) **A stop loses its commits (F266, F231).** `stage_engineer` (.claude/skills/fleet/dispatcher.py, lines 1523 to 1536) turns a stop, from the watchers or from the Engineer's own result, into `needs-admiral` and pushes nothing; only `engineer_finish` pushes, on `pr-ready`. A run is held (`journal.hold`) only for a lost model-free run, free space, the database step and the Red Team's kept table. So the round after the operator's answer starts from a fresh clone of GitHub's branch, without the stopped session's commits. On 372 that happened at all three stops (F266 lists the commits and the push times), and each time they were pushed by hand. Build:
+   - a stop whose clone holds commits that GitHub's branch does not keeps its run (a new hold reason), so the next round starts from those commits;
+   - those commits are also pushed, through the push gate, to a side branch named for the run, `phase-<N>-stopped-<run>`, never to the phase branch. The gate's checks hold for it, except the model-free run: no pull request is ever opened from it, and nothing merges it (K84);
+   - the stop note names the commits and says where they are: on the side branch, not on the phase branch;
+   - if commits reach GitHub's phase branch by hand meanwhile (as 9e9709c to 76bdea5 did on 2026-11-14), that is not a refusal: the next round starts from the held run when GitHub's branch is an ancestor of it, and from GitHub's branch, saying so in the log, when it is not.
+
+(b) **The operator's answer never reaches the builder (F231).** The Engineer's brief carries no issue comment (`engineer.session_brief`, called at dispatcher.py line 1515), and the fence reaches only Anthropic. Today an answer reaches a build only when someone writes it into the branch by hand, as ef8bacc and ae09d1b did on 372. F231's closing condition, built: when `needs-admiral` comes off after an Engineer's stop, the dispatcher takes the comments the operator's own account posted after the stop (F223's rule: never another login's; the repository is public), quotes them verbatim into the phase log on the branch in a dated entry, and makes the Engineer due again, without the operator re-applying `plan:approved`. The brief says where the answer is.
+
+(c) **The phone app's copy (F276).** Gate 11 (tests/test_phase205_gate11.py, line 426) compares `create_app().openapi()` with moto-diag-mobile's `api-schema/openapi.json`. The fence mounts the app's repository read-only and nothing in the fleet writes it, so a phase that changes the API's description stops with test-cannot-be-green: twice on 372 (K81, K82), each cleared by a desktop block. Build (K84, the operator's choice):
+   - a result the Engineer can end with, `app-copy`, when Gate 11 is red only because this phase changed the description;
+   - on it, the dispatcher, outside the fence and with no model: regenerates the file from the clone's HEAD with `create_app().openapi()`, written the way that reproduces moto-diag-mobile 993fadc from cbfa766 and d292eef from 76bdea5 byte for byte (show both at Step 0); refuses if any other file would change; commits it on the app repository's branch of the phase branch's name, never `main`; pushes it with the fleet's account; puts the fleet's own copy of the app repository on that branch and mounts that copy in the fence, instead of the operator's folder; runs Gate 11 with no model against it; and resumes the Engineer from its held run;
+   - the operator's ~/Projects/moto-diag-mobile on the desktop is no longer moved for a fleet phase, and handoffs stop asking for it.
+
+(d) **The briefs say less than the checks do.** Phase 389's lesson: where a check and a brief could disagree, the brief states the check's rule. Each gets a test that reads the brief against the real failure as a fixture.
+   - F275: the Engineer's rule 3 (.claude/skills/fleet/engineer.py, lines 85 and 86) names `sed -i` and redirects only under src/ and tests/. The guard refuses `sed -i` everywhere, and any write whose target it cannot read; scratch files go to a literal directory such as /fleet/run/.
+   - F264: the brief never says that the phase log carries regression.sh's whole record (the regression line, every skip line under it, and the coverage line), or that the Engineer reads its own log with `regression_record` before it ends its turn.
+   - F261: the Red Team's brief gives a kind, `code`, that its refute table may not carry. Build F261's first option, the row written with the kind `factual`, as the brief already calls a code "no": it changes no checklist.
+
+How it is proven:
+- each of 372's three stops replayed from its real artefacts as a fixture: run 20261112_152526_engineer_372 (2106fc7, cbfa766), run 20261112_225609_engineer_372 (4e46bcf, and its four refusals at 23:54 and 23:55 EST), run 20261113_175849_engineer_372 (c0133a2, 76bdea5, Gate 11 against 993fadc), and the operator's comments on issue #59; each test red on the old code and green on the new. Copy what you need from the desktop's run folders into tests/fixtures first, before anything prunes them;
+- known-bad cases: a comment by any other login is never quoted; a stop with no new commits holds nothing; the app-copy step refuses on `main`, when a second file would change, and when another check is also red; a held run outlives a restart and is never pruned;
+- the mutations, red.
+
+Out of scope, each a finding already: F260, F267, F256, F263, F262, F265, F217's missed digests, F230, and the Quartermaster's F237, F238 and F253. File what you find and leave it.
+
+Stops beyond rule 1: any change that loosens the push gate beyond the side branch above; any write to the app's repository other than api-schema/openapi.json on a phase branch; any change to the guards.
+
+After the merge, which is mine, in this order, each named in the handoff:
+1. I give the fleet's account write access to moto-diag-mobile on GitHub (today it can only read it), and its key the same reach if the key is limited to one repository.
+2. One block for the desktop that checks no fleet job is running, moves the fleet's copy (~/motodiag/fleet/code) to master and restarts motodiag-fleet.service, accepting "the search on start:" or a "resume" line, as 398's did, every gh call with -R Kubanjaze/moto-diag.
+3. A trial before 404 starts, on an issue carrying `<!-- fleet-trial -->`: a planted stop after a commit, kept and on its side branch; an answer of mine quoted into the log; and the app-copy step on a throwaway branch in both repositories. Write its block into the handoff; I run it.
+
+Report at the end: each cause as re-measured; each fix with its fixture seen red; the regression line; verify_phase.sh's result; the trial's block; the next step, my call.

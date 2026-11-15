@@ -1,0 +1,22 @@
+Do this: start Phase 334, the terms a shop accepts and a privacy policy, from templates (row 334, on master as 🔲: make it 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out.
+
+My words: "yes go with templates, and approve both drafts"
+
+- **Why:** live payments have been on since 21:10 EST on 2026-11-11, and Mekno shows a user no terms, disclaimer or privacy policy. The advisor's search of 2026-11-15, `git grep -n -i -E "disclaim|terms of service|privacy policy|own risk" -- src`, found 5 lines here, none of them shown to a user (a developer's note in src/motodiag/cli/main.py, a migration's text and three knowledge rows), and none in moto-diag-mobile; re-measure it at Step 0. A disclaimer holds only inside terms the shop has accepted, with the date and the version kept. The advisor said on 2026-11-15 that no law requires a lawyer first, and my answer was templates now and a lawyer's review later, as a new version (K84).
+- **Built by the fleet,** after 404 and before 330 ('Next, in order' #17, K84), so that 330's onboarding for new shops can include the step.
+- **What it ships:**
+  1. **The terms,** `docs/legal/terms.md`, from a public template whose licence allows reuse. Step 0 names the template, its licence and its address (Basecamp's policies, under CC BY 4.0, are one to check). Cut to what Mekno does, with the version and its date at the top, and these clauses in plain words:
+     - Mekno's diagnoses and suggestions are information: the mechanic decides, and is responsible for the repair;
+     - the tax figures are a convenience: the shop is responsible for its own sales tax;
+     - the shop answers for its customers' claims, and indemnifies Mekno against them;
+     - what Mekno owes a shop is capped at what the shop paid it, over the period the template uses;
+     - the shop's data, its customers' included, is the shop's: it can take it out when it leaves, and it is deleted when the shop asks;
+     - a subscription's price and renewal are shown before it is paid for, and it can be cancelled online as easily as it was bought.
+  2. **The privacy policy,** `docs/legal/privacy.md`, from the same template: what Mekno keeps (accounts, shops, their customers' names and phone numbers, bikes, invoices, diagnoses, photos and videos), why, the services it goes to (Stripe for payments, Anthropic for the AI's answers, Sentry for crash reports, the offsite backup), how long it is kept, and how a shop gets it out or deleted. Neither file holds a phone number, a price ID or Sentry's address: contact is the website's support page.
+  3. **Acceptance, on the server:** a record of who accepted which version, and when (a new table, through the fleet's database step); a route that gives the current version and its address, and one that accepts it. A new version must be accepted again.
+  4. **Two switches, both off by default,** so nothing changes for the first shop until I turn them on: one makes the routes a signed-in user calls refuse, with a plain message naming the step, until the current version is accepted (on once the app's screen is in); the other makes Stripe Checkout ask a subscriber to accept the terms (on once the terms page's address is in Stripe's settings).
+- **Where the pages live:** getmekno.com is my site, outside this repository. The handoff gives me the two files to publish there, as /terms/ and /privacy/, the server settings that hold their addresses, and the Stripe setting for the terms link, each step in plain English. This phase publishes nothing there.
+- **The app's screen** that shows the terms and the "I agree" button is moto-diag-mobile's work: Step 0 names it, and it follows as 334B, built by a mobile session, as 372B follows 372 (K81).
+- **The rule-1 stops it carries:** none that I know of. I read the two texts before they are published: the handoff asks me to.
+- **Not in this phase:** a lawyer's review (later, as a new version); the privacy links on the store listings (mine); the trademark; the shop's accountant, before its first warranty job.
+- **The live step,** in the handoff: the new table through the fleet's database step, the server restarted on the new code with both switches off, and the route that gives the current version read once.
