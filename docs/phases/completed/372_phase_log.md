@@ -33,7 +33,7 @@ The decisions, character for character from `docs/decisions.md`:
 - `tests/test_phase372_payment_routes.py`, 26 tests, all green on the first run. Only the writer, who logs in for the audit test, gets a password hash; the other callers use API keys (a hash per user made the file 76 s).
 - `tests/test_phase372_wiring.py`, 18 tests, read with `code_of`.
 - **Against master's code.** A scratch worktree at `62c9f3c` (master's code) with the new route module and the two test files copied in, so only `app.py`, `errors.py` and `openapi.py` were master's, run with that worktree's `src/` on `PYTHONPATH`: route tests 1 passed / 25 failed, wiring 10 passed / 8 failed, `tests/test_phase273_connect.py` 12 passed / 0 failed, `tests/test_phase273_invoice_payments.py` 35 passed / 0 failed. The ten wiring tests that passed read the route module's own text, which the control kept. The one route test that passed was "an invoice that does not exist is 404": a path nobody serves is a 404 too, so it could not fail. It now also requires the problem type `invoice-not-found`, and re-run on master's code it is red (1 failed); on the branch its class is 4 passed. So all 26 route tests are red on master's code.
-- **Mutations.** `372_mutate.py`, the plan's thirteen, on 348's harness; its output is `372_mutate.out`: **13/13 red**, every file restored. The route mutations run the route tests alone, so each is caught by an answer, not by the wiring file's reading of the text.
+- **Mutations.** `372_mutate.py`, the plan's thirteen, on 348's harness; its output is `372_mutate.out`: **13/13 red**, every file restored.
 - **The OpenAPI suites unchanged:** `tests/test_phase372_wiring.py`, `test_phase183_openapi.py`, `test_phase184_gate9.py`, `test_phase204_gate10.py` and `test_phase205_gate11.py` together: 91 passed, 1 skipped, 2 failed, the two failures Gate 11's `TestContractSnapshot` (below).
 - **`COLLECTED_TEST_FLOOR`** 12576 → 12620, by a diff of collected ids against `62c9f3c`, each side with its own `src/`: +44 −0 (26 and 18).
 - The quality counts (`scripts/code_quality.py counts`) equal their pins: ruff 1108, mypy 202, complex 25, big 5, helpers 19, swallowed 22. The test file's import order was put right for ruff before the commit.
@@ -341,4 +341,9 @@ The 105 skips are the fence's, the same 105 as at `d10da9a`. 12516 is one more t
 
 - The entry above listed Deviation 7 as changed; it is unchanged, and Deviation 9 was added. The entry now says so.
 - Deviation 8's opening sentence counted three Engineer sessions, and the same Deviation names a fourth. The sentence is deleted; the Deviation now opens on the second session's stop.
+- Documents only; no file under `src/` or `tests/` changed, so the regression of record at `76bdea5` stands.
+
+## 2026-11-15: One factual fix from the Red Team's third round
+
+- Item 4's mutations bullet said every route mutation runs the route tests alone. R7, which drops connect's 403 reference, runs both test files and is caught by the wiring file's reading of the generated document. The sentence is deleted; the bullet keeps the 13/13 result.
 - Documents only; no file under `src/` or `tests/` changed, so the regression of record at `76bdea5` stands.
