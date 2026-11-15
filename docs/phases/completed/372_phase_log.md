@@ -332,7 +332,13 @@ The 105 skips are the fence's, the same 105 as at `d10da9a`. 12516 is one more t
 ## 2026-11-14: The close-out, again
 
 - The close moves to 2026-11-14, the date of the regression of record above. Row 372 says **CLOSED 2026-11-14.** with the new line and the app's snapshot `d292eef`; the handoff is renamed `docs/handoffs/2026-11-14_372_closed.md` with `git mv`, and its server block now names the code's last commit, `c0133a2`.
-- v1.1 brought to bug fix #1 and the new snapshot: Deviations 1, 4, 7 and 8, "No bug fixes" replaced, Results' Gate 11, floor, whole-tree and regression lines.
+- v1.1 brought to bug fix #1 and the new snapshot: Deviations 1, 4 and 8 changed, Deviation 9 added, "No bug fixes" replaced, Results' Gate 11, floor, whole-tree and regression lines.
 - `implementation.md`'s history row and the root `phase_log.md`'s pointer carry the new date.
 - `closeout_check.py . 372` first refused the bug-fix register: the heading of 2026-11-13's Gate 11 entry named the fix by number, so it counted as a second entry, and the entry's commit was a `- **Commit:**` bullet, not the `**Commit.**` line the check reads. The heading now names the fix by what it did, and the commit line takes the check's form; neither fact changed. It then printed nothing.
 - The edit guard blocked one command, once: a Python here-document that rewrote the handoff, whose text named a file under `tests/` and whose write path the guard could not resolve ("blocks what it cannot resolve. Use a literal path"). Nothing in it ran, the `git mv` included. The guard is unchanged; the handoff was edited with the Edit tool instead, and the rename run on its own.
+
+## 2026-11-15: Two factual fixes from the Red Team's second round
+
+- The entry above listed Deviation 7 as changed; it is unchanged, and Deviation 9 was added. The entry now says so.
+- Deviation 8's opening sentence counted three Engineer sessions, and the same Deviation names a fourth. The sentence is deleted; the Deviation now opens on the second session's stop.
+- Documents only; no file under `src/` or `tests/` changed, so the regression of record at `76bdea5` stands.
