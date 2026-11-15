@@ -225,10 +225,114 @@ The 105 skips are the fence's: each is named above, by file and reason. `COVERAG
 - **Fix:** both fields typed `Literal[...]` with the CHECK's values. New test `test_the_payment_list_emits_channel_and_status_as_their_check_enums` in `tests/test_phase372_wiring.py` reads the two enums from `create_app().openapi()`. `COLLECTED_TEST_FLOOR` 12620 → 12621, by a diff of collected ids against `9e9709c`: +1 -0.
 - **Files:** `src/motodiag/api/routes/payments.py`, `tests/test_phase372_wiring.py`, `tests/test_phase255B_collected_test_floor.py`.
 - **Verified:** `check_f9_patterns.py --all` prints "F9 lint: clean". The new test failed with the fix stashed and passes with it; `test_phase372_*`, `test_phase195c_pydantic_literal_lint.py` and `test_phase183_openapi.py`: 113 passed.
-- **Commit:** `c0133a2`.
 
-## 2026-11-13: Gate 11 is red after bug fix #1
+
+**Commit.** `c0133a2`.
+
+## 2026-11-13: Gate 11 is red after the payment-enums fix
 
 - `wholetree.sh --full` at `c0133a2`, on its own, on a clean tree: exit 1. It printed "wholetree full: FAILED — 4 failed, 5099 passed, 36 skipped, 33 warnings in 995.33s (0:16:35) (997.5 s wall)". `regression.sh` then refused to start (exit 2): "no passing `wholetree.sh --full` record for HEAD c0133a2df007".
 - The four failures are one cause: `tests/test_phase205_gate11.py::TestContractSnapshot::test_shared_schemas_have_not_drifted` reports "InvoicePayment.channel: changed; InvoicePayment.status: changed", and gates 12, 13 and 14 re-run Gate 11. The app's snapshot at moto-diag-mobile `993fadc` was written from `cbfa766`, where both fields were `string`; the gate rightly sees the enums as a contract change.
 - The app's copy at `../moto-diag-mobile` is read-only inside the fence. No gate is loosened. As on 2026-11-12, the Engineer commits this record and stops with kind `test-cannot-be-green`: the snapshot on the mobile branch `phase-372-payment-api-routes-and-the-app` needs writing again from `c0133a2`. The regression of record and the close-out documents' new line wait for that.
+
+## 2026-11-14: Gate 11 green again; the whole-tree run and the regression of record
+
+The operator refreshed the app's snapshot from `76bdea5` on moto-diag-mobile's branch `phase-372-payment-api-routes-and-the-app`: commit `d292eef`, "API schema: refresh for backend Phase 372 bug fix #1 (payment enums)". Its only change is the two enums. Run by the fourth Engineer session, in the fence, at `76bdea5`; no file under `src/` or `tests/` changed after `c0133a2`.
+
+- `tests/test_phase205_gate11.py` on its own: 21 passed.
+- `wholetree.sh --full` on its own, on a clean tree: exit 0. It printed "wholetree full: PASSED — 5103 passed, 36 skipped, 33 warnings in 940.41s (0:15:40) (942.9 s wall)" and wrote its record for commit `76bdea5267fc`. A first start of it was stopped at ten minutes by the session's own background time limit, not by a test; it was started again from the beginning.
+- `regression.sh`, then, on the same clean tree: exit 0. Its lines, as printed:
+
+Regression of record: 12516 passed, 0 failed, 105 skipped, 0 errors at `76bdea5` (34 min 46 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0) (run inside the fleet's fence)
+Skipped in the regression of record: [1] tests/test_phase191b_ffmpeg.py:249: real ffmpeg binary or fixture mp4 not available
+Skipped in the regression of record: [1] tests/test_phase191b_ffmpeg.py:264: real ffmpeg binary or fixture mp4 not available
+Skipped in the regression of record: [1] tests/test_phase191b_ffmpeg.py:269: real ffmpeg binary or fixture mp4 not available
+Skipped in the regression of record: [1] tests/test_phase191b_ffmpeg.py:277: real ffmpeg binary or fixture mp4 not available
+Skipped in the regression of record: [1] tests/test_phase191b_ffmpeg.py:283: real ffmpeg binary or fixture mp4 not available
+Skipped in the regression of record: [1] tests/test_phase244H_test_db_isolation.py:79: no production database on this machine
+Skipped in the regression of record: [7] tests/test_phase257_source_checks.py:211: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase257_source_checks.py:476: acquired/Yamaha/library_om_contents_pdf_10_5YR-F8199-15_02.pdf is not in this machine's library
+Skipped in the regression of record: [1] tests/test_phase257_source_checks.py:476: acquired/KTM/24_3214961_en_OM.pdf is not in this machine's library
+Skipped in the regression of record: [1] tests/test_phase257_source_checks.py:527: the KTM manual is not in this machine's library
+Skipped in the regression of record: [1] tests/test_phase257_manual_route_excerpts.py:147: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase257_manual_route_excerpts.py:352: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase257_manual_route_excerpts.py:358: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase257_manual_route_excerpts.py:364: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase257_manual_route_excerpts.py:367: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:104: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:121: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:137: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:145: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:153: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:162: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:175: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:185: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:218: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:223: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:248: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:259: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:272: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:292: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:306: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:321: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:333: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:340: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:438: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:445: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:464: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase257_orchestrator_guards.py:85: inside the fleet's fence: no Subconscious login there (K42)
+Skipped in the regression of record: [2] tests/test_phase257_orchestrator_guards.py:149: inside the fleet's fence: osacompile is macOS-only
+Skipped in the regression of record: [4] tests/test_phase257_sandbox_boundary.py:72: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:80: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:87: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:93: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:106: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:112: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:119: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:125: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:131: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase204_gate10.py:47: inside the fleet's fence: no ffmpeg on the home desktop
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:61: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [4] tests/test_phase388_fence_boundary.py:96: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [3] tests/test_phase388_fence_boundary.py:105: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:113: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:120: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:125: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:131: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:139: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:148: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:159: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:164: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:170: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:177: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:186: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:198: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:210: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:216: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [7] tests/test_phase388_fence_boundary.py:221: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:235: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:244: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:280: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:287: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:291: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:295: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:303: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:316: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:325: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:330: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:338: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:344: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:350: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:354: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:360: inside the fleet's fence: its boundary is proven from the host, not from inside
+Line coverage of record: 88.20% at `76bdea5` (the pin is 87.50%): 0.70 points above it; raise COVERAGE_PERCENT to lock it in
+
+The 105 skips are the fence's, the same 105 as at `d10da9a`. 12516 is one more than 12515: bug fix #1's test. `COVERAGE_PERCENT` is not raised: the plan keeps the ratchet's pins as they are. Only documents change after `76bdea5`.
+
+## 2026-11-14: The close-out, again
+
+- The close moves to 2026-11-14, the date of the regression of record above. Row 372 says **CLOSED 2026-11-14.** with the new line and the app's snapshot `d292eef`; the handoff is renamed `docs/handoffs/2026-11-14_372_closed.md` with `git mv`, and its server block now names the code's last commit, `c0133a2`.
+- v1.1 brought to bug fix #1 and the new snapshot: Deviations 1, 4, 7 and 8, "No bug fixes" replaced, Results' Gate 11, floor, whole-tree and regression lines.
+- `implementation.md`'s history row and the root `phase_log.md`'s pointer carry the new date.
+- `closeout_check.py . 372` first refused the bug-fix register: the heading of 2026-11-13's Gate 11 entry named the fix by number, so it counted as a second entry, and the entry's commit was a `- **Commit:**` bullet, not the `**Commit.**` line the check reads. The heading now names the fix by what it did, and the commit line takes the check's form; neither fact changed. It then printed nothing.
+- The edit guard blocked one command, once: a Python here-document that rewrote the handoff, whose text named a file under `tests/` and whose write path the guard could not resolve ("blocks what it cannot resolve. Use a literal path"). Nothing in it ran, the `git mv` included. The guard is unchanged; the handoff was edited with the Edit tool instead, and the rename run on its own.

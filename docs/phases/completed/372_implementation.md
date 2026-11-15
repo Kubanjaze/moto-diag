@@ -1,6 +1,6 @@
 # Phase 372 — Payment API routes and the app's payment screens
 
-**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-11-13 (v1.0 2026-11-12, `5a1e6e9`, revised `62c9f3c`; v1.1 the close-out)
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-11-14 (v1.0 2026-11-12, `5a1e6e9`, revised `62c9f3c`; v1.1 the close-out)
 
 ---
 
@@ -152,35 +152,36 @@ The phase is a shop phase, not fleet-only: it changes `src/motodiag/api`, `docs/
 
 ## Deviations
 
-1. **The fork went to (B)** (K81, 2026-11-12: "B, give me the desktop block"). The routes ship here; the three screens are row 372B, added 🔲 to the ROADMAP. Item 7 is not built, and row 372 names the snapshot commit on the mobile branch (`993fadc`), since no screens commit exists.
+1. **The fork went to (B)** (K81, 2026-11-12: "B, give me the desktop block"). The routes ship here; the three screens are row 372B, added 🔲 to the ROADMAP. Item 7 is not built, and row 372 names the snapshot commit on the mobile branch (`d292eef`, which replaced `993fadc` after bug fix #1), since no screens commit exists.
 2. **The app's prompt is kept as written for option A.** It was written before the operator's answer. It already says it applies only under (A) and tells a session not told that to stop and ask, so it cannot mislead 372B's session; 372B writes its own prompt from it when it starts.
 3. **The handoff's app step is the types and the merge of the snapshot branch,** as the plan's (B) says; the snapshot itself was pushed by the operator's desktop block. A third step puts the desktop's copy of the app back on `main`, which item 8's step 2 already asked for.
-4. **The handoff's server block names the code's last commit, `4e46bcf`, not the branch's tip:** every commit after it changes documents only.
+4. **The handoff's server block names the code's last commit, `c0133a2` (bug fix #1), not the branch's tip:** every commit after it changes documents only.
 5. **`README.md`'s route count** said 80 (from Phase 208, already wrong); it now says 117, the measured count on this branch, rather than 80 moved by five.
 6. **Decided in the build, recorded in the phase log:** the answers are pydantic models; an invoice not at the shop raises `InvoiceNotFoundError`, which the chain already answers 404 `invoice-not-found`; three private helpers besides `_invoice_shop_id` (`_require_invoice_at_shop`, `_account`, `_started_fields`), none of which writes.
 7. **The Gate 11 stop went as the plan says,** with the snapshot refreshed by the operator's desktop block and the branch's commits through `cbfa766` pushed by hand. No gate was loosened.
-8. **The build took three Engineer sessions.** The second stopped on an edit-guard block (F275); its one commit, `4e46bcf`, was carried by the advisor, and its unfinished close-out was not (it is kept as `1b59a8d` on `carry-372-stopped-build`). This close-out, the whole-tree run and the regression of record were done again from `d10da9a` on 2026-11-13, so the phase closes on that date.
+8. **The build took three Engineer sessions.** The second stopped on an edit-guard block (F275); its one commit, `4e46bcf`, was carried by the advisor, and its unfinished close-out was not (it is kept as `1b59a8d` on `carry-372-stopped-build`). This close-out, the whole-tree run and the regression of record were done again from `d10da9a` on 2026-11-13. Bug fix #1 then turned Gate 11 red, and a fourth session ran them again from `76bdea5` on 2026-11-14, after the operator refreshed the app's snapshot (`d292eef`), so the phase closes on that date.
+9. **Bug fix #1 changed the API's description after the snapshot was taken,** so the snapshot was refreshed a second time by the operator, as in Deviation 7. No gate was loosened.
 
-No bug fixes.
+One bug fix (the phase log): the payments list typed `channel` and `status` as free strings against `invoice_payments`' CHECK constraints; both are `Literal` now, with one new test.
 
 ## Results
 
 - **The routes.** Five, under the `payments` tag, each on `require_tier("shop")` and `require_shop_access`; four rows in `_exc_class_chain` (409 `payment-refused`; 503 `payments-not-configured` for two; 503 `stripe-unavailable`). Each operation documents 401, 402, 403, 404, 409 and 503.
-- **The tests.** `tests/test_phase372_payment_routes.py` (26) and `tests/test_phase372_wiring.py` (18). On master's `app.py`, `errors.py` and `openapi.py`, all 26 route tests are red, and the two 273 CLI suites are green (12 and 35 passed).
+- **The tests.** `tests/test_phase372_payment_routes.py` (26) and `tests/test_phase372_wiring.py` (19, one from bug fix #1). On master's `app.py`, `errors.py` and `openapi.py`, all 26 route tests are red, and the two 273 CLI suites are green (12 and 35 passed).
 - **The mutations.** `372_mutate.py`: 13/13 red (`372_mutate.out`).
-- **Gate 11** against the refreshed snapshot (moto-diag-mobile `993fadc`, branch `phase-372-payment-api-routes-and-the-app`): 21 passed, in the fence.
-- **`COLLECTED_TEST_FLOOR` 12576 to 12620**, by a diff of collected ids: +44 −0.
+- **Gate 11** against the refreshed snapshot (moto-diag-mobile `d292eef`, branch `phase-372-payment-api-routes-and-the-app`): 21 passed, in the fence.
+- **`COLLECTED_TEST_FLOOR` 12576 to 12620**, by a diff of collected ids: +44 −0; **12621** after bug fix #1 (+1 −0).
 - **The code's counts** at their pins: ruff 1108, mypy 202, complex 25, big 5, helpers 19, swallowed 22.
-- **`wholetree.sh --full`** on `d10da9a`: 5103 passed, 36 skipped, exit 0.
+- **`wholetree.sh --full`** on `76bdea5`: 5103 passed, 36 skipped, exit 0.
 - **The regression of record:**
 
-Regression of record: 12515 passed, 0 failed, 105 skipped, 0 errors at `d10da9a` (36 min 53 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0) (run inside the fleet's fence)
+Regression of record: 12516 passed, 0 failed, 105 skipped, 0 errors at `76bdea5` (34 min 46 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0) (run inside the fleet's fence)
 
-  Line coverage of record: 88.20% at `d10da9a` (the pin is 87.50%). The 105 skips are named in the phase log.
+  Line coverage of record: 88.20% at `76bdea5` (the pin is 87.50%). The 105 skips are named in the phase log.
 
 ## Version history
 
 | version | date | what |
 |---|---|---|
 | 1.0 | 2026-11-12 | the plan |
-| 1.1 | 2026-11-13 | built; the fork answered B (K81); Deviations and Results; closed |
+| 1.1 | 2026-11-14 | built; the fork answered B (K81); bug fix #1; Deviations and Results; closed |
