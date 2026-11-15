@@ -5111,7 +5111,7 @@ under it. F250's rotation edits the same file and needs the same
 restart, so one sitting can do both. The guide names the setting when a
 phase next touches it.
 
-### F250
+### F250 — CLOSED by K83 (the operator keeps the key)
 
 **The Sentry DSN was pasted into a chat on 2026-11-01, so it is to be rotated now that the live check has passed**
 
@@ -5141,6 +5141,11 @@ The steps, the operator's next, in this order:
 What would close it: the old key deleted after a check with the new key
 has arrived, recorded here with the new check's event id and the date.
 No key or DSN is recorded.
+
+**Closed 2026-11-15 by K83, without the steps above.** The operator, to
+the advisor session at 00:09 EST: "im not replacing that sentry key, get
+over it, ignore it". The key stays as it is, and nothing here is left to
+do.
 
 ### F251 — CLOSED by Phase 398
 
