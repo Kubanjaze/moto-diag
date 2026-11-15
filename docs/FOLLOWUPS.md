@@ -5702,13 +5702,36 @@ for free space, for the database step and for the Red Team's kept table.
 Neither stop is one of these, so taking the label off starts a fresh
 clone of GitHub's branch.
 
+It happened three more times on Phase 372 (issue #59), each rescued by
+hand. Added 2026-11-14 by the advisor, the push times from GitHub's
+record of the phase branch:
+- 2026-11-12, 15:56 EST: the first build's stop (test-cannot-be-green,
+  answered as K81) left `2106fc7` and `cbfa766` (15:52 and 15:55) in its
+  run's folder, with GitHub's branch at `62c9f3c`. The operator's desktop
+  block pushed both at 22:21 EST.
+- 2026-11-12, 23:56 EST: the second session's stop (guard-blocked-twice,
+  F275) left `4e46bcf` (23:01) in its folder. The operator's desktop
+  block pushed it, under its unfinished close-out, to the branch
+  `carry-372-stopped-build` at 14:44 EST on 2026-11-13, and the advisor
+  merged it into the phase branch as `df88d09` (pushed 14:56 EST).
+- 2026-11-13, 18:24 EST: fix round 1's stop (test-cannot-be-green,
+  answered as K82) left the fix, `c0133a2` (18:05), and its record,
+  `76bdea5` (18:24), in run `20261113_175849_engineer_372`'s clone, with
+  GitHub's branch at `9e9709c`. The stop note says "that fix is
+  committed on the phase branch", which was true only in the clone. The
+  operator's desktop block pushed both at 22:12 EST on 2026-11-14, a
+  fast-forward to `76bdea5`.
+Without the rescues, each next round would have started from GitHub's
+branch, without that work.
+
 What it affects: any stop after a commit. Without the two rescues, the
 morning's build (its stage started at 09:55) and the evening's fix round
 (22:33 to 23:47) would have been done again.
 
 What would close it: a stop after a commit holds its run (a new hold
 reason), so that the round after the operator's answer starts from those
-commits, and the stop note names them.
+commits, and the stop note names them and says whether they are on
+GitHub.
 
 ### F267
 
