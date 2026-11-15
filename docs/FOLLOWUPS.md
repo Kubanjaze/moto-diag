@@ -5143,7 +5143,7 @@ has arrived, recorded here with the new check's event id and the date.
 No key or DSN is recorded.
 
 **Closed 2026-11-15 by K83, without the steps above.** The operator, to
-the advisor session at 00:09 EST: "im not replacing that sentry key, get
+the advisor session at 23:05 EST on 2026-11-14: "im not replacing that sentry key, get
 over it, ignore it". The key stays as it is, and nothing here is left to
 do.
 
