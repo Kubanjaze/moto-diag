@@ -95,12 +95,16 @@ class ConnectAnswer(BaseModel):
     card_payments_status: Optional[str]
 
 
+#: The values `invoice_payments`' CHECK allows for `channel`.
+PaymentChannel = Literal["checkout", "terminal"]
+
+
 class CheckoutStarted(BaseModel):
     payment_id: int
     invoice_number: str
     amount_cents: int
     currency: str
-    channel: str
+    channel: PaymentChannel
     checkout_url: str
     paid_when: str
 
@@ -110,7 +114,7 @@ class TerminalStarted(BaseModel):
     invoice_number: str
     amount_cents: int
     currency: str
-    channel: str
+    channel: PaymentChannel
     payment_intent_id: str
     reader_action_status: Optional[str]
     paid_when: str
@@ -118,11 +122,11 @@ class TerminalStarted(BaseModel):
 
 class InvoicePayment(BaseModel):
     id: int
-    channel: Literal["checkout", "terminal"]
+    channel: PaymentChannel
     amount_cents: int
     currency: str
     status: Literal["started", "failed", "succeeded"]
-    outcome: Optional[str]
+    outcome: Optional[Literal["paid_invoice", "paid_twice", "rejected"]]
     outcome_reason: Optional[str]
     failure_message: Optional[str]
     refunded_cents: int

@@ -537,7 +537,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: against 9e9709c (12620): +1 -0. Added, in test_phase372_wiring.py:
 #: test_the_payment_list_emits_channel_and_status_as_their_check_enums.
 #: Measured: 12621.
-COLLECTED_TEST_FLOOR = 12621
+#:
+#: Phase 372 bug fix #2 (the Red Team's round 4, fixed by hand), by a diff
+#: of collected ids against 47f5b00 (12621), each side read with its own
+#: src/: +2 -0. Added, in test_phase372_wiring.py:
+#: test_the_payment_starts_emit_channel_as_its_check_enum and
+#: test_the_payment_list_emits_outcome_as_its_check_enum. Measured: 12623.
+COLLECTED_TEST_FLOOR = 12623
 
 
 def _collected_count() -> int:

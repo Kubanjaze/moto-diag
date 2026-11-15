@@ -97,5 +97,19 @@ def test_the_payment_list_emits_channel_and_status_as_their_check_enums(spec):
     assert set(props["status"]["enum"]) == {"started", "failed", "succeeded"}
 
 
+def test_the_payment_starts_emit_channel_as_its_check_enum(spec):
+    schemas = spec["components"]["schemas"]
+    for name in ("CheckoutStarted", "TerminalStarted"):
+        channel = schemas[name]["properties"]["channel"]
+        assert set(channel.get("enum", [])) == {"checkout", "terminal"}, name
+
+
+def test_the_payment_list_emits_outcome_as_its_check_enum(spec):
+    branches = spec["components"]["schemas"]["InvoicePayment"]["properties"]["outcome"]["anyOf"]
+    assert {"type": "null"} in branches
+    assert {v for b in branches for v in b.get("enum", [])} == {
+        "paid_invoice", "paid_twice", "rejected"}
+
+
 def test_the_route_module_catches_nothing():
     assert "except" not in code_of(routes)
