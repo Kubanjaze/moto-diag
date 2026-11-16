@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F276** (this file). The
+At the time of writing the highest assigned is **F278** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -6136,9 +6136,92 @@ held the phase until the operator was there to run it. Phase 404 changes
 the API's description too (a new refusal past a plan's AI limit), so it
 would meet the same stop.
 
+Added 2026-11-15, after 372 merged: a third refresh, outside any stop.
+Bug fix #2, made by hand on the Mac (K87), changed the description
+again, and the operator's desktop block regenerated the copy from
+backend `a2d72c6` as moto-diag-mobile `13b6e68`; Gate 11 passed 21
+against it. The Mac's run of the same generator on `a2d72c6` gave the
+same file byte for byte (sha-256 `5f4cc4b6a994…`), a third pair for the
+proof below.
+
 What would close it: the fleet refreshing that one file itself, outside
 the fence and with no model, on the mobile repository's branch of the
 phase branch's name and never `main`, refusing when any other file would
 change, then running Gate 11 against it; proven by regenerating `993fadc`
 from `cbfa766` and `d292eef` from `76bdea5` byte for byte. Phase 403 is
 drafted to build it.
+
+### F277
+
+**A review round the operator grants after the third can never be recorded: `refute_check`'s C5 refuses any table row above round 3, so the Red Team's stage stops on its own table**
+
+Filed 2026-11-15 by the advisor session. K9 (2026-09-27, "max 3 refute
+rounds") is held by `.claude/skills/refute/refute_check.py`'s C5
+(`MAX_ROUNDS = 3`: "no round is above 3"), which
+`.claude/skills/fleet/red_team.py`'s `check_table` runs on every table
+the Red Team writes. After round 3 the fleet stops and the operator
+decides.
+
+Measured on Phase 372 (issue #59, PR #66). The operator granted a fourth
+round on 2026-11-15 (K85, "one more round for 372"). The Engineer's fix
+round ended `pr-ready` at `47f5b00`, and the Red Team's fourth round
+(run `20261115_125327_red_team_372`) wrote a table whose 16 rows, rightly
+marked round 4, all fail C5. At 12:56 EST the dispatcher stopped the
+stage, label unchanged, and acted on none of its answer. The answer
+(back: one code finding and one wording finding) was read by hand from
+the run's journal on the home desktop, and its code finding became 372's
+bug fix #2, made by hand (K87).
+
+Every later round would fail the same way: nothing the operator can write
+lets C5 accept round 4. So the round-3 stop offers a choice, one more
+round, that the fleet cannot carry out. The advisor recommended that
+option in K85 without checking that it could run.
+
+What would close it: C5 accepts a round above 3 when the table names the
+K-id that granted it (resolving, and naming the phase); or the round-3
+stop says the fleet's options are a fix by hand or a merge as it stands.
+Either changes a rule's definition, so it is the operator's call. It
+fits Phase 403 (the fleet's stops) if the operator adds it there; 403's
+prompt does not name it.
+
+### F278
+
+**The F9 lint's CHECK-enum rule misses response classes that resolve to no table, and CHECKs written `IS NULL OR … IN (…)`**
+
+Filed 2026-11-15 by the advisor session.
+`scripts/check_f9_patterns.py`'s `pydantic-literal-vs-check` rule
+(Phase 195C) checks a response model's field only when the class
+resolves to a table, by a `# f9-table:` marker or by its name
+(`InvoicePayment` to `invoice_payments`), and it reads only constraints
+of the form `CHECK (<col> IN (...))` (`_CHECK_IN_RE`).
+
+Phase 372 shipped three fields it could not see:
+- `CheckoutStarted.channel` and `TerminalStarted.channel`, in classes
+  named for what they answer, with no marker;
+- `InvoicePayment.outcome`, held by `CHECK (outcome IS NULL OR outcome
+  IN ('paid_invoice', 'paid_twice', 'rejected'))`
+  (`src/motodiag/core/migrations.py`, lines 7146 and 7147).
+
+At `47f5b00`, with the first two typed `str` and the third
+`Optional[str]`, `check_f9_patterns.py --all` printed "F9 lint: clean"
+and exited 0 (re-measured 2026-11-15 in a worktree at that commit, with
+the project's Python). The positive control is the lint's own tests
+(`tests/test_phase195c_pydantic_literal_lint.py`): a free `str` and an
+`Optional[str]` on a class that resolves to a table each fire
+(`test_str_typed_field_fires_one_finding`,
+`test_optional_str_typed_field_fires`), and a class that resolves to no
+table yields nothing, by design
+(`test_healthstatus_shaped_model_yields_zero_findings`, its
+"load-bearing negative case").
+
+The Red Team's fourth round found the first two by reading; the advisor
+found the third while fixing them (372's bug fix #2, `5b60f79`). No test
+runs the lint over `src/` (372's bug fix #1, its root cause), so a gap in
+it surfaces only when someone reads the code.
+
+What would close it: the rule reads the `IS NULL OR` form; a response
+class whose fields come from a table carries the `# f9-table:` marker
+(the lint already honours it:
+`test_marker_resolves_and_then_rule_does_flag`), or a rule finds such
+classes; a planted case for each; and a test that runs the lint over
+`src/`.
