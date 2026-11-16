@@ -545,11 +545,11 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: test_the_payment_list_emits_outcome_as_its_check_enum. Measured: 12623.
 #:
 #: Phase 403 (the fleet's stops), by a diff of collected counts against
-#: master 8e22b1f (12624, one above the floor before it): +61 -0, all in the
+#: master 8e22b1f (12624, one above the floor before it): +62 -0, all in the
 #: five new files test_phase403_kept_stop.py (16), _answer_carried.py (8),
-#: _app_copy.py (16), _briefs.py (8) and _granted_round.py (13).
-#: Measured: 12685.
-COLLECTED_TEST_FLOOR = 12685
+#: _app_copy.py (17), _briefs.py (8) and _granted_round.py (13).
+#: Measured: 12686.
+COLLECTED_TEST_FLOOR = 12686
 
 
 def _collected_count() -> int:

@@ -174,6 +174,18 @@ def test_another_red_check_refuses_and_stops(app):
     assert J.held(held)["why"] == D.STOPPED, "the work was not kept"
 
 
+def test_gate11_still_red_against_the_new_copy_stops(app):
+    """Known-bad: the refreshed copy does not turn Gate 11 green: the build
+    does not go on as if it had."""
+    w = app
+    w.gate11 = [False, False]
+    to_approved(w)
+    advance(w)
+    note = w.host.comments(N)[-1]
+    assert "still fails against" in note and "needs-admiral" in labels(w)
+    assert w.engineer.runs == 1
+
+
 def test_gate11_already_green_refuses(app):
     w = app
     w.gate11 = [True]

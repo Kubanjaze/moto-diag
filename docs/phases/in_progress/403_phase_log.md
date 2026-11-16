@@ -65,3 +65,12 @@ built (K88); said to the operator in the thread before any code.
 - The wider fleet and close-out suites (`tests/test_phase35*`, `36*`,
   `38*`, `39*`, `255*`, `403_*`, `test_roadmap_continuity.py`): 2365
   passed.
+
+## 2026-11-16 — the mutations
+
+`403_mutate.py`, 31 mutations over (a) to (e), under a throwaway HOME. The
+first run: 30/31 red. M14 (Gate 11 not run again against the refreshed
+copy) survived: no test refreshed a copy that left Gate 11 red. Added
+`test_gate11_still_red_against_the_new_copy_stops` (`COLLECTED_TEST_FLOOR`
+12685 → 12686, +1 in `test_phase403_app_copy.py`); M14 then red. The run of
+record: 31/31 red (`403_mutate.out`).
