@@ -6173,9 +6173,11 @@ the run's journal on the home desktop, and its code finding became 372's
 bug fix #2, made by hand (K87).
 
 Every later round would fail the same way: nothing the operator can write
-lets C5 accept round 4. So the round-3 stop offers a choice, one more
-round, that the fleet cannot carry out. The advisor recommended that
-option in K85 without checking that it could run.
+lets C5 accept round 4. Yet the fleet runs one when asked: the round-3
+stop says only "The operator decides." (`.claude/skills/fleet/dispatcher.py`,
+line 1908), and setting `build:open` again starts a fix round and a
+fourth review, as it did on 372. The advisor offered that option in K85,
+recommended, without checking that it could run.
 
 What would close it: C5 accepts a round above 3 when the table names the
 K-id that granted it (resolving, and naming the phase); or the round-3
