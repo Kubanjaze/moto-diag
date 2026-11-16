@@ -362,9 +362,68 @@ The 105 skips are the fence's, the same 105 as at `d10da9a`. 12516 is one more t
 - **Files:** `src/motodiag/api/routes/payments.py`, `tests/test_phase372_wiring.py`, `tests/test_phase255B_collected_test_floor.py`.
 - **Verified:** with the fix stashed the two new tests fail (2 failed); with it they pass (2 passed), the file restored byte for byte. `test_phase372_*`, `test_phase195c_pydantic_literal_lint.py`, `test_phase183_openapi.py`, `test_phase184_gate9.py`, `test_phase204_gate10.py`, `test_phase255B_collected_test_floor.py` and both `test_phase273_*` files: 176 passed. `scripts/code_quality.py counts` equals the pins: ruff 1108, mypy 202, complex 25, big 5, helpers 19, swallowed 22. Gate 11 with the change, against the app's snapshot at moto-diag-mobile `d292eef`: 1 failed, 20 passed, the failure naming exactly "CheckoutStarted.channel: changed", "InvoicePayment.outcome: changed" and "TerminalStarted.channel: changed". The snapshot is written again from this commit, as on 2026-11-14, before the regression of record.
 
-**Commit.** the commit after `47f5b00` that carries this entry; the close-out entry names it by hash.
+**Commit.** `5b60f79`.
 
 ## 2026-11-15: The fourth round's wording finding
 
 - `372_implementation.md` line 89 quoted row 14 of the plan of record as a sentence in quotation marks, in a form the document does not hold: the source is a table row (`docs/reports/2026-10-12_plan_of_record.md` line 26). The quotation is deleted; the sentence keeps the row's number and the document.
 - Documents only; no file under `src/` or `tests/` changed after bug fix #2's commit.
+
+## 2026-11-15: The app's snapshot written again; the whole-tree run and the regression of record, on the Mac
+
+- Bug fix #2 and the wording fix were pushed to the phase branch, `47f5b00` to `a2d72c6`, a fast-forward, with issue #59 held.
+- The advisor wrote the operator a desktop block that writes the app's snapshot from `a2d72c6` with the fleet's Python, by `create_app().openapi()` as on 2026-11-12 and 2026-11-14, and refuses unless the file equals the one written on the Mac (sha256 `5f4cc4b6a994…`) and Gate 11 passes against it. The Mac's writer reproduces `d292eef` byte for byte from `47f5b00`, whose `src/` equals `76bdea5`'s, so the fingerprint was known before the block ran. Tested on 15 stand-in cases first: three good runs (a first paste, a second, a paste after a refused push) and twelve planted faults, each stopping with nothing changed. The operator ran it on the home desktop and reported moto-diag-mobile `13b6e68` at 18:39 EST: "API schema: refresh for backend Phase 372 bug fix #2 (payment channel and outcome)", on the branch `phase-372-payment-api-routes-and-the-app` after `d292eef`, with `main` untouched. Its only file is `api-schema/openapi.json`, and its sha256 equals the Mac's. Gate 11 there: 21 passed.
+- The Mac's copy of the app was put on `13b6e68` for the runs below, and back on `main` after them.
+- `wholetree.sh --full` at `a2d72c6`, on its own, on a clean tree: exit 0. It printed "wholetree full: PASSED — 5138 passed, 1 skipped, 11 warnings in 595.93s (0:09:55) (596.5 s wall)".
+- The first `regression.sh` run started at 18:50 EST, ten minutes before midnight UTC, and failed one test, F246's: `tests/test_phase274_quotes_variance.py::TestTheQuoteRecord::test_queuing_an_estimate_records_the_quote`, "assert '2026-11-16' == '2026-11-15'". The file reads "today" when it is imported, at the start of the run, and the run reached the test after midnight UTC. It printed:
+
+Regression run FAILED (not of record): 12573 passed, 1 failed, 49 skipped, 0 errors at `a2d72c6` (36 min 2 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 1)
+
+- A run started after midnight UTC does not cross it, so `regression.sh` ran again at 19:27 EST (00:27 UTC) on the same commit and the same clean tree, as F246 records for 343's run. Its 49 skips are the first run's, on the Mac, each pinned. It printed:
+
+Regression of record: 12574 passed, 0 failed, 49 skipped, 0 errors at `a2d72c6` (34 min 25 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0)
+Skipped in the regression of record: [1] tests/test_phase244H_test_db_isolation.py:79: no production database on this machine
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:61: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [4] tests/test_phase388_fence_boundary.py:96: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [3] tests/test_phase388_fence_boundary.py:105: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:113: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:120: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:125: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:131: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:139: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:148: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:159: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:164: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:170: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:177: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:186: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:198: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:210: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:216: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [7] tests/test_phase388_fence_boundary.py:221: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:235: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:244: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:280: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:287: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:291: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:295: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:303: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:316: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:325: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:330: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:338: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:344: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:350: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:354: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:360: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase390_space.py:327: bubblewrap is the desktop's
+Line coverage of record: 88.24% at `a2d72c6` (the pin is 87.50%): 0.74 points above it; raise COVERAGE_PERCENT to lock it in
+
+12574 is 12573 and the quote test, which passed. `COVERAGE_PERCENT` is not raised, as before. Only documents change after `a2d72c6`.
+
+## 2026-11-15: The close-out, again
+
+- The close moves to 2026-11-15, the date of the regression of record above. Row 372 says **CLOSED 2026-11-15.** with the new line, bug fix #2 and the app's snapshot `13b6e68`; the root `implementation.md` row and `phase_log.md` pointer carry the new date.
+- The handoff is renamed `docs/handoffs/2026-11-15_372_closed.md` with `git mv`. Its server block names the code's last commit, `5b60f79`, and was tested on 11 stand-in cases. Its steps 2 and 3 are the advisor's versions, at the operator's word (15:54 EST, "use your versions for steps 2 and 3"): they can be pasted again after a failure partway, step 2 checks that the app compiles before it pushes, and both check the snapshot's fingerprint. Tested on stand-ins: 14 runs of step 2 and 5 of step 3, each as intended; the app's merged `main` compiles.
+- `372_implementation.md` is v1.2: Deviations 1, 4, 8 and 9 changed, Deviations 10 to 12 added, and Results' tests, Gate 11, floor, whole-tree, regression and coverage lines.
+- The edit guard blocked one command, once, while the advisor tested the desktop block: a `sed -i` on a scratch copy of the test bench, outside the repository ("`sed -i` edits a file in place, and is blocked wherever it points"). Nothing in it ran. The guard is unchanged; the file was changed with the Edit tool, and the bench's helper that used `sed -i` inside a script now writes a new file instead. No other guard blocked a command in this work.
