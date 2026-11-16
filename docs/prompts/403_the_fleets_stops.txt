@@ -1,10 +1,12 @@
 Do this: start Phase 403, the fleet's stops: work kept, the answer carried, the app's copy refreshed (row 403, on master as 🔲: make it 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out. Built by a builder session: it changes .claude/skills/fleet/, which the push gate keeps from the fleet. The fleet waits for it ('Next, in order' #15).
 
-- **Already on master:** this prompt, row 403, K84 and its place in "Next, in order", before 404, 334 and 330. Fetch master first.
+- **Already on master:** this prompt, row 403, K84 and its place in "Next, in order", before 404, 334 and 330, and K88, which added (e) below on 2026-11-16. Fetch master first.
 - **The row names what it unblocks (K43):** 404, 334 and 330, and every later shop phase. Phase 372 lost more than two days to the stops below, for about seven hours of the fleet's own work; any phase that changes what the server tells the phone app meets them again.
 - **You are at ~/Projects/moto-diag on the PC**, where the fleet runs and bubblewrap exists for the fence's tests. That folder is on `phase-399-the-cost-ledger`, clean: branch from master. Check `pgrep -x bwrap` before any whole-tree or regression run (F220). The fleet is idle while it waits for this phase: leave its service and its folders alone, except to copy the fixtures named below.
 
 My words: "yes go with templates, and approve both drafts"
+
+My words on (e), the fourth review (K88): "Option 1, save a 4th round I grant, with three conditions: 1. One written grant = one extra round. No 5th round without a new grant from me. 2. Ship it with a regression test: a granted 4th round's findings get saved and acted on, and an ungranted 4th round never runs. 3. Update the 403 plan before any code. If this turns out to be more than a small addition, stop and ask me before building it."
 
 What is wrong. Each finding in docs/FOLLOWUPS.md holds its evidence; re-measure each at Step 0. Line numbers are from 1c3bc05.
 
@@ -26,14 +28,21 @@ What is wrong. Each finding in docs/FOLLOWUPS.md holds its evidence; re-measure 
    - F264: the brief never says that the phase log carries regression.sh's whole record (the regression line, every skip line under it, and the coverage line), or that the Engineer reads its own log with `regression_record` before it ends its turn.
    - F261: the Red Team's brief gives a kind, `code`, that its refute table may not carry. Build F261's first option, the row written with the kind `factual`, as the brief already calls a code "no": it changes no checklist.
 
+(e) **A review round I grant after the third is never recorded (F277).** The Red Team's round is counted from its markers on the issue (dispatcher.py line 1851), and nothing stops a round past the third from starting, but `refute_check`'s C5 (.claude/skills/refute/refute_check.py, lines 60 and 120 to 122) fails every table row above round 3. On 372 the fourth round I granted (K85) ran, found a code defect, and stopped on its own table at 12:56 EST on 2026-11-15, label unchanged (run 20261115_125327_red_team_372); its answer was read by hand (K87). The round-3 stop (dispatcher.py lines 1891 to 1908) says only "The operator decides." Build, to my three conditions above:
+   - a grant is a row of mine in docs/decisions.md that gives one phase one more review round, written by the Yeoman in a form the dispatcher finds by lookup, never by reading my prose (as K50's covers line is);
+   - a phase has three review rounds and one more for each grant. Past that number the dispatcher starts no fix round and no review round: it stops, label unchanged, and says a grant is needed. A fifth round needs a second grant;
+   - a granted round runs as any other: its table passes C1 to C7 with its round number and its grant named; its findings are saved (the PR comment, the issue comment, and on a clear the phase log) and acted on (a back starts a fix round, a clear goes on to the Captain's recommendation);
+   - every stop when the rounds are spent says what I can do: grant one more round, fix it by hand, or merge as it stands.
+
 How it is proven:
 - each of 372's three stops replayed from its real artefacts as a fixture: run 20261112_152526_engineer_372 (2106fc7, cbfa766), run 20261112_225609_engineer_372 (4e46bcf, and its four refusals at 23:54 and 23:55 EST), run 20261113_175849_engineer_372 (c0133a2, 76bdea5, Gate 11 against 993fadc), and the operator's comments on issue #59; each test red on the old code and green on the new. Copy what you need from the desktop's run folders into tests/fixtures first, before anything prunes them;
-- known-bad cases: a comment by any other login is never quoted; a stop with no new commits holds nothing; the app-copy step refuses on `main`, when a second file would change, and when another check is also red; a held run outlives a restart and is never pruned;
+- for (e), 372's fourth review replayed from run 20261115_125327_red_team_372 (copy it with the three above): with a grant planted in a copy of docs/decisions.md, its table is recorded and its back starts a fix round; with no grant, no fourth round starts, where the old code ran one; one grant never lets a fifth round start;
+- known-bad cases: a comment by any other login is never quoted; a stop with no new commits holds nothing; the app-copy step refuses on `main`, when a second file would change, and when another check is also red; a held run outlives a restart and is never pruned; a grant naming another phase, or written in any other form, grants nothing;
 - the mutations, red.
 
 Out of scope, each a finding already: F260, F267, F256, F263, F262, F265, F217's missed digests, F230, and the Quartermaster's F237, F238 and F253. File what you find and leave it.
 
-Stops beyond rule 1: any change that loosens the push gate beyond the side branch above; any write to the app's repository other than api-schema/openapi.json on a phase branch; any change to the guards.
+Stops beyond rule 1: any change that loosens the push gate beyond the side branch above; any write to the app's repository other than api-schema/openapi.json on a phase branch; any change to the guards. And my size stop for (e) (K88): Step 0 measures what (e) touches, the files and functions it changes and its tests, and the v1.0 plan carries it before any code; if that is more than a small addition, stop and ask me, with that measure, before building it.
 
 After the merge, which is mine, in this order, each named in the handoff:
 1. I give the fleet's account write access to moto-diag-mobile on GitHub (today it can only read it), and its key the same reach if the key is limited to one repository.

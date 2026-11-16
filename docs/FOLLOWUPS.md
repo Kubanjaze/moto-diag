@@ -6182,9 +6182,13 @@ recommended, without checking that it could run.
 What would close it: C5 accepts a round above 3 when the table names the
 K-id that granted it (resolving, and naming the phase); or the round-3
 stop says the fleet's options are a fix by hand or a merge as it stands.
-Either changes a rule's definition, so it is the operator's call. It
-fits Phase 403 (the fleet's stops) if the operator adds it there; 403's
-prompt does not name it.
+Either changes a rule's definition, so it is the operator's call.
+
+Added 2026-11-16, before Phase 403 started: the operator chose the
+first, with three conditions (K88): one written grant allows one more
+round, a fifth needs a second grant, and a round nobody granted never
+runs. It is item (e) of `docs/prompts/403_the_fleets_stops.txt`, and
+row 403 names it. The round-3 stop's wording is part of it.
 
 ### F278
 
