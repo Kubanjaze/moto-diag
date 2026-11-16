@@ -41,8 +41,15 @@ import roadmap_check  # noqa: E402
 
 REPO_URL = "https://github.com/Kubanjaze/moto-diag.git"
 IDENTITY_FILE = pathlib.Path.home() / ".config" / "motodiag" / "fleet-github.env"
+#: The fleet's own copy of the phone app's repository (Phase 403, F276):
+#: cloned by the dispatcher, put on each phase's branch, and mounted in the
+#: fence. Never the operator's ~/Projects/moto-diag-mobile, which no fleet
+#: phase moves any more.
 MOBILE = pathlib.Path(os.environ.get("FLEET_MOBILE")
-                      or pathlib.Path.home() / "Projects" / "moto-diag-mobile")
+                      or pathlib.Path(os.environ.get("FLEET_STATE")
+                                      or pathlib.Path.home() / ".local" / "state" / "motodiag"
+                                      / "fleet") / "moto-diag-mobile")
+MOBILE_URL = "https://github.com/Kubanjaze/moto-diag-mobile.git"
 TRIAL_MARKER = "<!-- fleet-trial -->"
 #: Until the machine user exists: a reserved, non-routable domain (RFC 2606).
 PLACEHOLDER_EMAIL = "fleet@motodiag.invalid"
@@ -120,14 +127,29 @@ def _git(clone: pathlib.Path, *args: str) -> subprocess.CompletedProcess:
     return subprocess.run(["git", "-C", str(clone), *args], capture_output=True, text=True)
 
 
+def side_branch(phase: str, run: str) -> str:
+    """Where a stopped Engineer run's commits go (Phase 403, K84): a branch
+    named for the run, never the phase branch; nothing merges it."""
+    return f"phase-{phase}-stopped-{run}"
+
+
 def gate(clone: pathlib.Path, *, rank: str, phase: str, branch: str, base: str,
-         tested: Callable[[str], tuple[bool, str]], mobile: pathlib.Path | None = MOBILE
-         ) -> list[str]:
+         tested: Callable[[str], tuple[bool, str]], mobile: pathlib.Path | None = MOBILE,
+         side: bool = False) -> list[str]:
     """Why HEAD of `clone` may not be pushed to `branch`; [] when it may.
-    `base` is the commit GitHub has for the branch (master's, for a new one)."""
+    `base` is the commit GitHub has for the branch (master's, for a new one).
+
+    `side` (Phase 403, K84): a stopped run's side branch. G1 then asks for
+    `phase-<N>-stopped-…` exactly; G2 to G5 hold as for any push, against
+    the phase branch's head as `base`; G6, the model-free run, is not asked,
+    because nothing merges a side branch and no pull request is opened
+    from it."""
     fails: list[str] = []
-    if branch == "master" or not re.fullmatch(rf"phase-{re.escape(phase)}-[A-Za-z0-9._-]+", branch):
-        fails.append(f"G1 the branch {branch!r} is not phase-{phase}-…")
+    shape = (rf"phase-{re.escape(phase)}-stopped-[A-Za-z0-9._-]+" if side
+             else rf"phase-{re.escape(phase)}-[A-Za-z0-9._-]+")
+    if branch == "master" or not re.fullmatch(shape, branch):
+        fails.append(f"G1 the branch {branch!r} is not phase-{phase}-"
+                     + ("stopped-…" if side else "…"))
     head = _git(clone, "rev-parse", "HEAD").stdout.strip()
     if _git(clone, "merge-base", "--is-ancestor", base, head).returncode != 0:
         fails.append(f"G2 {head[:12]} is not a fast-forward of {base[:12]}")
@@ -158,7 +180,7 @@ def gate(clone: pathlib.Path, *, rank: str, phase: str, branch: str, base: str,
         fails.append("G4 an added line holds what looks like a credential")
     drift = roadmap_check.check_tree(clone, mobile if mobile and mobile.is_dir() else None)
     fails += [f"G5 {d}" for d in drift]
-    if not fails:
+    if not fails and not side:
         ok, why = tested(head)
         if not ok:
             fails.append(f"G6 {head[:12]} did not pass a model-free run: {why}")

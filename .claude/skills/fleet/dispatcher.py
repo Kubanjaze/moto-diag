@@ -92,7 +92,9 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "closeout"))
 sys.path.insert(0, str(HERE.parent / "finding"))
 sys.path.insert(0, str(HERE.parent / "deploy"))
+sys.path.insert(0, str(HERE.parent / "refute"))
 sys.path.insert(0, str(HERE.parents[2] / "scripts"))
+import app_copy  # noqa: E402
 import captain  # noqa: E402
 import closeout_check  # noqa: E402
 import code_quality  # noqa: E402
@@ -106,6 +108,7 @@ import quality_report  # noqa: E402
 import quartermaster  # noqa: E402
 import rank_call  # noqa: E402
 import red_team  # noqa: E402
+import refute_check  # noqa: E402
 import roadmap_check  # noqa: E402
 import scout  # noqa: E402
 import through_fleet  # noqa: E402
@@ -194,6 +197,19 @@ SPACE_M = "<!-- fleet-space:"
 DEPLOY_M = "<!-- fleet-database-step:"
 #: A stop the record answered (Phase 392, K50): read by the Engineer's due rule.
 ANSWER_M = "<!-- fleet-answered:"
+#: The phone app's copy refreshed (Phase 403, F276). Its own prefix: the
+#: held run's Engineer is due while it is newer than any rank comment but a
+#: `started` one.
+APP_M = "<!-- fleet-app-copy:"
+#: The operator took `needs-admiral` off an Engineer stop with no comment of
+#: theirs after it (Phase 403, F231). Read by no due rule; said once a stop.
+NO_ANSWER_M = "<!-- fleet-no-answer:"
+#: Why an Engineer run is held for its next round to start from (Phase 403,
+#: F266): a stop that kept commits, and the app's copy step.
+STOPPED = "stopped"
+STOP_HOLDS = (STOPPED, engineer.APP_COPY)
+#: An Engineer stop's marker (Phase 403): `stop=<kind>` after the rank.
+_ENG_STOP = re.compile(r"^<!-- fleet-dispatcher: needs-admiral rank=engineer stop=(\S+)")
 #: The next mission's own marks (Phase 392, K48, K49): on the issue it opens,
 #: and its question to the operator when the plan says the phase needs them.
 NEXT_M = "<!-- fleet-next:"
@@ -740,6 +756,8 @@ class Check:
     out: str = ""
     #: A full run's coverage JSON, in its run folder (Phase 393: the Quartermaster's Q11).
     coverage: str = ""
+    #: The run folder a command ran in (Phase 403: the app-copy generator's file).
+    run: str = ""
 
 
 def _time(s: str) -> dt.datetime:
@@ -759,7 +777,7 @@ class Fleet:
                  disk_usage: Callable[[pathlib.Path], tuple] = shutil.disk_usage,
                  group_run: Callable[..., subprocess.CompletedProcess] = run_group,
                  live_check: Callable[[pathlib.Path, str], tuple[int, str]] | None = None,
-                 deploy_root: pathlib.Path | None = None):
+                 deploy_root: pathlib.Path | None = None, mobile_url: str | None = None):
         self.state_dir, self.token, self.host, self.fence = state, token, host, fence
         self.workspace_docs, self.repo_url, self.sweep_hours = workspace_docs, repo_url, sweep_hours
         self.now = now or (lambda: dt.datetime.now().astimezone())
@@ -768,6 +786,9 @@ class Fleet:
         self.runs = state / "runs"
         self.venv = venv if venv is not None else state / "venv"
         self.mobile = mobile if mobile is not None else fleet_git.MOBILE
+        #: Where the fleet's own copy of the app is cloned from and pushed to
+        #: (Phase 403, F276). None: the copy is neither made nor moved (tests).
+        self.mobile_url = mobile_url
         self.identity_file, self.push_url = identity_file, push_url or repo_url
         self.popen, self.sleep = popen, sleep
         self.check = check or self.check_run
@@ -950,10 +971,14 @@ class Fleet:
         self.gh("issue", "edit", str(issue), "--remove-label", label)
         self.gh("issue", "edit", str(issue), "--add-label", label)
 
-    def escalate(self, issue: int, rank: str, label: str, text: str) -> None:
-        kind = self.tag(f"{label} rank={rank} -->")[:-4]
+    def escalate(self, issue: int, rank: str, label: str, text: str, *,
+                 stop: str | None = None, more: str = "") -> None:
+        """`stop`: an Engineer stop's kind, in the marker (Phase 403), which
+        still begins `<label> rank=<rank>` for every older reader. `more`: a
+        paragraph after the bold one (the commits a stop kept)."""
+        kind = self.tag(f"{label} rank={rank}" + (f" stop={stop}" if stop else "") + " -->")[:-4]
         self.step("escalate", lambda: self.comment(
-            issue, kind, f"**{text.strip()}**\n\nThe fleet leaves this issue alone until the "
+            issue, kind, f"**{text.strip()}**{more}\n\nThe fleet leaves this issue alone until the "
                          f"operator takes `{label}` off."),
             lambda: (label in self.labels_of(issue)
                      or self.has_comment(issue, f"{MARKER} {kind} -->")))
@@ -1062,8 +1087,10 @@ class Fleet:
             ok = self.git("-C", str(self.mirror), "rev-parse", "--verify", "-q", f"refs/heads/{b}")
             return (b, "") if ok.returncode == 0 else (None, f"the branch `{b}` the issue names "
                                                               "is not on GitHub")
-        heads = self.git("-C", str(self.mirror), "for-each-ref", "--format=%(refname:short)",
-                         f"refs/heads/phase-{phase}-*").stdout.split()
+        heads = [h for h in self.git("-C", str(self.mirror), "for-each-ref",
+                                     "--format=%(refname:short)",
+                                     f"refs/heads/phase-{phase}-*").stdout.split()
+                 if not h.startswith(f"phase-{phase}-stopped-")]   # a stop's side branch (403)
         if len(heads) == 1:
             return heads[0], ""
         return None, (f"no branch `phase-{phase}-…` on GitHub" if not heads else
@@ -1152,7 +1179,35 @@ class Fleet:
                 self.git("-C", str(clone), "switch", "-q", "-c", new_branch)
             return {"base": self.git("-C", str(clone), "rev-parse", "HEAD").stdout.strip()}
         self.step("clone", do)
+        self.sync_mobile(branch)
         return run / "clone"
+
+    # ---- the fleet's own copy of the phone app (Phase 403, F276)
+    def ensure_mobile(self) -> None:
+        """The fleet's own copy of the app, cloned once from GitHub (the
+        repository is public). Only where `mobile_url` is set (the service)."""
+        if not self.mobile_url or (self.mobile / ".git").exists():
+            return
+        self.mobile.parent.mkdir(parents=True, exist_ok=True)
+        r = self.git("clone", "-q", self.mobile_url, str(self.mobile))
+        self.log(f"the fleet's own copy of the app: cloned to {self.mobile}" if r.returncode == 0
+                 else f"the fleet's own copy of the app could not be cloned: "
+                      f"{r.stderr.strip()[:200]}")
+
+    def sync_mobile(self, branch: str) -> None:
+        """The fleet's own copy of the app put on `branch` when the app has a
+        branch of that name, else on its `main`: what the fence mounts for a
+        stage on that phase. The operator's own copy is never moved."""
+        if not self.mobile_url or not (self.mobile / ".git").exists():
+            return
+        m = str(self.mobile)
+        if self.git("-C", m, "fetch", "-q", "--prune", "origin").returncode != 0:
+            self.log("the fleet's copy of the app could not be fetched; it stays as it is")
+            return
+        has = self.git("-C", m, "rev-parse", "--verify", "-q",
+                       f"refs/remotes/origin/{branch}").returncode == 0
+        self.git("-C", m, "checkout", "-q", "-f", "--detach",
+                 f"origin/{branch}" if has else "origin/main")
 
     def committed(self, clone: pathlib.Path, subject: str) -> str | None:
         """HEAD, when it is a commit past the clone's base with this subject."""
@@ -1222,7 +1277,8 @@ class Fleet:
         c = self.check(clone, commit, full=full, command=command)
         if self.journal is not None:
             self.journal.put_check(key, {"ok": c.ok, "commit": c.commit, "line": c.line,
-                                         "why": c.why, "out": c.out, "coverage": c.coverage})
+                                         "why": c.why, "out": c.out, "coverage": c.coverage,
+                                         "run": c.run})
         return c
 
     def clone(self, run: pathlib.Path, branch: str) -> pathlib.Path:
@@ -1318,7 +1374,7 @@ class Fleet:
         (run / "run" / "check.txt").write_text(text, encoding="utf-8")
         clean_tmp(run)                 # F226: the run has ended; its result is written
         if command:
-            return Check(r.returncode == 0, commit, why=text[-2000:], out=text)
+            return Check(r.returncode == 0, commit, why=text[-2000:], out=text, run=str(run))
         if not full:
             return Check(r.returncode == 0, commit, why=text.strip().splitlines()[-1][:300]
                          if text.strip() else f"exit {r.returncode}")
@@ -1493,26 +1549,41 @@ class Fleet:
 
     def stage_engineer(self, issue: int, phase: str, body: str, branch: str, *,
                        findings: str | None = None, rnd: int = 0, resume: dict | None = None,
-                       answer: str | None = None) -> str:
+                       answer: str | None = None, carried: dict | None = None,
+                       app: dict | None = None) -> str:
+        """A round of the Chief Engineer. `carried` (Phase 403, F231): the
+        Engineer stop the operator answered on the issue, `{"at", "kind"}`;
+        its answer is quoted into the phase log first. `app` (F276): the
+        app's copy was refreshed for this held run. Either way, and for any
+        round on an issue with a kept run, the clone starts from that run's
+        commits when GitHub's branch is their ancestor (`engineer_clone`)."""
         ident = self.identity_for(issue, body, "engineer")
         if ident is None:
             return "needs hands"
         answer = (resume or {}).get("answer", answer)
+        carried = (resume or {}).get("carried", carried)
+        app = (resume or {}).get("app", app)
         run, j = self.begin(f"engineer_{phase}", {"stage": "engineer", "issue": issue,
                                                   "phase": phase, "body": body, "branch": branch,
                                                   "findings": findings, "rnd": rnd,
-                                                  "answer": answer}, resume)
+                                                  "answer": answer, "carried": carried,
+                                                  "app": app}, resume)
         self.say_once(issue, f"{ENGINEER_M} started round={rnd} -->",
                       f"**Chief Engineer, phase {phase}: building**"
                       + (f", fix round {rnd} for the Red Team's findings" if findings else "")
                       + (", again, with the record's answer to its stop" if answer else "")
+                      + (", again, with your answer to its stop, quoted in the phase log"
+                         if carried else "")
+                      + (", again, after the phone app's copy was refreshed" if app else "")
                       + f", in a fenced clone of `{branch}`.", step="started")
-        clone = self.stage_clone(run, branch)
+        clone = self.engineer_clone(run, issue, branch)
         self.author(clone, "engineer", ident if ident.is_fleet else None)
         self.label_once(issue, "build:open", step="label-build")
+        said = self.carry_answer(issue, phase, clone, carried) if carried else None
         runner = FencedRunner(self, clone, run / "run", journal=j)
         argv = engineer.session_argv()
-        brief = engineer.session_brief(phase, issue, findings=findings, rnd=rnd, answer=answer)
+        brief = engineer.session_brief(phase, issue, findings=findings, rnd=rnd, answer=answer,
+                                       carried=said, app=app)
         self.log(f"issue {issue}: the Chief Engineer on phase {phase}, round {rnd}, {clone}")
         try:
             r, reason = runner.session(argv, brief,
@@ -1521,22 +1592,274 @@ class Fleet:
             self.pause(j, e, runner)
             return "rate-limited"
         if reason:
-            if self.answer_stop(issue, phase, reason.split(":", 1)[0], clone):
-                return "stopped, answered from the record"
-            self.escalate(issue, "engineer", "needs-admiral",
-                          f"Chief Engineer, phase {phase}: stopped. {reason}")
-            return f"stopped: {reason[:80]}"
+            kind = reason.split(":", 1)[0]
+            return self.stop_engineer(issue, phase, branch, run, ident, rnd, kind,
+                                      f"Chief Engineer, phase {phase}: stopped. {reason}",
+                                      findings=findings)
         result = engineer.read_result(run / "run")
         if result["outcome"] == "stop":
-            if self.answer_stop(issue, phase, result["kind"], clone):
-                return "stopped, answered from the record"
-            self.escalate(issue, "engineer", "needs-admiral",
-                          f"Chief Engineer, phase {phase}: stopped ({result['kind']}). "
-                          f"{result['question']}")
-            return f"stopped: {result['kind']}"
+            return self.stop_engineer(issue, phase, branch, run, ident, rnd, result["kind"],
+                                      f"Chief Engineer, phase {phase}: stopped "
+                                      f"({result['kind']}). {result['question']}",
+                                      findings=findings)
+        if result["outcome"] == engineer.APP_COPY:
+            return self.app_copy(issue, phase, branch, ident, run, result, rnd, findings)
         if result["outcome"] == "deploy":
             return self.engineer_deploy(issue, phase, branch, ident, run, result, rnd)
         return self.engineer_finish(issue, phase, branch, ident, run, result, rnd)
+
+    # ---- (Phase 403) a stop keeps its work; the answer and the app's copy
+    def stop_engineer(self, issue: int, phase: str, branch: str, run: pathlib.Path,
+                      ident: fleet_git.Identity, rnd: int, kind: str, text: str, *,
+                      findings: str | None = None) -> str:
+        """An Engineer stop: its commits kept first (F266), then the record's
+        answer (K50), else the operator's `needs-admiral`, the kind in its
+        marker and the kept commits named in its note."""
+        more = self.keep_stop(issue, phase, branch, run, ident, rnd, kind, findings)
+        if self.answer_stop(issue, phase, kind, run / "clone"):
+            return "stopped, answered from the record"
+        self.escalate(issue, "engineer", "needs-admiral", text, stop=kind, more=more)
+        return f"stopped: {kind[:80]}"
+
+    def keep_stop(self, issue: int, phase: str, branch: str, run: pathlib.Path,
+                  ident: fleet_git.Identity, rnd: int, kind: str, findings: str | None) -> str:
+        """The commits a stopped run holds that GitHub's phase branch lacks:
+        none, nothing is held and nothing said; some, the run is held (`why:
+        stopped`), the commits pushed through the gate to the run's side
+        branch, never the phase branch (K84), and the paragraph the stop
+        note carries naming them and where they are."""
+        clone = run / "clone"
+        self.update_mirror()
+        base = self.ref(branch) or self.ref("master")
+        head = self.git("-C", str(clone), "rev-parse", "HEAD").stdout.strip()
+        new = [ln.split(" ", 1) for ln in self.git(
+            "-C", str(clone), "log", "--reverse", "--format=%H %s", f"{base}..HEAD"
+        ).stdout.splitlines() if ln.strip()]
+        if not new:
+            self.log(f"issue {issue}: the stop left no commit that GitHub's {branch} lacks: "
+                     "nothing held")
+            return ""
+        side = fleet_git.side_branch(phase, run.name)
+        self.step("hold-stop", lambda: journal.hold(run, {
+            "issue": issue, "phase": phase, "rnd": rnd, "commit": head, "why": STOPPED,
+            "side": side, "kind": kind, "findings": findings}))
+        try:
+            self.step("side-push", lambda: self.push_side(clone, phase, side, ident, base),
+                      lambda: self.pushed(side, head))
+            where = (f"They are on GitHub on the side branch `{side}`, not on the phase branch "
+                     f"`{branch}`: nothing merges that branch, and no pull request is opened "
+                     "from it.")
+        except Stop as e:
+            where = (f"They are not on GitHub: the push to the side branch `{side}` was refused "
+                     f"({str(e)[:300]}). They are only in the run kept on the home desktop, "
+                     f"`{run.name}`.")
+        listed = "\n".join(f"- `{sha[:12]}` {subject}" for sha, subject in new)
+        self.log(f"issue {issue}: the stop kept {len(new)} commit(s) in {run.name}, side "
+                 f"branch {side}")
+        return (f"\n\nWhat the stopped session committed that GitHub's phase branch does not "
+                f"have ({len(new)} commit{'s' if len(new) != 1 else ''}):\n\n{listed}\n\n"
+                f"{where} The run is kept, and the next round starts from these commits.")
+
+    def push_side(self, clone: pathlib.Path, phase: str, side: str, ident: fleet_git.Identity,
+                  base: str) -> str:
+        """HEAD to the side branch, through the gate's side mode: G1 to G5,
+        and no model-free run, which only a merge needs (K84)."""
+        fails = fleet_git.gate(clone, rank="engineer", phase=phase, branch=side, base=base,
+                               tested=lambda c: (True, ""), mobile=self.mobile, side=True)
+        if fails:
+            raise Stop("the push gate refused: " + "; ".join(fails)[:600])
+        r = fleet_git.push(clone, side, ident, run=self.host, url=self.push_url)
+        if r.returncode != 0:
+            raise Stop(f"the push failed: {(r.stderr or r.stdout).strip()[:300]}")
+        self.update_mirror()
+        head = self.git("-C", str(clone), "rev-parse", "HEAD").stdout.strip()
+        self.log(f"pushed the side branch {side} at {head[:12]} as {ident.login} (a stop's work)")
+        return head
+
+    def stopped_hold(self, issue: int) -> pathlib.Path | None:
+        """The issue's newest run held for its next round to start from."""
+        return next((p for p in journal.held_runs(self.runs, issue)
+                     if (journal.held(p) or {}).get("why") in STOP_HOLDS), None)
+
+    def engineer_clone(self, run: pathlib.Path, issue: int, branch: str) -> pathlib.Path:
+        """The Engineer's clone: GitHub's branch, or, when the issue has a
+        kept run, that run's commits while GitHub's branch is their ancestor
+        (commits pushed by hand on top of them included); when it is not,
+        GitHub's branch, and the log says so. The kept run is released once
+        the clone is made."""
+        held = self.stopped_hold(issue)
+        if held is None:
+            return self.stage_clone(run, branch)
+
+        def do() -> dict:
+            shutil.rmtree(run / "clone", ignore_errors=True)
+            self.update_mirror()
+            gh = self.ref(branch)
+            kept = self.git("-C", str(held / "clone"), "rev-parse", "HEAD").stdout.strip()
+            ok = gh is None or self.git("-C", str(held / "clone"), "merge-base",
+                                        "--is-ancestor", gh, kept).returncode == 0
+            if ok:
+                r = self.git("clone", "-q", "--no-hardlinks", "--branch", branch,
+                             str(held / "clone"), str(run / "clone"))
+                if r.returncode != 0:
+                    raise Stop(f"the held run's clone could not be copied: {r.stderr.strip()[:200]}")
+                c = str(run / "clone")
+                self.git("-C", c, "remote", "set-url", "origin", str(self.mirror))
+                self.git("-C", c, "fetch", "-q", "origin")
+                self.git("-C", c, "branch", "-q", "-f", "--track", "master", "origin/master")
+                said = f"the held run {held.name}, at {kept[:12]}, with its commits"
+            else:
+                self.clone(run, branch)
+                said = (f"GitHub's branch at {gh[:12]}: it is not an ancestor of the held run "
+                        f"{held.name}'s {kept[:12]}, so those commits stay on their side branch")
+            self.log(f"issue {issue}: the Engineer starts from {said}")
+            return {"base": self.git("-C", str(run / "clone"), "rev-parse", "HEAD").stdout.strip(),
+                    "from": said}
+        self.step("clone", do)
+        self.step("release-held", lambda: journal.release(held))
+        self.sync_mobile(branch)
+        return run / "clone"
+
+    def operator_comments(self, issue: int, after: dt.datetime) -> list[dict]:
+        """The operator's own comments after `after` (F223's rule for 403's
+        (b)): by `fleet_git.OPERATOR_LOGIN` only, never another login's (the
+        repository is public), and not a fleet marker. Read raw: `comments`
+        shows the operator only on a trial."""
+        data = json.loads(self.gh("issue", "view", str(issue), "--json", "comments"))
+        me = fleet_git.OPERATOR_LOGIN.lower()
+        return [c for c in data["comments"]
+                if str((c.get("author") or {}).get("login", "")).lower() == me
+                and _time(c["createdAt"]) > after
+                and not c.get("body", "").lstrip().startswith("<!--")]
+
+    def engineer_stop(self, issue: int) -> tuple[dt.datetime, str] | None:
+        """(when, kind) of the Engineer stop that is the issue's last rank
+        comment, or None."""
+        ranked = [c for c in self.comments(issue)
+                  if c.get("body", "").lstrip().startswith(RANK_PREFIXES)]
+        m = _ENG_STOP.match(ranked[-1]["body"].lstrip()) if ranked else None
+        return (_time(ranked[-1]["createdAt"]), m.group(1)) if m else None
+
+    def phase_log(self, clone: pathlib.Path, phase: str) -> pathlib.Path:
+        for d in ("in_progress", "completed"):
+            p = clone / "docs" / "phases" / d / f"{phase}_phase_log.md"
+            if p.is_file():
+                return p
+        p = clone / "docs" / "phases" / "in_progress" / f"{phase}_phase_log.md"
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(f"# Phase {phase} — phase log\n", encoding="utf-8")
+        return p
+
+    def carry_answer(self, issue: int, phase: str, clone: pathlib.Path, carried: dict) -> dict:
+        """The operator's comments after the stop, quoted verbatim in a dated
+        phase-log entry and committed in the clone; what the brief says."""
+        at = _time(carried["at"])
+        said = self.operator_comments(issue, at)
+        if not said:
+            raise Stop("the operator's answer to the stop is no longer on the issue")
+        heading = self.step("answer-heading", lambda: (
+            f"{self.now():%Y-%m-%d %H:%M %Z} — the operator's answer to the stop of "
+            f"{at.astimezone(self.now().tzinfo):%Y-%m-%d %H:%M %Z}"))
+        log = self.phase_log(clone, phase)
+        rel = str(log.relative_to(clone))
+
+        def write() -> list[str]:
+            text = log.read_text(encoding="utf-8")
+            if f"## {heading}\n" not in text:
+                quoted = "".join(
+                    f"\n**{c['createdAt']}:**\n\n"
+                    + "\n".join(f"> {ln}" if ln.strip() else ">"
+                                for ln in c["body"].strip("\n").splitlines()) + "\n"
+                    for c in said)
+                text = (text.rstrip("\n") + f"\n\n## {heading}\n\nQuoted by the fleet's "
+                        f"dispatcher, verbatim, from issue #{issue}: the comments the operator's "
+                        f"own account (`{fleet_git.OPERATOR_LOGIN}`) posted after the Chief "
+                        f"Engineer's stop ({carried['kind']}). No other account's words are "
+                        f"quoted.\n{quoted}")
+                log.write_text(text, encoding="utf-8")
+            return [rel]
+        subject = f"Phase {phase}: the operator's answer to the Chief Engineer's stop, quoted"
+        self.step("answer-commit", lambda: self.commit(clone, write(), subject, "answer"),
+                  lambda: self.committed(clone, subject))
+        start = ((self.journal.value("clone") or {}).get("from") if self.journal else None)
+        return {"LOG": rel, "HEADING": heading,
+                "FROM": f"This clone starts from {start}." if start else
+                        "This clone starts from GitHub's branch."}
+
+    def app_copy(self, issue: int, phase: str, branch: str, ident: fleet_git.Identity,
+                 run: pathlib.Path, result: dict, rnd: int, findings: str | None) -> str:
+        """An `app-copy` (F276, K84): the run held, the app's copy refreshed
+        with no model (`refresh_app`), said on the issue; the next cycle
+        starts the Engineer again from the held run. A refusal is a stop."""
+        clone = run / "clone"
+        head = self.git("-C", str(clone), "rev-parse", "HEAD").stdout.strip()
+        held = {"issue": issue, "phase": phase, "rnd": rnd, "commit": head,
+                "why": engineer.APP_COPY, "findings": findings}
+        self.step("hold-app", lambda: journal.hold(run, held))
+        try:
+            app = self.step("app-copy", lambda: self.refresh_app(clone, phase, branch, head,
+                                                                 ident))
+        except Stop as e:
+            return self.stop_engineer(
+                issue, phase, branch, run, ident, rnd, engineer.APP_COPY,
+                f"Chief Engineer, phase {phase}: the phone app's copy of the server's "
+                f"description could not be refreshed, so the build cannot go on. {e}",
+                findings=findings)
+        self.step("hold-app-done", lambda: journal.hold(run, {**held, "app": app}))
+        self.say_once(issue, f"{APP_M} phase={phase} app={app['APP']} -->",
+                      f"**Chief Engineer, phase {phase}: the phone app's copy refreshed, with no "
+                      f"model.** The session reported that only the comparison with the app's "
+                      f"copy was red: {result['summary'].strip()} The copy was regenerated from "
+                      f"`{head[:12]}` and committed on the app's branch `{branch}` as "
+                      f"`{app['APP']}` (never its main); the comparison passes against it. The "
+                      f"build goes on from the same work at the next cycle.", step="app-said")
+        self.log(f"issue {issue}: the app's copy refreshed: {app['APP']} on {branch}")
+        return f"the app's copy refreshed ({app['APP']})"
+
+    def refresh_app(self, clone: pathlib.Path, phase: str, branch: str, head: str,
+                    ident: fleet_git.Identity) -> dict:
+        """The step itself, outside the model: refused without the fleet's
+        account, on a branch that is not the phase's, on a clone with
+        uncommitted changes, when the whole-tree run is also red, or when
+        Gate 11 is not red; else the generator in the fence with no network,
+        the one file committed and pushed on the app's branch
+        (`app_copy.commit_copy`), and Gate 11 again against it, which must
+        pass."""
+        if not ident.is_fleet:
+            raise Stop("the app's copy is pushed only with the fleet's own GitHub account, and "
+                       "there is none on this computer")
+        problem = app_copy.branch_problem(branch, phase)
+        if problem:
+            raise Stop(problem)
+        dirty = engineer._dirty(clone)
+        if dirty:
+            raise Stop(dirty[0])
+        fast = self.checked(clone, head, full=False)
+        if not fast.ok:
+            raise Stop(f"another check is also red, not only the app's copy: the whole-tree run "
+                       f"with no model failed ({fast.why[-300:]})")
+        before = self.checked(clone, head, full=False, command=app_copy.GATE11_CMD)
+        if before.ok:
+            raise Stop("the comparison with the app's copy (Gate 11) already passes: there is "
+                       "nothing to refresh")
+        gen = self.checked(clone, head, full=False, command=app_copy.generate_cmd())
+        out = pathlib.Path(gen.run) / "run" / app_copy.OUT_NAME if gen.run else None
+        if not gen.ok or out is None or not out.is_file():
+            raise Stop(f"the generator did not write the description: {gen.why[-300:]}")
+        app = app_copy.commit_copy(self.mobile, branch, phase, out.read_bytes(), head,
+                                   ident.author("app-copy"))
+        r = fleet_git.push(self.mobile, branch, ident, run=self.host,
+                           url=self.mobile_url or fleet_git.MOBILE_URL)
+        if r.returncode != 0:
+            raise Stop(f"the push of the app's copy failed: {(r.stderr or r.stdout).strip()[:300]}")
+        self.log(f"pushed moto-diag-mobile {branch} at {app[:12]} as {ident.login} (the app's "
+                 f"copy, from {head[:12]})")
+        after = self.check(clone, head, full=False,
+                           command=["env", f"FLEET_APP_COPY={app[:12]}", *app_copy.GATE11_CMD])
+        if not after.ok:
+            raise Stop(f"the comparison with the app's copy still fails against {app[:12]}: "
+                       f"{after.why[-300:]}")
+        return {"COMMIT": head[:12], "BRANCH": branch, "APP": app[:12]}
 
     def engineer_deploy(self, issue: int, phase: str, branch: str, ident: fleet_git.Identity,
                         run: pathlib.Path, result: dict, rnd: int) -> str:
@@ -1849,6 +2172,11 @@ class Fleet:
         if pr is None:
             raise Stop(f"no open pull request for `{branch}`")
         rnd = resume["rnd"] if resume and "rnd" in resume else len(self.red_rounds(issue)) + 1
+        grants = self.review_grants(phase)
+        allowed = red_team.MAX_ROUNDS + len(grants)
+        if rnd > allowed and not resume:
+            # Phase 403 (K88): no round past three and the operator's grants.
+            raise Stop(self.spent(phase, rnd - 1, grants))
         run, j = self.begin(f"red_team_{phase}", {"stage": "red_team", "issue": issue,
                                                   "phase": phase, "body": body, "branch": branch,
                                                   "rnd": rnd}, resume)
@@ -1865,7 +2193,8 @@ class Fleet:
             scan = red_team.code_scan(clone)               # Phase 393: the five questions
             context = red_team.gather(clone, phase, f9.why, scan=scan,
                                       approved_at=self.plan_approved_at(issue))
-            v, call = red_team.review(phase, rnd, context, clone=clone, run=runner, scan=scan)
+            v, call = red_team.review(phase, rnd, context, clone=clone, run=runner, scan=scan,
+                                      grants=grants)
         except RateLimited as e:
             self.pause(j, e, runner)
             return "rate-limited"
@@ -1888,8 +2217,8 @@ class Fleet:
                       f"**Red Team, phase {phase}, round {rnd}: {v['verdict']}** "
                       f"(PR #{pr['number']}).\n\n{red_team.findings_text(v)}{filed}\n\n{cite}")
         if v["verdict"] == red_team.BACK:
-            if rnd >= red_team.MAX_ROUNDS:
-                unfiled = ""
+            unfiled = ""
+            if rnd >= allowed:
                 if fnum:
                     ident = self.identity_for(issue, body, "red-team")
                     if ident is None:
@@ -1902,11 +2231,17 @@ class Fleet:
                     self.push_once(clone, head, rank="red-team-record", phase=phase,
                                    branch=branch, ident=ident, tested=self.fast(clone))
                     unfiled = f" The wording it left open is filed as {fnum}, on the branch."
+            if rnd >= red_team.MAX_ROUNDS and not grants:
+                # K9: after round 3 the operator decides; the stop says how.
                 self.escalate(issue, "red-team", "needs-admiral",
-                              f"Red Team, phase {phase}: round {rnd} of {red_team.MAX_ROUNDS} "
-                              "still finds factual, citation or code defects; under K9 the "
-                              "phase does not ship as it stands. The operator decides." + unfiled)
+                              f"Red Team, phase {phase}: round {rnd} of {allowed} still finds "
+                              "factual, citation or code defects; under K9 the phase does not "
+                              "ship as it stands. The operator decides." + unfiled,
+                              more="\n\n" + self.spent(phase, rnd, grants, options_only=True))
                 return "back, rounds exhausted"
+            # A granted round's findings are acted on (K88): a fix round; the
+            # review round after it needs a grant of its own when it is past
+            # the rounds the phase has.
             self.label_once(issue, "build:open")
             return f"back, round {rnd}"
         ident = self.identity_for(issue, body, "red-team")
@@ -1933,6 +2268,32 @@ class Fleet:
             journal.release(h)
             clean_tmp(h)
         return f"clear, round {rnd}"
+
+    def review_grants(self, phase: str) -> list[str]:
+        """The operator's grants of review rounds past the third for `phase`
+        (Phase 403, K88): rows of master's `docs/decisions.md` whose Covers
+        is `grant=review-round subject=<phase>`, by lookup. Never the
+        branch's copy, which a rank could write."""
+        return refute_check.grants(self.master_text(plan_order.DECISIONS), phase)
+
+    def spent(self, phase: str, done: int, grants: list[str], *,
+              options_only: bool = False) -> str:
+        """What every stop when the review rounds are spent says (K88): the
+        count, and the operator's three options, in plain English."""
+        allowed = red_team.MAX_ROUNDS + len(grants)
+        head = (f"Red Team, phase {phase}: the review rounds are spent, {done} of {allowed} "
+                f"({red_team.MAX_ROUNDS}" + (f" and {len(grants)} you granted, "
+                                             f"{', '.join(grants)}" if grants else "")
+                + f"). No review round {done + 1} starts without a written grant from you. ")
+        options = ("What you can do:\n"
+                   f"1. Grant one more review round: tell the advisor \"one more review round "
+                   f"for {phase}\". It is written as a decision on master, one grant for one "
+                   "round (a further round needs a further grant). Then take `needs-admiral` "
+                   "off and put `build:open` on this issue for a fix round, or `review:open` "
+                   "if the fix is already on the branch.\n"
+                   "2. Fix it by hand on the branch.\n"
+                   "3. Merge it as it stands.")
+        return options if options_only else head + options
 
     def record_holds(self, issue: int) -> list[pathlib.Path]:
         """The issue's runs holding a cleared Red Team table, newest first."""
@@ -2326,7 +2687,8 @@ class Fleet:
         if s == "engineer":
             return self.stage_engineer(n, ph, paused["body"], paused["branch"],
                                        findings=paused.get("findings"), rnd=paused.get("rnd", 0),
-                                       resume=paused, answer=paused.get("answer"))
+                                       resume=paused, answer=paused.get("answer"),
+                                       carried=paused.get("carried"), app=paused.get("app"))
         if s == "recheck":
             return self.stage_recheck(n, ph, paused["body"], paused["branch"],
                                       pathlib.Path(paused["held"]), resume=paused)
@@ -2512,16 +2874,19 @@ class Fleet:
         if not runs:
             return None
         why = (journal.held(runs[0]) or {}).get("why")
+        if why == STOPPED:
+            # A stop's kept work (Phase 403): the next Engineer round starts
+            # from it, whatever starts that round (`engineer_clone`).
+            return None
         ranked = [c["body"].lstrip() for c in self.comments(n)
                   if c.get("body", "").lstrip().startswith(RANK_PREFIXES)]
         stop = f"{MARKER} needs-admiral rank=engineer"
-        if why in ("space", "deploy"):
-            # Held for free space (F221) or for the database step (Phase 395):
-            # the cycle reaches the issue only once `needs-hands` is off, and
-            # the hold is due while its comment is newer than any rank comment
-            # but a `started` one (a recheck that then stops does not run
-            # again every cycle).
-            spaced = self.newest(n, SPACE_M if why == "space" else DEPLOY_M)
+        if why in ("space", "deploy", engineer.APP_COPY):
+            # Held for free space (F221), for the database step (Phase 395)
+            # or after the app's copy (Phase 403): the hold is due while its
+            # comment is newer than any rank comment but a `started` one (a
+            # recheck that then stops does not run again every cycle).
+            spaced = self.newest(n, {"space": SPACE_M, "deploy": DEPLOY_M}.get(why, APP_M))
             later = [_time(c["createdAt"]) for c in self.comments(n)
                      if (b := c.get("body", "").lstrip()).startswith(RANK_PREFIXES)
                      and not (_STARTED.match(b) or _ENG_STARTED.match(b))]
@@ -2552,9 +2917,32 @@ class Fleet:
                                                     self.markers(RED_M, "red-team")):
             return "red-team", lambda: self.stage_red_team(n, phase, body, branch())
         if "build:open" in labels and (held := self.held_for(n)) is not None:
-            if (journal.held(held) or {}).get("why") == "deploy":
+            info = journal.held(held) or {}
+            if info.get("why") == "deploy":
                 return "engineer", lambda: self.stage_deployed(n, phase, body, branch(), held)
+            if info.get("why") == engineer.APP_COPY:
+                if not info.get("app"):
+                    return None                   # its own stop says why; the label is off
+                return "engineer", lambda: self.stage_engineer(
+                    n, phase, body, branch(), findings=info.get("findings"),
+                    rnd=info.get("rnd", 0), app=info["app"])
             return "engineer", lambda: self.stage_recheck(n, phase, body, branch(), held)
+        if "build:open" in labels and (stopped := self.engineer_stop(n)) is not None:
+            # The operator took `needs-admiral` off an Engineer stop (Phase
+            # 403, F231): their comments since are its answer.
+            if self.operator_comments(n, stopped[0]):
+                back = self.newest(n, f"{RED_M} verdict=back")
+                rnd = sum(1 for v, _ in self.red_rounds(n) if v == "back")
+                carried = {"at": stopped[0].isoformat(), "kind": stopped[1]}
+                return "engineer", lambda: self.stage_engineer(
+                    n, phase, body, branch(), findings=back[1] if back and rnd else None,
+                    rnd=rnd, carried=carried)
+            mark = f"{NO_ANSWER_M} at={stopped[0].isoformat()} -->"
+            if not self.has_comment(n, mark):
+                self.say(n, mark, "**Fleet dispatcher: no answer of yours to the Chief "
+                                  "Engineer's stop is on this issue yet.** Write your answer as a "
+                                  "comment here: the build starts again from it, with your words "
+                                  "quoted in the phase log.")
         if "build:open" in labels:
             back, mine = self.newest(n, f"{RED_M} verdict=back"), self.newest(n, ENGINEER_M)
             stop = self.newest(n, f"{MARKER} stopped rank=engineer")
@@ -2569,6 +2957,12 @@ class Fleet:
                     rnd=rnd, answer=said[1])
             if back and (latest_mine is None or back[0] > latest_mine[0]):
                 rnd = sum(1 for v, _ in self.red_rounds(n) if v == "back")
+                grants = self.review_grants(phase)
+                if rnd >= red_team.MAX_ROUNDS and not grants:
+                    # Phase 403 (K88): after round 3, a fix round only on a grant.
+                    def spent() -> str:
+                        raise Stop(self.spent(phase, rnd, grants))
+                    return "engineer", spent
                 return "engineer", lambda: self.stage_engineer(
                     n, phase, body, branch(), findings=back[1], rnd=rnd)
         if "plan:approved" in labels and self.due_for(n, "plan:approved",
@@ -2747,6 +3141,7 @@ class Fleet:
         self.ledger_read_in(dry_run=dry_run)
         if not dry_run:
             self.update_mirror()
+            self.ensure_mobile()
         rows = self.master_rows()
         issues = {i["number"]: i for i in self.issues_open()}
         paused = (self.load().get("paused") or {}).get("run")
@@ -2821,6 +3216,7 @@ class Fleet:
 
     def cycle(self) -> None:
         self.update_mirror()
+        self.ensure_mobile()
         self.sweep()
         self.reclaim_boundaries(self.master_rows())
         state = self.load()
@@ -2987,7 +3383,7 @@ def main(argv: list[str]) -> int:
         held = lock(STATE)
         fleet = Fleet(state=STATE, token=load_token(TOKEN_FILE),
                       sweep_hours=getattr(a, "sweep_hours", SWEEP_HOURS), disks=DISKS,
-                      trim=FSTRIM)
+                      trim=FSTRIM, mobile_url=fleet_git.MOBILE_URL)
     except Refused as e:
         print(f"REFUSED: {e}", file=sys.stderr)
         return 4

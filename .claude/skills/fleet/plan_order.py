@@ -43,6 +43,8 @@ from dataclasses import dataclass, field
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "closeout"))
+sys.path.insert(0, str(HERE.parent / "refute"))
+import refute_check  # noqa: E402
 from roadmap_check import DONE  # noqa: E402
 
 ROOT = HERE.parents[2]
@@ -231,12 +233,13 @@ def decisions(text: str) -> list[Decision]:
 
 def covers_problem(covers: str) -> str | None:
     """Why a Covers cell is not a lookup the record may use, or None."""
-    if covers == NO_STOP:
-        return None
+    if covers == NO_STOP or refute_check.GRANT_COVERS.match(covers):
+        return None                      # a grant: one more review round (Phase 403, K88)
     m = _COVERS.match(covers)
     if not m:
-        return (f"Covers {covers!r} is not '{NO_STOP}' or "
-                "'stop=<kind> subject=<phase>[,<phase>]'")
+        return (f"Covers {covers!r} is not '{NO_STOP}', "
+                "'stop=<kind> subject=<phase>[,<phase>]' or "
+                "'grant=review-round subject=<phase>'")
     if m.group(1) in RULE1_KINDS:
         return f"Covers names {m.group(1)}, a rule-1 stop, which the record never answers (K50)"
     if m.group(1) not in ANSWERABLE:

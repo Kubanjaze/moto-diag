@@ -303,9 +303,28 @@ def check(repo: pathlib.Path, phase: str) -> list[str]:
     # A8 — a log that mentions refute carries the checklist, or says in one
     # line that no refute pass ran (K7, Phase 358)
     if phase not in A8_REFUTE_EXEMPT:
-        fails += [f"A8 {f}" for f in refute_record(log_txt, phase)]
+        fails += [f"A8 {f}" for f in refute_record(log_txt, phase,
+                                                     review_grants(repo, phase))]
         fails += [f"A8 {f}" for f in refute_contradictions(repo, phase)]
     return fails
+
+
+def review_grants(repo: pathlib.Path, phase: str) -> list[str]:
+    """The operator's grants of review rounds past the third for `phase`
+    (Phase 403, K88), from the tree's `docs/decisions.md` and, where the
+    repository has one, `origin/master`'s: a grant is written on master,
+    and a phase branch cut before it does not carry it."""
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "refute"))
+    import refute_check
+    texts = [_read(pathlib.Path(repo) / "docs" / "decisions.md")]
+    r = subprocess.run(["git", "-C", str(repo), "show", "origin/master:docs/decisions.md"],
+                       capture_output=True, text=True)
+    if r.returncode == 0:
+        texts.append(r.stdout)
+    found: list[str] = []
+    for text in texts:
+        found += [k for k in refute_check.grants(text, phase) if k not in found]
+    return sorted(found, key=lambda k: int(k[1:]))
 
 
 #: K6. `regression.sh` prints: "Regression of record: 9507 passed, 0 failed,
@@ -491,7 +510,8 @@ def legacy_regression_line(log_txt: str) -> bool:
                for ln in log_txt.splitlines() if re.search(r"regression", ln, re.I))
 
 
-def refute_record(log_txt: str, phase: str | None = None) -> list[str]:
+def refute_record(log_txt: str, phase: str | None = None,
+                  grants: list[str] | tuple[str, ...] = ()) -> list[str]:
     """Why a log that mentions refute does not record it; [] when it does.
 
     The operator's words, applied literally: "a log mentioning refute
@@ -507,7 +527,7 @@ def refute_record(log_txt: str, phase: str | None = None) -> list[str]:
     if refute_check.find_block(log_txt):
         rounds = phase not in refute_check.OLD_FORMAT
         return [f"refuter checklist: {f}"
-                for f in refute_check.check(log_txt, require_rounds=rounds)]
+                for f in refute_check.check(log_txt, require_rounds=rounds, grants=grants)]
     if _NO_REFUTE.search(log_txt):
         return []
     return ["the log mentions refute but has no '## Refuter pass' checklist, and no "

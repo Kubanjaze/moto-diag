@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F278** (this file). The
+At the time of writing the highest assigned is **F279** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -6231,3 +6231,30 @@ class whose fields come from a table carries the `# f9-table:` marker
 `test_marker_resolves_and_then_rule_does_flag`), or a rule finds such
 classes; a planted case for each; and a test that runs the lint over
 `src/`.
+
+### F279
+
+**A refute table row whose quote holds an escaped pipe (`\|`) is not read as a row, so C1–C7 never see it**
+
+Found 2026-11-16 by Phase 403's builder, replaying 372's fourth review
+(run `20261115_125327_red_team_372`, kept as
+`tests/fixtures/phase403/red_team_372_round4.json`).
+
+- The table has 16 rows marked round 4. `refute_check._ROW`
+  (`.claude/skills/refute/refute_check.py`, the row pattern above `_RKO`)
+  takes a cell as `[^|]+`, so a quote that holds `\|` (here a line of the
+  plan of record's "Next, in order" table, "… Wave 1, item 4 · K48 \|")
+  splits its cells, and the line matches no row. 15 rows are read; F277's
+  "16 rows … all fail C5" counted the table's lines, not the checker's
+  rows.
+- That row was the round's one open wording defect. `open_wording`
+  (`.claude/skills/fleet/red_team.py`) reads rows with the same pattern,
+  so no finding was filed for it, and C7 never asked for one.
+
+What it affects: any refute row quoting a Markdown table line, which this
+repository's documents are full of. Such a row is neither checked nor
+filed.
+
+What would close it: `_ROW` reads `\|` inside a cell as text; the 372 table
+as the fixture, its 16th row read, and a planted row with `\|` that C3 or
+C5 must fail.

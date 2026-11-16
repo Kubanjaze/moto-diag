@@ -1,0 +1,57 @@
+[
+ {
+  "run": "20261112_152526_engineer_372",
+  "kind": "test-cannot-be-green",
+  "base": "62c9f3c93dcae4bd63e810b8960d55f0f28de242",
+  "commits": [
+   {
+    "sha": "2106fc7505b1c8707255bdca1bc7fbb2e762cce1",
+    "subject": "Phase 372: the payment routes, their error rows and the payments tag"
+   },
+   {
+    "sha": "cbfa7660e20233ef42d14980fade06af66208dc6",
+    "subject": "Phase 372: the guide, the app's prompt, the mutations and the phase log"
+   }
+  ],
+  "stop_at": "2026-11-12T20:56:34Z",
+  "source": "pruned before Phase 403: git and issue #59's stop comment",
+  "stop_text": "Chief Engineer, phase 372: stopped (test-cannot-be-green). The server side of the card-payments work is built and saved on the branch phase-372-payment-api-routes-and-the-app (last commit cbfa766). A shop can now be connected to Stripe, an invoice sent to the card reader or turned into a pay-link, and its payments read, through five new server addresses. The new tests all pass, and each of the thirteen deliberate breaks I tried was caught. One existing check now fails, as the plan said it would: it compares the server's list of addresses with the copy the phone app keeps, and the phone app's copy does not have the five new ones yet. I cannot update that copy from here, because the phone app's folder is read-only to me, and I have not weakened the check. Two things are needed from you. First, the phone app's copy refreshed from the home desktop, on a new branch of the phone app with the same name (phase-372-payment-api-routes-and-the-app), never on main; the advisor can give you the paste block. Second, a choice: (A) build the phone app's three new screens (card-payments setup, taking an invoice's payment, and the plan screen) as part of this same piece of work, from the instructions I wrote in docs/prompts/372_the_apps_payment_screens.txt, which is what the plan recommends; or (B) ship the server part now and leave the screens to a separate follow-up piece of work later. Once the copy is refreshed and you have picked A or B, I run the full test suite and finish."
+ },
+ {
+  "run": "20261112_225609_engineer_372",
+  "kind": "guard-blocked-twice",
+  "base": "ef8bacceab1c3aaa6976f0e1626b954efc966951",
+  "commits": [
+   {
+    "sha": "4e46bcf504156d6e8ef9520d115e6983bd056be5",
+    "subject": "Phase 372: Gate 11 green in the fence; row 372B for the app's screens (K81, B)"
+   }
+  ],
+  "stop_at": "2026-11-13T04:56:18Z",
+  "source": "pruned before Phase 403: git, issue #59's stop comment and the dispatcher log",
+  "stop_text": "Chief Engineer, phase 372: stopped. guard-blocked-twice: a guard blocked the same thing twice: [${CLAUDE_PROJECT_DIR}/.claude/skills/closeout/edit_guard.sh]: edit guard: blocked — the edit guard cannot tell where the redirect `>` `$b.inner` writes (a variable, substitution, glob or unknown dire"
+ },
+ {
+  "run": "20261113_175849_engineer_372",
+  "kind": "test-cannot-be-green",
+  "base": "9e9709c984bb4f20325e5eeb2713d8588654470f",
+  "commits": [
+   {
+    "sha": "c0133a2df0078d425c2e8b40b82d62f72cff9ffc",
+    "subject": "Phase 372 bug fix #1: the payments list types channel and status as their CHECK enums"
+   },
+   {
+    "sha": "76bdea5267fcb1faa5c6f0a978a5d2d210708e8d",
+    "subject": "Phase 372: Gate 11 is red after bug fix #1; the app's snapshot needs refreshing"
+   }
+  ],
+  "stop_at": "2026-11-13T23:24:56Z",
+  "source": "its run folder: stage.json, run/engineer.json, its clone's log",
+  "engineer_json": {
+   "outcome": "stop",
+   "kind": "test-cannot-be-green",
+   "question": "The reviewer found that the payments list told the phone app two of its fields (how a payment was taken, and whether it worked) were free text, when the database only ever holds a few fixed words. I fixed the server so it now names those fixed words; that fix is committed on the phase branch (c0133a2, with its record in 76bdea5). But the phone app keeps its own copy of the server's description, written on 12 November before this fix, and the check that compares the two now fails, as it should, because the copies differ. I cannot update the app's copy from inside the sandbox. The decision I need: please refresh the phone app's copy of the description on its branch phase-372-payment-api-routes-and-the-app from backend commit 76bdea5 (the same way as on 12 November), and leave the desktop's copy of the app on that branch. Then restart this build so it can run the full test run and update the close-out papers. Or tell me to undo the fix and file it for the screens phase instead."
+  },
+  "stop_text": "Chief Engineer, phase 372: stopped (test-cannot-be-green). The reviewer found that the payments list told the phone app two of its fields (how a payment was taken, and whether it worked) were free text, when the database only ever holds a few fixed words. I fixed the server so it now names those fixed words; that fix is committed on the phase branch (c0133a2, with its record in 76bdea5). But the phone app keeps its own copy of the server's description, written on 12 November before this fix, and the check that compares the two now fails, as it should, because the copies differ. I cannot update the app's copy from inside the sandbox. The decision I need: please refresh the phone app's copy of the description on its branch phase-372-payment-api-routes-and-the-app from backend commit 76bdea5 (the same way as on 12 November), and leave the desktop's copy of the app on that branch. Then restart this build so it can run the full test run and update the close-out papers. Or tell me to undo the fix and file it for the screens phase instead."
+ }
+]

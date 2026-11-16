@@ -543,7 +543,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: src/: +2 -0. Added, in test_phase372_wiring.py:
 #: test_the_payment_starts_emit_channel_as_its_check_enum and
 #: test_the_payment_list_emits_outcome_as_its_check_enum. Measured: 12623.
-COLLECTED_TEST_FLOOR = 12623
+#:
+#: Phase 403 (the fleet's stops), by a diff of collected counts against
+#: master 8e22b1f (12624, one above the floor before it): +61 -0, all in the
+#: five new files test_phase403_kept_stop.py (16), _answer_carried.py (8),
+#: _app_copy.py (16), _briefs.py (8) and _granted_round.py (13).
+#: Measured: 12685.
+COLLECTED_TEST_FLOOR = 12685
 
 
 def _collected_count() -> int:

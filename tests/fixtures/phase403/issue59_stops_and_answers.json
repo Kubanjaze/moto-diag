@@ -1,0 +1,44 @@
+[
+ {
+  "author": {
+   "login": "kubanjazefleet"
+  },
+  "createdAt": "2026-11-12T20:56:34Z",
+  "body": "<!-- fleet-dispatcher: needs-admiral rank=engineer run=20261112_152526_engineer_372 -->\n**Chief Engineer, phase 372: stopped (test-cannot-be-green). The server side of the card-payments work is built and saved on the branch phase-372-payment-api-routes-and-the-app (last commit cbfa766). A shop can now be connected to Stripe, an invoice sent to the card reader or turned into a pay-link, and its payments read, through five new server addresses. The new tests all pass, and each of the thirteen deliberate breaks I tried was caught. One existing check now fails, as the plan said it would: it compares the server's list of addresses with the copy the phone app keeps, and the phone app's copy does not have the five new ones yet. I cannot update that copy from here, because the phone app's folder is read-only to me, and I have not weakened the check. Two things are needed from you. First, the phone app's copy refreshed from the home desktop, on a new branch of the phone app with the same name (phase-372-payment-api-routes-and-the-app), never on main; the advisor can give you the paste block. Second, a choice: (A) build the phone app's three new screens (card-payments setup, taking an invoice's payment, and the plan screen) as part of this same piece of work, from the instructions I wrote in docs/prompts/372_the_apps_payment_screens.txt, which is what the plan recommends; or (B) ship the server part now and leave the screens to a separate follow-up piece of work later. Once the copy is refreshed and you have picked A or B, I run the full test suite and finish.**\n\nThe fleet leaves this issue alone until the operator takes `needs-admiral` off."
+ },
+ {
+  "author": {
+   "login": "Kubanjaze"
+  },
+  "createdAt": "2026-11-13T03:51:50Z",
+  "body": "Answered: B (decision K81).\n\nThe routes ship in 372, and the phone app's screens become a follow-on, 372B. The phone app's copy is refreshed as moto-diag-mobile `993fadcdde68` on its branch `phase-372-payment-api-routes-and-the-app`. The fleet reads this answer from the 372 branch (`ef8bacc`, the phase log), not from this comment.\n"
+ },
+ {
+  "author": {
+   "login": "kubanjazefleet"
+  },
+  "createdAt": "2026-11-13T04:56:18Z",
+  "body": "<!-- fleet-dispatcher: needs-admiral rank=engineer run=20261112_225609_engineer_372 -->\n**Chief Engineer, phase 372: stopped. guard-blocked-twice: a guard blocked the same thing twice: [${CLAUDE_PROJECT_DIR}/.claude/skills/closeout/edit_guard.sh]: edit guard: blocked — the edit guard cannot tell where the redirect `>` `$b.inner` writes (a variable, substitution, glob or unknown dire**\n\nThe fleet leaves this issue alone until the operator takes `needs-admiral` off."
+ },
+ {
+  "author": {
+   "login": "Kubanjaze"
+  },
+  "createdAt": "2026-11-13T20:53:11Z",
+  "body": "Restarted with 4e46bcf carried over from the stopped build.\n\nThe 11:56 PM session made one commit, `4e46bcf` (Gate 11 green, row 372B), and stopped before pushing it. That commit is now on the 372 branch (`df88d09`). The close-out it left unfinished is kept on the branch `carry-372-stopped-build` (`1b59a8d`), as a record only. The newest entry in the phase log (`d10da9a`) tells the build to do the close-out again from the 372 branch. The fleet reads that note from the branch, not from this comment.\n"
+ },
+ {
+  "author": {
+   "login": "kubanjazefleet"
+  },
+  "createdAt": "2026-11-13T23:24:56Z",
+  "body": "<!-- fleet-dispatcher: needs-admiral rank=engineer run=20261113_175849_engineer_372 -->\n**Chief Engineer, phase 372: stopped (test-cannot-be-green). The reviewer found that the payments list told the phone app two of its fields (how a payment was taken, and whether it worked) were free text, when the database only ever holds a few fixed words. I fixed the server so it now names those fixed words; that fix is committed on the phase branch (c0133a2, with its record in 76bdea5). But the phone app keeps its own copy of the server's description, written on 12 November before this fix, and the check that compares the two now fails, as it should, because the copies differ. I cannot update the app's copy from inside the sandbox. The decision I need: please refresh the phone app's copy of the description on its branch phase-372-payment-api-routes-and-the-app from backend commit 76bdea5 (the same way as on 12 November), and leave the desktop's copy of the app on that branch. Then restart this build so it can run the full test run and update the close-out papers. Or tell me to undo the fix and file it for the screens phase instead.**\n\nThe fleet leaves this issue alone until the operator takes `needs-admiral` off."
+ },
+ {
+  "author": {
+   "login": "Kubanjaze"
+  },
+  "createdAt": "2026-11-15T03:13:17Z",
+  "body": "**Admiral (operator): the stop is answered, option A.**\n\n1. The Chief Engineer's two commits were still only in its run clone (`runs/20261113_175849_engineer_372`). They are now pushed: `phase-372-payment-api-routes-and-the-app` moved 9e9709c -> 76bdea5 (c0133a2 bug fix #1, 76bdea5 its record).\n2. The phone app's copy of the server description is refreshed on moto-diag-mobile `phase-372-payment-api-routes-and-the-app` as d292eef, written from backend 76bdea5 by `create_app().openapi()` the same way as 993fadc on 12 November (that method reproduces 993fadc byte for byte from cbfa7660e202). The only change: `InvoicePayment.channel` (checkout, terminal) and `.status` (started, failed, succeeded) now carry their enums.\n3. Gate 11 (`tests/test_phase205_gate11.py`) at 76bdea5 against the new copy: 21 passed.\n4. The desktop's moto-diag-mobile folder stays on `phase-372-payment-api-routes-and-the-app`.\n\nRestarting the build: `needs-admiral` off, `plan:approved` on. Please run the full test run and update the close-out papers.\n"
+ }
+]

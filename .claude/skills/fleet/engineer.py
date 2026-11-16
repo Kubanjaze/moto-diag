@@ -54,6 +54,8 @@ MAX_BUG_FIXES = 2            # the third stops
 RESULT = "engineer.json"     # in the run directory, /fleet/run inside the fence
 STOP_KINDS = ("third-bug-fix", "guard-blocked-twice", "fork", "threshold-or-rule",
               "test-cannot-be-green", "login-or-credential", "live-database-change")
+#: The result that asks for the phone app's copy (Phase 403, F276).
+APP_COPY = "app-copy"
 #: The prompt a cut session is resumed with (389 for a usage limit; 390 for a restart too).
 CONTINUE = ("You were stopped part-way, by a usage limit or a restart of the machine. Continue "
             "the work from where you were, and finish as the brief says.")
@@ -82,8 +84,14 @@ workspace rules it imports are loaded; follow them. In particular:
    on its own and read its exit code; never through a pipe. Commit
    messages through a quoted heredoc (<<'MSGEOF'), ending with the line
    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
-3. Change files under src/ and tests/ only with the Edit and Write tools:
-   the edit guard blocks sed -i and shell redirects there.
+3. Change files under src/ and tests/ only with the Edit and Write tools.
+   The edit guard refuses sed -i wherever it points: under src/, tests/,
+   docs/ or anywhere else. It refuses any shell write (a redirect >, >> or
+   >|, tee, cp, mv) whose target is not a literal path it can read: a
+   variable, a substitution or a glob is refused wherever it would land.
+   Write scratch files to a literal directory, /fleet/run/ (for example
+   > /fleet/run/scratch.txt), and edit documents with the Edit tool. The
+   same refusal twice ends your session.
 4. When you add tests, raise COLLECTED_TEST_FLOOR in
    tests/test_phase255B_collected_test_floor.py by a diff of collected ids,
    with the reason in the comment and the commit message.
@@ -92,8 +100,14 @@ workspace rules it imports are loaded; follow them. In particular:
    Fix, Files, Verified and Commit, and its own commit. Keep the phase log
    (docs/phases/in_progress/{N}_phase_log.md) as dated entries as you go.
 6. The regression of record: .claude/skills/closeout/wholetree.sh --full,
-   then .claude/skills/closeout/regression.sh, on a clean tree. Copy the
-   lines it prints into the phase log exactly as printed.
+   then .claude/skills/closeout/regression.sh, on a clean tree. The phase
+   log carries regression.sh's whole record exactly as it printed it: the
+   "Regression of record:" line, every "Skipped in the regression of
+   record:" line right under it, and the coverage line after them. Before
+   you end your turn, read your own log back with
+   .venv/bin/python .claude/skills/fleet/engineer.py record {N}
+   which prints the record it finds, or why it finds none; fix the log
+   until it finds one.
 7. Unless the plan has the database step (below), close out before you
    finish, as .claude/skills/closeout/SKILL.md sets
    out: v1.1 (every section updated, Deviations, Results with the
@@ -128,7 +142,9 @@ the deploy skill's scope file
 (docs/phases/in_progress/{N}_deploy_scope.json, every table and schema
 object it adds, as .claude/skills/deploy/SKILL.md step 1 sets out), and
 tests that run it on fresh databases (never live). Run the regression of
-record (rule 6) and commit it. Then do NOT close out: you cannot reach the
+record (rule 6), put its whole record in the phase log and read it back as
+rule 6 says (the live apply reads it the same way), and commit it.
+Then do NOT close out: you cannot reach the
 live database, and the operator applies the change between your
 regression and your close-out. Leave every phase document in
 docs/phases/in_progress/, change nothing under .claude/skills/deploy/ or
@@ -140,6 +156,21 @@ docs/phases/in_progress/, change nothing under .claude/skills/deploy/ or
 and end your turn. A migration the plan does not name in that section, or
 one that changes or deletes existing live rows, is a stop
 (live-database-change), never a deploy.
+
+**The phone app's copy of the API's description.** Gate 11
+(tests/test_phase205_gate11.py) compares the server's description with
+../moto-diag-mobile/api-schema/openapi.json, which you can read and cannot
+write. When this phase changes the description, Gate 11 goes red. If
+Gate 11 is the only thing red (.claude/skills/closeout/wholetree.sh
+passes), commit everything, write /fleet/run/engineer.json as
+{{"outcome": "app-copy", "summary": "<one plain sentence: what this phase
+ changed in the API's description>"}}
+and end your turn. A script with no model then regenerates the app's copy
+from your last commit, on the app's branch named as this phase's branch
+(never main), checks Gate 11 against it, and starts you again in this
+same clone. Never ask the operator, in a stop, a log or a handoff, to
+refresh the app's copy or to move the desktop's copy of the app: the
+fleet does both.
 
 **Stop instead of finishing** when any of these happens: a third bug fix;
 a CLAUDE.md rule-1 condition (a real fork, a threshold or a rule's
@@ -210,13 +241,38 @@ thing stops you again, stop again: that time it goes to the operator. ===
 """
 
 
+#: Said when the operator answered the Engineer's stop on the issue (Phase
+#: 403, F231): the dispatcher quoted the answer into the phase log.
+CARRIED = """
+=== Your last session on this phase stopped, and the operator has answered.
+The answer is in the phase log, {LOG}, in the entry headed
+"{HEADING}": the operator's own comments on issue #{ISSUE}, quoted
+verbatim by the dispatcher and committed in this clone. Read it first and
+apply it literally, to nothing beyond it (CLAUDE.md rule 1). {FROM} ===
+"""
+
+#: Said when the dispatcher refreshed the app's copy (Phase 403, F276).
+APP_COPIED = """
+=== The phone app's copy of the API's description is refreshed: the
+dispatcher regenerated api-schema/openapi.json from {COMMIT} on
+moto-diag-mobile's branch {BRANCH} ({APP}), and Gate 11 passes against it.
+This is the clone you ended in, with your commits. Carry on from where you
+were and finish as the brief says. ===
+"""
+
+
 def session_brief(phase: str, issue: int, *, findings: str | None = None, rnd: int = 0,
-                  answer: str | None = None, closeout: bool = False) -> str:
+                  answer: str | None = None, closeout: bool = False,
+                  carried: dict | None = None, app: dict | None = None) -> str:
     prompt = BRIEF.format(N=phase, ISSUE=issue, KINDS=", ".join(STOP_KINDS))
     if findings:
         prompt += FIX_ROUND.format(ROUND=rnd, FINDINGS=findings, N=phase)
     if answer:
         prompt += ANSWERED.format(ANSWER=answer)
+    if carried:
+        prompt += CARRIED.format(ISSUE=issue, **carried)
+    if app:
+        prompt += APP_COPIED.format(**app)
     if closeout:
         prompt += CLOSEOUT.format(N=phase)
     return prompt
@@ -285,8 +341,13 @@ def read_result(run_dir: pathlib.Path) -> dict:
             raise Stop(f"{RESULT} says stop with no known kind or no question")
         return r
     outcome = r.get("outcome")
+    if outcome == APP_COPY:
+        if not str(r.get("summary", "")).strip():
+            raise Stop(f"{RESULT} says {APP_COPY} and does not say what changed in the "
+                       "API's description")
+        return r
     if outcome not in ("pr-ready", "deploy"):
-        raise Stop(f"{RESULT} has no outcome of pr-ready, deploy or stop")
+        raise Stop(f"{RESULT} has no outcome of pr-ready, deploy, {APP_COPY} or stop")
     if not str(r.get("summary", "")).strip():
         raise Stop(f"{RESULT} says {outcome} with no summary")
     if not str(r.get("regression_line", "")).startswith(closeout_check.PREFIX):
@@ -415,3 +476,29 @@ def verify_after_apply(clone: pathlib.Path, phase: str, applied: str) -> list[st
     elif log is None or f"> {said[-1]}" not in log.read_text(encoding="utf-8"):
         fails.append("the phase log does not quote the operator's answer as it was typed")
     return fails
+
+
+def record_said(root: pathlib.Path, phase: str) -> tuple[int, str]:
+    """What rule 6's read-back prints (Phase 403, F264): the record
+    `regression_record` finds in the phase's log, or why it finds none."""
+    log = _doc(root, phase, "phase_log")
+    if log is None:
+        return 1, f"no {phase}_phase_log.md under docs/phases/"
+    rec, why = closeout_check.regression_record(log.read_text(encoding="utf-8"), phase)
+    if rec is None:
+        return 1, f"no regression of record in {log.relative_to(root)}: {why}"
+    return 0, (f"the regression of record in {log.relative_to(root)}: {rec[0]} passed at "
+               f"`{rec[1]}`, by `{rec[2]}`")
+
+
+def main(argv: list[str]) -> int:
+    if len(argv) != 2 or argv[0] != "record":
+        print("usage: engineer.py record <phase>", file=sys.stderr)
+        return 2
+    rc, said = record_said(pathlib.Path.cwd(), argv[1])
+    print(said)
+    return rc
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

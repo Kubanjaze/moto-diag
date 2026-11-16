@@ -67,6 +67,15 @@ deleted rather than rewrote, and whether rounds 2+ were given the diff and
 its neighbours rather than the whole row, are the refuter's instruction and
 the reviewer's judgement. They are stated here, not enforced.
 
+**A round the operator grants** (Phase 403, K88, verbatim: "One written
+grant = one extra round. No 5th round without a new grant from me."). A
+grant is a `docs/decisions.md` row whose Covers is `grant=review-round
+subject=<phase>`. Round 3 + k names the phase's k-th grant after its
+number, `4 K89 · factual · fixed`, and C5 passes it only then; a grant
+named on rounds 1 to 3 fails C5. `refute_check.grants` reads the grants;
+`closeout_check`'s A8 hands them over from the tree's and `origin/master`'s
+`docs/decisions.md`.
+
 ## The ceiling of what this can enforce — stated, not implied
 
 `refute_check.py` asserts C1–C4: the block exists, every row has a verdict,
