@@ -1,6 +1,6 @@
 # Phase 403 — The fleet's stops: work kept, the answer carried, the app's copy refreshed (F231, F266, F275, F261, F264, F276, F277)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-11-16
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-11-16 (v1.0 `7cb4914`)
 
 ---
 
@@ -224,24 +224,114 @@ only by the operator's after-merge block.
 
 ## Planned items
 
-- [ ] (d) the two briefs
-- [ ] (a) the kept stop, the side branch, the next round from it
-- [ ] (b) the operator's answer carried
-- [ ] (c) the app-copy step and the fleet's own copy of the app
-- [ ] (e) the granted round
-- [ ] the fixtures red on the old code; the known-bad cases; the mutations
-- [ ] the regression of record, `verify_phase.sh`, the close-out, the handoff
+- [x] (d) the two briefs
+- [x] (a) the kept stop, the side branch, the next round from it
+- [x] (b) the operator's answer carried
+- [x] (c) the app-copy step and the fleet's own copy of the app
+- [x] (e) the granted round
+- [x] the fixtures red on the old code; the known-bad cases; the mutations
+- [x] the regression of record, `verify_phase.sh`, the close-out, the handoff
 
 ## Deviations
 
-(v1.1)
+1. **Two of the four run folders were gone before the phase began.**
+   `20261112_152526_engineer_372` and `20261112_225609_engineer_372` had
+   been pruned (`KEEP_RUNS`); their fixtures are rebuilt from git (every
+   commit is in master's history) and issue #59's stop notes. The other
+   two were copied first (`403_step0.md`, S0-0).
+2. **The generator runs in the fence, not beside it.** The prompt says
+   "outside the fence and with no model". The commit and the push are
+   outside; the generator, which imports the clone's own (model-written)
+   code, runs as a model-free run in the fence with no network, as every
+   other run of the clone's code does. Its output is the same bytes (S0-3).
+3. **"Another check is also red" is the whole-tree run** (`wholetree.sh`
+   fast, the commit gate), which leaves Gate 11 out by its own rule. The
+   full regression is not run twice.
+4. **(e)'s reading of the fix round.** After a granted round's back the
+   fleet runs a fix round, and the review round after it needs a grant of
+   its own (Rule-1 stops anticipated, above). After round 3's back with no
+   grant the phase stops as before, its note now listing three options.
+5. **(e) came out larger than measured.** Step 0 measured about 90 lines
+   of code over five files; built, it is about 165 added lines over the same
+   five files (`refute_check.py` 42, `red_team.py` 33 of its 39,
+   `closeout_check.py` 23, `plan_order.py` 7, and about 60 in
+   `dispatcher.py`), about 110 without docstrings and comments. Still no
+   new stage, label, marker or hold. Said to the operator with the pull
+   request; K88's condition 3 is theirs to read against it.
+6. **No answer yet is a plain line, not a stage.** With `needs-admiral` off
+   and no comment of the operator's after the stop, one `fleet-no-answer`
+   comment says to write the answer; the stage starts once there is one.
+7. **The record's answer (K50) also keeps the work.** `stop_engineer` holds
+   the commits before it asks the record, so a stop the record answers
+   starts its next round from them too.
+8. **The second-file refusal is tested with a planted change** made after
+   the step's own checkout (`_git` wrapped): the step forces its checkout
+   and cleans untracked files, so no other way to change a second file is
+   left to test.
+9. **One test beyond v1.0's list**, from the mutations (M14):
+   `test_gate11_still_red_against_the_new_copy_stops`.
+10. **F279 found and filed**: 372's round-4 table has 16 lines marked round
+    4, and the checker reads 15 (a quote holding `\|`). Left, as the
+    prompt says.
+11. **v1.0 was committed before any code, not pushed before it**: this
+    builder may push only on the operator's typed approval in the thread,
+    which had not come when the build began. The plan's commit (`7cb4914`)
+    is the first on the branch.
+12. **No push guard ran on any commit** (F268): this session was started
+    outside the repository root. `wholetree.sh` fast was run by hand, alone,
+    before each commit.
+13. **The trial is written, not run.** `403_trial.py` makes real issues and
+    branches on GitHub with the fleet's account, which has no write access
+    to moto-diag-mobile yet: it is the operator's step 3, after the merge.
+    It was compiled, not run.
 
 ## Results
 
-(v1.1)
+- **(a)** Cause, re-measured (S0-1): a stop pushed nothing and held
+  nothing. Now each of 372's three stops, replayed, is held (`why:
+  stopped`), its commits on `phase-902-stopped-<run>` and not on the phase
+  branch, each named in the note by hash and subject; the next round's
+  clone has them; hand pushes on top are taken, a branch moved past them is
+  started from and logged; a stop with no new commits holds nothing; a
+  held run outlives a restart and the prune. The gate's side mode: G1 to
+  G5 as for any push, G6 never asked, the phase branch refused.
+- **(b)** Cause (S0-2): no comment reached the Engineer. Now issue #59's
+  three operator answers are each quoted verbatim after their stop, the
+  Engineer runs again without `plan:approved`, and the brief names the log
+  and the entry; another login's comment, and a comment from before the
+  stop, are never quoted; a resumed stage quotes once.
+- **(c)** Cause (S0-3): the fence mounts the app read-only. Now the
+  generator reproduces `993fadc` from `cbfa766` and `d292eef` from
+  `76bdea5` by sha-256; the step writes one file on the app's phase branch,
+  pushes it with the fleet's account, checks Gate 11 against the fleet's
+  copy, and resumes the held run; it refuses `main`, a second file, a red
+  whole-tree run, a Gate 11 already green or still red after, and a push
+  without the fleet's account. `fleet_git.MOBILE` is the fleet's own copy.
+- **(d)** Each brief read against its real failure: the guard's refusal of
+  `> $b.inner` and its `sed -i` rule; 371's log at `f0b3512`, which the new
+  read-back (`engineer.py record`) explains; `1 · code · open` under C5.
+- **(e)** Cause (S0-5): no bound, and C5 refused round 4. Now, 372's round 4
+  replayed: with no grant it never starts (the old code ran it); with a
+  grant on master it is recorded (15 rows named `4 K93 ·`) and its back
+  starts a fix round; one grant never lets round 5 start, a second does; a
+  grant for another phase, for two, in another form or only in words grants
+  nothing; round 3 with no grant stops with the three options and no fix
+  round.
+- Tests: 62 new, all green. On master's code (`8e22b1f`): 42 failed, the
+  app-copy file could not be collected (16, red), and 3 controls passed.
+- `403_mutate.py`: **31/31 mutations red**.
+- `COLLECTED_TEST_FLOOR` 12623 → 12686 (master collects 12624; +62 −0).
+- F279 filed, left.
+- **Regression of record:** 12581 passed, 0 failed, 105 skipped, 0 errors at `e5040ba`, 13 min 47 s, coverage 88.17%, inside the fence (wholetree --full first: 5165 passed, 36 skipped); the real cost ledger unchanged across it (5,780 rows, sha256 8a55eb86… before and after).
+- `dispatcher.py`, `engineer.py`, `fleet_git.py`, `red_team.py`,
+  `plan_order.py`, `app_copy.py` and `refute_check.py` changed: the fleet's
+  copy moves to master and `motodiag-fleet.service` restarts after the
+  merge (the handoff's step 2). At its first cycle the service clones its
+  own copy of moto-diag-mobile.
 
 ## Version history
 
 | Version | Date | What changed |
 |---|---|---|
-| 1.0 | 2026-11-16 | The plan, before any code |
+| 1.0 | 2026-11-16 | The plan, before any code (`7cb4914`) |
+| 1.1 | 2026-11-16 | Phase 403 built (`681a475`, `7a14983`, `e5040ba`); Deviations and Results |

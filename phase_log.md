@@ -3937,3 +3937,8 @@ Write-up: [`402_implementation.md`](docs/phases/completed/402_implementation.md)
 
 Log: [`docs/phases/completed/372_phase_log.md`](docs/phases/completed/372_phase_log.md).
 Write-up: [`372_implementation.md`](docs/phases/completed/372_implementation.md).
+
+## Phase 403 — The fleet's stops: work kept, the answer carried, the app's copy refreshed — CLOSED 2026-11-16
+
+Log: [`docs/phases/completed/403_phase_log.md`](docs/phases/completed/403_phase_log.md).
+Write-up: [`403_implementation.md`](docs/phases/completed/403_implementation.md).
