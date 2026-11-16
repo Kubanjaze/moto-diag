@@ -30,3 +30,9 @@ Check any file with `shasum -a 256 docs/prompts/<file>`.
 The GLM run folders still hold what is not a prompt: `start.sh`,
 `sandbox.sb`, `baseline.txt` and the run's `tmp/`. Their `start.sh` read
 `$RUN/prompt.txt`, which is now here; those runs are finished.
+
+## Written for a session in the mobile repository
+
+| file | for | written |
+|---|---|---|
+| `372_the_apps_payment_screens.txt` | Phase 372's app screens (card-payments setup, an invoice's payment, the plan screen), in `moto-diag-mobile` on the branch `phase-372-payment-api-routes-and-the-app` | 2026-11-12 |

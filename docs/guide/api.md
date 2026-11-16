@@ -173,7 +173,11 @@ owners'.
 | shop | 300 | 10,000 |
 | company | 1,000 | 50,000 |
 
-Shop-management routes need `shop` or above. `motodiag tier` shows where
+Shop-management routes need `shop` or above. The payments routes need
+`shop` too, and a permission at the shop: connecting it to Stripe needs
+`manage_billing` (the owner), and starting or listing an invoice's
+payments needs `manage_shop` (the owner and the service writer).
+`motodiag tier` shows where
 you stand; `motodiag subscription show` shows the subscription behind it.
 
 ## The routes
@@ -198,6 +202,7 @@ you stand; `motodiag subscription show` shows the subscription behind it.
 | `diagnostics` | 1 | OBD adapter failure telemetry |
 | `meta` | 2 | `/healthz`, `/v1/version` |
 | `audit` | 1 | A shop's activity log: who did what, when |
+| `payments` | 5 | A shop's Stripe account, its onboarding, an invoice paid online or at the reader, and the invoice's payments |
 
 Every request that changes something (POST, PUT, PATCH or DELETE) is
 recorded in the activity log: who made it, the path, the status and

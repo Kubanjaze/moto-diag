@@ -527,7 +527,23 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: test_the_post_carries_the_key_once_and_the_schedule, the rename of
 #: test_the_post_carries_the_url_the_header_and_the_schedule, which went.
 #: Measured: 12576.
-COLLECTED_TEST_FLOOR = 12576
+#:
+#: Phase 372 (the payment routes), by a diff of collected ids against the
+#: branch's base at 62c9f3c (12576, master's code), each side read with its
+#: own src/: +44 -0. Added: test_phase372_payment_routes.py (26) and
+#: test_phase372_wiring.py (18). Measured: 12620.
+#:
+#: Phase 372 bug fix #1 (the Red Team's round 1), by a diff of collected ids
+#: against 9e9709c (12620): +1 -0. Added, in test_phase372_wiring.py:
+#: test_the_payment_list_emits_channel_and_status_as_their_check_enums.
+#: Measured: 12621.
+#:
+#: Phase 372 bug fix #2 (the Red Team's round 4, fixed by hand), by a diff
+#: of collected ids against 47f5b00 (12621), each side read with its own
+#: src/: +2 -0. Added, in test_phase372_wiring.py:
+#: test_the_payment_starts_emit_channel_as_its_check_enum and
+#: test_the_payment_list_emits_outcome_as_its_check_enum. Measured: 12623.
+COLLECTED_TEST_FLOOR = 12623
 
 
 def _collected_count() -> int:

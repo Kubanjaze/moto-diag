@@ -127,6 +127,7 @@ def create_app(
     from motodiag.api.routes.live import router as live_router
     from motodiag.api.routes.meta import router as meta_router
     from motodiag.api.routes.parts import router as parts_router
+    from motodiag.api.routes.payments import router as payments_router
     from motodiag.api.routes.photos import router as photos_router
     from motodiag.api.routes.push import router as push_router
     from motodiag.api.routes.reports import router as reports_router
@@ -147,6 +148,7 @@ def create_app(
     app.include_router(sessions_router, prefix="/v1")
     app.include_router(kb_router, prefix="/v1")
     app.include_router(shop_mgmt_router, prefix="/v1")
+    app.include_router(payments_router, prefix="/v1")  # Phase 372 — card payments
     app.include_router(audit_router, prefix="/v1")  # Phase 348 — audit trail
     app.include_router(reports_router, prefix="/v1")
     app.include_router(videos_router, prefix="/v1")

@@ -20,6 +20,24 @@ The job is its own service on the home desktop,
 `motodiag-payments.service`. It runs beside the API and starts by itself
 when the desktop starts.
 
+## From the app
+
+A shop owner connects the shop to Stripe from the phone: the app asks the
+server for a link, and Stripe's own page opens to take the shop's details.
+The link works once and is for the owner only. Back in the app, the shop's
+card payments show as ready once Stripe has finished checking.
+
+A service writer (or the owner) then takes an invoice's payment from the
+phone in one of two ways: **send it to the card reader**, or **share a
+pay-link** the customer opens to pay online. Neither tap pays the invoice.
+The invoice shows as paid only when Stripe's news arrives, through the job
+above, so within about half a minute of the card being approved; the app
+reads the payment's outcome, approved or declined with the reason, from the
+server.
+
+The server routes behind these screens are listed under "The routes" in
+`docs/guide/api.md` (`payments`).
+
 ## The thank-you page
 
 After a customer pays through Stripe Checkout, leaves the billing portal

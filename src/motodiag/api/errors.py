@@ -97,6 +97,14 @@ def _exc_class_chain():
         UnsupportedImageFormatError,
     )
 
+    # Phase 372 — a shop's card payments (Phase 273's refusals)
+    from motodiag.payments.connect import ConnectError
+    from motodiag.payments.stripe_api import (
+        LiveKeyRefused,
+        StripeNotConfigured,
+        StripeUnavailable,
+    )
+
     # Phase 182 — report builders
     from motodiag.reporting.builders import ReportBuildError
     from motodiag.shop.bay_scheduler import (
@@ -315,6 +323,18 @@ def _exc_class_chain():
          "Audio format not supported by this server"),
         (AudioDecodeError, 422, "voice-transcript-decode-failed",
          "Audio could not be decoded"),
+        # Phase 372 — a shop's card payments. ConnectError is a ValueError,
+        # so without its row it would be the 400 of the ValueError handler;
+        # the three Stripe faults are RuntimeErrors, so without theirs they
+        # would be the catch-all's 500. Each message names a setting, a
+        # command or a Stripe call, never a key.
+        (ConnectError, 409, "payment-refused", "Payment refused"),
+        (StripeNotConfigured, 503, "payments-not-configured",
+         "Payments are not configured on this server"),
+        (LiveKeyRefused, 503, "payments-not-configured",
+         "Payments are not configured on this server"),
+        (StripeUnavailable, 503, "stripe-unavailable",
+         "Stripe is unavailable"),
     ]
 
 
