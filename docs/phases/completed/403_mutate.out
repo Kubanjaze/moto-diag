@@ -1,0 +1,32 @@
+M1 a stop with commits holds nothing: red
+M2 the stop's commits go to the phase branch: red
+M3 the side mode asks for the model-free run: red
+M4 the side mode takes any phase branch name: red
+M5 the next round starts from GitHub's branch, the kept run unread: red
+M6 the ancestor rule is not asked: red
+M7 another login's comment is quoted: red
+M8 comments from before the stop are quoted: red
+M9 nothing runs when needs-admiral comes off a stop (F231 as it was): red
+M10 the brief does not say where the answer is: red
+M11 the app's copy may go on main: red
+M12 a second file changing in the app is let through: red
+M13 another red check is let through: red
+M14 Gate 11 is not run again against the new copy: red
+M15 the copy is pushed without the fleet's account: red
+M16 the generator is not 372's method: red
+M17 the held app-copy run is not resumed: red
+M18 rule 3 names sed -i under src/ and tests/ only: red
+M19 rule 6 gives no read-back: red
+M20 the Red Team's brief says nothing of a code finding's row: red
+M21 C5 takes any round: red
+M22 C5 takes any grant's K-id: red
+M23 a grant for any phase counts: red
+M24 an ungranted fourth round runs (F277 as it was): red
+M25 one grant allows two rounds: red
+M26 a granted round's back is not acted on: red
+M27 a fix round runs past round 3 with no grant: red
+M28 the grant is not written into the round's rows: red
+M29 the record check refuses a grant: red
+M30 A8 reads no grant: red
+M31 the spent-rounds stops name no options: red
+31/31 red

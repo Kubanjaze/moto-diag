@@ -1,5 +1,12 @@
 # closeout — changelog
 
+## 2026-11-16 — A8 reads the operator's review-round grants (Phase 403, K88)
+
+`refute_record` takes the phase's grants; `review_grants(repo, phase)`
+reads them from the tree's `docs/decisions.md` and `origin/master`'s, so a
+phase branch cut before a grant still passes a granted round's table. No
+other assertion changed.
+
 ## 2026-11-08 — A5 reads only a line that begins with the prefix (Phase 398, K67, F251)
 
 `regression_record` takes the last line that **begins** with "Regression of

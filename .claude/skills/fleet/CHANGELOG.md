@@ -1,5 +1,43 @@
 # fleet — changelog
 
+## 2026-11-16 — the fleet's stops: work kept, the answer carried, the app's copy refreshed (Phase 403, K84, K88)
+
+The operator: "yes go with templates, and approve both drafts" (K84), and
+for the fourth review, K88. The prompt is
+`docs/prompts/403_the_fleets_stops.txt`; Step 0 is `403_step0.md`.
+
+- **(a) A stop keeps its work (F266).** `Fleet.stop_engineer`,
+  `keep_stop`, `push_side`: a stop whose clone holds commits GitHub's
+  phase branch lacks holds its run (`why: stopped`) and pushes them through
+  `fleet_git.gate(..., side=True)` (G1 to G5; no G6, K84) to
+  `fleet_git.side_branch(phase, run)`; the note names them. `escalate`
+  gains `stop=<kind>` in the marker and a `more` paragraph.
+  `engineer_clone` starts the next round from the kept run while GitHub's
+  branch is its ancestor, else from GitHub's branch, logged.
+- **(b) The operator's answer (F231).** `operator_comments` (the
+  operator's own login only), `engineer_stop`, `carry_answer`: a dated
+  phase-log entry quoting the comments after the stop, committed; the
+  Engineer due again on `build:open` once `needs-admiral` is off;
+  `engineer.CARRIED` in the brief. No comment yet: one `fleet-no-answer`
+  line.
+- **(c) The app's copy (F276).** `app_copy.py`, new; the Engineer's
+  result `app-copy`; `Fleet.app_copy` and `refresh_app` (model-free runs
+  in the fence: `wholetree.sh`, Gate 11 red, the generator; the one file
+  committed and pushed on the app's phase branch with the fleet's account;
+  Gate 11 green after); `held_for` resumes the held run on the
+  `fleet-app-copy` comment. `fleet_git.MOBILE` is the fleet's own copy
+  under its state folder (`ensure_mobile`, `sync_mobile`); the operator's
+  folder is no longer mounted or moved.
+- **(d) The briefs (F275, F264, F261).** The Engineer's rules 3 and 6;
+  `engineer.py record <phase>`, the read-back; the Red Team's table line on
+  a code finding's kind.
+- **(e) A granted round (F277).** `review_grants` (master's
+  `docs/decisions.md`), `spent`; no review round past 3 + grants, no fix
+  round after round 3 with none; the round-3 stop names three options;
+  `red_team.check_table(..., grants)` and `with_grant`;
+  `plan_order.covers_problem` accepts the grant form.
+- Held by `tests/test_phase403_*.py`; mutations in `403_mutate.py`.
+
 ## 2026-11-08 — the cost ledger, made true (Phase 399, K69, F254, F255)
 
 The operator: "the cost ledger and Bosun’s watch-only phase may go ahead as

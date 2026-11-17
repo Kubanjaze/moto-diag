@@ -1,5 +1,15 @@
 # refute — changelog
 
+## 2026-11-16 — a round the operator grants passes C5 (Phase 403, K88, F277)
+
+The operator: "Option 1, save a 4th round I grant, with three conditions:
+1. One written grant = one extra round. No 5th round without a new grant
+from me." `_RKO` takes a K-id after the round's number (its groups are now
+named); `grants(decisions_text, phase)` reads the rows whose Covers is
+`grant=review-round subject=<phase>`; `check(..., grants=)` passes round
+3 + k only when it names grant k. Held by
+`tests/test_phase403_granted_round.py`, with 372's round-4 table.
+
 ## 2026-09-27 — at most three rounds, held by C5–C7 (Phase 358, K9)
 
 The operator's amended rule is quoted verbatim in SKILL.md. The reason is

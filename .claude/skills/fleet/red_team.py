@@ -148,7 +148,12 @@ Return:
 For a repository file the page is its line number ("docs/FOLLOWUPS.md p.
 3677" means line 3677). Every row has a verdict, a quote in quotation
 marks, a source with a page, and the last column. A killed row's outcome
-is open until the Engineer fixes it.
+is open until the Engineer fixes it. The table has no kind "code": a code
+finding (kind "code" in findings, or a "no" on the code checklist) is
+written in this table with the kind factual, which is what a code "no" is
+(K9), or the checker refuses the whole table. Write the round as the
+number alone ("{ROUND} · factual · open"); a script adds what else the
+round's cell needs.
 
 A wording defect you leave open is written "open" with no F-number after
 it. You cannot file a finding (you are read-only), and you never write an
@@ -304,7 +309,8 @@ def checklist_nos(v: dict, scan: dict | None) -> list[dict]:
 
 
 def review(phase: str, rnd: int, context: str, *, clone: pathlib.Path, run: Runner,
-           model: str = OPUS, scan: dict | None = None) -> tuple[dict, rank_call.Call]:
+           model: str = OPUS, scan: dict | None = None, grants: list[str] | tuple = ()
+           ) -> tuple[dict, rank_call.Call]:
     """One round. The verdict, its findings and a table that passes C1–C7.
     A "no" on the code checklist, the model's or the script's, makes it a
     back (Phase 393, K54: a factual defect under K9)."""
@@ -327,26 +333,47 @@ def review(phase: str, rnd: int, context: str, *, clone: pathlib.Path, run: Runn
     if v["verdict"] == BACK and not findings:
         raise Stop("back, with no findings")
     table = str(v.get("refuter_pass", ""))
-    return check_table(v, table, rnd), c
+    return check_table(v, table, rnd, grants), c
 
 
-def check_table(v: dict, table: str, rnd: int) -> dict:
+def check_table(v: dict, table: str, rnd: int, grants: list[str] | tuple = ()) -> dict:
     """The table against C1–C7, as it will stand; `v` gains `wording_open`,
-    the rows the dispatcher files one finding for (F228)."""
+    the rows the dispatcher files one finding for (F228). A round past the
+    third (Phase 403, K88) is the phase's grant's: its K-id is written after
+    the round's number in each of its rows (`with_grant`), and that table
+    is the one returned, to be recorded."""
     # C6 ("no factual or citation defect is still open: the row does not
     # ship") holds a table that ships, the one a clear commits. On a back the
     # killed rows are open by definition: the Engineer has not fixed them yet
     # (Phase 389, bug fix #2: the planted-bug proof's first round). C7 the
     # same before the last round: the wording may still be fixed (F228).
+    if rnd > MAX_ROUNDS and rnd - MAX_ROUNDS <= len(grants):
+        table = with_grant(table, rnd, grants[rnd - MAX_ROUNDS - 1])
     back = v["verdict"] == BACK
-    files = not back or rnd >= MAX_ROUNDS
+    files = not back or rnd >= MAX_ROUNDS + len(grants)
     rows = open_wording(table) if files else []
     shown = with_finding(table, PLACEHOLDER) if rows else table
-    bad = [f for f in refute_check.check(shown)
+    bad = [f for f in refute_check.check(shown, grants=grants)
            if not (back and f.startswith("C6 ")) and not (not files and f.startswith("C7 "))]
     if bad:
         raise Stop("the refute table fails the checklist: " + "; ".join(bad)[:400])
-    return {**v, "wording_open": rows}
+    return {**v, "refuter_pass": table, "wording_open": rows}
+
+
+def with_grant(table: str, rnd: int, kid: str) -> str:
+    """The table with `kid` after the round's number in each row of round
+    `rnd` that names no grant (Phase 403): the model writes the number
+    alone, and the grant is the record's, not the model's."""
+    out = []
+    for line in table.splitlines():
+        m = refute_check._ROW.match(line)
+        k = refute_check._RKO.match(m.group("rko")) if m and m.group("rko") else None
+        if k and int(k["round"]) == rnd and not k["grant"]:
+            cell = m.group("rko")
+            at = cell.index(k["round"]) + len(k["round"])
+            line = line[:m.start("rko")] + cell[:at] + f" {kid}" + cell[at:] + line[m.end("rko"):]
+        out.append(line)
+    return "\n".join(out) + ("\n" if table.endswith("\n") else "")
 
 
 #: Stands in for the finding's number while the table is checked; the
@@ -367,7 +394,8 @@ def open_wording(table: str) -> list[dict]:
         if not m or not m.group("rko"):
             continue
         k = refute_check._RKO.match(m.group("rko"))
-        if k and k.group(2).lower() == "wording" and k.group(3).lower() == "open" and not k.group(4):
+        if k and k["kind"].lower() == "wording" and k["outcome"].lower() == "open" \
+                and not k["finding"]:
             out.append({"line": line, "claim": m.group("claim").strip(),
                         "quote": m.group("quote").strip(), "source": m.group("source").strip()})
     return out
@@ -379,7 +407,8 @@ def with_finding(table: str, fnum: str) -> str:
     for line in table.splitlines():
         m = refute_check._ROW.match(line)
         k = refute_check._RKO.match(m.group("rko")) if m and m.group("rko") else None
-        if k and k.group(2).lower() == "wording" and k.group(3).lower() == "open" and not k.group(4):
+        if k and k["kind"].lower() == "wording" and k["outcome"].lower() == "open" \
+                and not k["finding"]:
             line = line[:m.start("rko")] + m.group("rko").rstrip() + f" {fnum} " + line[m.end("rko"):]
         out.append(line)
     return "\n".join(out) + ("\n" if table.endswith("\n") else "")

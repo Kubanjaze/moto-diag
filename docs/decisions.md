@@ -26,6 +26,13 @@ kind is one of the Engineer's stops that are not rule 1's
 from the record. `.claude/skills/fleet/plan_order.py check` refuses any
 other value.
 
+**A grant** (since Phase 403, the operator's K88): a row whose Covers is
+exactly `grant=review-round subject=<phase>`, for one phase, gives that
+phase one more Red Team review round. One row is one round; a fifth round
+needs a second row. The fleet reads master's copy of this file, by lookup
+(`refute_check.grants`), never the words; it is written with
+`yeoman.py decide --covers 'grant=review-round subject=<phase>'`.
+
 | K-id | Date | The operator's words | The check it became | Covers |
 |---|---|---|---|---|
 | K32 | 2026-10-08 | "i care about doing it in the order that makes the most sense, with context in mind feel free to adjust what that looks like" | No check. The order is `docs/reports/2026-10-12_plan_of_record.md`, whose changes are dated there. | no stop |
