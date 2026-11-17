@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F279** (this file). The
+At the time of writing the highest assigned is **F280** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -6258,3 +6258,55 @@ filed.
 What would close it: `_ROW` reads `\|` inside a cell as text; the 372 table
 as the fixture, its 16th row read, and a planted row with `\|` that C3 or
 C5 must fail.
+
+### F280
+
+**A stop keeps nothing when GitHub's phase branch moved during the Engineer's session: `keep_stop` compares the clone with a commit it never fetched, and git's failure reads as "nothing held"**
+
+Found 2026-11-16 in the review of pull request #67 (Phase 403), before its
+merge as `661f61a`. The operator: "File as a new finding: keep_stop misses
+commits if the phase branch moves on GitHub during an Engineer session".
+Measured by the advisor session on the Mac, on `661f61a`.
+
+- `keep_stop` (`.claude/skills/fleet/dispatcher.py`, lines 1631 to 1641)
+  updates the mirror, takes `base` as GitHub's tip of the phase branch,
+  and lists `git log base..HEAD` in the stage clone without reading git's
+  exit code. The stage clone is made from the mirror when the stage starts
+  and is not fetched again. If a commit reaches GitHub's phase branch while
+  the session runs (a push by hand, say), `base` is a commit the clone does
+  not have: git prints `fatal: Invalid revision range <sha>..HEAD`, exits
+  128 and writes nothing to stdout, and line 1638 reads the empty list as
+  no commits.
+- Through 403's own test world (`tests/test_phase403_kept_stop.py`:
+  `Stopping` with `STOPS[0]`, plus one commit pushed by hand to the
+  stand-in GitHub's phase branch before the session's own commits), from a
+  scratch test outside the repository: the stopped clone held 2 commits
+  GitHub's branch lacked; no run was held, no side branch was pushed, the
+  stop note named neither, and the dispatcher logged "the stop left no
+  commit that GitHub's phase-902-the-trial lacks: nothing held". The
+  control, the same stop with no push during the session: the run held,
+  the side branch pushed, both commits named.
+- The side push uses the same `base`: `push_side` (lines 1663 to 1668)
+  passes it to the gate, whose G2 (`.claude/skills/fleet/fleet_git.py`,
+  lines 154 and 155) runs `merge-base --is-ancestor` with it, and that
+  fails the same way for a commit the clone lacks. In a scratch repository:
+  "G2 c4f5d20fe03e is not a fast-forward of d4daa1b62f16". Reading the
+  log's exit code alone would leave the side push refused.
+- 403's tests move GitHub's branch only after the stop
+  (`test_commits_pushed_by_hand_on_top_are_not_a_refusal`,
+  `test_a_phase_branch_moved_past_the_kept_run_is_started_from_and_said`),
+  never during the session.
+
+What it affects: F266's loss, in this one timing. The stop's commits stay
+only in a run folder that is not held, the next round starts from
+GitHub's branch without them, the stop note does not mention them, and
+`prune_runs` removes the folder once 20 newer runs exist (`KEEP_RUNS`).
+
+What would close it: a stop's commits are found and pushed whatever
+GitHub's phase branch did during the session. The comparison, and the side
+push's G2, use a commit the clone holds (for instance the one the session
+started from, which the run's journal records as the `clone` step's
+`base`), and a `git log` that fails is never read as "nothing held": the
+run is held, and the stop note says the comparison failed. The test:
+GitHub's branch moves during the session, as measured above, red on
+`661f61a`.
