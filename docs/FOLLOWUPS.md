@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F280** (this file). The
+At the time of writing the highest assigned is **F281** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -6310,3 +6310,58 @@ started from, which the run's journal records as the `clone` step's
 run is held, and the stop note says the comparison failed. The test:
 GitHub's branch moves during the session, as measured above, red on
 `661f61a`.
+
+### F281
+
+**Nothing reads the fleet's GitHub key's expiry: it lapses on 2027-01-24 at 03:21:46 UTC with no warning beforehand, and from then on GitHub refuses every call the fleet makes**
+
+Found 2026-11-16 by Phase 403's after-merge step 1, run on the home
+desktop, which printed the key's expiry. The operator: "file it",
+answering the advisor's offer to file the missing warning. Measured by the
+advisor session on the Mac, on `6203f8a`.
+
+- The fleet's GitHub key is a classic token with only `public_repo`, made
+  with a 90-day expiry (`docs/phases/completed/389_operator_steps.md`,
+  line 30). Step 1 read its expiry from the
+  `github-authentication-token-expiration` header GitHub returns on a call
+  made with it: 2027-01-24 03:21:46 UTC (22:21:46 EST on 2027-01-23), 68
+  days after 2026-11-17 00:00 UTC.
+- Nothing reads that date.
+  `git grep -i -E 'token-expiration|github-authentication-token'` outside
+  `tests/` and `docs/` finds 0 lines; the same pattern finds the line in a
+  planted copy of the header (1). `git grep -i expir` over
+  `.claude/skills/fleet`, `ops` and `scripts` finds only `TimeoutExpired`
+  and one comment on the tailnet key in `ops/desktop/install_remote.sh`.
+  `read_identity_file` (`.claude/skills/fleet/fleet_git.py`, lines 209 to
+  223) checks the key's shape, not its age.
+- Every GitHub call the dispatcher makes carries the key. `gh_run`
+  (`.claude/skills/fleet/dispatcher.py`, lines 930 to 937) puts it in
+  `GH_TOKEN` whenever the identity file parses, reads included, and `gh`
+  (lines 939 to 943) raises `Stop` on a refusal. An expired key still
+  parses, so nothing falls back to another login. Read from the code, not
+  tried with an expired key: the search on start would fail at its issue
+  list (`issues_open`, line 1010), and each cycle at the sweep's (line
+  2833). The Monday "Code health, weekly" comment needs the key too. The
+  reasons would reach only `dispatcher.log` on the desktop, because
+  posting a comment needs the key.
+- The renewal is written down: 389's operator steps, line 66, "Making a
+  new one and running Part B again replaces it." The warning is what is
+  missing.
+
+What it affects: on 2027-01-24 everything the fleet does on GitHub stops
+at once (reads, comments, labels, pushes, pull requests), and the first
+sign is the fleet going quiet.
+
+What would close it:
+- **An early warning from the fleet:** it reads the expiry header on the
+  calls it already makes and, a set number of days ahead, says so where
+  the operator looks while the key still works (the weekly page, say).
+  How many days is the operator's number.
+- **A warning that needs neither the desktop nor the key**, because the
+  fleet's own warning dies with them: for instance the date kept in the
+  repository and checked by a scheduled GitHub workflow, or a reminder
+  outside the repository.
+- **On the day it lapses,** a log line that names the expired key, not a
+  generic failed `gh`.
+- **The tests:** a stand-in key whose header shows an expiry inside the
+  window turns the warning on, and one outside it does not.
