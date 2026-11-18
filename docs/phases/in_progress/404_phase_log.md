@@ -140,3 +140,25 @@ there: the Individual and Company bike controls, the two tables agreeing
 (they agreed on master too, at 50), `checkin` still returning a bool, the
 alarm-off control, the no-key and planted-key controls, the day's turn
 leaving other tables alone, and the migration's "before" state.
+
+## 2026-11-18 — committed, then the mutations
+
+- `4b07f31`, the build, after `wholetree.sh` (fast: 2743 passed, 10
+  skipped, exit 0) and `wholetree.sh --full` on the staged tree (5212
+  passed, 36 skipped, exit 0; record for `dfdad6b`'s tree as staged).
+- **Mutations, `404_mutate.py`: 26/26 red** (`404_mutate.out`). The plan's
+  seven are P1 (figure off by one), P3 (`shops.owner_user_id`), P4 (every
+  member, the caller's own included: the check has no caller, so the
+  caller's subscription reaches it only as a member's; the API test with a
+  Company technician under an Individual owner goes red), S1 (the check
+  after the paid call), F1 (a 401 recorded as accepted), F3 (the stale
+  window at one interval) and N1 ("Solo Mechanic"). The other nineteen
+  remove each call site's check, the CLI's red line, the error row, the
+  housekeeping and the rollback's drop.
+- A first run of the script was stopped by the sandbox's ten-minute limit
+  on a background command, after nine mutations, all red. It was stopped
+  while S4 was applied, and the harness's restore did not run: the photo
+  identification's check line was missing from `vehicle_identifier.py`.
+  Found by checking that each mutation's original text occurs exactly once,
+  restored with the Edit tool before the commit, and the whole run was
+  repeated with a longer limit. Not a defect in the shipped code.
