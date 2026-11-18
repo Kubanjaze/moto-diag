@@ -49,7 +49,9 @@ in the phase log.
      sentinel `check_vehicle_quota` (line 391) and `_quota_for`
      (`src/motodiag/api/routes/vehicles.py` line 197) already read.
      `individual` stays 5 and `company` stays -1. No route changes:
-     `POST /v1/vehicles` (line 258) keeps calling the same check.
+     `POST /v1/vehicles` (line 258) keeps calling the same check, and
+     `GET /v1/vehicles` answers a Shop account with `quota_limit` null and
+     `quota_remaining` null, as it answers Company today.
    - `TIER_LIMITS[SubscriptionTier.SHOP].max_vehicles` (line 92) becomes
      `-1`, so the CLI's "Max vehicles" rows read "Unlimited" for Shop. The
      module's docstring (lines 4 to 6) says what the plans now limit.
@@ -85,13 +87,23 @@ in the phase log.
      is pinned equal to them by a test, so the CLI's "AI cost cap / month"
      row (`src/motodiag/cli/main.py` line 198) shows what the server
      enforces: Company's line 125 becomes 150.0.
-   - **The shop's plan:** the owner's active subscription,
-     `shops.owner_user_id` then
-     `motodiag.billing.subscription_repo.get_active_subscription`, the same
-     rule `resolve_tier` (`src/motodiag/auth/deps.py` line 129) uses for a
-     shop member. A shop whose owner has no active subscription has no plan
-     and so no plan figure; the brake alone applies, as it does today
-     (a reading, under Rule-1 stops anticipated). A call with no shop
+   - **The shop's plan:** the rule `resolve_tier` applies to a shop member
+     (`src/motodiag/auth/deps.py` lines 147 to 162): the shop's active
+     owner-role members, read from `shop_members` where `role = 'owner'`
+     and `is_active = 1`; each owner's active subscription through
+     `motodiag.billing.subscription_repo.get_active_subscription`; the
+     highest of their tiers by `_TIER_RANK`. The rule never reads
+     `shops.owner_user_id`: that column keeps its default of 1 on every
+     shop the API creates, because `create_shop_endpoint`
+     (`src/motodiag/api/routes/shop_mgmt.py` lines 308 to 314) calls
+     `create_shop` without an owner and stamps the real owner into
+     `shop_members` through `seed_first_owner`. The Engineer lifts the
+     owner lookup into one function both `resolve_tier` and the check
+     call, or writes the check's own copy pinned equal by a test; the
+     Engineer's choice, said in the log. A shop with no active owner-role
+     member, or whose owners have no active subscription, has no plan and
+     so no plan figure; the brake alone applies, as it does today (a
+     reading, under Rule-1 stops anticipated). A call with no shop
      (`shop_id is None`) is not held to a plan figure, as `check_cost_cap`
      already lets an unattributed call through; attribution is not changed
      here.
@@ -162,8 +174,10 @@ in the phase log.
      refused its next paid call, 402 `plan-ai-limit-reached` through the
      API and a red line through the CLI, the message naming "Company" and
      the first of next month; a Shop shop is refused past $50.00 and served
-     at $49.99; an Individual past $5.00; the brake at 0 refuses nothing on
-     its own; a shop with no plan is held only by the brake; every call
+     at $49.99; an Individual past $5.00; a shop whose `shops.owner_user_id`
+     is 1 and whose `shop_members` owner is a different user on Company is
+     held to Company's figure, not user 1's; the brake at 0 refuses nothing
+     on its own; a shop with no plan is held only by the brake; every call
      site in the census has a test that it refuses before paying (the
      stand-in client records no call).
 3. **F272, the names** (`src/motodiag/cli/subscription.py`,
@@ -199,18 +213,24 @@ in the phase log.
      deletes its own rows older than 30 days from this table only, as
      `limit_check` already runs at the day's turn; nothing else is deleted.
    - **The status.** `feed_status_cmd` (`payments.py` line 170) reads the
-     newest row and prints, after the Stripe lines, one line for the alarm
-     that names where it checks in, how often, the last check-in's local
-     time and how long ago, and Sentry's answer; with no row yet, it says
-     so. `_status_problems` (line 130) gains, when the alarm is on: "the
-     alarm has never checked in" when no row exists; "the last check-in was
-     refused: <answer>" when the newest row was not accepted; "no check-in
-     succeeded within two intervals" when the newest accepted row is older
-     than `2 * settings.stripe_poll_checkin_s`. Each is a "Not right:" line
-     and exit 1, as the Stripe problems are. With the alarm off the line
-     reads "Alarm: off: no Sentry DSN" as today and adds no problem.
-     `_alarm_line` (line 102) is replaced by, or feeds, the new line; no
-     key is ever printed (the 371 mask tests stay).
+     newest row and prints, after `_alarm_line`'s line (line 189), one new
+     check-in line that names the last check-in's local time and how long
+     ago, and Sentry's answer; with no row yet, it says so. The new line is
+     a new function beside `_alarm_line`, built from the row and the
+     settings. **`_alarm_line` (line 102) stays as it is, and `feed run`
+     (line 149) is unchanged:** `feed run` prints `_alarm_line` at line
+     157, and `tests/test_phase371_cli.py` line 137 monkeypatches
+     `cp._alarm_line` by name as the control that a printed key is seen,
+     so the name and its callers keep working. `_status_problems`
+     (line 130) gains, when the alarm is on: "the alarm has never checked
+     in" when no row exists; "the last check-in was refused: <answer>" when
+     the newest row was not accepted; "no check-in succeeded within two
+     intervals" when the newest accepted row is older than
+     `2 * settings.stripe_poll_checkin_s`. Each is a "Not right:" line and
+     exit 1, as the Stripe problems are. With the alarm off, `_alarm_line`
+     reads "Alarm: off: no Sentry DSN" as today, the new line is not
+     printed, and no problem is added. No key is ever printed (the 371 mask
+     tests stay).
    - **The guide.** `docs/guide/payments.md`, "Seeing that it is running"
      (lines 52 to 65), describes the new line and the three new reasons for
      exit 1.
@@ -218,8 +238,9 @@ in the phase log.
      once, `payments feed status` exits 1 and prints the refusal with
      "401"; answering 202, it exits 0 and prints the time and "202"; with
      the newest accepted row planted older than two intervals, exit 1; with
-     the alarm off, exit 0 and the old line; the 371 status tests still
-     pass; no planted key appears in any output.
+     the alarm off, exit 0 and the old line; `feed run --once` prints the
+     same lines as before; the 371 status and `feed run` tests still pass;
+     no planted key appears in any output.
 5. **Documents.** `docs/FOLLOWUPS.md` gains, at close-out, the closing
    lines for F270, F271, F272 and F274 in the form F273's has, each saying
    "once merged and live" until the handoff records the live step; the
@@ -283,27 +304,37 @@ The phase is a shop phase, not fleet-only: it changes `src/motodiag/`,
   two plans that would ship different things. Where this plan leaves a
   build choice (the return shape of `monitor.checkin`, the compare table's
   layout, whether `TIER_LIMITS` reads the server's figures or is pinned
-  equal to them), either choice ships the same behaviour.
+  equal to them, whether the owner lookup is lifted out of `resolve_tier`
+  or copied and pinned equal), either choice ships the same behaviour.
 - **A threshold or a rule's definition: four changes, approved; anything
   else is a stop.** K84 and K90 are the operator's approval of exactly
   these: Shop's bike limit removed; Company at 3 locations and $150 a month
   of AI; each plan's AI figure, $5, $50 and $150, a limit the server keeps,
   the brake left at 0; the three names. The Engineer applies those values
   literally. Foreseeable stops, each with kind `threshold-or-rule`: a
-  figure for a shop whose owner has no active subscription; any number for
-  the brake; any change to Individual's 5 bikes, Shop's 10 people, 1
-  location or 500 diagnoses a month, or Company's unlimited bikes and
-  diagnoses; a model-access change; a limit kept on locations or people.
-  **Two readings, recorded, told to the operator with the pull request:**
+  figure for a shop with no plan (no active owner-role member, or none with
+  an active subscription); any number for the brake; any change to
+  Individual's 5 bikes, Shop's 10 people, 1 location or 500 diagnoses a
+  month, or Company's unlimited bikes and diagnoses; a model-access change;
+  a limit kept on locations or people.
+  **Three readings, recorded, told to the operator with the pull request:**
   (1) a shop with no plan is held only by the brake, as an unattributed
   call is today, since K84's figures are per plan; (2) the month is the UTC
   calendar month, as `shop_cost_this_month` already counts it, and the
-  date the message names is the first of the next month in UTC.
-- **A test that cannot be made green: none known.** Three existing pins
+  date the message names is the first of the next month in UTC; (3) the
+  shop's plan is the one `resolve_tier` already gives a shop member, the
+  highest active subscription among the shop's active owner-role members
+  in `shop_members`, and not `shops.owner_user_id`, which the API leaves at
+  its default of 1.
+- **A test that cannot be made green: none known.** Four existing pins
   change with their reason in the commit message:
   `tests/test_phase177_vehicle_api.py` line 239 (shop 50, an `f9-noqa`
-  contract pin), `tests/test_phase109_cli_foundation.py` lines 63 (shop
-  bikes) and 75 (Company locations). If the SSOT lint
+  contract pin) and `test_shop_tier_gets_bigger_quota` in the same file
+  (lines 443 to 462, which asserts `quota_limit == 50` and
+  `quota_remaining == 44` for a shop-tier account and goes red when
+  `_quota_for` returns None for Shop; its new expectation is `quota_limit`
+  null and `quota_remaining` null); `tests/test_phase109_cli_foundation.py`
+  lines 63 (shop bikes) and 75 (Company locations). If the SSOT lint
   (`tests/test_phase191d_ssot_constants_lint.py`) or any other test pins a
   behaviour this phase must change and cannot be made green inside K84's
   scope, the Engineer stops.
@@ -313,9 +344,9 @@ The phase is a shop phase, not fleet-only: it changes `src/motodiag/`,
 - **A live-database change that alters or deletes rows: none planned.**
   Migration 090 adds one empty table and one index (The database step). The
   limits apply at the next call and rewrite no stored row: no
-  `subscriptions`, `cost_events`, `vehicles` or `shops` row changes. A
-  migration that would alter or delete an existing live row, or any write
-  that rewrites stored plan data or a shop's counts, is a stop.
+  `subscriptions`, `cost_events`, `vehicles`, `shops` or `shop_members` row
+  changes. A migration that would alter or delete an existing live row, or
+  any write that rewrites stored plan data or a shop's counts, is a stop.
 
 ## The database step
 
@@ -350,10 +381,11 @@ The phase is a shop phase, not fleet-only: it changes `src/motodiag/`,
 ## Tests
 
 - `tests/test_phase404_bike_limit.py`: a Shop account adds 51 bikes through
-  `POST /v1/vehicles`, each 201, and the list shows `quota_limit` null; an
-  Individual account's sixth is 402 `vehicle-quota-exceeded` (the control);
-  a Company account is unchanged; `TIER_LIMITS` and `TIER_VEHICLE_LIMITS`
-  agree for every plan, and so do the session limits.
+  `POST /v1/vehicles`, each 201, and `GET /v1/vehicles` shows `quota_limit`
+  null and `quota_remaining` null; an Individual account's sixth is 402
+  `vehicle-quota-exceeded` (the control); a Company account is unchanged;
+  `TIER_LIMITS` and `TIER_VEHICLE_LIMITS` agree for every plan, and so do
+  the session limits.
 - `tests/test_phase404_plan_ai_limit.py`: on a fresh database with a shop,
   an owner on each plan and planted `cost_events` rows: Company at $150.00
   refused, at $149.99 served; Shop at $50.00 refused; Individual at $5.00
@@ -361,11 +393,18 @@ The phase is a shop phase, not fleet-only: it changes `src/motodiag/`,
   month; through the API it is 402 `plan-ai-limit-reached` and the brake's
   row is untouched; the brake at 0 alone refuses nothing; a shop with no
   plan is refused only when the brake is set; the lower of plan and brake
-  refuses first; each call site in the census refuses before the stand-in
-  client is called: the video question, the video sweep (video stays
-  pending), the transcript upload (402 before the audio is stored),
-  `motodiag diagnose`, `motodiag code explain`, `motodiag intake photo`, the
-  labor estimate, and each other site the census finds.
+  refuses first; **the owner rule:** a shop created as the API creates it,
+  `shops.owner_user_id` left at 1 and a different user stamped as the
+  active owner-role member in `shop_members` on Company, is held to
+  Company's $150, while user 1 has no subscription or an Individual one
+  (the control: the figure read from `shops.owner_user_id` would refuse at
+  $5 or never); a shop with two active owners on different plans is held
+  to the higher; an owner whose membership is inactive is not counted;
+  each call site in the census refuses before the stand-in client is
+  called: the video question, the video sweep (video stays pending), the
+  transcript upload (402 before the audio is stored), `motodiag diagnose`,
+  `motodiag code explain`, `motodiag intake photo`, the labor estimate, and
+  each other site the census finds.
 - `tests/test_phase404_plan_names.py`: `motodiag tier` under each plan and
   `motodiag tier --compare` print "Individual: for your own bikes", "Shop"
   and "Company"; the "Physical locations" row reads 3 for Company; the "AI
@@ -376,24 +415,32 @@ The phase is a shop phase, not fleet-only: it changes `src/motodiag/`,
   refusal with "401"; answering 202, exit 0 with the time and "202"; the
   newest accepted row planted older than two check-in intervals, exit 1;
   no row with the alarm on, exit 1 "has never checked in"; the alarm off,
-  exit 0 and no check-in problem (the control); rows older than 30 days are
-  deleted at the day's turn and younger ones kept; no planted key in any
-  output; `monitor.checkin` returns the answer for a 2xx, a 4xx and a
-  network failure.
+  exit 0, `_alarm_line`'s old line and no check-in problem (the control);
+  `feed run --once` prints the same lines as on master; rows older than 30
+  days are deleted at the day's turn and younger ones kept; no planted key
+  in any output; `monitor.checkin` returns the answer for a 2xx, a 4xx and
+  a network failure.
 - `tests/test_phase404_migration_090.py`: a fresh database migrates to 90
   with the table and index present; the rollback removes both and nothing
   else; the scope file names exactly what the migration adds.
-- Existing tests updated with the reason: `tests/test_phase177_vehicle_api.py`
-  line 239; `tests/test_phase109_cli_foundation.py` lines 63 and 75;
+- Existing tests updated with the reason in the commit message:
+  `tests/test_phase177_vehicle_api.py` line 239 (shop's 50 becomes
+  unlimited) and `test_shop_tier_gets_bigger_quota` (lines 443 to 462:
+  `quota_limit` null and `quota_remaining` null for a shop-tier account,
+  the way `test_company_tier_shows_unlimited` beside it reads Company);
+  `tests/test_phase109_cli_foundation.py` lines 63 and 75;
   `tests/test_phase371_monitor.py` and
   `tests/test_phase371B_checkin_key_once.py` if the return shape changes;
-  `tests/test_phase371_cli.py`'s status tests stay as they are.
+  `tests/test_phase371_cli.py`'s status, `feed run` and key-control tests
+  stay as they are, `_alarm_line` included.
 - Old code: each new test file run against master's `src/`, red, with the
   controls green.
-- Mutations, `404_mutate.py`: the plan figure off by one, the shop's plan
-  read from the caller instead of the owner, the check after the paid call,
-  the 401 recorded as accepted, the stale window at one interval, a name
-  left as "Solo Mechanic".
+- Mutations, `404_mutate.py`: the plan figure off by one; the shop's plan
+  read from `shops.owner_user_id` instead of the active owner-role members
+  in `shop_members`; the shop's plan read from the caller's own
+  subscription instead of the owners'; the check after the paid call; the
+  401 recorded as accepted; the stale window at one interval; a name left
+  as "Solo Mechanic".
 - `COLLECTED_TEST_FLOOR` raised by a diff of collected ids; the floor test
   and the quality ratchet both green.
 - The regression of record through `regression.sh` inside the fence, with
@@ -409,18 +456,19 @@ screens and its own text (372B; any disagreement found at Step 0 is named
 for that session). The Mekno name in what customers see (K77, later work).
 The brake's number (`MOTODIAG_COST_CAP_MONTHLY_USD_CENTS` stays 0). AI
 spend attribution (`src/motodiag/shop/attribution.py`) and the F-ticket on
-the app sending its active shop. Any change to prices, model access or the
-session limits. The payments feed's Stripe rounds and notices (Phase 371).
-Any change to `.claude/skills/`, the guards or the fleet. No seed data, no
-split and no eval protocol: this phase has none.
+the app sending its active shop. Any change to `shops.owner_user_id`, its
+default or the shops that carry it. Any change to prices, model access or
+the session limits. The payments feed's Stripe rounds, notices and
+`feed run` (Phase 371). Any change to `.claude/skills/`, the guards or the
+fleet. No seed data, no split and no eval protocol: this phase has none.
 
 ## Planned items
 
 - [ ] Step 0 re-measured: the census of paid AI calls with its count and command in the phase log; the three app lines recorded; the `## The database step` scope file `404_deploy_scope.json`
-- [ ] F270: Shop's bike limit removed in both tables; the two tables agree in a test; the 51st bike test
-- [ ] F271: the plan figures kept by the server; `check_cost_cap` holds the plan figure beside the brake; the refusal names the plan and the date; 402 `plan-ai-limit-reached`; every call site in the census checks before paying; Company's locations read 3 and the finding is filed
+- [ ] F270: Shop's bike limit removed in both tables; the two tables agree in a test; the 51st bike test; `test_shop_tier_gets_bigger_quota` and line 239 of `test_phase177_vehicle_api.py` updated with the reason
+- [ ] F271: the plan figures kept by the server; the shop's plan read by `resolve_tier`'s owner rule from `shop_members`, with the `owner_user_id = 1` test; `check_cost_cap` holds the plan figure beside the brake; the refusal names the plan and the date; 402 `plan-ai-limit-reached`; every call site in the census checks before paying; Company's locations read 3 and the finding is filed
 - [ ] F272: the three names in every table, with the tests
-- [ ] F274: `monitor.checkin` returns the answer; migration 090 and the job's record; `payments feed status`'s line and three reasons for exit 1; the guide
+- [ ] F274: `monitor.checkin` returns the answer; migration 090 and the job's record; the status's new check-in line beside `_alarm_line`, `feed run` unchanged, and three reasons for exit 1; the guide
 - [ ] Existing pins updated with their reason; new tests red on master's code; mutations red; `COLLECTED_TEST_FLOOR` raised
 - [ ] The regression of record; the `deploy` outcome; the operator applies migration 090 from one paste block
 - [ ] The close-out: FOLLOWUPS closing lines for F270, F271, F272 and F274; the ROADMAP row ✅ with CLOSED date and regression line; the handoff with the live step (server and feed restarted, `payments feed status` printed and read) as one paste block ending in ALL GOOD or SOMETHING IS OFF
