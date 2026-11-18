@@ -354,6 +354,14 @@ class VehicleIdentifier:
             self._maybe_attach_alert(user_id, quota_before, cached)
             return cached
 
+        # Phase 404 (F271): refuse before paying for the vision call. The
+        # CLI has no shop of its own: the database's only one, else the
+        # call stays unattributed (as `motodiag diagnose`).
+        from motodiag.shop.attribution import only_shop
+        from motodiag.shop.cost_cap import check_cost_cap
+
+        check_cost_cap(only_shop(self._db_path), db_path=self._db_path)
+
         # Vision call — Haiku first (or Sonnet if forced)
         initial_model = force_model or self._default_model
         guess = self._run_vision(jpeg_bytes, hints, initial_model, image_hash, user_id)

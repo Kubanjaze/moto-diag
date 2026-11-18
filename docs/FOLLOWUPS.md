@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F281** (this file). The
+At the time of writing the highest assigned is **F282** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -6365,3 +6365,29 @@ What would close it:
   generic failed `gh`.
 - **The tests:** a stand-in key whose header shows an expiry inside the
   window turns the warning on, and one outside it does not.
+
+### F282
+
+**The plan tables show a location limit and a people limit that no code keeps: Company reads 3 locations and Shop 10 people, and nothing counts either**
+
+Found 2026-11-18 by Phase 404's Step 0, which set Company's
+`max_locations` to 3 as the operator approved (K84). Measured on the
+branch at `dfdad6b`:
+- `max_locations` is read only by the CLI's `motodiag tier` panel
+  (`src/motodiag/cli/main.py`, "Physical locations"); no route or command
+  compares anything to it.
+- No code adds a shop location: `terminal_locations` is a Stripe Terminal
+  address, and `shops` has no parent shop, so a company's second and
+  fourth location are both just more shops, unconnected.
+- `max_users` sits the same way: shown ("User accounts", and "Max users"
+  in `motodiag tier --compare`), and no member invite or add compares the
+  shop's member count with it.
+
+What it affects: a Company account is told 3 locations and a Shop account
+10 people, and the server lets either have any number. Nothing is wrong
+for a customer today, because no customer can add a location at all.
+
+What would close it: the code that adds a location to a company (a phase
+of its own), with the check against `max_locations` in it; and, if the
+operator wants the people limit kept, the same check at the member add.
+The numbers are the operator's (K84 sets only Company's 3).

@@ -19,7 +19,7 @@ Downstream Track G phases will append more subgroups (work orders in
 from __future__ import annotations
 
 import json as _json
-from typing import Optional
+from typing import NoReturn, Optional
 
 import click
 from rich.panel import Panel
@@ -204,6 +204,14 @@ from motodiag.shop import (
 from motodiag.shop import (
     top_parts as analytics_top_parts,
 )
+from motodiag.shop.cost_cap import CostCapExceeded
+
+
+def _refused_spend(console, e: CostCapExceeded) -> NoReturn:
+    """Phase 404: the plan's AI figure or the brake refused before paying;
+    one red line and exit 1, as `motodiag diagnose` does."""
+    console.print(f"[red]{e}[/red]")
+    raise click.exceptions.Exit(1) from e
 
 
 def _sole_shop_id_or_fail() -> int:
@@ -2295,6 +2303,8 @@ def register_shop(cli_group: click.Group) -> None:
                 force=force,
                 escalate_on_low_confidence=escalate_on_low_confidence,
             )
+        except CostCapExceeded as e:
+            _refused_spend(console, e)
         except (PriorityScorerError, ShopNotFoundError, ValueError) as e:
             raise click.ClickException(str(e)) from e
         if as_json:
@@ -2330,6 +2340,8 @@ def register_shop(cli_group: click.Group) -> None:
         except PriorityBudgetExhausted as e:
             console.print(f"[yellow]{e}[/yellow]")
             results = e.scored_so_far
+        except CostCapExceeded as e:
+            _refused_spend(console, e)
         except PriorityScorerError as e:
             raise click.ClickException(str(e)) from e
         if as_json:
@@ -2998,6 +3010,8 @@ def register_shop(cli_group: click.Group) -> None:
                 tier_preference=tier.lower(), model=model.lower(),
                 use_cache=not no_cache,
             )
+        except CostCapExceeded as e:
+            _refused_spend(console, e)
         except (PartNotFoundError, InvalidTierPreferenceError, ValueError) as e:
             raise click.ClickException(str(e)) from e
         if as_json:
@@ -3133,6 +3147,8 @@ def register_shop(cli_group: click.Group) -> None:
                 environment_hint=environment_hint,
                 write_back=not no_write_back,
             )
+        except CostCapExceeded as e:
+            _refused_spend(console, e)
         except (LaborEstimatorError, WorkOrderNotFoundError) as e:
             raise click.ClickException(str(e)) from e
         if as_json:
@@ -3161,10 +3177,13 @@ def register_shop(cli_group: click.Group) -> None:
         """Bulk-estimate all open/in-progress WOs for a shop."""
         console = get_console()
         init_db()
-        results = bulk_estimate_open_wos(
-            shop_id, model=model.lower(),
-            skill_tier=skill_tier.lower(), force=force,
-        )
+        try:
+            results = bulk_estimate_open_wos(
+                shop_id, model=model.lower(),
+                skill_tier=skill_tier.lower(), force=force,
+            )
+        except CostCapExceeded as e:
+            _refused_spend(console, e)
         if as_json:
             click.echo(_json.dumps(
                 [r.model_dump(mode="json") for r in results],

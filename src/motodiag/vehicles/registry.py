@@ -38,10 +38,11 @@ class VehicleQuotaExceededError(Exception):
         )
 
 
-# Phase 177 tier-to-quota mapping. ``-1`` = unlimited.
+# Phase 177 tier-to-quota mapping. ``-1`` = unlimited. Phase 404 (F270,
+# the operator's K84): the Shop plan has no bike limit.
 TIER_VEHICLE_LIMITS: dict[str, int] = {
     "individual": 5,
-    "shop": 50,
+    "shop": -1,
     "company": -1,
 }
 

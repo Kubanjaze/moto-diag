@@ -1,9 +1,17 @@
 """Subscription tier system — 3-tier access control for MotoDiag.
 
-Phase 109: Foundational subscription infrastructure. Three tiers:
-- INDIVIDUAL: single mechanic, personal use, 5 vehicles, basic diagnostics
-- SHOP: small/medium shop, multi-mechanic, 50 vehicles, team features
-- COMPANY: multi-location, unlimited vehicles, API access, fleet management
+Phase 109: Foundational subscription infrastructure. Three tiers, named
+and limited as the operator set them in Phase 404 (K84):
+- INDIVIDUAL ("Individual: for your own bikes"): 5 bikes, $5 of AI a month
+- SHOP ("Shop"): no bike limit, team features, $50 of AI a month
+- COMPANY ("Company"): no bike limit, 3 locations, API access, $150 of AI
+  a month
+
+The server keeps the bike limit (``vehicles.registry.TIER_VEHICLE_LIMITS``),
+the diagnosis limit (``core.session_repo.TIER_SESSION_MONTHLY_LIMITS``) and
+the AI figure, per shop per calendar month (``shop.cost_cap.PLAN_AI_CENTS``);
+``tests/test_phase404_*`` hold this table equal to them. Locations and
+people are shown here and kept nowhere.
 
 Tier enforcement happens at the CLI layer before commands execute. All
 downstream Track D/H/I phases will use this system. Real payment integration
@@ -66,7 +74,7 @@ class TierFeatures(BaseModel):
 TIER_LIMITS: dict[SubscriptionTier, TierFeatures] = {
     SubscriptionTier.INDIVIDUAL: TierFeatures(
         tier=SubscriptionTier.INDIVIDUAL,
-        display_name="Solo Mechanic",
+        display_name="Individual: for your own bikes",
         price_monthly_usd=19.00,
         price_yearly_usd=190.00,
         max_vehicles=5,
@@ -86,10 +94,10 @@ TIER_LIMITS: dict[SubscriptionTier, TierFeatures] = {
     ),
     SubscriptionTier.SHOP: TierFeatures(
         tier=SubscriptionTier.SHOP,
-        display_name="Shop (per location)",
+        display_name="Shop",
         price_monthly_usd=99.00,
         price_yearly_usd=990.00,
-        max_vehicles=50,
+        max_vehicles=-1,         # unlimited (Phase 404, F270)
         max_sessions_per_month=500,
         max_users=10,
         max_locations=1,
@@ -106,13 +114,13 @@ TIER_LIMITS: dict[SubscriptionTier, TierFeatures] = {
     ),
     SubscriptionTier.COMPANY: TierFeatures(
         tier=SubscriptionTier.COMPANY,
-        display_name="Multi-Location / Enterprise",
+        display_name="Company",
         price_monthly_usd=299.00,
         price_yearly_usd=2990.00,
         max_vehicles=-1,         # unlimited
         max_sessions_per_month=-1,
         max_users=-1,
-        max_locations=-1,
+        max_locations=3,         # shown, kept nowhere (Phase 404, F271)
         can_export_pdf=True,
         can_share_reports=True,
         can_use_media_diagnostics=True,
@@ -122,7 +130,7 @@ TIER_LIMITS: dict[SubscriptionTier, TierFeatures] = {
         can_access_shop_management=True,
         priority_support=True,
         ai_model_access=["haiku", "sonnet"],
-        ai_monthly_cost_cap_usd=500.0,
+        ai_monthly_cost_cap_usd=150.0,
     ),
 }
 
@@ -182,9 +190,18 @@ def format_tier_comparison() -> str:
     def fmt_bool(b: bool) -> str:
         return "✓" if b else "—"
 
+    # Phase 404 (F272): every plan name comes from ``display_name``. The full
+    # names ride on a line across the table; each column is headed by the
+    # name's first part, which fits the column.
+    tiers = (individual, shop, company)
+    names = "Plans: " + " · ".join(t.display_name for t in tiers)
+    heads = [t.display_name.split(":")[0] for t in tiers]
+
     lines = [
-        "┌─────────────────────────────┬──────────────┬──────────────┬──────────────┐",
-        "│ Feature                     │ Individual   │ Shop         │ Company      │",
+        "┌" + "─" * 74 + "┐",
+        f"│ {names:<72} │",
+        "├─────────────────────────────┬──────────────┬──────────────┬──────────────┤",
+        f"│ Feature                     │ {heads[0]:<12} │ {heads[1]:<12} │ {heads[2]:<12} │",
         "├─────────────────────────────┼──────────────┼──────────────┼──────────────┤",
         f"│ Monthly price               │ ${individual.price_monthly_usd:>11.2f} │ ${shop.price_monthly_usd:>11.2f} │ ${company.price_monthly_usd:>11.2f} │",
         f"│ Yearly price                │ ${individual.price_yearly_usd:>11.2f} │ ${shop.price_yearly_usd:>11.2f} │ ${company.price_yearly_usd:>11.2f} │",

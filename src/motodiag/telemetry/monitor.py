@@ -20,7 +20,7 @@ from __future__ import annotations
 import http.client
 import json
 import logging
-from typing import Optional
+from typing import NamedTuple, Optional
 
 from motodiag.telemetry.dsn import Dsn
 from motodiag.telemetry.sender import Transport, urllib_transport
@@ -51,10 +51,23 @@ def checkin_body(status: str, interval_minutes: int, margin_minutes: int) -> dic
     }
 
 
-def checkin(dsn: Dsn, slug: str, transport: Optional[Transport] = None, *,
-            status: str = "ok", interval_minutes: int,
-            margin_minutes: int = MARGIN_MINUTES) -> bool:
-    """Post one check-in; True on a 2xx. Never raises for the network."""
+class CheckinAnswer(NamedTuple):
+    """Sentry's answer to one check-in (Phase 404, F274).
+
+    ``answer`` is the code and reason ("202 Accepted", "401 Unauthorized"),
+    or the exception's name when the request never got an answer. It never
+    holds the URL, which carries the DSN's public key.
+    """
+
+    ok: bool
+    answer: str
+
+
+def checkin_answer(dsn: Dsn, slug: str, transport: Optional[Transport] = None,
+                   *, status: str = "ok", interval_minutes: int,
+                   margin_minutes: int = MARGIN_MINUTES) -> CheckinAnswer:
+    """Post one check-in and return Sentry's answer. Never raises for the
+    network."""
     body = json.dumps(checkin_body(status, interval_minutes,
                                    margin_minutes)).encode("utf-8")
     headers = {"Content-Type": "application/json"}
@@ -64,9 +77,19 @@ def checkin(dsn: Dsn, slug: str, transport: Optional[Transport] = None, *,
     except (OSError, http.client.HTTPException) as exc:
         logger.warning("payments feed: the check-in to %s failed: %s",
                        dsn, type(exc).__name__)
-        return False
+        return CheckinAnswer(False, type(exc).__name__)
+    answer = f"{code} {reason}".strip()
     if 200 <= code < 300:
-        return True
+        return CheckinAnswer(True, answer)
     logger.warning("payments feed: the check-in to %s answered %s %s",
                    dsn, code, reason)
-    return False
+    return CheckinAnswer(False, answer)
+
+
+def checkin(dsn: Dsn, slug: str, transport: Optional[Transport] = None, *,
+            status: str = "ok", interval_minutes: int,
+            margin_minutes: int = MARGIN_MINUTES) -> bool:
+    """Post one check-in; True on a 2xx. Never raises for the network."""
+    return checkin_answer(dsn, slug, transport, status=status,
+                          interval_minutes=interval_minutes,
+                          margin_minutes=margin_minutes).ok

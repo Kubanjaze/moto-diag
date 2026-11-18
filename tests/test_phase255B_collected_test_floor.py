@@ -549,7 +549,15 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: five new files test_phase403_kept_stop.py (16), _answer_carried.py (8),
 #: _app_copy.py (17), _briefs.py (8) and _granted_round.py (13).
 #: Measured: 12686.
-COLLECTED_TEST_FLOOR = 12686
+#:
+#: Phase 404 (what the plans limit, and the feed's status), by a diff of
+#: collected ids against the branch's v1.0 commit dfdad6b (12687): +93 -1.
+#: Added: test_phase404_bike_limit.py (7), _plan_ai_limit.py (40),
+#: _plan_names.py (19), _feed_checkin_status.py (19), _migration_090.py (7),
+#: and test_phase177_vehicle_api.py's test_shop_has_no_limit, which replaces
+#: the removed test_shop_limit_50 (the Shop plan's bike cap is gone, K84).
+#: Measured: 12779.
+COLLECTED_TEST_FLOOR = 12779
 
 
 def _collected_count() -> int:

@@ -371,6 +371,44 @@ def notices_since(db_path: Optional[str], since: str) -> list[dict]:
     return [dict(r) for r in rows]
 
 
+# ------------------------------------------------- the check-ins (Phase 404)
+
+#: The feed keeps its check-in rows this long; older ones are deleted at
+#: the day's turn, from ``stripe_feed_checkins`` only.
+CHECKIN_KEEP_S = 30 * 86400
+
+
+def record_checkin(db_path: Optional[str], now: float,
+                   sent: monitor.CheckinAnswer, slug: str) -> None:
+    """One row per check-in sent: when, whether Sentry accepted it, its
+    answer and the monitor's slug. Never the URL, which carries the key."""
+    with get_connection(db_path) as conn:
+        conn.execute(
+            "INSERT INTO stripe_feed_checkins (sent_at, ok, answer, slug) "
+            "VALUES (?, ?, ?, ?)",
+            (utc_at(now), 1 if sent.ok else 0, sent.answer, slug))
+
+
+def prune_checkins(db_path: Optional[str], now: float) -> int:
+    """Delete this table's rows older than 30 days; the number deleted."""
+    with get_connection(db_path) as conn:
+        cur = conn.execute(
+            "DELETE FROM stripe_feed_checkins WHERE datetime(sent_at) < ?",
+            (utc_cutoff(utc_at(now - CHECKIN_KEEP_S)),))
+        return cur.rowcount
+
+
+def newest_checkin(db_path: Optional[str], *,
+                   accepted: bool = False) -> Optional[dict]:
+    """The newest check-in row, or the newest Sentry accepted; None if none."""
+    with get_connection(db_path) as conn:
+        row = conn.execute(
+            "SELECT sent_at, ok, answer, slug FROM stripe_feed_checkins "
+            "WHERE ok >= ? ORDER BY datetime(sent_at) DESC, id DESC LIMIT 1",
+            (1 if accepted else 0,)).fetchone()
+    return dict(row) if row else None
+
+
 # ---------------------------------------------------------------- the job
 
 
@@ -393,6 +431,7 @@ class _Job:
         if today != self.day.day:
             limit_check(self.settings, self.db_path, self.day, self.sender,
                         self.clock)
+            prune_checkins(self.db_path, self.clock())
             self.day = DayStats(today)
         try:
             results = poll_once(self.settings, self.db_path, self.clock)
@@ -423,9 +462,11 @@ class _Job:
                 and now - self.last_checkin < self.settings.stripe_poll_checkin_s):
             return
         self.last_checkin = now
-        monitor.checkin(self.dsn, self.settings.stripe_poll_monitor_slug,
-                        self.transport,
-                        interval_minutes=max(1, self.settings.stripe_poll_checkin_s // 60))
+        slug = self.settings.stripe_poll_monitor_slug
+        sent = monitor.checkin_answer(
+            self.dsn, slug, self.transport,
+            interval_minutes=max(1, self.settings.stripe_poll_checkin_s // 60))
+        record_checkin(self.db_path, now, sent, slug)
 
 
 def alarm_dsn(settings: Settings):

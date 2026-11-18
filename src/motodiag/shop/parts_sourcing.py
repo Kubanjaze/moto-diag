@@ -365,6 +365,12 @@ def recommend_source(
             model=model,
         )
     else:
+        # Phase 404 (F271): refused before the paid call. A part has no
+        # shop: the database's only one, else unattributed (as `diagnose`).
+        from motodiag.shop.attribution import only_shop
+        from motodiag.shop.cost_cap import check_cost_cap
+
+        check_cost_cap(only_shop(db_path), db_path=db_path)
         client = ShopAIClient(model=model, max_tokens=1024, temperature=0.2)
         cache_payload = {
             "part_id": part_id, "quantity": quantity,

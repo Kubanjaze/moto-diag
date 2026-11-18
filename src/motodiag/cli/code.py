@@ -24,10 +24,12 @@ from rich.table import Table
 
 from motodiag.cli.completion import complete_dtc_code
 from motodiag.cli.diagnose import (
+    _check_cap,
     _load_known_issues,
     _load_vehicle,
     _parse_symptoms,
     _resolve_model,
+    _resolve_shop,
 )
 from motodiag.cli.subscription import current_tier
 from motodiag.cli.theme import get_console, severity_style
@@ -158,6 +160,9 @@ def _run_explain(
     TypeError fallback — the same pattern as ``_run_quick``.
     """
     call = interpret_fn or _default_interpret_fn
+    # Phase 404 (F271): refuse before paying, as `motodiag diagnose` does;
+    # the shop is the database's only one, else the call stays unattributed.
+    _check_cap(_resolve_shop(None, db_path), db_path)
     _identity, known = _load_known_issues(
         vehicle["make"], vehicle["model"], vehicle["year"], db_path=db_path,
     )

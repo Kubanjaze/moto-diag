@@ -115,7 +115,7 @@ def _exc_class_chain():
     )
 
     # Phase 209D — the monthly AI spend cap (off unless one is configured)
-    from motodiag.shop.cost_cap import CostCapExceeded
+    from motodiag.shop.cost_cap import CostCapExceeded, PlanAILimitReached
     from motodiag.shop.intake_repo import (
         IntakeAlreadyClosedError,
         IntakeNotFoundError,
@@ -300,6 +300,10 @@ def _exc_class_chain():
         # Phase 209D — 402 like the other "you may not spend more" cases
         (CostCapExceeded, 402, "ai-spend-cap-reached",
          "Monthly AI limit reached for this shop"),
+        # Phase 404 — the plan's own AI figure (a CostCapExceeded subclass;
+        # the most specific handler wins)
+        (PlanAILimitReached, 402, "plan-ai-limit-reached",
+         "Monthly AI allowance for this plan reached"),
         # Phase 207 — per-request upload ceiling, any media route
         (UploadTooLargeError, 413, "upload-too-large",
          "Uploaded file too large"),

@@ -60,7 +60,7 @@ class TestTierFeatures:
         features = TIER_LIMITS[SubscriptionTier.SHOP]
         assert features.tier == SubscriptionTier.SHOP
         assert features.price_monthly_usd == 99.00
-        assert features.max_vehicles == 50
+        assert features.max_vehicles == -1  # unlimited since Phase 404 (F270, K84)
         assert features.max_users == 10
         assert features.can_export_pdf is True
         assert features.can_share_reports is True
@@ -72,7 +72,7 @@ class TestTierFeatures:
         assert features.price_monthly_usd == 299.00
         assert features.max_vehicles == -1  # unlimited
         assert features.max_users == -1
-        assert features.max_locations == -1
+        assert features.max_locations == 3  # Phase 404 (F271, K84): shown, kept nowhere
         assert features.can_use_api is True
         assert features.priority_support is True
 
