@@ -70,8 +70,7 @@ what each plan limits.
 - The figures are `PLAN_AI_CENTS` in `src/motodiag/shop/cost_cap.py`:
   individual 500, shop 5000, company 15000. `TIER_LIMITS` keeps its own
   floats (5.0, 50.0, 150.0; Company's was 500.0) and a test pins them equal.
-- The owner lookup is lifted, not copied: `shop_owner_ids`,
-  `highest_active_tier` and `shop_plan` in
+- `shop_owner_ids`, `highest_active_tier` and `shop_plan` in
   `src/motodiag/billing/subscription_repo.py`. `resolve_tier` ranks the
   owners it finds through `highest_active_tier`; `check_cost_cap` reads the
   shop's plan through `shop_plan`. Never `shops.owner_user_id`.
@@ -290,5 +289,36 @@ closing lines for F270, F271, F272 and F274 in `docs/FOLLOWUPS.md` (each
 "once merged and live"), and the handoff
 `docs/handoffs/2026-11-18_404_closed.md`, which carries the live step:
 the server and the payments feed restarted on the merged code, then
-`motodiag payments feed status` printed and read. No bug fix in this
-phase.
+`motodiag payments feed status` printed and read.
+
+## 2026-11-18 — the Red Team's round 1
+
+Four document corrections, each a deletion where one would do:
+- v1.1's Logic said the owner lookup was lifted into `shop_owner_ids`,
+  `highest_active_tier` and `shop_plan`, all called by `resolve_tier` and
+  `check_cost_cap`. `resolve_tier` calls only `highest_active_tier` and
+  keeps its own owner query; the build took the plan's other option, a
+  copy pinned equal by `test_the_resolve_tier_rule_and_the_shops_plan_agree`.
+  v1.1 now says so; the build entry's "lifted, not copied" is deleted.
+- v1.1's Deviation 5 now names the plan mutation that was replaced (the
+  caller's own subscription, which became P4).
+- F282 gave the `max_locations` change to Step 0; the build made it.
+- One code finding, two plan-rank constants: Bug fix #1 below.
+
+### Bug fix #1 — 2026-11-18 — two plan-rank constants in two modules
+
+- **Issue:** the build added `TIER_RANK` to
+  `src/motodiag/billing/subscription_repo.py`, a copy of
+  `auth/deps.py`'s `_TIER_RANK`, which `tier_meets` still read. Its
+  comment called it "the one ranking", which was false.
+- **Root cause:** `highest_active_tier` needed the ranking in the billing
+  module, and the copy was made instead of moving the one constant.
+- **Fix:** `_TIER_RANK` is deleted from `auth/deps.py`; `tier_meets`
+  imports `TIER_RANK` from `subscription_repo`, and the comment says
+  that it does.
+- **Files:** `src/motodiag/auth/deps.py`,
+  `src/motodiag/billing/subscription_repo.py`.
+- **Verified:** `grep -rn "_TIER_RANK" src tests` finds nothing; the
+  tier tests and Phase 404's own pass; the regression of record below.
+- **Commit:** the commit titled "Phase 404: Bug fix #1, one plan-rank
+  constant".

@@ -43,9 +43,6 @@ BEARER_PREFIX = "Bearer "
 
 SubscriptionTier = Literal["individual", "shop", "company"]
 SUBSCRIPTION_TIERS: tuple[str, ...] = ("individual", "shop", "company")
-_TIER_RANK: dict[str, int] = {
-    "individual": 1, "shop": 2, "company": 3,
-}
 
 
 class SubscriptionRequiredError(Exception):
@@ -164,11 +161,13 @@ def resolve_tier(
 
 def tier_meets(current: Optional[str], required: str) -> bool:
     """Does ``current`` meet or exceed ``required``?"""
+    from motodiag.billing.subscription_repo import TIER_RANK
+
     if current is None:
         return False
-    if current not in _TIER_RANK or required not in _TIER_RANK:
+    if current not in TIER_RANK or required not in TIER_RANK:
         return False
-    return _TIER_RANK[current] >= _TIER_RANK[required]
+    return TIER_RANK[current] >= TIER_RANK[required]
 
 
 def _extract_key_from_headers(

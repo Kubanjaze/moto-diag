@@ -183,7 +183,7 @@ def get_active_subscription(
     )
 
 
-#: Plan order, lowest first; the one ranking for a shop's plan.
+#: Plan order, lowest first; ``auth.deps.tier_meets`` reads it too.
 TIER_RANK: dict[str, int] = {"individual": 1, "shop": 2, "company": 3}
 
 
