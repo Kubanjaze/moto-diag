@@ -1,0 +1,11 @@
+S1 the exempt tuple emptied: red
+S2 the switch read inverted: red
+S3 the check moved from require_api_key into get_current_user: red
+A1 has_accepted matches the user alone, any version: red
+A2 a stale version accepted: red
+C1 consent_collection sent with the switch off: red
+T1 TERMS_VERSION out of step with the file's header: red
+T2 the cap clause deleted from the terms: red
+M1 the rollback leaves the table: red
+9/9 red
+exit 0

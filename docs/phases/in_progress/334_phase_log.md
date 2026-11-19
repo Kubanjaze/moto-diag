@@ -1,6 +1,6 @@
 # Phase 334 — phase log: Terms of Service + liability framework, the terms from templates (K84)
 
-**Status:** In progress — the code committed without migration 091; waiting for the app's copy of the API description
+**Status:** In progress — migration 091 committed and the regression of record run; waiting for the operator's live apply before the close-out
 
 **Started 2026-11-19** by the Chief Engineer, in a fresh clone of
 `phase-334-terms-of-service-liability-framework` at `bc78448`, inside the
@@ -217,3 +217,55 @@ of the API description carries the two terms routes and Gate 11 is green.
   being Gate 11's `TestContractSnapshot` (every live path, every live
   schema in the app's copy). Gate 11 is the only red, so the outcome is
   `app-copy`.
+
+## 2026-11-19 16:04 EST — resumed after the app's copy: migration 091, the mutations, the old code
+
+The dispatcher regenerated the app's copy of the API description from
+`eaed639` on the app's branch of this phase's name, and Gate 11 passes
+against it. This session resumed in the same clone, at `eaed639`, clean.
+
+**The held part restored.** `.git/334_held/` and `/fleet/run/held/` were
+gone; the stash's objects were not. Migration 091 and `SCHEMA_VERSION` 91
+were put back with the Edit tool from `dc4e31d`'s diff (afterwards
+`git diff dc4e31d -- src/motodiag/core` is empty), and the two test files
+with the Write tool from `a27ad05`; each one's `git hash-object` equals its
+blob there. The four phase files: 70 passed.
+
+**The floor.** Collected ids against `eaed639` (12818, `--collect-only -q
+-o addopts=`): +32 −0. `test_phase334_migration_091.py` 7,
+`test_phase334_terms_routes.py` 24, and `test_phase272_gate15.py`'s
+`test_rolling_back_peels_every_successor[90]`, parametrized up to
+`SCHEMA_VERSION`. `COLLECTED_TEST_FLOOR` 12818 → 12850.
+
+**The mutations.** The script drafted at `/fleet/run/334_mutate.py` did not
+outlive the old run, so `334_mutate.py` was written again from the plan's
+list, on 404's harness. Each mutation is an exact string that occurs once:
+- the exempt tuple emptied;
+- the switch read inverted;
+- the check moved from `require_api_key` into `get_current_user`;
+- `has_accepted` matching the user alone;
+- a stale version accepted;
+- `consent_collection` sent with the switch off;
+- `TERMS_VERSION` out of step with the file's header;
+- the cap clause deleted from the terms;
+- the rollback leaving the table.
+
+Run on its own: "9/9 red", exit 0 (`334_mutate.out`).
+
+**The old code.** The four new test files were run against master's `src/`
+(`e9132ea`, a detached worktree at `/fleet/run/oldcode`, through
+`PYTHONPATH`, removed afterwards). Master has no `src/` change since the
+branch point `0fa4d89`, so 091 is still the next number.
+- `test_phase334_legal_texts.py`, `_checkout_consent.py` and
+  `_terms_routes.py` are each "1 error": `cannot import name
+  'terms_acceptance' from 'motodiag.auth'`. The module is new, so these
+  files cannot run their controls against master's code one by one. The
+  knowledge-base control (the switch off, an unaccepted user reaches
+  both) passes on this branch.
+- `test_phase334_migration_091.py`: "2 failed, 1 passed, 4 errors". Its
+  control, `test_before_it_none_of_the_objects`, is the one that passed.
+
+**`wholetree.sh --full`**, on its own, before staging: exit 0, "wholetree
+full: PASSED — 5219 passed, 36 skipped, 33 warnings in 1036.70s (0:17:16)
+(1039.0 s wall)". It wrote no record because the tree was not staged. It
+runs again on the staged tree before the commit.
