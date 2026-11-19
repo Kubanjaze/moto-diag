@@ -143,6 +143,11 @@ The operator's words:
   - **Until 405 lands,** 334's database step stops the payments feed from before the dry run until the dispatcher's own check has passed, as 404's did.
   - **330 keeps its need as written:** F210's general rule comes first, and 405 is that rule.
   - **The prompt** is `docs/prompts/405_the_deploy_check_asks_what_the_change_did.txt`. Row 405 is on master, 🔲.
+- **2026-11-19, later: 406 runs beside this list, not in it (K93).** The Mac reaches the rest of the home desktop's steps through 384's fixed list, so the operator need not be at both computers.
+  - **The operator's words:** "Yes. Set it up as phase 406 and build it on the Mac now, alongside 334."
+  - **Built by the advisor session on the Mac,** as a pull request the operator merges after review. The fleet does not wait for it, and it does not wait for the fleet.
+  - **The order does not change:** after 334 comes 405, then 330.
+  - **The prompt** is `docs/prompts/406_the_mac_runs_the_rest.txt`. Row 406 is on master, 🚧.
 
 ## Where the ledger stands
 
