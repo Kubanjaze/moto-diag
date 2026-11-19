@@ -5883,6 +5883,9 @@ Closed 2026-11-18 by Phase 404, once merged and live (K84):
 It is live when the handoff's step prints ALL GOOD
 (`docs/handoffs/2026-11-18_404_closed.md`).
 
+It went live on 2026-11-19: the step printed ALL GOOD at 10:42 EST, with
+the server on the merge `8de9e47` (the handoff's "After the merge").
+
 ### F271 — CLOSED by Phase 404
 
 **The Company plan's AI spending figure, $500 a month on a $299 plan, is enforced nowhere, and the plan allows unlimited locations**
@@ -5938,6 +5941,9 @@ Closed 2026-11-18 by Phase 404, once merged and live (K84):
 
 It is live when the handoff's step prints ALL GOOD
 (`docs/handoffs/2026-11-18_404_closed.md`).
+
+It went live on 2026-11-19: the step printed ALL GOOD at 10:42 EST, with
+the server on the merge `8de9e47` (the handoff's "After the merge").
 
 ### F272 — CLOSED by Phase 404
 
@@ -6079,6 +6085,10 @@ Closed 2026-11-18 by Phase 404, once merged and live:
 
 It is live when the handoff's step restarts the feed on the merged code
 and the status is read (`docs/handoffs/2026-11-18_404_closed.md`).
+
+It went live on 2026-11-19: the step restarted the feed on `8de9e47`,
+and the status read "Last check-in: 2026-11-19T10:42:48 (5 s ago); Sentry
+accepted it: 202 Accepted" (the handoff's "After the merge").
 
 ### F275
 
