@@ -557,7 +557,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: and test_phase177_vehicle_api.py's test_shop_has_no_limit, which replaces
 #: the removed test_shop_limit_50 (the Shop plan's bike cap is gone, K84).
 #: Measured: 12779.
-COLLECTED_TEST_FLOOR = 12779
+#:
+#: Phase 334 (the terms from templates), first commit, by a diff of
+#: collected ids against the branch's v1.0 commit bc78448 (12779 in a
+#: worktree): +39 -0, all in test_phase334_legal_texts.py (33) and
+#: _checkout_consent.py (6). Migration 091 and its two test files follow in
+#: the next commit. Measured: 12818.
+COLLECTED_TEST_FLOOR = 12818
 
 
 def _collected_count() -> int:

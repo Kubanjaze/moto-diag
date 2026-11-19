@@ -63,7 +63,8 @@ it running and correct, and we do not promise that it will always be either.
 We are not liable for any indirect, incidental, special or consequential
 loss, including lost profits, lost data or lost goodwill, from your use of
 Mekno or your inability to use it, as far as the law allows. What Mekno owes
-a shop, for every claim together, is capped at what the shop paid Mekno.
+a shop, for every claim together, is capped at what the shop paid Mekno in
+fees in the 12 months before the claim.
 
 ## The shop's data is the shop's
 

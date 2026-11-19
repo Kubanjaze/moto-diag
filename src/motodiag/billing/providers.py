@@ -191,6 +191,35 @@ class FakeBillingProvider(BillingProvider):
 # ---------------------------------------------------------------------------
 
 
+def checkout_session_params(
+    *, user_id, email, tier: str, price: str, success_url: str,
+    cancel_url: str, terms_consent: bool,
+) -> dict[str, Any]:
+    """The params of a subscription Checkout Session, built without a client.
+
+    Phase 334: with ``terms_consent`` (``MOTODIAG_CHECKOUT_TERMS_CONSENT``)
+    on, Checkout asks the subscriber to accept the terms. Stripe shows the
+    box only once its Dashboard holds the terms link.
+    """
+    meta = {"user_id": str(user_id), "tier": tier}
+    params: dict[str, Any] = {
+        "mode": "subscription",
+        "line_items": [{"price": price, "quantity": 1}],
+        "client_reference_id": str(user_id),
+        "success_url": success_url,
+        "cancel_url": cancel_url,
+        "metadata": meta,
+        # F187: a Checkout Session's metadata does not reach the
+        # Subscription; only `subscription_data.metadata` does.
+        "subscription_data": {"metadata": meta},
+    }
+    if email:
+        params["customer_email"] = email
+    if terms_consent:
+        params["consent_collection"] = {"terms_of_service": "required"}
+    return params
+
+
 class StripeBillingProvider(BillingProvider):
     """Real Stripe API integration.
 
@@ -252,21 +281,12 @@ class StripeBillingProvider(BillingProvider):
         self, user_id, email, tier, success_url, cancel_url,
     ) -> CheckoutSessionResult:
         sc = self._stripe()
-        price = self._price_id_for_tier(tier)
-        meta = {"user_id": str(user_id), "tier": tier}
-        params: dict[str, Any] = {
-            "mode": "subscription",
-            "line_items": [{"price": price, "quantity": 1}],
-            "client_reference_id": str(user_id),
-            "success_url": success_url,
-            "cancel_url": cancel_url,
-            "metadata": meta,
-            # F187: a Checkout Session's metadata does not reach the
-            # Subscription; only `subscription_data.metadata` does.
-            "subscription_data": {"metadata": meta},
-        }
-        if email:
-            params["customer_email"] = email
+        params = checkout_session_params(
+            user_id=user_id, email=email, tier=tier,
+            price=self._price_id_for_tier(tier),
+            success_url=success_url, cancel_url=cancel_url,
+            terms_consent=self._settings.checkout_terms_consent,
+        )
         session = self._call("create a subscription checkout",
                              lambda: sc.v1.checkout.sessions.create(params))
         return CheckoutSessionResult(

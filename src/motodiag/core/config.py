@@ -271,6 +271,16 @@ class Settings(BaseSettings):
     stripe_feed_shops_upgrade: int = 100
     stripe_feed_late_s: int = 120
 
+    # Phase 334 (K84): the Terms of Service. The two pages live on the
+    # operator's site. Both switches ship off and are the operator's to turn
+    # on: `terms_required` makes every route that takes a credential refuse
+    # until the current version is accepted; `checkout_terms_consent` makes
+    # Stripe Checkout ask a subscriber to accept the terms.
+    terms_url: str = "https://getmekno.com/terms/"
+    privacy_url: str = "https://getmekno.com/privacy/"
+    terms_required: bool = False
+    checkout_terms_consent: bool = False
+
     # Rate limiting (Phase 176+)
     rate_limit_anonymous_per_minute: int = 30
     rate_limit_individual_per_minute: int = 60

@@ -1,6 +1,6 @@
 # Phase 334 — phase log: Terms of Service + liability framework, the terms from templates (K84)
 
-**Status:** In progress — stopped for the operator (the liability cap's period)
+**Status:** In progress — the code committed without migration 091; waiting for the app's copy of the API description
 
 **Started 2026-11-19** by the Chief Engineer, in a fresh clone of
 `phase-334-terms-of-service-liability-framework` at `bc78448`, inside the
@@ -120,7 +120,6 @@ signature; `test_phase176_auth_billing.py` line 386 runs unchanged. The
 route tags are pinned against `TAG_CATALOG` (`test_phase183_openapi.py`
 line 118), so the `terms` tag is catalogued.
 
-<<<<<<< Updated upstream
 ## 2026-11-19 — the whole-tree runs, and the migration held back
 
 - `wholetree.sh` (fast), on its own, before staging: exit 0, "wholetree
@@ -176,3 +175,45 @@ Quoted by the fleet's dispatcher, verbatim, from issue #72: the comments the ope
 > Cap Mekno's liability to a shop at the fees that shop paid Mekno in the 12 months before the claim.
 >
 > Recorded as K92 in docs/decisions.md.
+
+## 2026-11-19 15:07 EST — resumed: the answer applied, the code restored
+
+**The answer, applied to the one sentence it covers.** `docs/legal/terms.md`,
+"What Mekno owes is capped": "is capped at what the shop paid Mekno" now
+reads "is capped at what the shop paid Mekno in fees in the 12 months
+before the claim." `test_phase334_legal_texts.py`'s phrase for the cap now
+holds the whole sentence, period included, so deleting the period turns it
+red. Nothing else changed for the answer; `docs/decisions.md` is not
+touched by this session (the operator's comment says K92 is recorded
+there).
+
+**The code was not in this clone.** The working copy started clean at
+`e4eefa1`, and `/fleet/run/334_code.patch` was gone with the old run's
+folder. `git fsck --unreachable` found the last session's stash, "334 code"
+(`dc4e31d`, its untracked files in `a27ad05`, 13:30:16). The 15 files under
+`src/` and `tests/` were restored from it with the Edit and Write tools,
+hunk by hunk; afterwards `git diff dc4e31d -- src tests` was empty and each
+new file's `git hash-object` equalled its blob in `a27ad05`. The stray
+`<<<<<<< Updated upstream` line that `f53b92c` carried into this log, left
+by a stash pop, is removed. With the restored build and the new sentence,
+the four new files ran 70 passed.
+
+**What this commit holds,** in the order the entry above set: everything
+but migration 091, `SCHEMA_VERSION` 91 and the two test files that need the
+table (`test_phase334_migration_091.py`, `test_phase334_terms_routes.py`),
+kept at `/fleet/run/held/` and, because `/fleet/run` did not outlive the
+last run, also in the clone at `.git/334_held/` with the migration's diff
+(`migration_091.diff`); the stash's objects hold them a third time. Collected: 12818, against `bc78448`'s 12779
+(collected in a worktree at `/fleet/run/base`) +39 −0, all in
+`test_phase334_legal_texts.py` (33) and `_checkout_consent.py` (6);
+`COLLECTED_TEST_FLOOR` 12779 → 12818. The rest returns once the app's copy
+of the API description carries the two terms routes and Gate 11 is green.
+
+- `wholetree.sh` (fast), on its own, on this tree: exit 0, "wholetree fast:
+  PASSED — 2743 passed, 10 skipped, 33 warnings in 149.92s (0:02:29)
+  (151.9 s wall)".
+- The auth, billing, OpenAPI, payment-route and Gate 11 files with the two
+  phase-334 files: "2 failed, 347 passed, 1 warning in 672.91s", the two
+  being Gate 11's `TestContractSnapshot` (every live path, every live
+  schema in the app's copy). Gate 11 is the only red, so the outcome is
+  `app-copy`.

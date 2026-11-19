@@ -135,6 +135,7 @@ def create_app(
     from motodiag.api.routes.share import router as share_router
     from motodiag.api.routes.shop_mgmt import router as shop_mgmt_router
     from motodiag.api.routes.shops import router as shops_router
+    from motodiag.api.routes.terms import router as terms_router
     from motodiag.api.routes.time_tracking import router as time_tracking_router
     from motodiag.api.routes.transcripts import router as transcripts_router
     from motodiag.api.routes.vehicles import router as vehicles_router
@@ -142,6 +143,7 @@ def create_app(
 
     app.include_router(meta_router)             # /healthz, /v1/version
     app.include_router(auth_router, prefix="/v1")  # Phase 303 — staff logins
+    app.include_router(terms_router, prefix="/v1")  # Phase 334 — the terms
     app.include_router(shops_router, prefix="/v1")
     app.include_router(billing_router, prefix="/v1")
     app.include_router(vehicles_router, prefix="/v1")
