@@ -1,0 +1,168 @@
+# Phase 334 — phase log: Terms of Service + liability framework, the terms from templates (K84)
+
+**Status:** In progress — stopped for the operator (the liability cap's period)
+
+**Started 2026-11-19** by the Chief Engineer, in a fresh clone of
+`phase-334-terms-of-service-liability-framework` at `bc78448`, inside the
+fleet's sandbox. The plan is `334_implementation.md` v1.0, approved by the
+Executive Officer on issue #72. The plan has "## The database step", so the
+build ends after the regression of record with the `deploy` outcome; the
+close-out follows the operator's live apply.
+
+## 2026-11-19 — Step 0, re-measured
+
+**The prompt's search.**
+`git grep -n -i -E "disclaim|terms of service|privacy policy|own risk" -- src`:
+**5** lines, as the plan says, none shown to a user: `cli/main.py:155` (a
+developer's note), `core/migrations.py:6243` (migration text) and three
+knowledge rows (`known_issues_kawasaki_electrical.json:110`,
+`known_issues_suzuki_electrical.json:78`, `known_issues_zero.json:222`).
+The same search in `../moto-diag-mobile` at `9045c32`, `-- src`: **0**. Over
+the whole mobile repository it finds 6, all in its `docs/` (F80 and F14 in
+its FOLLOWUPS, and `app-store-listing.md`'s "privacy policy URL ... does not
+exist yet"); none in the app.
+
+**The acceptance vocabulary** (Step 0 report's terms: `terms_version`,
+`tos_version`, `accepted_version`, `accepted_at`, `accept_terms`,
+`terms_accepted`, `require_terms`): no hit before this phase. The
+classification stands: extension.
+
+**The three dependency counts**, in `src/motodiag/api/routes/`:
+- `Depends(get_current_user)`: **86** across **14** files (auth 5, billing 3,
+  diagnostics 1, parts 12, photos 3, push 2, reports 3, sessions 10, share 3,
+  shop_mgmt 26, time_tracking 5, transcripts 3, vehicles 6, videos 4).
+- `Depends(require_api_key)`: **8**, all in `kb.py`.
+- `Depends(get_api_key)`: **0**.
+- `require_tier(` reaches `get_current_user`: payments.py 182, 215, 259,
+  280, 304; audit.py 49; and the shop routes (auth, parts, photos, reports,
+  shop_mgmt, time_tracking, transcripts, videos).
+All three agree with the plan. The live WebSocket route
+(`api/routes/live.py`) resolves its credential itself and is the one
+credentialed route the first switch does not hold: named here for 334B.
+
+**The services census.** Command, as the plan names it:
+`git grep -n -i -E 'openai|whisper|anthropic|sentry|backblaze|s3' -- src`:
+**267** lines in 47 files; most hits of `s3` are substrings (`ss3`, ids,
+knowledge text). Each traced to where data leaves:
+
+| service | where in the code | what leaves |
+|---|---|---|
+| Stripe | `billing/providers.py`, `payments/` | subscriber's email and plan; shop card payments |
+| Anthropic | `engine/client.py`, `shop/ai_client.py`, `intake/vehicle_identifier.py`, `media/vision_analysis_pipeline.py`, `media/transcript_pipeline.py` | diagnosis text, photos, video frames, transcript text |
+| OpenAI (Whisper) | `media/whisper_client.py`, `media/transcript_pipeline.py`; `core/config.py` `openai_api_key`, `whisper_model` | voice-note audio |
+| Sentry | `telemetry/` | crash reports, one request in ten timed |
+| Backblaze (S3 API) | `backup/` (`MOTODIAG_BACKUP_S3_*`); `docs/guide/backups.md` names Backblaze | the encrypted nightly copy |
+
+The census grep does not reach two more destinations, found by a search of
+the code's outbound addresses
+(`git grep -n -i -E "https?://" -- 'src/motodiag/*.py'`, then
+`git grep -n -i -E "nhtsa.gov|push.apple|fcm|firebase|googleapis|twilio|sendgrid|mailgun|smtp" -- 'src/*.py'`):
+- **Apple** push notifications (`push/sender.py`, `api.push.apple.com`): the
+  device token and the notification's text;
+- **NHTSA** (`advanced/nhtsa.py`): a VIN, or make, model and year, for
+  recall and VIN lookups.
+The ECB rate fetch sends no user data. No Firebase, SMS or email service.
+The privacy policy names all seven.
+
+**The template.** The fence could not reach github.com
+(`curl -I https://raw.githubusercontent.com/basecamp/policies/master/README.md`:
+`CONNECT tunnel failed, response 403`). As the plan says for that case, the
+texts are written from Basecamp's policies as the Engineer knows them, the
+attribution names the source and CC BY 4.0, and the handoff asks the
+operator to open the address once and confirm the licence line.
+`docs/legal/README.md` records the name, the address, the licence and the
+date read.
+
+**The liability cap's period.** Basecamp's terms, as the Engineer knows
+them, disclaim indirect and consequential damages in their "Liability"
+section and name no cap with a period. The plan makes that a threshold for
+the operator (its "Rule-1 stops anticipated"). The cap clause in
+`docs/legal/terms.md` therefore reads "capped at what the shop paid Mekno",
+with no period, until the operator names one.
+
+## 2026-11-19 — the build
+
+- `src/motodiag/auth/terms_acceptance.py`: `TERMS_VERSION = "1.0"`,
+  `TERMS_DATE = "2026-11-19"`, `TERMS_EXEMPT_PATHS` (the four routes),
+  `record_acceptance`, `has_accepted`, `get_acceptance`, the two errors and
+  the refusal's message. `record_acceptance` inserts with
+  `ON CONFLICT (user_id, version) DO NOTHING` and reads the row back, so a
+  second acceptance returns the first row and no `except` is needed.
+- Migration 091 (`terms_acceptances` and the unique
+  `idx_terms_acceptances_user_version`), `SCHEMA_VERSION` 91, and
+  `334_deploy_scope.json`.
+- `src/motodiag/api/routes/terms.py`: `GET /v1/terms` (through
+  `get_api_key`) and `POST /v1/terms/accept` (through `get_current_user`),
+  mounted beside `auth_router`. Anonymous, `accepted` and `accepted_at` are
+  null; signed in, `accepted` is true or false.
+- The check in `require_api_key`, which gains `request` and `db_path`;
+  `get_current_user` unchanged. No query while the switch is off.
+- `checkout_session_params(...)` in `billing/providers.py`, called by
+  `StripeBillingProvider.create_checkout_session`;
+  `consent_collection.terms_of_service = "required"` only with the switch on.
+- Four settings (`terms_url`, `privacy_url`, `terms_required`,
+  `checkout_terms_consent`), after the payments feed's block.
+- Two rows in the error table; a `terms` entry in `TAG_CATALOG`.
+- `docs/legal/` (README, terms, privacy); the guide notes in `api.md` and
+  `payments.md`; the launch checklist's dated note; row 334B and
+  `docs/prompts/334B_the_apps_terms_screen.txt` (listed in
+  `docs/prompts/README.md`); README's route count 117 → 119.
+
+**Tests.** Four new files, 70 tests, green on this branch:
+`test_phase334_legal_texts.py` (33), `test_phase334_terms_routes.py` (24),
+`test_phase334_migration_091.py` (7), `test_phase334_checkout_consent.py`
+(6). `COLLECTED_TEST_FLOOR` 12779 → 12850 by a diff of collected ids
+against `bc78448` (12780): +70 −0.
+
+**Pins grepped before changing.** No test pins the error table's size, the
+guide's route count, the settings' fields or `require_api_key`'s
+signature; `test_phase176_auth_billing.py` line 386 runs unchanged. The
+route tags are pinned against `TAG_CATALOG` (`test_phase183_openapi.py`
+line 118), so the `terms` tag is catalogued.
+
+<<<<<<< Updated upstream
+## 2026-11-19 — the whole-tree runs, and the migration held back
+
+- `wholetree.sh` (fast), on its own, before staging: exit 0, "wholetree
+  fast: PASSED — 2750 passed, 10 skipped, 33 warnings in 151.70s (0:02:31)
+  (152.8 s wall)".
+- The OpenAPI, auth, floor and docs suites with Gate 11: 240 passed, 2
+  failed, the two Gate 11's `TestContractSnapshot` (the two new paths and
+  the schemas `AcceptRequest`, `Acceptance`, `TermsInfo`), as the plan
+  says.
+- `wholetree.sh --full` on the staged build, on its own: exit 1, "wholetree
+  full: FAILED — 4 failed, 5215 passed, 36 skipped, 33 warnings in 1020.06s
+  (0:17:00) (1022.4 s wall)". The four failures are one cause: gates 12, 13
+  and 14 re-run Gate 11, which is red until the app's copy is refreshed.
+- **So the commit of `migrations.py` waits.** The commit guard refuses a
+  commit that changes `migrations.py` without a passing `--full` record for
+  its tree, and `--full` cannot pass while Gate 11 is red; Gate 11 turns
+  green only after the fleet refreshes the app's copy from a commit of this
+  branch. Phase 372, the last phase with new routes, had no migration, so
+  this order is new. The guard is left as it is.
+- **A commit without the migration is not green either.** With migration
+  091 and `SCHEMA_VERSION` held out, `wholetree.sh` (fast), on its own:
+  exit 1, "wholetree fast: FAILED — 4 failed, 2742 passed, 10 skipped, 33
+  warnings, 4 errors in 162.24s (0:02:42) (164.3 s wall)": the seven tests
+  of `test_phase334_migration_091.py` and the floor (the tree collects
+  12849 then, one test parametrised by migration fewer). So no code is
+  committed red.
+- **What is committed now:** the documents only (`docs/legal/`, the guides,
+  the launch checklist, row 334B and its prompt, README's count, the scope
+  file and this log). The code and tests, `src/` and `tests/` exactly as
+  built and tested above, are kept whole in the clone's working copy and as
+  a patch, `/fleet/run/334_code.patch`.
+- **The order for the session that resumes:** apply the code (from the
+  working copy or the patch); commit everything except migration 091,
+  `SCHEMA_VERSION`, `test_phase334_migration_091.py` and the floor's last
+  eight (raised by the diff then measured), so fast mode passes; the
+  `app-copy` outcome; once Gate 11 is green, `--full` with the rest, its
+  commit, the mutations (`334_mutate.py`, drafted at `/fleet/run/334_mutate.py`),
+  the old-code run, the regression of record and the `deploy` outcome.
+
+## 2026-11-19 — stopped for the operator
+
+The plan's anticipated threshold stop: the template, as the Engineer knows
+it, names no period for the liability cap, so the period is the operator's.
+The answer changes one sentence of `docs/legal/terms.md` ("capped at what
+the shop paid Mekno", then the period) and nothing in the code.

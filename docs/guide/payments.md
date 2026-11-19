@@ -49,6 +49,15 @@ names it in one setting, `MOTODIAG_STRIPE_RETURN_PAGE_URL`, which the six
 return addresses all take unless one is set on its own. If the page ever
 moves, that is the one setting to change.
 
+## Accepting the terms at Checkout
+
+One setting, `MOTODIAG_CHECKOUT_TERMS_CONSENT`, off by default, makes
+Stripe Checkout ask a subscriber to tick a box accepting the Terms of
+Service before paying. Stripe shows that box only once its Dashboard holds
+the terms page's address (Settings, Public details, Terms of service), so
+put the address there first, then turn the setting on in `server.env` and
+restart the server. With it off, Checkout is exactly as before.
+
 ## Seeing that it is running
 
 On the home desktop, in the Ubuntu terminal:
