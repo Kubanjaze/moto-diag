@@ -6456,7 +6456,7 @@ Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 
 
 What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).
 
-### F284
+### F284 — CLOSED by the operator moving the log aside (2026-11-19)
 
 **The fleet's log on the home desktop holds 200 zero bytes left by the 2026-10-26 disk failure, so `grep` treats the whole file as binary and a plain search prints none of its lines**
 
@@ -6498,3 +6498,20 @@ because the log holds no zero bytes. The advisor's suggestion: move the
 file aside once, between two of the dispatcher's cycles, so that its next
 line starts a new file and the old one is kept beside it unchanged. Until
 then, every block that reads the log reads it with `grep -a`.
+
+Closed 2026-11-19 by the operator, on the home desktop at 12:19 EST, with
+the advisor's block. The advisor tested the block beforehand on
+stand-ins: 11 cases, and 3 planted faults, each caught. It printed:
+
+    The fleet's log: 448241 bytes, 200 of them zero. Moving it aside...
+    The old log is kept as it was: /home/lilcu/.local/state/motodiag/fleet/dispatcher.log.before-2026-11-19 (448241 bytes, 200 of them zero).
+    The new log is plain text (164 bytes), and a plain search prints its lines:
+        2026-11-19T12:19:23-05:00 the operator moved the old log aside, to dispatcher.log.before-2026-11-19, because it held zero bytes from the disk failure of 2026-10-26
+    ALL GOOD
+
+- The block wrote that line as the new log's first, then read it back
+  with a plain `grep`: the read that failed on 2026-11-18.
+- The fleet kept running and was not restarted; its next line goes to
+  the new file.
+- The old log keeps its 448241 bytes and its 200 zero bytes, beside the
+  new one. Reading it still needs `grep -a`.
