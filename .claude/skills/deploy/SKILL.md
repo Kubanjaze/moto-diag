@@ -218,8 +218,10 @@ two calls, with the yes asked on the Mac between them:
 - **`deploy-apply`** runs `through_fleet.py … --apply <sha256>`: no new
   checkout and no new dry run. Refused unless the dry run's checkout is at
   the commit, the branch is still there in the fleet's mirror, and the
-  diff hashes to the sha256 the Mac showed. The answer file says the yes was
-  typed on the Mac.
+  diff hashes to the sha256 the Mac showed. The Mac's `remote.py` refuses
+  `deploy-apply` on its own: only `deploy-step` sends it, after the yes.
+  The answer file says the answer was typed on the Mac, not at the desktop,
+  and records it as `> yes`, the only answer the Mac sends an apply for.
 - **Taking `needs-hands` off** stays in the operator's paste block.
 - **Before Phase 405 lands,** a database step stops the payments feed and
   stays at the desktop (K91).

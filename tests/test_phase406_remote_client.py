@@ -144,6 +144,20 @@ def test_main_sends_a_good_deploy_step_to_deploy_step(monkeypatch, tmp_path):
     assert got == [("lilcu@motodiag-ops", ("334", BRANCH, COMMIT))]
 
 
+def test_main_never_sends_a_bare_deploy_apply(monkeypatch, capsys, tmp_path):
+    """The review's 5: the apply goes only through deploy-step, after the
+    list and the yes; asked for on its own, nothing is sent."""
+    key = tmp_path / "key"
+    key.write_text("k")
+    cfg = tmp_path / "live.json"
+    cfg.write_text('{"live": null, "remote": {"ssh": "lilcu@motodiag-ops", "key": "%s"}}' % key)
+    sent: list[list[str]] = []
+    monkeypatch.setattr(M, "run", lambda argv: sent.append(argv) or 0)
+    assert M.main(["deploy-apply", "334", BRANCH, COMMIT, SHA], config=cfg) == M.REFUSED
+    assert sent == []
+    assert "only by deploy-step" in capsys.readouterr().err
+
+
 def test_the_ssh_words_reach_the_desktop_as_one_quoted_command():
     argv = M.ssh_argv(WAY, ["deploy-apply", "334", BRANCH, COMMIT, SHA])
     assert argv[-1] == f"deploy-apply 334 {BRANCH} {COMMIT} {SHA}"

@@ -151,7 +151,9 @@ def test_the_apply_of_that_sha256_makes_the_change_and_records_the_macs_yes(worl
     files = git(co, "diff", "--name-only", f"{world['commit']}..HEAD").split()
     assert sorted(files) == sorted(T.deploy_files(PHASE)), files
     answer = T.answer_path(co, PHASE).read_text()
-    assert "on the Mac, through the way in" in answer and "> yes" in answer
+    assert "on the Mac, through the way in" in answer and "typed on the Mac, not here" in answer
+    assert "The operator typed" not in answer, "the desktop saw no words typed"
+    assert answer.rstrip().splitlines()[-1] == "> yes", "the line the close-out quotes"
     assert shown_sha(said) in answer
     assert "equals the approved exact diff: yes" in "\n".join(applied)
 

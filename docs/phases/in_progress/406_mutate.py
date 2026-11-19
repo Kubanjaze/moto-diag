@@ -51,10 +51,9 @@ MUTATIONS = [
      "        if dirty:\n            raise Refused(f\"{what} has changes made by hand",
      "        if False:\n            raise Refused(f\"{what} has changes made by hand")], T_OPS),
     ("D6 server-update keeps the new code when the server fails", [(DSP,
-     '            self.sh.run(["git", "-C", str(srv), "reset", "--quiet", "--keep", before])\n',
-     "")], T_OPS),
+     "            if not self.back(srv, before, what):\n                return 1\n", "")], T_OPS),
     ("D7 the feed's restart seen from 'running' alone", [(DSP,
-     'if not self.active(FEED) or self.main_pid(FEED) in ("", "0", old):',
+     'if not self.active(FEED) or new in ("", "0", old):',
      "if not self.active(FEED):")], T_OPS),
     ("D8 the app server always healthy", [(DSP,
      "            if '\"status\":\"ok\"' in self.sh.healthz():",
@@ -66,8 +65,7 @@ MUTATIONS = [
      'if rc != 0 or said.strip().splitlines()[-1:] != ["nothing to resume"]:',
      "if rc != 0:")], T_OPS),
     ("D11 fleet-move keeps the new code when the fleet fails", [(DSP,
-     '        self.sh.run(["git", "-C", str(code), "reset", "--quiet", "--keep", before])\n',
-     "")], T_OPS),
+     "        if self.back(code, before, what):\n", "        if True:\n")], T_OPS),
     ("D12 the fleet's start not waited for", [(DSP,
      "            if self.starts() > seen and self.active(FLEET):",
      "            if self.active(FLEET):")], T_OPS),
@@ -80,6 +78,61 @@ MUTATIONS = [
     ("D15 feed-status keeps the caller's MOTODIAG_*", [(DSP,
      'env = {k: v for k, v in os.environ.items() if not k.startswith("MOTODIAG_")}',
      "env = dict(os.environ)")], T_OPS),
+    # The review's points (406_phase_log.md, "the review"): each fix, broken.
+    ("D16 the put-back not checked", [(DSP,
+     '        if rc != 0 or self.git(repo, "rev-parse", "HEAD")[1] != before:',
+     "        if False:")], T_OPS),
+    ("D17 the put-back checked by its exit alone", [(DSP,
+     '        if rc != 0 or self.git(repo, "rev-parse", "HEAD")[1] != before:',
+     "        if rc != 0:")], T_OPS),
+    ("D18 two changing steps at once", [(DSP,
+     "        if name in CHANGING:\n            lock = one_at_a_time(paths)\n", "")], T_OPS),
+    ("D19 a Mac gone away ends the step", [(DSP,
+     "    try:\n        print(*args, file=file if file is not None else sys.stdout, flush=True)\n"
+     "    except (BrokenPipeError, OSError):\n        pass\n",
+     "    print(*args, file=file if file is not None else sys.stdout, flush=True)\n")], T_OPS),
+    ("D20 commands write to the Mac's channel themselves", [(DSP,
+     "        with subprocess.Popen(argv, cwd=cwd, env=env, stdout=subprocess.PIPE,\n"
+     "                              stderr=subprocess.STDOUT, text=True, "
+     "errors=\"replace\") as p:\n"
+     "            assert p.stdout is not None\n"
+     "            for line in p.stdout:\n"
+     "                say(line.rstrip(\"\\n\"))\n"
+     "        return p.returncode\n",
+     "        return subprocess.run(argv, cwd=cwd, env=env).returncode\n")], T_OPS),
+    ("D21 server-update reads the settings after the change", [(DSP,
+     "        self.server_settings()\n        seen = self.checkins()\n",
+     "        seen = self.checkins()\n")], T_OPS),
+    ("D22 server-update reads the check-ins after the change", [(DSP,
+     "        seen = self.checkins()\n", "        seen = 0\n")], T_OPS),
+    ("D23 a feed that never checks in passes", [(DSP,
+     "            elif self.checkins() <= seen:\n"
+     "                say(\"the payments feed runs the new code, but wrote down no check-in "
+     "in 3 \"\n"
+     "                    \"minutes; it asks Stripe as before, so bring this to the advisor\")\n"
+     "                return 1\n", "")], T_OPS),
+    ("D24 a feed systemd restarted after a crash passes", [(DSP,
+     "            if not self.active(FEED) or self.main_pid(FEED) != pid:",
+     "            if not self.active(FEED):")], T_OPS),
+    ("D25 a feed that died after its check-in passes", [(DSP,
+     "            if not self.active(FEED) or self.main_pid(FEED) != pid:",
+     "            if self.main_pid(FEED) != pid:")], T_OPS),
+    ("D26 the search on start's exit not read", [(DSP,
+     'if rc != 0 or said.strip().splitlines()[-1:] != ["nothing to resume"]:',
+     'if said.strip().splitlines()[-1:] != ["nothing to resume"]:')], T_OPS),
+    ("D27 the search on start with sshd's PATH", [(DSP,
+     "        env = {**os.environ,\n"
+     "               \"PATH\": f\"{self.p.home / '.local' / 'bin'}"
+     ":/usr/local/bin:/usr/bin:/bin\"}\n",
+     "        env = dict(os.environ)\n")], T_OPS),
+    ("D28 SIGHUP ends the step", [(DSP,
+     "    signal.signal(signal.SIGHUP, signal.SIG_IGN)\n", "")], T_OPS),
+    ("D29 the fleet's start seen while it is not running", [(DSP,
+     "            if self.starts() > seen and self.active(FLEET):",
+     "            if self.starts() > seen:")], T_OPS),
+    ("D30 a line that is not UTF-8 ends the step", [(DSP,
+     'stderr=subprocess.STDOUT, text=True, errors="replace") as p:',
+     "stderr=subprocess.STDOUT, text=True) as p:")], T_OPS),
     ("T1 the apply skips the sha256", [(TFL, "    if D.sha256(diff) != sha:\n",
                                         "    if False:\n")], T_TWO),
     ("T2 the apply skips a moved branch", [(TFL,
@@ -91,8 +144,11 @@ MUTATIONS = [
     ("T4 the dry run alone prints no sha256", [(TFL,
      '    say(f"{SHA_LINE}{D.sha256(D.diff_path(co, phase))}")\n', "")], T_TWO),
     ("T5 the answer says the desktop asked", [(TFL,
-     'where="on the Mac, through the way in (Phase 406)",', 'where="on the home desktop",')],
-     T_TWO),
+     'where="on the Mac, through the way in (Phase 406; the time is when the "',
+     'where="on the home desktop (the time is when the "')], T_TWO),
+    ("T7 the answer says the operator's words were seen", [(TFL,
+     'typed="The answer was typed on the Mac, not here. The Mac\'s `remote.py "',
+     'typed="The operator typed, verbatim. The Mac\'s `remote.py "')], T_TWO),
     ("T6 the apply of another commit's dry run", [(TFL,
      '    if _git(co, "rev-parse", "HEAD").stdout.strip() != commit:\n',
      "    if False:\n")], T_TWO),
@@ -109,6 +165,13 @@ MUTATIONS = [
     ("C4 deploy-step's arguments unchecked", [(CLI,
      "            if len(args) != 3 or not all(re.fullmatch(p, a) for p, a in zip(STEP_ARGS, args)):",
      "            if len(args) != 3:")], T_CLI),
+    ("C5 deploy-apply sent on its own", [(CLI,
+     "        if argv[0] == \"deploy-apply\":\n"
+     "            raise NoWayIn(\"deploy-apply is sent only by deploy-step, "
+     "after the dry run's list \"\n"
+     "                          \"and your yes: run remote.py deploy-step "
+     "<phase> <branch> <commit>\")\n",
+     "")], T_CLI),
     ("I1 a wider password-free rule", [(SUD, "/usr/bin/systemctl restart motodiag-fleet.service\n",
                                         "/usr/bin/systemctl restart motodiag-fleet.service, "
                                         "/usr/bin/systemd-run\n")], T_INS),
@@ -117,6 +180,14 @@ MUTATIONS = [
                                                  "systemctl restart ssh.socket\n")], T_INS),
     ("I3 the dispatcher installed group-writable", [(UPD, "install -o root -g root -m 755",
                                                      "install -o root -g root -m 775")], T_INS),
+    ("I4 a dispatcher that does not parse is installed", [(UPD,
+     "python3 -c 'import ast, sys; ast.parse(open(sys.argv[1]).read())' \"$NEW\" \\\n"
+     "  || { echo \"the new dispatcher does not parse; nothing changed\"; exit 1; }\n", "")],
+     T_INS),
+    ("I5 the update runs for any user", [(UPD,
+     '[ "$(id -u)" -eq 0 ] || { echo "run with sudo"; exit 1; }\n', "")], T_INS),
+    ("I6 the rules installed before visudo checks them", [(SUD, 'visudo -cf "$TMP"\n', "")],
+     T_INS),
 ]
 
 

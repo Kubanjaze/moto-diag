@@ -16,7 +16,9 @@ there (ops/desktop/motodiag_remote.py) over the tailnet, by SSH to the
     remote.py deploy-step 334 <branch> <commit>
                                   the fleet's database step from the Mac (Phase
                                   406): the dry run's list shown, then yes asked
-                                  here, then the apply of exactly that diff
+                                  here, then the apply of exactly that diff;
+                                  `deploy-apply` alone is refused, so the apply
+                                  is never sent without the question
 
 No remote in live.json, or no key file: exit 4, as live.py refuses. The
 operation's own exit comes back unchanged; 255 is SSH's own failure.
@@ -181,6 +183,9 @@ def main(argv: list[str], *, repo: pathlib.Path = ROOT,
             if len(args) != 3 or not all(re.fullmatch(p, a) for p, a in zip(STEP_ARGS, args)):
                 raise NoWayIn("deploy-step takes a phase, its branch and a 40-hex commit")
             return deploy_step(way, *args)
+        if argv[0] == "deploy-apply":
+            raise NoWayIn("deploy-apply is sent only by deploy-step, after the dry run's list "
+                          "and your yes: run remote.py deploy-step <phase> <branch> <commit>")
         words = argv + [pushed_head(repo)] if argv[0] in AT_COMMIT else argv
     except NoWayIn as e:
         print(f"REFUSED: {e}", file=sys.stderr)

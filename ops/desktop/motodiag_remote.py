@@ -22,16 +22,21 @@ window: the payments feed's status, stop, start and restart; the server's
 update after a merge; the fleet's state, its log for one issue, and the move
 of its code copy; and the fleet's database step in two calls, the dry run
 and the apply of exactly the diff the Mac showed. No request has a terminal,
-so the yes is asked on the Mac between the two.
+so the yes is asked on the Mac between the two. The steps that change
+something hold one lock, so two cannot run at once, and each runs to its
+end, its put-back included, even when the Mac goes away mid-step: output
+that can no longer reach the Mac is dropped, and the outcome is logged.
 """
 from __future__ import annotations
 
 import datetime as dt
+import fcntl
 import hashlib
 import json
 import os
 import re
 import shlex
+import signal
 import sqlite3
 import subprocess
 import sys
@@ -39,7 +44,7 @@ import time
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
+from typing import IO, Callable
 
 REFUSED = 64
 UNIT = "motodiag-api.service"
@@ -64,6 +69,15 @@ class Refused(Exception):
     """The request is not one of the operations, or an argument is off its pattern."""
 
 
+def say(*args: object, file: IO[str] | None = None) -> None:
+    """print, except that a Mac gone away mid-step does not end the step:
+    the line is dropped and the step goes on to its end (Phase 406)."""
+    try:
+        print(*args, file=file if file is not None else sys.stdout, flush=True)
+    except (BrokenPipeError, OSError):
+        pass
+
+
 @dataclass(frozen=True)
 class Paths:
     dev: Path
@@ -75,6 +89,7 @@ class Paths:
     fleet_code: Path
     fleet_state: Path
     server_env: Path
+    home: Path
 
     @classmethod
     def under(cls, home: Path) -> "Paths":
@@ -84,7 +99,7 @@ class Paths:
                    live_config=home / ".config" / "motodiag" / "live.json",
                    fleet_code=home / "motodiag" / "fleet" / "code",
                    fleet_state=home / ".local" / "state" / "motodiag" / "fleet",
-                   server_env=home / ".config" / "motodiag" / "server.env")
+                   server_env=home / ".config" / "motodiag" / "server.env", home=home)
 
 
 class Shell:
@@ -92,8 +107,15 @@ class Shell:
 
     def run(self, argv: list[str], cwd: Path | None = None,
             env: dict[str, str] | None = None) -> int:
-        sys.stdout.flush()
-        return subprocess.run(argv, cwd=cwd, env=env).returncode
+        """Its lines passed on as they come, through `say` (Phase 406): no
+        command writes to the Mac's channel itself, so a Mac gone away cannot
+        end one mid-step."""
+        with subprocess.Popen(argv, cwd=cwd, env=env, stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT, text=True, errors="replace") as p:
+            assert p.stdout is not None
+            for line in p.stdout:
+                say(line.rstrip("\n"))
+        return p.returncode
 
     def capture(self, argv: list[str], cwd: Path | None = None,
                 env: dict[str, str] | None = None) -> tuple[int, str]:
@@ -138,6 +160,9 @@ OPS: dict[str, tuple[str, ...]] = {
     "deploy-dryrun": ("phase", "branch", "commit"),
     "deploy-apply": ("phase", "branch", "commit", "sha256"),
 }
+#: Phase 406's operations that change something: one at a time (`main`'s lock).
+CHANGING = frozenset({"feed-stop", "feed-start", "feed-restart", "server-update",
+                      "fleet-move", "deploy-dryrun", "deploy-apply"})
 
 
 def parse(command: str | None) -> tuple[str, list[str]]:
@@ -286,7 +311,17 @@ class Desk:
         the verbs and units the password-free rules name can pass sudo -n."""
         code = self.sh.run(["sudo", "-n", "systemctl", verb, unit])
         _, active = self.sh.capture(["systemctl", "is-active", unit])
-        print(f"{unit}: {active}")
+        say(f"{unit}: {active}")
+        return code
+
+    def server_pull(self) -> int:
+        srv = str(self.p.server)
+        _, branch = self.sh.capture(["git", "-C", srv, "branch", "--show-current"])
+        if branch != "master":
+            raise Refused(f"the server's checkout is on {branch or '(detached)'}, not master")
+        code = self.sh.run(["git", "-C", srv, "pull", "--ff-only", "--quiet"])
+        _, head = self.sh.capture(["git", "-C", srv, "log", "-1", "--format=%h %s"])
+        print("server checkout:", head)
         return code
 
     # ---- Phase 406 (K93): the steps done in the desktop's Ubuntu window
@@ -302,14 +337,15 @@ class Desk:
         `server.env`, line by line."""
         live = self.live()
         if live is None:
-            raise Refused("live is not on this machine")
+            raise Refused("live is not on this machine; nothing was changed")
         env = {k: v for k, v in os.environ.items() if not k.startswith("MOTODIAG_")}
         env["MOTODIAG_DB_PATH"] = str(live)
         env["MOTODIAG_DATA_DIR"] = str(live.parent)
         try:
             text = self.p.server_env.read_text(encoding="utf-8")
         except OSError:
-            raise Refused(f"the server's settings ({self.p.server_env}) cannot be read") from None
+            raise Refused(f"the server's settings ({self.p.server_env}) cannot be read; "
+                          "nothing was changed") from None
         for raw in text.splitlines():
             line = raw.strip()
             if not line or line[0] in "#;" or "=" not in line:
@@ -325,6 +361,20 @@ class Desk:
         env = self.server_settings()
         cli = str(self.p.server / ".venv" / "bin" / "motodiag")
         return self.sh.run([cli, "payments", "feed", "status"], cwd=self.p.server, env=env)
+
+    def checkins(self) -> int:
+        """The payments feed's check-in rows on live (Phase 404's table)."""
+        live = self.live()
+        if live is None:
+            raise Refused("live is not on this machine; nothing was changed")
+        try:
+            c = sqlite3.connect(f"file:{live}?mode=ro", uri=True)
+            try:
+                return int(c.execute("SELECT COUNT(*) FROM stripe_feed_checkins").fetchone()[0])
+            finally:
+                c.close()
+        except sqlite3.Error as e:
+            raise Refused(f"live's check-ins cannot be read ({e}); nothing was changed") from None
 
     def master_clean(self, repo: Path, what: str) -> str:
         """The checkout's HEAD, when it is on master with nothing changed by hand."""
@@ -348,13 +398,23 @@ class Desk:
 
     def forward(self, repo: Path, before: str, commit: str, what: str) -> None:
         if before == commit:
-            print(f"{what} is already at {commit[:12]}")
+            say(f"{what} is already at {commit[:12]}")
             return
         if self.git(repo, "merge-base", "--is-ancestor", before, commit)[0] != 0:
             raise Refused(f"{what} has commits that are not on master; nothing was changed")
         if self.sh.run(["git", "-C", str(repo), "merge", "--quiet", "--ff-only", commit]) != 0:
             raise Refused(f"{what} could not be moved to {commit[:12]}; nothing was changed")
-        print(f"{what} moved from {before[:12]} to {commit[:12]}")
+        say(f"{what} moved from {before[:12]} to {commit[:12]}")
+
+    def back(self, repo: Path, before: str, what: str) -> bool:
+        """The checkout put back at `before`, and seen there."""
+        rc = self.sh.run(["git", "-C", str(repo), "reset", "--quiet", "--keep", before])
+        if rc != 0 or self.git(repo, "rev-parse", "HEAD")[1] != before:
+            say(f"{what} could NOT be put back at {before[:12]}: it stays on the new code. "
+                "Bring this to the advisor now")
+            return False
+        say(f"{what} is back at {before[:12]}")
+        return True
 
     def healthy(self, tries: int = 30) -> bool:
         for _ in range(tries):
@@ -366,19 +426,21 @@ class Desk:
     def main_pid(self, unit: str) -> str:
         return self.sh.capture(["systemctl", "show", "-p", "MainPID", "--value", unit])[1]
 
-    def restart_server(self) -> str | None:
-        """The app server, then the payments feed, restarted: None, or what failed."""
+    def restart_server(self) -> tuple[str | None, str]:
+        """The app server, then the payments feed, restarted: what failed, or
+        None; and the feed's new main PID."""
         if self.sh.run(["sudo", "-n", "systemctl", "restart", UNIT]) != 0:
-            return "the app server could not be restarted"
+            return "the app server could not be restarted", ""
         if not self.healthy():
-            return "the app server did not answer healthy"
+            return "the app server did not answer healthy", ""
         old = self.main_pid(FEED)
         if self.sh.run(["sudo", "-n", "systemctl", "restart", FEED]) != 0:
-            return "the payments feed could not be restarted"
+            return "the payments feed could not be restarted", ""
         self.sh.sleep(5)
-        if not self.active(FEED) or self.main_pid(FEED) in ("", "0", old):
-            return "the payments feed did not come back"
-        return None
+        new = self.main_pid(FEED)
+        if not self.active(FEED) or new in ("", "0", old):
+            return "the payments feed did not come back", ""
+        return None, new
 
     def server_update(self, commit: str) -> int:
         """The server's update after a merge (404's step 1, as one name)."""
@@ -387,50 +449,62 @@ class Desk:
             raise Refused("the app server is not running; nothing was changed")
         if not self.active(FEED):
             raise Refused("the payments feed is not running; nothing was changed")
+        self.server_settings()
+        seen = self.checkins()
         before = self.master_clean(srv, what)
         self.master_is(srv, commit, what)
         self.forward(srv, before, commit, what)
-        problem = self.restart_server()
+        problem, pid = self.restart_server()
+        if problem is None:
+            for _ in range(60):
+                self.sh.sleep(3)
+                if self.checkins() > seen:
+                    break
+            if not self.active(FEED) or self.main_pid(FEED) != pid:
+                problem = "the payments feed did not keep running on the new code"
+            elif self.checkins() <= seen:
+                say("the payments feed runs the new code, but wrote down no check-in in 3 "
+                    "minutes; it asks Stripe as before, so bring this to the advisor")
+                return 1
         if problem:
-            print(f"{problem}: putting the code back at {before[:12]} and restarting both")
-            self.sh.run(["git", "-C", str(srv), "reset", "--quiet", "--keep", before])
-            back = self.restart_server()
-            print("both are back on the old code" if back is None else
-                  f"{back}, even on the old code: bring this to the advisor now")
+            say(f"{problem}: putting the code back at {before[:12]} and restarting both")
+            if not self.back(srv, before, what):
+                return 1
+            again, _ = self.restart_server()
+            say("both are back on the old code and running" if again is None else
+                f"{again}, even on the old code: bring this to the advisor now")
             return 1
-        print("the app server answers healthy, and the payments feed restarted")
-        status = 1
-        for _ in range(6):
-            self.sh.sleep(10)
-            status = self.feed_status()
-            if status == 0:
-                break
+        say("the app server answers healthy, and the payments feed checked in on the new code")
+        status = self.feed_status()
         _, head = self.git(srv, "log", "-1", "--format=%h %s")
-        print(f"the server and the payments feed are on: {head}")
+        say(f"the server and the payments feed are on: {head}")
         if status != 0:
-            print("the payments feed's status says something is not right (its lines above)")
+            say("the payments feed's status says something is not right (its lines above)")
         return status
 
     def recover_dry_run(self) -> tuple[int, str]:
-        """What the fleet's search on start would do; it writes nothing."""
+        """What the fleet's search on start would do; it writes nothing. Run
+        with the fleet unit's PATH (`motodiag-fleet.service`), where `gh` is."""
         script = self.p.fleet_code / ".claude" / "skills" / "fleet" / "dispatcher.py"
+        env = {**os.environ,
+               "PATH": f"{self.p.home / '.local' / 'bin'}:/usr/local/bin:/usr/bin:/bin"}
         return self.sh.capture(["/usr/bin/python3", str(script), "recover", "--dry-run"],
-                               cwd=self.p.fleet_code)
+                               cwd=self.p.fleet_code, env=env)
 
     def stage_running(self) -> bool:
         return self.sh.capture(["pgrep", "-x", "bwrap"])[0] == 0
 
     def fleet_status(self) -> int:
-        print(f"{FLEET}: {self.sh.capture(['systemctl', 'is-active', FLEET])[1]}")
-        print("a stage is running" if self.stage_running() else "no stage is running")
+        say(f"{FLEET}: {self.sh.capture(['systemctl', 'is-active', FLEET])[1]}")
+        say("a stage is running" if self.stage_running() else "no stage is running")
         code = self.p.fleet_code
         _, branch = self.git(code, "branch", "--show-current")
         _, head = self.git(code, "log", "-1", "--format=%H %s")
         _, dirty = self.git(code, "status", "--porcelain", "--untracked-files=no")
-        print(f"the fleet's code copy: {branch or '(detached)'} {head} | "
-              f"{'clean' if not dirty else 'NOT CLEAN'}")
+        say(f"the fleet's code copy: {branch or '(detached)'} {head} | "
+            f"{'clean' if not dirty else 'NOT CLEAN'}")
         _, said = self.recover_dry_run()
-        print(f"the fleet's search on start would say: {said}")
+        say(f"the fleet's search on start would say: {said}")
         return 0
 
     def fleet_log(self, issue: str, count: str) -> int:
@@ -440,14 +514,14 @@ class Desk:
         try:
             data = path.read_bytes()
         except OSError:
-            print(f"the fleet's log is not here ({path})", file=sys.stderr)
+            say(f"the fleet's log is not here ({path})", file=sys.stderr)
             return 1
         want = f"issue {issue}:".encode()
         lines = [ln for ln in data.split(b"\n") if want in ln]
         shown = lines[-int(count):] if int(count) else []
         for ln in shown:
-            print(ln.replace(b"\x00", b"").decode("utf-8", "replace"))
-        print(f"({len(lines)} line(s) name issue {issue}; {len(shown)} shown)")
+            say(ln.replace(b"\x00", b"").decode("utf-8", "replace"))
+        say(f"({len(lines)} line(s) name issue {issue}; {len(shown)} shown)")
         return 0
 
     def starts(self) -> int:
@@ -475,38 +549,29 @@ class Desk:
                           "when it has ended")
         rc, said = self.recover_dry_run()
         if rc != 0 or said.strip().splitlines()[-1:] != ["nothing to resume"]:
-            raise Refused(f"the fleet's search on start would act on something "
-                          f"({said.strip()[-300:] or 'no answer'}); nothing was changed")
+            raise Refused(f"the fleet's search on start would act on something, or could not "
+                          f"say ({said.strip()[-300:] or 'no answer'}); nothing was changed")
         before = self.master_clean(code, what)
         self.master_is(code, commit, what)
         self.forward(code, before, commit, what)
         if self.restart_fleet():
             _, head = self.git(code, "log", "-1", "--format=%h %s")
-            print(f"the fleet restarted and is on: {head}")
+            say(f"the fleet restarted and is on: {head}")
             return 0
-        print(f"the fleet did not come back on {commit[:12]}: putting its code back at "
-              f"{before[:12]} and restarting it")
-        self.sh.run(["git", "-C", str(code), "reset", "--quiet", "--keep", before])
-        print("the fleet is back on the old code" if self.restart_fleet() else
-              "the fleet is not running even on the old code: bring this to the advisor now")
+        say(f"the fleet did not come back on {commit[:12]}: putting its code back at "
+            f"{before[:12]} and restarting it")
+        if self.back(code, before, what):
+            say("the fleet is back on the old code" if self.restart_fleet() else
+                "the fleet is not running even on the old code: bring this to the advisor now")
         return 1
 
     def through_fleet(self, *args: str) -> int:
         """The fleet's database step, run as its paste block runs it: the
-        fleet's venv and its own code copy (master's), never a branch's."""
+        fleet's venv and its own code copy (master's), never a branch's.
+        Unbuffered, so its lines reach the Mac as they come."""
         python = str(self.p.fleet_state / "venv" / "bin" / "python")
         step = str(self.p.fleet_code / ".claude" / "skills" / "deploy" / "through_fleet.py")
-        return self.sh.run([python, step, *args])
-
-    def server_pull(self) -> int:
-        srv = str(self.p.server)
-        _, branch = self.sh.capture(["git", "-C", srv, "branch", "--show-current"])
-        if branch != "master":
-            raise Refused(f"the server's checkout is on {branch or '(detached)'}, not master")
-        code = self.sh.run(["git", "-C", srv, "pull", "--ff-only", "--quiet"])
-        _, head = self.sh.capture(["git", "-C", srv, "log", "-1", "--format=%h %s"])
-        print("server checkout:", head)
-        return code
+        return self.sh.run([python, "-u", step, *args])
 
     def dispatch(self, name: str, args: list[str]) -> int:
         handlers: dict[str, Callable[[], int]] = {
@@ -551,18 +616,39 @@ def log(paths: Paths, command: str | None, outcome: str) -> None:
                 f"{command!r} -> {outcome}\n")
 
 
+def one_at_a_time(paths: Paths) -> IO[str]:
+    """The lock Phase 406's changing operations hold; refused when held."""
+    paths.log.parent.mkdir(parents=True, exist_ok=True)
+    f = (paths.log.parent / "remote.lock").open("w")
+    try:
+        fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        f.close()
+        raise Refused("another step is running on the desktop; nothing was changed, so try "
+                      "again when it has ended") from None
+    return f
+
+
 def main(command: str | None, paths: Paths, shell: Shell) -> int:
+    lock: IO[str] | None = None
     try:
         name, args = parse(command)
+        if name in CHANGING:
+            lock = one_at_a_time(paths)
         code = Desk(paths, shell).dispatch(name, args)
     except Refused as e:
-        print(f"REFUSED: {e}", file=sys.stderr)
+        say(f"REFUSED: {e}", file=sys.stderr)
         log(paths, command, f"refused ({e})".splitlines()[0])
         return REFUSED
+    finally:
+        if lock is not None:
+            lock.close()
     log(paths, command, f"exit {code}")
     return code
 
 
 if __name__ == "__main__":
+    # A Mac gone away mid-step: the step still runs to its end (Phase 406).
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
     raise SystemExit(main(os.environ.get("SSH_ORIGINAL_COMMAND"),
                           Paths.under(Path.home()), Shell()))

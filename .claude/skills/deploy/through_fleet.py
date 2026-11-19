@@ -413,8 +413,13 @@ def apply_approved(phase: str, branch: str, commit: str, sha: str, *,
         raise Off("the dry run here is not the one you said yes to (its sha256 differs): "
                   "nothing was applied, so run the dry run again")
     return apply(phase, commit, co, db, service, python, now, say, YES,
-                 where="on the Mac, through the way in (Phase 406)",
-                 typed="The operator typed yes on the Mac, which sends no other answer")
+                 where="on the Mac, through the way in (Phase 406; the time is when the "
+                       "apply reached the desktop)",
+                 typed="The answer was typed on the Mac, not here. The Mac's `remote.py "
+                       "deploy-step` shows this dry run's list, then asks, and sends the apply "
+                       "naming this diff's sha256 only for an answer that reads yes; it sends "
+                       "no apply any other way. The desktop received that apply, so it records "
+                       "the answer as")
 
 
 def apply(phase: str, commit: str, co: pathlib.Path, db: pathlib.Path, service: Service,

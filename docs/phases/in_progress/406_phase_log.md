@@ -60,3 +60,64 @@ modes, `remote.py deploy-step`, one more password-free rule line and
   against master `3ebeac6`: +86 −0.
 - **The code's counts** (`scripts/code_quality.py counts`) equal their pins:
   ruff 1108, mypy 202, complex 25, big 5, helpers 19, swallowed 22.
+
+## 2026-11-19 — the review, and its fixes
+
+A fresh agent reviewed the build's diff (`6d9b356`), given the code and the
+plan, not this log. It found seven points. Each is fixed, and each fix has
+a test that a planted fault turns red:
+
+1. **A Mac gone away mid-step stopped the put-back.** The dispatcher's own
+   lines, and the commands it ran, wrote to the closed channel; it was
+   reproduced with the merge and restart done and no reset. Now:
+   - every line goes through `say`, which drops what cannot be sent;
+   - `Shell.run` passes each command's lines on through `say`, so no command
+     writes to the channel itself (`errors="replace"` for bytes that are not
+     UTF-8);
+   - SIGHUP is ignored;
+   - the steps that change something hold one lock (`remote.lock`), so a
+     second call is refused, not raced;
+   - `through_fleet.py` runs with `-u`, so its lines arrive as they come.
+   Tests: the put-back with stdout closed; a real pipe with no reader; the
+   real dispatcher run as SSH runs it, its output unread and SIGHUP sent
+   mid-step; the lock.
+2. **The put-back claimed success unchecked.** `back()` reads the reset's
+   exit and then HEAD. A put-back that did not take is said ("could NOT be
+   put back … Bring this to the advisor now"), and nothing restarts on the
+   new code after it. Tests: a reset that fails, and one that exits 0
+   without moving, for `server-update` and `fleet-move`.
+3. **The feed check was weaker than 404's step.** `server-update` waits up
+   to 3 minutes for a new check-in row on live, as 404's block did. Then the
+   feed must still run on the process it was restarted as: its unit
+   restarts it after a crash (`Restart=on-failure`), so a new PID is a
+   crash. A crash puts the code back. No check-in at all keeps the new code
+   and says so, because the feed asks Stripe as before. Tests: the feed
+   dying after its check-in, systemd restarting it, no check-in.
+4. **The settings were read only after the change.** `live.json`,
+   `server.env` and live's check-ins are read before anything moves. Tests:
+   each one unreadable is refused, nothing changed.
+5. **The apply could be sent without the question.** `remote.py` refuses
+   `deploy-apply` on its own; only `deploy-step` sends it, after the list
+   and the yes. The answer file no longer says the operator typed yes. It
+   says the answer was typed on the Mac, not at the desktop, and how the Mac
+   sends the apply, and records it as `> yes`, the line the close-out
+   quotes. The plan's re-run of `refusals()` in the apply was removed in the
+   build (above); v1.1's Deviations says so.
+6. **Tests that could not see a check.** The stand-in's reset can now fail
+   and stdout can close; the search on start's exit and the fleet's running
+   state each have a case. The install scripts are run, not read: copies
+   with only their two root paths moved (each move asserted once), and
+   stand-ins for `id`, `install`, `visudo`, `sha256sum` and `systemctl`,
+   proven by `command -v` in the scripts' shell.
+7. **The search on start ran with sshd's PATH.** It runs with the fleet
+   unit's (`~/.local/bin` first); the test reads the unit file's line.
+
+- **One test was wrong, the code unchanged:** the case for `Shell.run`'s
+  lines had its child print one line to a buffered stdout and one to
+  stderr, and they arrived in the other order. The child flushes now.
+- **Mutations** (`406_mutate.py`, `406_mutate.out`): 48/48 red. 20 are new,
+  one per fix; D6, D7, D11 and T5 were moved to the rewritten lines.
+- **`COLLECTED_TEST_FLOOR`** 12865 → 12885, by a diff of collected ids
+  against master `3ebeac6` (12779): +106 −0, all in the four new files.
+- **The code's counts** (`scripts/code_quality.py counts`) still equal their
+  pins: ruff 1108, mypy 202, complex 25, big 5, helpers 19, swallowed 22.
