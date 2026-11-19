@@ -9,6 +9,13 @@ block's work, run there by the operator with the fleet's own copy of the
 code (master's), never the branch's:
 
     through_fleet.py <phase> <branch> <commit>
+    through_fleet.py <phase> <branch> <commit> --dry-run-only
+    through_fleet.py <phase> <branch> <commit> --apply <sha256>
+
+The last two are the Mac's (Phase 406, K93): its way in has no terminal, so
+the yes is asked on the Mac between them. The first stops after step 5's
+list, whose last line is the dry-run diff's sha256; the second makes no new
+checkout and no new dry run, and applies only the diff that hashes to it.
 
 1. Live must be on this machine (`live.py`; exit 4 otherwise).
 2. A fresh clone of the fleet's mirror at `~/motodiag/deploy/<phase>`, at
@@ -314,13 +321,35 @@ def run(phase: str, branch: str, commit: str, *, mirror: pathlib.Path | None = N
     root, service = root or deploy_root(), service or Service()
     co = root / phase
     if applied(co, phase):
-        say("This change is already on the live database; nothing is applied again.")
-        rc, text = _quiet(lambda: D.verify_live(phase, db=db, repo=co))
-        say(text.rstrip())
-        if rc != 0:
-            raise Off("the live database does not match the change that was approved")
-        return 0
-    co = checkout(phase, branch, commit, mirror or mirror_path(), root)
+        return already(phase, db, co, say)
+    co = dry_run(phase, branch, commit, mirror or mirror_path(), root, db, backups, python, say)
+    words = ask(QUESTION)
+    return apply(phase, commit, co, db, service, python, now, say, words,
+                 where="on the home desktop", typed="The operator typed, verbatim")
+
+
+#: The question the database step asks before anything reaches live.
+QUESTION = ("\nType yes and press Enter to make this change to the live database "
+            "(anything else stops here, and nothing changes): ")
+#: The last line of a dry run alone (Phase 406): the diff the Mac shows, by its hash.
+SHA_LINE = "dry-run diff sha256: "
+
+
+def already(phase: str, db: pathlib.Path, co: pathlib.Path, say: Callable[[str], None]) -> int:
+    say("This change is already on the live database; nothing is applied again.")
+    rc, text = _quiet(lambda: D.verify_live(phase, db=db, repo=co))
+    say(text.rstrip())
+    if rc != 0:
+        raise Off("the live database does not match the change that was approved")
+    return 0
+
+
+def dry_run(phase: str, branch: str, commit: str, mirror: pathlib.Path, root: pathlib.Path,
+            db: pathlib.Path, backups: pathlib.Path, python: str,
+            say: Callable[[str], None]) -> pathlib.Path:
+    """The first half: a fresh checkout, the refusals, the dry run on a copy,
+    and the change in plain words. Nothing is asked and nothing is applied."""
+    co = checkout(phase, branch, commit, mirror, root)
     why = refusals(co, phase, commit)
     if why:
         raise Off("; ".join(why))
@@ -335,16 +364,74 @@ def run(phase: str, branch: str, commit: str, *, mirror: pathlib.Path | None = N
     for line in plain_words(diff.read_text()):
         say(f"  - {line}")
     say(f"\nThe full record is {diff.relative_to(co)} in {co}.")
-    words = ask("\nType yes and press Enter to make this change to the live database "
-                "(anything else stops here, and nothing changes): ")
+    return co
+
+
+def dry_run_only(phase: str, branch: str, commit: str, *, mirror: pathlib.Path | None = None,
+                 root: pathlib.Path | None = None, db: pathlib.Path | None = None,
+                 backups: pathlib.Path = D.BACKUPS, python: str = sys.executable,
+                 say: Callable[[str], None] = print) -> int:
+    """Phase 406 (K93): the dry run alone, for the Mac, which shows its list
+    and asks for yes on its own terminal. Its last line is the diff's sha256."""
+    db = db or L.where()
+    root = root or deploy_root()
+    if applied(root / phase, phase):
+        return already(phase, db, root / phase, say)
+    co = dry_run(phase, branch, commit, mirror or mirror_path(), root, db, backups, python, say)
+    say("\nNothing is applied: the Mac asks you for yes.")
+    say(f"{SHA_LINE}{D.sha256(D.diff_path(co, phase))}")
+    return 0
+
+
+def apply_approved(phase: str, branch: str, commit: str, sha: str, *,
+                   root: pathlib.Path | None = None, db: pathlib.Path | None = None,
+                   service: Service | None = None, python: str = sys.executable,
+                   now: Callable[[], dt.datetime] = lambda: dt.datetime.now().astimezone(),
+                   say: Callable[[str], None] = print) -> int:
+    """Phase 406 (K93): the second half, for the Mac, after the operator typed
+    yes there to the list the dry run showed. No new checkout and no new dry
+    run: the diff the first call left must hash to `sha`, its checkout must
+    be at `commit`, and the branch must still be there in the fleet's mirror."""
+    db = db or L.where()
+    root, service = root or deploy_root(), service or Service()
+    co = root / phase
+    if applied(co, phase):
+        return already(phase, db, co, say)
+    diff = D.diff_path(co, phase)
+    if not diff.is_file():
+        raise Off("there is no dry run here to apply: run the dry run first, and say yes to "
+                  "what it shows")
+    if _git(co, "rev-parse", "HEAD").stdout.strip() != commit:
+        raise Off(f"the dry run here is not of {commit[:12]}: run the dry run again")
+    _must(_git(co, "fetch", "-q", "origin"), "could not read the fleet's mirror")
+    head = _git(co, "rev-parse", "--verify", "-q", f"refs/remotes/origin/{branch}").stdout.strip()
+    if head != commit:
+        at = head[:12] or "no commit"
+        raise Off(f"the branch {branch} has moved since the dry run (it is at {at}): nothing "
+                  "was applied, so run the dry run again")
+    if D.sha256(diff) != sha:
+        raise Off("the dry run here is not the one you said yes to (its sha256 differs): "
+                  "nothing was applied, so run the dry run again")
+    return apply(phase, commit, co, db, service, python, now, say, YES,
+                 where="on the Mac, through the way in (Phase 406)",
+                 typed="The operator typed yes on the Mac, which sends no other answer")
+
+
+def apply(phase: str, commit: str, co: pathlib.Path, db: pathlib.Path, service: Service,
+          python: str, now: Callable[[], dt.datetime], say: Callable[[str], None],
+          words: str, *, where: str, typed: str) -> int:
+    """The second half: the answer written and committed with the diff, and
+    only on a yes, the apply, the live diff and `verify_live`."""
+    diff = D.diff_path(co, phase)
+    migrate, seed = branch_migrate(co, python), branch_seed(co, python)
     answer = answer_path(co, phase)
     answer.write_text(
         f"# Phase {phase}: the operator's answer to the database step\n\n"
-        f"- **Asked:** `{now().isoformat(timespec='seconds')}`, on the home desktop, after "
+        f"- **Asked:** `{now().isoformat(timespec='seconds')}`, {where}, after "
         f"the dry run on a copy\n"
         f"- **Dry-run diff sha256:** `{D.sha256(diff)}`\n"
         f"- **Commit:** `{commit}`\n\n"
-        f"The operator typed, verbatim:\n\n> {words}\n")
+        f"{typed}:\n\n> {words}\n")
     if words.strip().lower() != YES:
         raise Off(f"you typed {words!r}, not yes: nothing was applied, and the live database "
                   "is as it was", 2)
@@ -390,11 +477,23 @@ def main(argv: list[str]) -> int:
     ap.add_argument("phase")
     ap.add_argument("branch")
     ap.add_argument("commit")
+    mode = ap.add_mutually_exclusive_group()
+    mode.add_argument("--dry-run-only", action="store_true",
+                      help="the dry run and its list alone, for the Mac (Phase 406)")
+    mode.add_argument("--apply", metavar="SHA256",
+                      help="apply the dry run that hashes to SHA256, after a yes on the Mac")
     a = ap.parse_args(argv)
     if not re.fullmatch(r"\d{3}[A-Z]?", a.phase) or not re.fullmatch(r"[0-9a-f]{40}", a.commit):
         print(f"{OFF}: the phase or the commit is not one the fleet writes")
         return 1
+    if a.apply is not None and not re.fullmatch(r"[0-9a-f]{64}", a.apply):
+        print(f"{OFF}: the sha256 to apply is not one a dry run prints")
+        return 1
     try:
+        if a.dry_run_only:
+            return dry_run_only(a.phase, a.branch, a.commit)
+        if a.apply is not None:
+            return apply_approved(a.phase, a.branch, a.commit, a.apply)
         return run(a.phase, a.branch, a.commit)
     except L.LiveElsewhere as e:
         print(f"{OFF}: the live database is not on this computer ({e})")

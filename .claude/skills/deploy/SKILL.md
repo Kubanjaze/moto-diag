@@ -202,6 +202,38 @@ the resume and for Q1. Tests: `tests/test_phase395_through_fleet.py`. The
 trial, once, against a copy of live:
 `.claude/skills/fleet/fixtures/deploy/trial/trial_output.txt`.
 
+### From the Mac (Phase 406, K93)
+
+The way in (Phase 384) has no terminal, so the step runs from the Mac in
+two calls, with the yes asked on the Mac between them:
+
+    remote.py deploy-step <phase> <branch> <commit>
+
+- **`deploy-dryrun`** runs `through_fleet.py … --dry-run-only` on the
+  desktop: the same refusals, the dry run, the change in plain words, and a
+  last line `dry-run diff sha256: <hex>`. Nothing is asked or applied.
+- **The Mac shows that list as it comes, then asks for yes** on its own
+  terminal (the operator's condition: the list before the question).
+  Anything but yes sends nothing more.
+- **`deploy-apply`** runs `through_fleet.py … --apply <sha256>`: no new
+  checkout and no new dry run. Refused unless the dry run's checkout is at
+  the commit, the branch is still there in the fleet's mirror, and the
+  diff hashes to the sha256 the Mac showed. The answer file says the yes was
+  typed on the Mac.
+- **Taking `needs-hands` off** stays in the operator's paste block.
+- **Before Phase 405 lands,** a database step stops the payments feed and
+  stays at the desktop (K91).
+
+The rest of the desktop's routine steps are named operations too
+(`remote.py <name>`): `feed-status`, `feed-stop`, `feed-start`,
+`feed-restart`; `server-update <commit>` (the server's update after a
+merge, put back if the app server or the feed does not come back);
+`fleet-status`, `fleet-log <issue> <count>` and `fleet-move <commit>`
+(refused while a stage runs or the search on start would act). Password-free
+for exactly the units they restart (`ops/desktop/install_sudoers.sh`),
+installed once at the desktop with `sudo sh ops/desktop/update_remote.sh`.
+Tests: `tests/test_phase406_*.py`.
+
 ## Backups, and a change with no migration
 
 - **`deploy.py backup [label]`** (Phase 382) takes a backup-API copy of live

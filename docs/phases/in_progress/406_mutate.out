@@ -1,0 +1,29 @@
+D1 any branch passes: red
+D2 any sha256 passes: red
+D3 feed-stop stops the app server: red
+D4 server-update skips GitHub's master: red
+D5 a checkout changed by hand is moved: red
+D6 server-update keeps the new code when the server fails: red
+D7 the feed's restart seen from 'running' alone: red
+D8 the app server always healthy: red
+D9 fleet-move ignores a running stage: red
+D10 fleet-move ignores the search on start: red
+D11 fleet-move keeps the new code when the fleet fails: red
+D12 the fleet's start not waited for: red
+D13 the fleet's log read up to its first zero byte: red
+D14 deploy-apply drops the sha256: red
+D15 feed-status keeps the caller's MOTODIAG_*: red
+T1 the apply skips the sha256: red
+T2 the apply skips a moved branch: red
+T3 the apply without a dry run: red
+T4 the dry run alone prints no sha256: red
+T5 the answer says the desktop asked: red
+T6 the apply of another commit's dry run: red
+C1 yes asked before the list: red
+C2 any answer is a yes: red
+C3 the first of several sha256 lines taken: red
+C4 deploy-step's arguments unchecked: red
+I1 a wider password-free rule: red
+I2 the update touches the SSH listener: red
+I3 the dispatcher installed group-writable: red
+28/28 red
