@@ -46,10 +46,11 @@ in the phase log.
 **v1.1, as built** (`4b07f31`): each line below held when re-read at
 `dfdad6b`; the census found 13 hits (the phase log). The build choices
 the plan left open: the two plan tables are pinned equal by tests rather
-than one reading the other; the owner lookup is lifted into
-`shop_owner_ids`, `highest_active_tier` and `shop_plan`
-(`src/motodiag/billing/subscription_repo.py`), which `resolve_tier` and
-`check_cost_cap` both call; `monitor.checkin_answer` is a second function
+than one reading the other; the owner lookup is copied, not lifted:
+`check_cost_cap` reads `shop_plan` (`src/motodiag/billing/subscription_repo.py`),
+`resolve_tier` keeps its own owner query, the two share only
+`highest_active_tier` and `TIER_RANK`, and
+`test_the_resolve_tier_rule_and_the_shops_plan_agree` pins them equal; `monitor.checkin_answer` is a second function
 and `monitor.checkin` keeps its bool; the compare table carries the three
 full names on a line above its columns. What differs from the text below
 is under Deviations.
@@ -518,7 +519,10 @@ fleet. No seed data, no split and no eval protocol: this phase has none.
    turns. The plan says only that the lower refuses first.
 5. **26 mutations, not the plan's seven.** The other nineteen remove each
    call site's check, the CLI's red line, the error row, the housekeeping
-   and the rollback's drop. The first run of `404_mutate.py` was cut off by
+   and the rollback's drop. The plan's "the caller's own subscription
+   instead of the owners'" became P4, "every member, the caller's own
+   included": the check has no caller, so the caller's subscription reaches
+   it only as a member's. The first run of `404_mutate.py` was cut off by
    the sandbox's ten-minute limit with one mutation still in place; the
    file was restored with the Edit tool before any commit and the whole run
    repeated (the phase log).

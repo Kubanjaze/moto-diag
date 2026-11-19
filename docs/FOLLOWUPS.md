@@ -6412,7 +6412,7 @@ What would close it:
 
 **The plan tables show a location limit and a people limit that no code keeps: Company reads 3 locations and Shop 10 people, and nothing counts either**
 
-Found 2026-11-18 by Phase 404's Step 0, which set Company's
+Found 2026-11-18 by Phase 404's Step 0; Phase 404's build set Company's
 `max_locations` to 3 as the operator approved (K84). Measured on the
 branch at `dfdad6b`:
 - `max_locations` is read only by the CLI's `motodiag tier` panel
