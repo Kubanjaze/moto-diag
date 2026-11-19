@@ -28,9 +28,9 @@ the Mac must still show me the dry run's list before it asks for yes."
   else; `ops/desktop/update_remote.sh` installs the dispatcher and the
   rules, once, at the desktop.
 
-Held by `tests/test_phase406_*.py` (108 tests), after an independent
+Held by `tests/test_phase406_*.py` (110 tests), after an independent
 review's seven points were fixed (406's phase log). `406_mutate.py`:
-50/50 red.
+52/52 red.
 
 ## 2026-10-31 — device_tokens.last_seen_at joins SERVER_WRITES (Phase 385, K39, F212)
 

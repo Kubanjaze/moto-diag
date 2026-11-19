@@ -70,6 +70,8 @@ class Desktop(R.Shell):
         self.feed_checks_in = True      # False: running, but no check-in row
         self.feed_dies = False          # True: gone a few seconds after its check-in
         self.feed_respawns = False      # True: crashed and restarted by systemd, a new PID
+        self.unreadable_after = False   # True: live's check-ins and server.env gone at the
+                                        # feed's restart, after the change
         self.fleet_logs_start = True
         self.fleet_stays_up = True      # False: starts, logs it, then is not active
 
@@ -95,7 +97,10 @@ class Desktop(R.Shell):
             elif unit == R.FEED and verb == "restart":
                 self.pid += 1 if self.feed_comes_back and self.feed_new_pid else 0
                 self.units[unit] = "active" if self.feed_comes_back else "failed"
-                if self.feed_comes_back and self.feed_checks_in:
+                if self.unreadable_after:
+                    sqlite3.connect(self.live).execute("DROP TABLE stripe_feed_checkins")
+                    self.p.server_env.unlink()
+                elif self.feed_comes_back and self.feed_checks_in:
                     self._check_in()
             else:
                 self.units[unit] = "active"
@@ -162,6 +167,7 @@ class Desktop(R.Shell):
 
     def sleep(self, seconds):
         self.calls.append(["sleep", str(seconds)])
+        self.envs.append(None)
         if self.feed_dies and seconds == 3:
             self.units[R.FEED] = "failed"
         if self.feed_respawns and seconds == 3:
@@ -360,7 +366,38 @@ def test_server_update_no_check_in_keeps_the_new_code_and_says_so(desk, capsys):
     assert call(desk, f"server-update {NEW}") == 1
     assert desk.heads[str(desk.p.server)] == NEW
     assert not desk.did("git", "-C", str(desk.p.server), "reset")
-    assert "wrote down no check-in" in capsys.readouterr().out
+    assert "no new check-in could be seen" in capsys.readouterr().out
+
+
+def test_server_update_never_says_nothing_changed_after_the_change(desk, capsys):
+    """Live's check-ins and the server's settings, readable before the
+    change, are gone after it: the step is not refused (a refusal says
+    nothing was changed), it says what it could not see, and the feed's
+    status runs with the settings read before the change."""
+    desk.unreadable_after = True
+    assert call(desk, f"server-update {NEW}") == 1
+    out, err = capsys.readouterr()
+    assert "REFUSED" not in err and "no new check-in could be seen" in out
+    assert f"'server-update {NEW}' -> exit 1" in desk.p.log.read_text()
+    assert desk.heads[str(desk.p.server)] == NEW, "a check-in not seen puts nothing back"
+
+
+def test_server_update_reads_the_settings_once_before_the_change(desk):
+    """The feed's status at the end runs with the settings read before the
+    change, not with a second read that could fail after it: server.env goes
+    once the feed has restarted and checked in."""
+    real_run = desk.run
+
+    def run(argv, cwd=None, env=None):
+        code = real_run(argv, cwd, env)
+        if argv == ["sudo", "-n", "systemctl", "restart", R.FEED]:
+            desk.p.server_env.unlink()
+        return code
+
+    desk.run = run  # type: ignore[method-assign]
+    assert call(desk, f"server-update {NEW}") == 0
+    (argv,) = [c for c in desk.calls if c[0].endswith("motodiag")]
+    assert desk.envs[desk.calls.index(argv)]["MOTODIAG_ENV"] == "prod"
 
 
 @pytest.mark.parametrize("how", ["reset", "reset-silent"])

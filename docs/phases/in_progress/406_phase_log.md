@@ -124,10 +124,24 @@ a test that a planted fault turns red:
   because it is the review's first point in the file 406 owns, and the
   regression of record had not run. The full whole-tree run started on
   `e4a2792` was stopped for it, unfinished.
-- **Mutations** (`406_mutate.py`, `406_mutate.out`): 50/50 red. 22 are new,
-  one per fix and two for 384's lines; D6, D7, D11 and T5 were moved to the
-  rewritten lines.
-- **`COLLECTED_TEST_FLOOR`** 12865 → 12887, by a diff of collected ids
-  against master `3ebeac6` (12779): +108 −0, all in the four new files.
+- **And the review's 4, finished:** `server-update` still read the
+  server's settings and live's check-ins again after its change. Had
+  either read failed there, the step would have been refused with
+  "nothing was changed" while the new code ran. It now keeps the settings
+  it read before the change, and a check-in it cannot read after the
+  change counts as not seen ("no new check-in could be seen on live", true
+  either way). Found while drafting the handoff; the full whole-tree run
+  started on `8529590` was stopped for it, unfinished.
+- **A guard blocked a command,** at 17:24 EST: a Python heredoc that edited
+  my draft of v1.1 in the scratchpad, through a path given as an argument,
+  with `tests/` in its text: "edit guard: blocked — a Python script body
+  writes to a path the edit guard cannot resolve, and the body names src/
+  or tests/". The draft was edited with the Edit tool instead. The guard is
+  unchanged.
+- **Mutations** (`406_mutate.py`, `406_mutate.out`): 52/52 red. 24 are new:
+  one per fix, two for 384's lines, two for the reads after the change; D6,
+  D7, D11, D21, D23 and T5 were moved to the rewritten lines.
+- **`COLLECTED_TEST_FLOOR`** 12865 → 12889, by a diff of collected ids
+  against master `3ebeac6` (12779): +110 −0, all in the four new files.
 - **The code's counts** (`scripts/code_quality.py counts`) still equal their
   pins: ruff 1108, mypy 202, complex 25, big 5, helpers 19, swallowed 22.

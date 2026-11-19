@@ -559,13 +559,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: Measured: 12779.
 #:
 #: Phase 406 (the Mac runs the rest of the desktop's steps, K93), by a diff
-#: of collected ids against master 3ebeac6 (12779): +108 -0, all in the four
-#: new files test_phase406_remote_ops.py (65), _through_fleet_split.py (12),
+#: of collected ids against master 3ebeac6 (12779): +110 -0, all in the four
+#: new files test_phase406_remote_ops.py (67), _through_fleet_split.py (12),
 #: _remote_client.py (20) and _install.py (11). The build's +86 measured
-#: 12865; the review's fixes added 20 (12885), and 384's operations
-#: printing through `say` the last 2.
-#: Measured: 12887.
-COLLECTED_TEST_FLOOR = 12887
+#: 12865; the review's fixes added 20 (12885), 384's operations printing
+#: through `say` 2 (12887), and server-update's reads after its change 2.
+#: Measured: 12889.
+COLLECTED_TEST_FLOOR = 12889
 
 
 def _collected_count() -> int:

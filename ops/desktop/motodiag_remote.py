@@ -357,9 +357,11 @@ class Desk:
             env[k] = v
         return env
 
-    def feed_status(self) -> int:
-        """`motodiag payments feed status`, its lines and its exit code."""
-        env = self.server_settings()
+    def feed_status(self, env: dict[str, str] | None = None) -> int:
+        """`motodiag payments feed status`, its lines and its exit code, with
+        the server's settings as read now, or as `server-update` read them
+        before its change."""
+        env = env if env is not None else self.server_settings()
         cli = str(self.p.server / ".venv" / "bin" / "motodiag")
         return self.sh.run([cli, "payments", "feed", "status"], cwd=self.p.server, env=env)
 
@@ -376,6 +378,15 @@ class Desk:
                 c.close()
         except sqlite3.Error as e:
             raise Refused(f"live's check-ins cannot be read ({e}); nothing was changed") from None
+
+    def checked_in_since(self, seen: int) -> bool:
+        """A new check-in row on live since `seen`. Read after a change, a read
+        that fails is a check-in not seen: refused then, the step would say
+        that nothing was changed, which would not be true."""
+        try:
+            return self.checkins() > seen
+        except Refused:
+            return False
 
     def master_clean(self, repo: Path, what: str) -> str:
         """The checkout's HEAD, when it is on master with nothing changed by hand."""
@@ -450,7 +461,7 @@ class Desk:
             raise Refused("the app server is not running; nothing was changed")
         if not self.active(FEED):
             raise Refused("the payments feed is not running; nothing was changed")
-        self.server_settings()
+        env = self.server_settings()
         seen = self.checkins()
         before = self.master_clean(srv, what)
         self.master_is(srv, commit, what)
@@ -459,13 +470,14 @@ class Desk:
         if problem is None:
             for _ in range(60):
                 self.sh.sleep(3)
-                if self.checkins() > seen:
+                if self.checked_in_since(seen):
                     break
             if not self.active(FEED) or self.main_pid(FEED) != pid:
                 problem = "the payments feed did not keep running on the new code"
-            elif self.checkins() <= seen:
-                say("the payments feed runs the new code, but wrote down no check-in in 3 "
-                    "minutes; it asks Stripe as before, so bring this to the advisor")
+            elif not self.checked_in_since(seen):
+                say("the payments feed runs the new code, but no new check-in could be seen "
+                    "on live in 3 minutes; it asks Stripe as before, so bring this to the "
+                    "advisor")
                 return 1
         if problem:
             say(f"{problem}: putting the code back at {before[:12]} and restarting both")
@@ -476,7 +488,7 @@ class Desk:
                 f"{again}, even on the old code: bring this to the advisor now")
             return 1
         say("the app server answers healthy, and the payments feed checked in on the new code")
-        status = self.feed_status()
+        status = self.feed_status(env)
         _, head = self.git(srv, "log", "-1", "--format=%h %s")
         say(f"the server and the payments feed are on: {head}")
         if status != 0:

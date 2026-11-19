@@ -101,15 +101,17 @@ MUTATIONS = [
      "        return p.returncode\n",
      "        return subprocess.run(argv, cwd=cwd, env=env).returncode\n")], T_OPS),
     ("D21 server-update reads the settings after the change", [(DSP,
-     "        self.server_settings()\n        seen = self.checkins()\n",
-     "        seen = self.checkins()\n")], T_OPS),
+     "        env = self.server_settings()\n        seen = self.checkins()\n",
+     "        env = None\n        seen = self.checkins()\n")], T_OPS),
     ("D22 server-update reads the check-ins after the change", [(DSP,
      "        seen = self.checkins()\n", "        seen = 0\n")], T_OPS),
     ("D23 a feed that never checks in passes", [(DSP,
-     "            elif self.checkins() <= seen:\n"
-     "                say(\"the payments feed runs the new code, but wrote down no check-in "
-     "in 3 \"\n"
-     "                    \"minutes; it asks Stripe as before, so bring this to the advisor\")\n"
+     "            elif not self.checked_in_since(seen):\n"
+     "                say(\"the payments feed runs the new code, but no new check-in could be "
+     "seen \"\n"
+     "                    \"on live in 3 minutes; it asks Stripe as before, so bring this to "
+     "the \"\n"
+     "                    \"advisor\")\n"
      "                return 1\n", "")], T_OPS),
     ("D24 a feed systemd restarted after a crash passes", [(DSP,
      "            if not self.active(FEED) or self.main_pid(FEED) != pid:",
@@ -139,6 +141,13 @@ MUTATIONS = [
     ("D32 384's fetch prints to the closed channel", [(DSP,
      '        say(json.dumps({"name": f.name,',
      '        print(json.dumps({"name": f.name,')], T_OPS),
+    ("D33 a check-in unreadable after the change is a refusal", [(DSP,
+     "        try:\n            return self.checkins() > seen\n        except Refused:\n"
+     "            return False\n",
+     "        return self.checkins() > seen\n")], T_OPS),
+    ("D34 server-update reads the settings again after the change", [(DSP,
+     "        status = self.feed_status(env)\n", "        status = self.feed_status()\n")],
+     T_OPS),
     ("T1 the apply skips the sha256", [(TFL, "    if D.sha256(diff) != sha:\n",
                                         "    if False:\n")], T_TWO),
     ("T2 the apply skips a moved branch", [(TFL,
