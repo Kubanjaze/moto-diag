@@ -1,6 +1,6 @@
 # Phase 404 — What the plans limit, and a payments status that tells the truth (F270, F271, F272, F274)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-11-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-11-18 (v1.0 `dfdad6b`)
 
 ---
 
@@ -42,6 +42,17 @@ on the new code, then `motodiag payments feed status` printed and read.
 Causes and measurements: `404_step0.md`. The Engineer re-measures each
 line below before changing it (CLAUDE.md, Step 0), and records the census
 in the phase log.
+
+**v1.1, as built** (`4b07f31`): each line below held when re-read at
+`dfdad6b`; the census found 13 hits (the phase log). The build choices
+the plan left open: the two plan tables are pinned equal by tests rather
+than one reading the other; the owner lookup is lifted into
+`shop_owner_ids`, `highest_active_tier` and `shop_plan`
+(`src/motodiag/billing/subscription_repo.py`), which `resolve_tier` and
+`check_cost_cap` both call; `monitor.checkin_answer` is a second function
+and `monitor.checkin` keeps its bool; the compare table carries the three
+full names on a line above its columns. What differs from the text below
+is under Deviations.
 
 1. **F270, the bike limit** (`src/motodiag/vehicles/registry.py`,
    `src/motodiag/cli/subscription.py`).
@@ -300,6 +311,9 @@ The phase is a shop phase, not fleet-only: it changes `src/motodiag/`,
 
 ## Rule-1 stops anticipated
 
+**v1.1:** none of these came up in the build. The three readings were
+applied as written, and the PR tells the operator about them.
+
 - **A real fork: none known.** The Step 0 report leaves no choice between
   two plans that would ship different things. Where this plan leaves a
   build choice (the return shape of `monitor.checkin`, the compare table's
@@ -373,12 +387,19 @@ The phase is a shop phase, not fleet-only: it changes `src/motodiag/`,
   empty table where the payments feed will write each check-in it sends to
   Sentry and the answer it got, and one index; nothing already in the live
   database is changed or removed."
+- **v1.1, as applied:** the operator answered "yes" to the dry-run diff
+  (`404_dryrun_diff.md`, sha256 `ad1faa79…69eef6a5`) and applied it to
+  live on 2026-11-18 (22:10 EST); `404_live_diff.md` has no scope
+  problems and equals the approved exact diff (Results).
 - **After it:** the running feed is still master's code and writes nothing
   to the table until the handoff's live step restarts the server and the
   feed on the merged code; the first check-in after that writes the first
   row, and `payments feed status` reads it.
 
 ## Tests
+
+**v1.1:** the five files below hold 70 test functions, collected as 92
+ids. The mutations are 26, the plan's seven among them (Results).
 
 - `tests/test_phase404_bike_limit.py`: a Shop account adds 51 bikes through
   `POST /v1/vehicles`, each 201, and `GET /v1/vehicles` shows `quota_limit`
@@ -464,11 +485,100 @@ fleet. No seed data, no split and no eval protocol: this phase has none.
 
 ## Planned items
 
-- [ ] Step 0 re-measured: the census of paid AI calls with its count and command in the phase log; the three app lines recorded; the `## The database step` scope file `404_deploy_scope.json`
-- [ ] F270: Shop's bike limit removed in both tables; the two tables agree in a test; the 51st bike test; `test_shop_tier_gets_bigger_quota` and line 239 of `test_phase177_vehicle_api.py` updated with the reason
-- [ ] F271: the plan figures kept by the server; the shop's plan read by `resolve_tier`'s owner rule from `shop_members`, with the `owner_user_id = 1` test; `check_cost_cap` holds the plan figure beside the brake; the refusal names the plan and the date; 402 `plan-ai-limit-reached`; every call site in the census checks before paying; Company's locations read 3 and the finding is filed
-- [ ] F272: the three names in every table, with the tests
-- [ ] F274: `monitor.checkin` returns the answer; migration 090 and the job's record; the status's new check-in line beside `_alarm_line`, `feed run` unchanged, and three reasons for exit 1; the guide
-- [ ] Existing pins updated with their reason; new tests red on master's code; mutations red; `COLLECTED_TEST_FLOOR` raised
-- [ ] The regression of record; the `deploy` outcome; the operator applies migration 090 from one paste block
-- [ ] The close-out: FOLLOWUPS closing lines for F270, F271, F272 and F274; the ROADMAP row ✅ with CLOSED date and regression line; the handoff with the live step (server and feed restarted, `payments feed status` printed and read) as one paste block ending in ALL GOOD or SOMETHING IS OFF
+- [x] Step 0 re-measured: the census of paid AI calls with its count and command in the phase log; the three app lines recorded; the `## The database step` scope file `404_deploy_scope.json`
+- [x] F270: Shop's bike limit removed in both tables; the two tables agree in a test; the 51st bike test; `test_shop_tier_gets_bigger_quota` and line 239 of `test_phase177_vehicle_api.py` updated with the reason
+- [x] F271: the plan figures kept by the server; the shop's plan read by `resolve_tier`'s owner rule from `shop_members`, with the `owner_user_id = 1` test; `check_cost_cap` holds the plan figure beside the brake; the refusal names the plan and the date; 402 `plan-ai-limit-reached`; every call site in the census checks before paying; Company's locations read 3 and the finding is filed
+- [x] F272: the three names in every table, with the tests
+- [x] F274: `monitor.checkin` returns the answer; migration 090 and the job's record; the status's new check-in line beside `_alarm_line`, `feed run` unchanged, and three reasons for exit 1; the guide
+- [x] Existing pins updated with their reason; new tests red on master's code; mutations red; `COLLECTED_TEST_FLOOR` raised
+- [x] The regression of record; the `deploy` outcome; the operator applies migration 090 from one paste block
+- [x] The close-out: FOLLOWUPS closing lines for F270, F271, F272 and F274; the ROADMAP row ✅ with CLOSED date and regression line; the handoff with the live step (server and feed restarted, `payments feed status` printed and read) as one paste block ending in ALL GOOD or SOMETHING IS OFF
+
+## Deviations
+
+1. **Three paid call sites the plan's list did not name** were found by
+   the census and checked the same way, as the plan allows:
+   `motodiag garage add-from-photo` (through `VehicleIdentifier.identify`,
+   with `intake photo`), `shop priority score` / `rescore-all`
+   (`score_work_order`, the work order's shop) and
+   `shop sourcing recommend` (`recommend_source`; a part has no shop, so
+   the database's only one). The CLI command the plan calls
+   `motodiag code explain` is `motodiag code <DTC> --explain`.
+2. **The five `shop` commands that reach `ShopAIClient` print a refusal as
+   one red line and exit 1** (`_refused_spend` in `cli/shop.py`). Before,
+   a refusal there would have been a traceback. This is the CLI's red line
+   the plan's finish line asks for, at sites it did not name.
+3. **A fifth existing pin changed**, which the plan did not name:
+   `test_phase177_vehicle_api.py::TestQuota::test_shop_limit_50` asserted
+   that the 51st Shop bike is refused. It became `test_shop_has_no_limit`.
+   It pinned the behaviour K84 removes, so it is inside the approved change
+   and not a stop.
+4. **On a tie between the plan figure and the brake, the plan's refusal is
+   raised**, because its message names the plan and the day the month
+   turns. The plan says only that the lower refuses first.
+5. **26 mutations, not the plan's seven.** The other nineteen remove each
+   call site's check, the CLI's red line, the error row, the housekeeping
+   and the rollback's drop. The first run of `404_mutate.py` was cut off by
+   the sandbox's ten-minute limit with one mutation still in place; the
+   file was restored with the Edit tool before any commit and the whole run
+   repeated (the phase log).
+6. **The live step is the operator's, after the merge.** This build cannot
+   reach the home desktop. The server and the payments feed restart on the
+   merged code, and `payments feed status` is read, from the handoff's
+   paste block. FOLLOWUPS closes F270, F271, F272 and F274 "once merged and
+   live" until that block prints ALL GOOD.
+
+## Results
+
+- **F270.** A Shop account's 51st `POST /v1/vehicles` answers 201, and
+  `GET /v1/vehicles` shows `quota_limit` and `quota_remaining` null.
+  Individual's sixth is 402 `vehicle-quota-exceeded`, and Company is
+  unchanged. `TIER_LIMITS` and `TIER_VEHICLE_LIMITS` agree for every plan,
+  and so do the session limits. The app's three lines agree, so nothing is
+  named for 372B.
+- **F271.** `PLAN_AI_CENTS` (individual 500, shop 5000, company 15000) is
+  kept by `check_cost_cap`. Past it, `PlanAILimitReached` (a
+  `CostCapExceeded`) refuses the call before it is paid, through the API as
+  402 `plan-ai-limit-reached` and through the CLI as a red line, naming the
+  plan and the first of next month (UTC). The brake's row, class and
+  message are unchanged, and at 0 it refuses nothing. The shop's plan comes
+  from its active owner-role members in `shop_members`, never
+  `shops.owner_user_id`. Every paid site in the census refuses before the
+  stand-in client is called. Company's locations read 3, and **F282** is
+  filed: the location and people limits are shown and kept nowhere.
+- **F272.** "Individual: for your own bikes", "Shop" and "Company" in
+  `motodiag tier` and `motodiag tier --compare`. None of the three old
+  names is left under `src/`.
+- **F274.** Each check-in the feed sends is recorded in
+  `stripe_feed_checkins`. `payments feed status` prints "Last check-in:"
+  with its local time, how long ago and Sentry's answer. It exits 1 when
+  the alarm never checked in, when the last check-in was refused, or when
+  none was accepted within two intervals. `feed run` and `_alarm_line` are
+  unchanged, and the guide describes the new line.
+- **Tests.** Five new files: 70 functions, 92 collected ids. Run on
+  master's code at `dfdad6b`, two files fail at import, and in the other
+  three 17 failed and 4 errored, with the controls green.
+  `COLLECTED_TEST_FLOOR` went from 12686 to 12779 (+93 −1).
+- **Mutations.** `404_mutate.py`: **26/26 red** (`404_mutate.out`).
+- **Quality counts.** Ruff 1108 and mypy 202, as pinned.
+- **Regression of record:** 12674 passed, 0 failed, 105 skipped, 0 errors
+  at `3e9fb96`, 36 min 23 s, `python -m pytest -n auto --dist load
+  --cov=motodiag`, exit 0, inside the fleet's fence, after
+  `wholetree.sh --full` (5212 passed, 36 skipped). Line coverage 88.33%
+  (the pin is 87.50%). Gate 11 passed: the API's description did not
+  change. The last code commit is `4b07f31`.
+- **Live outcome.** The operator answered "yes" to the dry-run diff
+  (sha256 `ad1faa79a568de428abd55d2fdb6435702177e4294fa75026474115669eef6a5`)
+  and applied migration 090 to live on 2026-11-18. The dispatcher checked
+  it with `verify-live`. `404_live_diff.md`: **scope problems none**,
+  **equals the approved exact diff: yes**, 0 rows set aside as written by
+  the running API, and F158 census 41. Added: the table
+  `stripe_feed_checkins`, the index `idx_stripe_feed_checkins_sent_at`,
+  and `schema_version` row 90. No existing row changed or was removed.
+
+## Version history
+
+| Version | Date | What changed |
+|---|---|---|
+| 1.0 | 2026-11-18 | The plan, before any code (`b57aed5`; revised for the Executive Officer, `dfdad6b`) |
+| 1.1 | 2026-11-18 | Phase 404 built (`4b07f31`, `3e9fb96`), migration 090 applied live; Deviations and Results |

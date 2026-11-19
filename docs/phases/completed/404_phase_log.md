@@ -1,6 +1,6 @@
 # Phase 404 — phase log: what the plans limit, and a payments status that tells the truth (F270, F271, F272, F274)
 
-**Status:** In progress
+**Status:** Complete
 
 **Started 2026-11-18** by the Chief Engineer, in a fresh clone of
 `phase-404-what-the-plans-limit-and-a` at `dfdad6b`, inside the fleet's
@@ -259,3 +259,36 @@ does not change the API's description.
 
 Next: the operator applies migration 090 to live (the deploy skill),
 then the close-out.
+
+## 2026-11-18 — the operator's answer, and migration 090 on live
+
+The dry run ran on a copy on the home desktop
+(`404_dryrun_diff.md`, sha256
+`ad1faa79a568de428abd55d2fdb6435702177e4294fa75026474115669eef6a5`,
+at `ff1af12`; backup `motodiag_pre404_20261118_220955.db`). Asked at
+2026-11-18T22:10:00-05:00, the operator typed, verbatim
+(`404_deploy_answer.md`):
+
+> yes
+
+The operator then applied migration 090 to live and checked it, and the
+dispatcher checked it again with `verify-live`. `404_live_diff.md`, live
+after the apply against the backup: scope problems none; equals the
+approved exact diff, yes; nothing set aside as written by the running
+API (0); F158 census on live 41, as on the copy. What it added: the
+table `stripe_feed_checkins`, the index
+`idx_stripe_feed_checkins_sent_at`, and `schema_version` row 90
+(2026-11-19 03:10:02 UTC). No existing row changed or was removed.
+
+## 2026-11-18 — the close-out
+
+No code changed after the regression of record: every commit after
+`4b07f31` changes documents only. The close-out moves the phase's files,
+the three deploy files and the scope file to `docs/phases/completed/`,
+writes v1.1, the ROADMAP row, the root `phase_log.md` pointer, the
+closing lines for F270, F271, F272 and F274 in `docs/FOLLOWUPS.md` (each
+"once merged and live"), and the handoff
+`docs/handoffs/2026-11-18_404_closed.md`, which carries the live step:
+the server and the payments feed restarted on the merged code, then
+`motodiag payments feed status` printed and read. No bug fix in this
+phase.
