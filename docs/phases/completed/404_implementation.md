@@ -566,11 +566,11 @@ fleet. No seed data, no split and no eval protocol: this phase has none.
 - **Mutations.** `404_mutate.py`: **26/26 red** (`404_mutate.out`).
 - **Quality counts.** Ruff 1108 and mypy 202, as pinned.
 - **Regression of record:** 12674 passed, 0 failed, 105 skipped, 0 errors
-  at `3e9fb96`, 36 min 23 s, `python -m pytest -n auto --dist load
+  at `29e21a3`, 35 min 16 s, `python -m pytest -n auto --dist load
   --cov=motodiag`, exit 0, inside the fleet's fence, after
   `wholetree.sh --full` (5212 passed, 36 skipped). Line coverage 88.33%
   (the pin is 87.50%). Gate 11 passed: the API's description did not
-  change. The last code commit is `4b07f31`.
+  change. The last code commit is `af96fb9`, Bug fix #1 (the phase log).
 - **Live outcome.** The operator answered "yes" to the dry-run diff
   (sha256 `ad1faa79a568de428abd55d2fdb6435702177e4294fa75026474115669eef6a5`)
   and applied migration 090 to live on 2026-11-18. The dispatcher checked
@@ -585,4 +585,4 @@ fleet. No seed data, no split and no eval protocol: this phase has none.
 | Version | Date | What changed |
 |---|---|---|
 | 1.0 | 2026-11-18 | The plan, before any code (`b57aed5`; revised for the Executive Officer, `dfdad6b`) |
-| 1.1 | 2026-11-18 | Phase 404 built (`4b07f31`, `3e9fb96`), migration 090 applied live; Deviations and Results |
+| 1.1 | 2026-11-18 | Phase 404 built (`4b07f31`, `3e9fb96`), migration 090 applied live; Deviations and Results; the Red Team's round 1 (`af96fb9`, `29e21a3`), 2026-11-19 |
