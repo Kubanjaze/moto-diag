@@ -166,3 +166,13 @@ The plan's anticipated threshold stop: the template, as the Engineer knows
 it, names no period for the liability cap, so the period is the operator's.
 The answer changes one sentence of `docs/legal/terms.md` ("capped at what
 the shop paid Mekno", then the period) and nothing in the code.
+
+## 2026-11-19 14:59 EST — the operator's answer to the stop of 2026-11-19 13:33 EST
+
+Quoted by the fleet's dispatcher, verbatim, from issue #72: the comments the operator's own account (`Kubanjaze`) posted after the Chief Engineer's stop (threshold-or-rule). No other account's words are quoted.
+
+**2026-11-19T19:58:22Z:**
+
+> Cap Mekno's liability to a shop at the fees that shop paid Mekno in the 12 months before the claim.
+>
+> Recorded as K92 in docs/decisions.md.
