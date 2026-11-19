@@ -1,0 +1,34 @@
+Do this: start Phase 405, the deploy check asks what the change did (row 405, on master as 🔲: the fleet's row pull request makes it 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out.
+
+My words (K91): "C as recommended, with 334's database step done the 404 way. Add C's row right after 334 so the fleet opens it when 334 merges."
+
+- **Why:** every live database step compares live with the backup taken at its dry run, and refuses or fails on anything that changed in between, apart from the short list of columns the server writes (`SERVER_WRITES`). The payments feed writes live all the time (F259):
+  - its place in Stripe's list, `stripe_event_cursors`, every 20 seconds;
+  - one row in `stripe_feed_checkins` every 5 minutes, since Phase 404, and from 2026-12-19 a daily delete of the rows older than 30 days;
+  - `stripe_feed_notices`; and, on payment news, `stripe_webhook_events`, `invoice_payments` and `invoices`.
+  So 404's first database step refused, before touching live: "live differs from the backup in ['stripe_event_cursors']". The second ran only with the feed stopped. Every later check failed once the feed ran again: the Quartermaster's Q1 and `verify_phase.sh` check 8 (`docs/handoffs/2026-11-18_404_closed.md`, "After the merge"). A shop's own use will do the same (F210): a work order between the dry run and the apply refuses the step, and any write after it fails check 8. F210 is to be settled before onboarding (330).
+- **Built by the fleet,** after 334 and before 330 ('Next, in order' #18, K91).
+- **The rule the operator chose, option C:** the check stops asking whether live stood still since the backup, apart from the change, and asks whether the change did exactly what was approved, and whether anything else touched what it changes.
+  1. **Before the apply:** refuse only when something changed since the dry run in a table the change touches (the tables its approved diff and its scope name). Changes elsewhere are listed in the output, not refused.
+  2. **After the apply, and in every later check** (apply-live's own check, `verify-live`, the dispatcher's re-check, the Quartermaster's Q1, `verify_phase.sh` check 8): pass when everything approved is on live exactly as approved. Other differences are listed, not counted as failures.
+  3. **Still refused or failed:** an approved change missing on live, or different from what was approved; and a change since the dry run to a table the change touches. Every gate that is not this comparison stays as it is: the fresh dry run must equal the approved diff, scope problems, the backup's hash, integrity and foreign keys.
+- **What exists,** to re-measure at Step 0:
+  - `.claude/skills/deploy/deploy.py`: `SERVER_WRITES` (line 184) and `server_masked` (line 189); `exact_gaps` (line 291); `preflight` (line 567), whose drift refusal is at line 598; `apply_live` (line 626); `verify_live` (line 762).
+  - Its callers: `through_fleet.py`, the operator's database step; the dispatcher's `verify_live_here` (`.claude/skills/fleet/dispatcher.py` line 701), which runs the fleet's own copy of `deploy.py`; the Quartermaster's Q1 (`.claude/skills/fleet/quartermaster.py` line 154); `verify_phase.sh` check 8 (line 69), and its way in from the Mac (`ops/desktop/motodiag_remote.py`, `live_check`, line 183).
+  - The tests that hold today's rule: `tests/test_phase348_server_writes.py`, `tests/test_phase383_server_writes.py`, `tests/test_phase385_server_writes.py`, `tests/test_phase357_deploy_exact.py` and the deploy contract tests. A control that holds the old rule changes only where K91 changes the rule, and each such change is named in the phase log; the controls on a touched table keep failing.
+- **What it ships:**
+  1. The rule above in `deploy.py`: one implementation, which every caller uses.
+  2. Planted cases, each seen red on a mutation:
+     - a payments-feed write to a table the change does not touch, between the dry run and the apply: listed, and the apply goes ahead;
+     - a new row in an untouched table after the apply: listed, and the check passes;
+     - rows the running code adds to a table the change created, like 404's check-ins: listed, and the check passes;
+     - a change since the dry run to a table the change touches: refused;
+     - an approved change missing on live, and one altered: the check fails.
+  3. The deploy skill's `SKILL.md` and `CHANGELOG.md` say what the check now asks, dated, with K91.
+  4. F259 and F210 closed, once merged and live. If Step 0 finds a case the rule does not cover, a finding names it.
+- **The rule-1 stops it carries, answered:** the change to the deploy check's definition is K91's. Any other change to a gate is a stop, and so is an edge case where the rule as written could go two ways.
+- **Not in this phase:** a migration, or any change to live; stopping or starting the payments feed or the server. The set-aside list stays, unless Step 0 shows nothing uses it under the new rule, and says so.
+- **The live step,** in the handoff:
+  1. The fleet's own copy of the code moves onto the merge, and the fleet restarts: the dispatcher's re-check and the operator's database step run from that copy.
+  2. From the Mac, `verify_phase.sh` for 404 (`404 29e21a3 d797d8e`) and for this phase: check 8 passes, with the payments feed's writes listed.
+- **Closes** F259 and F210, once merged and live.
