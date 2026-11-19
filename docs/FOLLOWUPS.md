@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F283** (this file). The
+At the time of writing the highest assigned is **F284** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -6455,3 +6455,46 @@ Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 
 - The other nineteen mutations remove each call site's check, the CLI's red line, the error row, the housekeeping and the rollback's drop: "P5 an inactive owner counted: red" (docs/phases/completed/404_mutate.out p. 5)
 
 What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).
+
+### F284
+
+**The fleet's log on the home desktop holds 200 zero bytes left by the 2026-10-26 disk failure, so `grep` treats the whole file as binary and a plain search prints none of its lines**
+
+Found 2026-11-18 by the advisor session, when its block for 404's
+database step read the dispatcher's `verify-live` line with plain `grep`
+and got nothing back.
+
+What is wrong, measured on the home desktop at 23:08 EST on 2026-11-18,
+by a read-only block that read the file's bytes with Python:
+- `~/.local/state/motodiag/fleet/dispatcher.log` is 444120 bytes and
+  5114 lines. It holds 200 zero bytes, all on line 296, which is 253
+  bytes long.
+- The dated line before line 296 is 2026-10-26T19:03:55, and the one
+  after it is 2026-10-26T21:40:21. Line 296 without its zeros reads
+  "2026-10-26T21:40:21-04:00 the search on start failed:".
+- So the zeros come from the disk failure of 2026-10-26, when Ubuntu's
+  disk went read-only at 19:40, and from the recovery after it. Nothing
+  writes them now: `Fleet.log` (`.claude/skills/fleet/dispatcher.py`
+  line 809) opens the file by name, in append mode, as UTF-8 text, for
+  each line it writes.
+- Ubuntu's `grep` therefore calls the whole file binary. A plain `grep`
+  prints only "binary file matches" where it would print the matching
+  lines. `grep -a` prints them, and `grep -c` still counts them.
+
+What it cost: the dispatcher wrote "verify-live 404: exit 0" at 22:14:27
+EST on 2026-11-18. The advisor's block read that line with plain `grep`,
+got an empty line back, and ended in a false SOMETHING IS OFF, saying the
+dispatcher had not checked the change. A read-only block that read with
+`grep -a` showed it had (`docs/handoffs/2026-11-18_404_closed.md`, "After
+the merge").
+
+What it affects: any block, test or person that reads the fleet's log
+with plain `grep`. No code reads it: in code, `git grep dispatcher.log`
+finds only the writer and `tests/test_phase390_search.py`, which reads a
+log of its own making.
+
+What would close it: a plain `grep` of the log prints its matching lines,
+because the log holds no zero bytes. The advisor's suggestion: move the
+file aside once, between two of the dispatcher's cycles, so that its next
+line starts a new file and the old one is kept beside it unchanged. Until
+then, every block that reads the log reads it with `grep -a`.
