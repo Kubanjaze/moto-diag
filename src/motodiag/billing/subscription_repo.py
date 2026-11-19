@@ -183,6 +183,44 @@ def get_active_subscription(
     )
 
 
+#: Plan order, lowest first; ``auth.deps.tier_meets`` reads it too.
+TIER_RANK: dict[str, int] = {"individual": 1, "shop": 2, "company": 3}
+
+
+def highest_active_tier(
+    user_ids: list[int], db_path: Optional[str] = None,
+) -> Optional[str]:
+    """The highest plan among these users' active subscriptions, or None."""
+    tiers = [
+        s.tier for s in (
+            get_active_subscription(u, db_path=db_path) for u in user_ids
+        ) if s is not None and s.tier in TIER_RANK
+    ]
+    return max(tiers, key=TIER_RANK.__getitem__) if tiers else None
+
+
+def shop_owner_ids(shop_id: int, db_path: Optional[str] = None) -> list[int]:
+    """The shop's active owner-role members, from ``shop_members``.
+
+    Phase 404 (F271): never ``shops.owner_user_id``, which keeps its
+    default of 1 on every shop the API creates; the real owner is stamped
+    into ``shop_members`` (``seed_first_owner``).
+    """
+    with get_connection(db_path) as conn:
+        return [int(r[0]) for r in conn.execute(
+            "SELECT DISTINCT user_id FROM shop_members "
+            "WHERE shop_id = ? AND role = 'owner' AND is_active = 1",
+            (shop_id,),
+        ).fetchall()]
+
+
+def shop_plan(shop_id: int, db_path: Optional[str] = None) -> Optional[str]:
+    """The shop's plan: the highest active subscription among its active
+    owners, the rule ``auth.deps.resolve_tier`` gives a shop member. None
+    when the shop has no such owner, or none with an active subscription."""
+    return highest_active_tier(shop_owner_ids(shop_id, db_path), db_path)
+
+
 def get_subscription_by_stripe_id(
     stripe_subscription_id: str, db_path: Optional[str] = None,
 ) -> Optional[dict]:

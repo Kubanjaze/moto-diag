@@ -7,7 +7,7 @@ from typing import Generator
 
 from motodiag.core.config import get_settings
 
-SCHEMA_VERSION = 89  # Phase 371: the payments feed's place and notices (migration 089)
+SCHEMA_VERSION = 90  # Phase 404: the payments feed's check-ins (migration 090)
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

@@ -1,0 +1,28 @@
+P1 the plan figure off by one: red
+P2 refused only past the figure, not at it: red
+P3 the shop's plan read from shops.owner_user_id: red
+P4 the shop's plan read from every member, the caller's own included: red
+P5 an inactive owner counted: red
+P6 the plan refuses even when the brake is lower: red
+P7 the API answers the brake's slug: red
+S1 the labor estimate checks after the paid call: red
+S2 the transcript upload unchecked: red
+S3 code explain unchecked: red
+S4 the photo identification unchecked: red
+S5 the parts sourcing unchecked: red
+S6 the priority score unchecked: red
+S7 the labor command prints no red line: red
+N1 a name left as Solo Mechanic: red
+N2 Company's locations left unlimited: red
+N3 Company's AI row left at $500: red
+B1 the Shop plan's bike cap back: red
+B2 the CLI's table drifts from the server's: red
+F1 a 401 recorded as accepted: red
+F2 the monitor calls a 4xx accepted: red
+F3 the stale window at one interval: red
+F4 never checking in is not a problem: red
+F5 a refused check-in is not a problem: red
+F6 no housekeeping at the day's turn: red
+M1 the rollback keeps the table: red
+26/26 red
+exit 0

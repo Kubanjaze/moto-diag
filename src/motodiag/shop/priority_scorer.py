@@ -426,6 +426,11 @@ def score_work_order(
             inp, model=model, db_path=db_path,
         )
     else:
+        # Phase 404 (F271): the work order's shop may not pay past its
+        # plan's AI figure (or the brake); refused before the paid call.
+        from motodiag.shop.cost_cap import check_cost_cap
+
+        check_cost_cap(wo.get("shop_id"), db_path=db_path)
         client = ShopAIClient(model=model, max_tokens=400, temperature=0.2)
         cache_payload = inp.model_dump()
         ai_resp = client.ask(

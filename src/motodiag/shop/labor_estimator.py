@@ -313,6 +313,11 @@ def estimate_labor(
             wo=wo, issues=issues, skill_tier=skill_tier, model=model,
         )
     else:
+        # Phase 404 (F271): the work order's shop may not pay past its
+        # plan's AI figure (or the brake); refused before the paid call.
+        from motodiag.shop.cost_cap import check_cost_cap
+
+        check_cost_cap(wo.get("shop_id"), db_path=db_path)
         client = client or ShopAIClient(
             model=model, max_tokens=2048, temperature=0.2,
         )

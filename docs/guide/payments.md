@@ -59,10 +59,25 @@ motodiag payments feed status
 
 It prints, for each account, when it was last asked and how long ago, the
 time of the newest news, and the last error if there was one; then the
-warnings sent in the last 30 days, and whether the alarm is on. It ends
-with "Not right: …" lines when something is wrong. Its exit code is 0 when
-every account was asked within the last two rounds with no error, 1 when
-not, and 2 when Stripe is not set up on this machine.
+warnings sent in the last 30 days, and whether the alarm is on. When the
+alarm is on, one more line names the last check-in it sent to Sentry: its
+time, how long ago, and Sentry's answer, such as "Sentry accepted it: 202
+Accepted" or "Sentry refused it: 401 Unauthorized" ("none yet" before the
+first). It ends with "Not right: …" lines when something is wrong. Its exit
+code is 0 when every account was asked within the last two rounds with no
+error, 1 when not, and 2 when Stripe is not set up on this machine.
+
+With the alarm on, three more things make it exit 1, each on its own
+"Not right:" line:
+
+- "the alarm has never checked in": no check-in is on record yet;
+- "the last check-in was refused: …": Sentry did not accept the newest
+  one, and the line names its answer;
+- "no check-in succeeded within two intervals": Sentry accepted none in
+  the last two check-in intervals (10 minutes, at the usual 5).
+
+With the alarm off there is no check-in line, and none of these three. The
+feed keeps 30 days of check-ins and deletes older ones once a day.
 
 To ask once by hand and see what came back:
 

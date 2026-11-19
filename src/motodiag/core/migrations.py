@@ -7850,6 +7850,34 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS stripe_event_cursors;
         """,
     ),
+    Migration(
+        version=90,
+        name="stripe_feed_checkins",
+        description=(
+            "Phase 404 (F274), the payments feed's check-ins. One row per "
+            "check-in the feed sends to Sentry: when (UTC), whether Sentry "
+            "accepted it, its answer (the HTTP code and reason, or the "
+            "exception's name) and the monitor's slug. `payments feed "
+            "status` reads the newest. The feed deletes its own rows older "
+            "than 30 days, from this table only. Adds an empty table and "
+            "one index; changes and removes no existing row."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS stripe_feed_checkins (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sent_at TEXT NOT NULL,
+                ok INTEGER NOT NULL CHECK (ok IN (0, 1)),
+                answer TEXT NOT NULL,
+                slug TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_stripe_feed_checkins_sent_at
+                ON stripe_feed_checkins(sent_at);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_stripe_feed_checkins_sent_at;
+            DROP TABLE IF EXISTS stripe_feed_checkins;
+        """,
+    ),
 ]
 
 

@@ -213,12 +213,13 @@ class TestQuota:
         assert exc.value.limit == 5
         assert exc.value.tier == "individual"
 
-    def test_shop_limit_50(self, db):
-        # Populate 49, expect still-allowed; then add 50th, expect blocked on 51st.
+    def test_shop_has_no_limit(self, db):
+        # Phase 404 (F270, the operator's K84): the Shop plan's 50-bike cap
+        # is removed; with 50 bikes the 51st is still allowed.
         for _ in range(50):
             add_vehicle_for_owner(_vehicle(), 1, db_path=db)
-        with pytest.raises(VehicleQuotaExceededError):
-            check_vehicle_quota(1, "shop", db_path=db)
+        # Should not raise
+        check_vehicle_quota(1, "shop", db_path=db)
 
     def test_company_unlimited(self, db):
         for _ in range(60):
@@ -236,7 +237,7 @@ class TestQuota:
 
     def test_tier_limits_map(self):
         assert TIER_VEHICLE_LIMITS["individual"] == 5  # f9-noqa: ssot-pin contract-pin: individual tier vehicle cap is the entry-tier conversion lever; bumping it changes the effective free-tier value and triggers a Stripe price-tier review per Phase 176 billing wire-up.
-        assert TIER_VEHICLE_LIMITS["shop"] == 50  # f9-noqa: ssot-pin contract-pin: shop-tier vehicle cap is sized for a 2-3 mechanic small shop's working garage; bumping requires re-validating quota gate behavior in test_phase177 + reconciling with shop-tier billing collateral that quotes "up to 50 bikes."
+        assert TIER_VEHICLE_LIMITS["shop"] == -1  # f9-noqa: ssot-pin contract-pin: the Shop plan has no bike limit since Phase 404 (F270, the operator's K84); -1 is the unlimited sentinel check_vehicle_quota and _quota_for read, so a cap returning here is a pricing change the operator must approve.
         assert TIER_VEHICLE_LIMITS["company"] == -1  # f9-noqa: ssot-pin contract-pin: -1 is the unlimited-tier sentinel; changing it (e.g., to None or to a hard cap) breaks the check_vehicle_quota dispatch in src/motodiag/vehicles/registry.py and the company-tier UI badge that renders "Unlimited" when seeing -1.
 
 
@@ -444,7 +445,8 @@ class TestVehicleEndpointsErrors:
         user_id = _make_user(api_db)
         _make_sub(api_db, user_id, tier="shop")
         _, plaintext = create_api_key(user_id, db_path=api_db)
-        # Add 5 — still fine at shop tier (limit 50)
+        # Add 6 — past Individual's 5; Shop has no bike limit since
+        # Phase 404 (F270), so the quota reads null, as Company's does.
         for i in range(6):
             add_vehicle_for_owner(
                 _vehicle(year=2000 + i),
@@ -458,8 +460,8 @@ class TestVehicleEndpointsErrors:
         assert r.status_code == 200
         body = r.json()
         assert body["tier"] == "shop"
-        assert body["quota_limit"] == 50
-        assert body["quota_remaining"] == 44
+        assert body["quota_limit"] is None
+        assert body["quota_remaining"] is None
 
     def test_company_tier_shows_unlimited(self, api_db):
         user_id = _make_user(api_db)

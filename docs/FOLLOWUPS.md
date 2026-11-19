@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F281** (this file). The
+At the time of writing the highest assigned is **F283** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -5828,7 +5828,7 @@ check runs its allowance read on the desktop, where the fleet reads it.
 Related: F262 (the reading keeps no reason) and F263 (a reset wording it
 cannot read).
 
-### F270
+### F270 — CLOSED by Phase 404
 
 **The Shop plan's limit of 50 vehicles counts every bike a person adds, customers' bikes included, so a shop is refused its 51st customer bike**
 
@@ -5873,7 +5873,17 @@ diagnoses a month. Then the change, before the first shop pays, with a
 test that a Shop account adds its 51st bike, and the app's quota wording
 checked against it.
 
-### F271
+Closed 2026-11-18 by Phase 404, once merged and live (K84):
+- The Shop plan has no bike limit, in both tables, and a test holds the
+  two tables equal.
+- A Shop account's 51st `POST /v1/vehicles` answers 201
+  (`tests/test_phase404_bike_limit.py`).
+- The app's three quota lines were re-read and agree.
+
+It is live when the handoff's step prints ALL GOOD
+(`docs/handoffs/2026-11-18_404_closed.md`).
+
+### F271 — CLOSED by Phase 404
 
 **The Company plan's AI spending figure, $500 a month on a $299 plan, is enforced nowhere, and the plan allows unlimited locations**
 
@@ -5916,7 +5926,20 @@ figure each plan shows is one the server enforces, with a test that a
 Company account is refused past it. Until then the server-wide brake is
 the only one; its number is the operator's to choose.
 
-### F272
+Closed 2026-11-18 by Phase 404, once merged and live (K84):
+- Each plan's AI figure is kept by the server, per shop, per UTC calendar
+  month: Individual $5, Shop $50, Company $150 (`PLAN_AI_CENTS`,
+  `src/motodiag/shop/cost_cap.py`).
+- Past it, the next paid AI call is refused before it is paid: 402
+  `plan-ai-limit-reached`, naming the plan and the first of next month.
+- Every paid call in the phase's census is held to it.
+- The brake stays at 0, off.
+- Company's locations read 3; the limit itself is kept nowhere (F282).
+
+It is live when the handoff's step prints ALL GOOD
+(`docs/handoffs/2026-11-18_404_closed.md`).
+
+### F272 — CLOSED by Phase 404
 
 **The $19 plan is named for a mechanic, "Solo Mechanic", when it is meant for a rider's own bikes**
 
@@ -5944,6 +5967,12 @@ What would close it: wherever the plan is named, it reads "Individual:
 for your own bikes", and the 5-bike limit stays. That means the CLI now,
 and the app, the website and the Stripe product (set in the operator's
 dashboard) once they name it, with a test that the CLI's name says so.
+
+Closed 2026-11-18 by Phase 404, once merged and live (K84): the CLI's
+plan tables read "Individual: for your own bikes", "Shop" and "Company",
+with a test for each (`tests/test_phase404_plan_names.py`). The 5-bike
+limit stays. The app, the website and the Stripe product still name no
+plan; the names there are theirs when they do.
 
 ### F273 — CLOSED by Phase 371B
 
@@ -6003,7 +6032,7 @@ It was seen on 2026-11-12: `motodiag-payments-feed` was in Sentry's list
 when the operator connected the email alert. In the alarm test that
 followed, Sentry's email came 12 minutes after the feed was stopped.
 
-### F274
+### F274 — CLOSED by Phase 404
 
 **`payments feed status` says "last error: none" and shows the alarm as on while Sentry refuses every check-in**
 
@@ -6037,6 +6066,19 @@ What would close it: the feed records each check-in's outcome where
 Sentry's answer. It exits 1 when the last one failed, or when none
 succeeded within two intervals. A test shows that a refused check-in
 turns the status red.
+
+Closed 2026-11-18 by Phase 404, once merged and live:
+- The feed records each check-in's answer in `stripe_feed_checkins`
+  (migration 090, applied to live on 2026-11-18).
+- `payments feed status` prints the last check-in's time and Sentry's
+  answer.
+- It exits 1 when the alarm never checked in, when the last check-in was
+  refused, or when none was accepted within two intervals.
+- A stand-in answering 401 turns it red
+  (`tests/test_phase404_feed_checkin_status.py`).
+
+It is live when the handoff's step restarts the feed on the merged code
+and the status is read (`docs/handoffs/2026-11-18_404_closed.md`).
 
 ### F275
 
@@ -6365,3 +6407,41 @@ What would close it:
   generic failed `gh`.
 - **The tests:** a stand-in key whose header shows an expiry inside the
   window turns the warning on, and one outside it does not.
+
+### F282
+
+**The plan tables show a location limit and a people limit that no code keeps: Company reads 3 locations and Shop 10 people, and nothing counts either**
+
+Found 2026-11-18 by Phase 404's Step 0; Phase 404's build set Company's
+`max_locations` to 3 as the operator approved (K84). Measured on the
+branch at `dfdad6b`:
+- `max_locations` is read only by the CLI's `motodiag tier` panel
+  (`src/motodiag/cli/main.py`, "Physical locations"); no route or command
+  compares anything to it.
+- No code adds a shop location: `terminal_locations` is a Stripe Terminal
+  address, and `shops` has no parent shop, so a company's second and
+  fourth location are both just more shops, unconnected.
+- `max_users` sits the same way: shown ("User accounts", and "Max users"
+  in `motodiag tier --compare`), and no member invite or add compares the
+  shop's member count with it.
+
+What it affects: a Company account is told 3 locations and a Shop account
+10 people, and the server lets either have any number. Nothing is wrong
+for a customer today, because no customer can add a location at all.
+
+What would close it: the code that adds a location to a company (a phase
+of its own), with the check against `max_locations` in it; and, if the
+operator wants the people limit kept, the same check at the member add.
+The numbers are the operator's (K84 sets only Company's 3).
+
+### F283
+
+**Wording the Red Team left open on phase 404, round 2**
+
+Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 392, F228). K9: "after round 3, remaining wording defects go to one finding". The rows, from the refute table in the Red Team's round 2 on phase 404:
+
+- No code changed after the regression of record: every commit after 4b07f31 changes documents only: "No code changed after the regression of record: every commit after" (docs/phases/completed/404_phase_log.md p. 284)
+- Three paid call sites the plan's list did not name (shop priority, shop sourcing among them): "and whatever CLI commands reach" (docs/phases/completed/404_implementation.md p. 166)
+- The other nineteen mutations remove each call site's check, the CLI's red line, the error row, the housekeeping and the rollback's drop: "P5 an inactive owner counted: red" (docs/phases/completed/404_mutate.out p. 5)
+
+What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).

@@ -1,0 +1,12 @@
+{
+ "_comment": "Phase 404, migration 090 (F274): adds one empty table (stripe_feed_checkins), one index and one schema_version row. No existing row changes or is removed; every table not named here must not change at all.",
+ "tables": {
+  "schema_version": {"added": 1}
+ },
+ "schema": {
+  "added": [
+   "index idx_stripe_feed_checkins_sent_at",
+   "table stripe_feed_checkins"
+  ]
+ }
+}

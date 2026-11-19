@@ -43,9 +43,6 @@ BEARER_PREFIX = "Bearer "
 
 SubscriptionTier = Literal["individual", "shop", "company"]
 SUBSCRIPTION_TIERS: tuple[str, ...] = ("individual", "shop", "company")
-_TIER_RANK: dict[str, int] = {
-    "individual": 1, "shop": 2, "company": 3,
-}
 
 
 class SubscriptionRequiredError(Exception):
@@ -136,7 +133,10 @@ def resolve_tier(
     of an owner-role active member of any shop where the caller is an
     active member (the operator's answer at Phase 303's stop).
     """
-    from motodiag.billing.subscription_repo import get_active_subscription
+    from motodiag.billing.subscription_repo import (
+        get_active_subscription,
+        highest_active_tier,
+    )
     from motodiag.core.database import get_connection
 
     sub = get_active_subscription(credential.user_id, db_path=db_path)
@@ -154,21 +154,20 @@ def resolve_tier(
                WHERE me.user_id = ? AND me.is_active = 1""",
             (credential.user_id,),
         ).fetchall()]
-    tiers = [
-        s.tier for s in (
-            get_active_subscription(o, db_path=db_path) for o in owners
-        ) if s is not None and s.tier in _TIER_RANK
-    ]
-    return max(tiers, key=_TIER_RANK.__getitem__) if tiers else None
+    # Phase 404: the owners' plan is ranked by the same function the
+    # spending check reads a shop's plan through (subscription_repo).
+    return highest_active_tier(owners, db_path=db_path)
 
 
 def tier_meets(current: Optional[str], required: str) -> bool:
     """Does ``current`` meet or exceed ``required``?"""
+    from motodiag.billing.subscription_repo import TIER_RANK
+
     if current is None:
         return False
-    if current not in _TIER_RANK or required not in _TIER_RANK:
+    if current not in TIER_RANK or required not in TIER_RANK:
         return False
-    return _TIER_RANK[current] >= _TIER_RANK[required]
+    return TIER_RANK[current] >= TIER_RANK[required]
 
 
 def _extract_key_from_headers(

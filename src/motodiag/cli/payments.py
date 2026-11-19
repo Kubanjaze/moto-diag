@@ -127,6 +127,37 @@ def _stale(row: dict, now: float, interval_s: int) -> bool:
     return now - asked > 2 * interval_s
 
 
+def _checkin_line(row: Optional[dict], now: float) -> str:
+    """Phase 404 (F274): the last check-in, its local time, how long ago and
+    Sentry's answer; printed only when the alarm is on. Beside
+    ``_alarm_line``, which stays as Phase 371 wrote it."""
+    if row is None:
+        return "Last check-in: none yet"
+    ago = now - stored_instant(row["sent_at"]).timestamp()
+    verdict = "accepted" if row["ok"] else "refused"
+    return (f"Last check-in: {local_display(row['sent_at'])} ({ago:.0f} s ago); "
+            f"Sentry {verdict} it: {row['answer']}")
+
+
+def _checkin_problems(settings, db_path: str, now: float) -> list[str]:
+    """With the alarm on: never checked in, the last one refused, or none
+    accepted within two check-in intervals."""
+    if event_feed.alarm_dsn(settings) is None:
+        return []
+    newest = event_feed.newest_checkin(db_path)
+    if newest is None:
+        return ["the alarm has never checked in"]
+    problems = []
+    if not newest["ok"]:
+        problems.append(f"the last check-in was refused: {newest['answer']}")
+    accepted = event_feed.newest_checkin(db_path, accepted=True)
+    if accepted is None or (
+            now - stored_instant(accepted["sent_at"]).timestamp()
+            > 2 * settings.stripe_poll_checkin_s):
+        problems.append("no check-in succeeded within two intervals")
+    return problems
+
+
 def _status_problems(settings, db_path: str, rows: list[dict], now: float) -> list[str]:
     by_account = {r["account"]: r for r in rows}
     problems = []
@@ -138,7 +169,7 @@ def _status_problems(settings, db_path: str, rows: list[dict], now: float) -> li
             problems.append(f"{account} was not asked within two intervals")
         elif row["last_error"]:
             problems.append(f"{account}'s last round ended in an error")
-    return problems
+    return problems + _checkin_problems(settings, db_path, now)
 
 
 def register_feed(payments_group: click.Group) -> None:
@@ -187,6 +218,8 @@ def register_feed(payments_group: click.Group) -> None:
         for n in notices:
             click.echo(f"  {local_display(n['sent_at'])}: {n['detail']}")
         click.echo(_alarm_line(settings))
+        if event_feed.alarm_dsn(settings) is not None:
+            click.echo(_checkin_line(event_feed.newest_checkin(settings.db_path), now))
         problems = _status_problems(settings, settings.db_path, rows, now)
         for p in problems:
             click.echo(f"Not right: {p}")

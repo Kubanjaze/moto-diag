@@ -76,6 +76,7 @@ from motodiag.media.audio_pipeline import inspect_audio
 from motodiag.media.paths import resolve_media_path, stored_media_path
 from motodiag.media.transcript_pipeline import run_extraction_pipeline
 from motodiag.shop import get_work_order
+from motodiag.shop.cost_cap import check_cost_cap
 from motodiag.shop.extracted_symptom_repo import (
     confirm_extracted_symptom,
     get_extracted_symptom,
@@ -395,6 +396,12 @@ async def upload_voice_transcript(
         user_id=user.id,
         db_path=db_path,
     )
+
+    # Phase 404 (F271): the extraction pays Whisper and Claude, so the
+    # shop's plan figure (and the brake) is checked before the audio is
+    # stored and the task queued, as the video question checks before the
+    # frames are cut.
+    check_cost_cap(shop_id, db_path=db_path)
 
     # Trust mobile metadata for duration_ms when the format header
     # didn't expose it (M4A / Ogg). WAV duration comes from the
