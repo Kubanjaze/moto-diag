@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F282** (this file). The
+At the time of writing the highest assigned is **F283** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -6433,3 +6433,15 @@ What would close it: the code that adds a location to a company (a phase
 of its own), with the check against `max_locations` in it; and, if the
 operator wants the people limit kept, the same check at the member add.
 The numbers are the operator's (K84 sets only Company's 3).
+
+### F283
+
+**Wording the Red Team left open on phase 404, round 2**
+
+Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 392, F228). K9: "after round 3, remaining wording defects go to one finding". The rows, from the refute table in the Red Team's round 2 on phase 404:
+
+- No code changed after the regression of record: every commit after 4b07f31 changes documents only: "No code changed after the regression of record: every commit after" (docs/phases/completed/404_phase_log.md p. 284)
+- Three paid call sites the plan's list did not name (shop priority, shop sourcing among them): "and whatever CLI commands reach" (docs/phases/completed/404_implementation.md p. 166)
+- The other nineteen mutations remove each call site's check, the CLI's red line, the error row, the housekeeping and the rollback's drop: "P5 an inactive owner counted: red" (docs/phases/completed/404_mutate.out p. 5)
+
+What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).

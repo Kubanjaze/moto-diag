@@ -420,3 +420,31 @@ Line coverage of record: 88.33% at `29e21a3` (the pin is 87.50%): 0.83 points ab
 
 The same counts as the first record; the pin is left as it is. Gate 11
 passed. The migration did not change, so live needs nothing new.
+
+## Refuter pass
+
+| claim | verdict | quote | source | round · kind · outcome |
+|---|---|---|---|---|
+| The five new files hold 70 test functions, collected as 92 ids | kept | "**v1.1:** the five files below hold 70 test functions, collected as 92" | docs/phases/completed/404_implementation.md p. 402 | 2 · none · kept |
+| COLLECTED_TEST_FLOOR went from 12686 to 12779 (+93 −1) | kept | "COLLECTED_TEST_FLOOR = 12779" | tests/test_phase255B_collected_test_floor.py p. 560 | 2 · none · kept |
+| 404_mutate.py: 26/26 red | kept | "26/26 red" | docs/phases/completed/404_mutate.out p. 27 | 2 · none · kept |
+| Regression of record 12674 passed, 105 skipped at 29e21a3 | kept | "Regression of record: 12674 passed, 0 failed, 105 skipped, 0 errors at `29e21a3`" | docs/phases/completed/404_phase_log.md p. 337 | 2 · none · kept |
+| The live diff has no scope problems and equals the approved exact diff | kept | "**Equals the approved exact diff:** `yes`" | docs/phases/completed/404_live_diff.md p. 4 | 2 · none · kept |
+| The operator answered "yes" to the dry-run diff ad1faa79…69eef6a5 | kept | "**Dry-run diff sha256:** `ad1faa79a568de428abd55d2fdb6435702177e4294fa75026474115669eef6a5`" | docs/phases/completed/404_deploy_answer.md p. 4 | 2 · none · kept |
+| PLAN_AI_CENTS is individual 500, shop 5000, company 15000 | kept | "\"company\": 15000," | src/motodiag/shop/cost_cap.py p. 64 | 2 · none · kept |
+| On a tie between the plan figure and the brake, the plan's refusal is raised | kept | "if plan is not None and figure is not None and (cap <= 0 or figure <= cap):" | src/motodiag/shop/cost_cap.py p. 149 | 2 · none · kept |
+| The shop's plan comes from active owner-role members in shop_members, never shops.owner_user_id | kept | "\"WHERE shop_id = ? AND role = 'owner' AND is_active = 1\"," | src/motodiag/billing/subscription_repo.py p. 212 | 2 · none · kept |
+| The owner lookup is copied, not lifted; resolve_tier keeps its own owner query and shares highest_active_tier | kept | "return highest_active_tier(owners, db_path=db_path)" | src/motodiag/auth/deps.py p. 159 | 2 · none · kept |
+| Bug fix #1: _TIER_RANK deleted from auth/deps.py; tier_meets imports TIER_RANK | kept | "from motodiag.billing.subscription_repo import TIER_RANK" | src/motodiag/auth/deps.py p. 164 | 2 · none · kept |
+| The transcript upload checks before the audio is stored | kept | "check_cost_cap(shop_id, db_path=db_path)" | src/motodiag/api/routes/transcripts.py p. 404 | 2 · none · kept |
+| The five shop commands that reach ShopAIClient print a refusal as one red line | kept | "_refused_spend(console, e)" | src/motodiag/cli/shop.py p. 3151 | 2 · none · kept |
+| monitor.checkin_answer is a second function and monitor.checkin keeps its bool | kept | "margin_minutes=margin_minutes).ok" | src/motodiag/telemetry/monitor.py p. 95 | 2 · none · kept |
+| Status exits 1 on never checked in, last refused, none accepted within two intervals | kept | "return [\"the alarm has never checked in\"]" | src/motodiag/cli/payments.py p. 149 | 2 · none · kept |
+| The compare table's lines are 76 characters, as before | kept | "f\"│ {names:<72} │\"," | src/motodiag/cli/subscription.py p. 202 | 2 · none · kept |
+| F282 is filed: the location and people limits are shown and kept nowhere | kept | "**The plan tables show a location limit and a people limit that no code keeps" | docs/FOLLOWUPS.md p. 6413 | 2 · none · kept |
+| F270, F271, F272, F274 close "once merged and live" | kept | "Closed 2026-11-18 by Phase 404, once merged and live (K84):" | docs/FOLLOWUPS.md p. 5929 | 2 · none · kept |
+| No code changed after the regression of record: every commit after 4b07f31 changes documents only | killed | "No code changed after the regression of record: every commit after" | docs/phases/completed/404_phase_log.md p. 284 | 2 · wording · open F283 |
+| Three paid call sites the plan's list did not name (shop priority, shop sourcing among them) | killed | "and whatever CLI commands reach" | docs/phases/completed/404_implementation.md p. 166 | 2 · wording · open F283 |
+| The other nineteen mutations remove each call site's check, the CLI's red line, the error row, the housekeeping and the rollback's drop | killed | "P5 an inactive owner counted: red" | docs/phases/completed/404_mutate.out p. 5 | 2 · wording · open F283 |
+| ROADMAP row 404 is ✅ with CLOSED date and the regression line | kept | "**CLOSED 2026-11-18.** Built by the fleet (K84)." | docs/ROADMAP.md p. 685 | 2 · none · kept |
+| The plan of record puts 404 at #16 from K84 | kept | "\| 16 \| 404 \| shop \| fleet \| nothing \| 2026-11-15 · K84 \|" | docs/reports/2026-10-12_plan_of_record.md p. 28 | 2 · none · kept |
