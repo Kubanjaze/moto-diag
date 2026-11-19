@@ -34,10 +34,13 @@ After this phase:
    must be accepted again.
 3. **Two switches, both off by default,** so nothing changes for the first
    shop until the operator turns them on: `MOTODIAG_TERMS_REQUIRED` makes
-   every route a signed-in user calls refuse, with a plain message naming
-   the step, until the current version is accepted;
-   `MOTODIAG_CHECKOUT_TERMS_CONSENT` makes Stripe Checkout ask a subscriber
-   to accept the terms.
+   every route that takes a credential refuse, with a plain message naming
+   the step, until the current version is accepted. The check sits in
+   `require_api_key`, the one dependency every signed-in route passes
+   through, the eight knowledge-base routes included; the live WebSocket
+   route, which resolves its credential itself, is the one exception and is
+   named under Non-goals. `MOTODIAG_CHECKOUT_TERMS_CONSENT` makes Stripe
+   Checkout ask a subscriber to accept the terms.
 4. **The app's screen is named as 334B,** a row in `docs/ROADMAP.md` for a
    mobile session, as 372B follows 372 (K81), with its prompt in
    `docs/prompts/`.
@@ -155,8 +158,9 @@ only extended, and with the switches off nothing a user does today changes.
      override them.
    - `GET /v1/terms`: version, date, `terms_url` and `privacy_url`, for
      anyone; signed in (through `get_api_key`, which answers None for an
-     anonymous caller, `src/motodiag/auth/deps.py` line 193), it adds
-     `accepted` and `accepted_at` for the caller and the current version.
+     anonymous caller, `src/motodiag/auth/deps.py` line 193, and which the
+     first switch never touches), it adds `accepted` and `accepted_at` for
+     the caller and the current version.
    - `POST /v1/terms/accept`, body `{"version": "..."}`, signed in through
      `get_current_user`: the version must equal `TERMS_VERSION`, else 422
      `terms-version-stale` with the current version in the detail, so a
@@ -180,35 +184,54 @@ only extended, and with the switches off nothing a user does today changes.
    (`src/motodiag/auth/deps.py`, `src/motodiag/core/config.py`,
    `src/motodiag/auth/terms_acceptance.py`).
    - `terms_required: bool = False` (`MOTODIAG_TERMS_REQUIRED`).
-   - `get_current_user` (`deps.py` lines 229 to 258), the one chokepoint
-     every signed-in route reads (86 `Depends(get_current_user)` across 14
-     route files), raises `TermsNotAcceptedError` when the switch is on and
-     `has_accepted(user.id, TERMS_VERSION)` is false, after the user row is
-     found and before the user is returned. The message names the step in
-     plain words: "Accept the current Terms of Service (version 1.0) first:
-     read GET /v1/terms, then POST /v1/terms/accept." It holds a session
-     caller and an API-key caller alike.
+   - **The chokepoint is `require_api_key`** (`deps.py` lines 217 to 226),
+     not `get_current_user`. The Executive Officer's check found that
+     `get_current_user` is not the only way a credentialed route is
+     reached: the eight knowledge-base routes in
+     `src/motodiag/api/routes/kb.py` (lines 242, 263, 338, 364, 390, 419,
+     441 and 468, under the prefix `/kb` at line 40, the full KB export
+     among them) depend on `require_api_key` directly. Every other
+     signed-in route reaches it through `get_current_user` (86
+     `Depends(get_current_user)` across 14 route files, `deps.py` line 231)
+     or through `require_tier`, which depends on `get_current_user`
+     (`payments.py` lines 182, 215, 259, 280 and 304; `audit.py` line 49).
+     `Depends(require_api_key)` appears in no route file but `kb.py`, and
+     `Depends(get_api_key)` in none. The Engineer re-measures these three
+     counts at Step 0 and records them in the log. So the check goes in
+     `require_api_key`: it gains `request: Request` and
+     `db_path: str = Depends(get_db_path)`, and after the 401 for a missing
+     credential it raises `TermsNotAcceptedError` when the switch is on,
+     the path is not exempt, and `has_accepted(api_key.user_id,
+     TERMS_VERSION)` is false. `get_current_user` is unchanged. The message
+     names the step in plain words: "Accept the current Terms of Service
+     (version 1.0) first: read GET /v1/terms, then POST /v1/terms/accept."
+     It holds a session caller and an API-key caller alike, since both
+     resolve to an `ApiKey` with a `user_id` (line 213).
    - **What stays reachable while unaccepted,** so a user can read, accept
      or leave: `GET /v1/terms`, `POST /v1/terms/accept`, `GET /v1/auth/me`
      (`auth.py` line 126) and `POST /v1/auth/logout` (line 144). `/v1/auth/
      login` is anonymous and untouched. The list lives in one tuple,
      `TERMS_EXEMPT_PATHS`, in `terms_acceptance.py`, compared against
-     `request.url.path`; whether the check reads the tuple inside
-     `get_current_user` or the four routes take a sibling dependency without
-     the check is the Engineer's call, said in the log, and either ships
-     the same behaviour.
+     `request.url.path` inside `require_api_key`; `GET /v1/terms` reads
+     `get_api_key`, below the check, and needs no exemption, but is listed
+     so the tuple is the one record of what an unaccepted user may call.
    - The live WebSocket route resolves its credential itself
      (`src/motodiag/api/routes/live.py` line 325) and is not held by the
      switch in this phase (Non-goals); the Engineer notes it in the phase
      log for 334B.
    - With the switch off, nothing changes: no query is made and no route
-     refuses.
+     refuses. The test router in `tests/test_phase176_auth_billing.py`
+     (line 386) that depends on `require_api_key` runs with the switch off
+     and is unchanged.
    - Finish line: switch off, a user with no acceptance reaches
-     `GET /v1/vehicles` (the control); switch on, the same call is 403
-     `terms-not-accepted` with the message above, the four exempt routes
-     answer as before, and after `POST /v1/terms/accept` the call is 200;
-     with `TERMS_VERSION` moved on (monkeypatched), the same user is refused
-     again until they accept again; an API-key caller is held the same way.
+     `GET /v1/vehicles` and `GET /v1/kb/dtc/categories` (the controls);
+     switch on, both calls are 403 `terms-not-accepted` with the message
+     above, the four exempt routes answer as before, and after
+     `POST /v1/terms/accept` both calls are 200; with `TERMS_VERSION` moved
+     on (monkeypatched), the same user is refused again on both until they
+     accept again; an API-key caller is held the same way. The
+     knowledge-base call is in the finish line so that a check that sits
+     only in `get_current_user` turns the test red.
 7. **The second switch: Checkout asks for the terms**
    (`src/motodiag/billing/providers.py`, `src/motodiag/core/config.py`).
    - `checkout_terms_consent: bool = False` (`MOTODIAG_CHECKOUT_TERMS_CONSENT`).
@@ -236,7 +259,10 @@ only extended, and with the switches off nothing a user does today changes.
    - `docs/guide/api.md`, "The routes" (lines 183 to 205), gains the row
      `terms | 2 | The current Terms of Service and a user's acceptance`, and
      a short paragraph under it on the two switches: what each does, that
-     both are off by default, and the message a refused call carries.
+     both are off by default, that the first holds every route that takes
+     a credential through `require_api_key` (the knowledge-base routes
+     included, the live WebSocket excepted), the four routes it leaves
+     reachable, and the message a refused call carries.
    - `docs/guide/payments.md` gains, after "The thank-you page" (line 41), a
      short section "Accepting the terms at Checkout": the switch, and that
      Stripe's Dashboard must hold the terms link first.
@@ -273,7 +299,7 @@ only extended, and with the switches off nothing a user does today changes.
 
 ## The change log's three newest entries
 
-- **2026-10-29 — rule 6: the code's counts only improve, and the weekly page (Phase 393, K54).** Became `tests/test_phase393_quality_ratchet.py`: the six measured counts against their pins both ways, and the coverage gate wired into `.claude/skills/closeout/regression.sh`. This phase adds no finding to any count and lowers no pin; the check in `get_current_user` is one call and one raise, with no new `except Exception: pass` block, and the new module is small.
+- **2026-10-29 — rule 6: the code's counts only improve, and the weekly page (Phase 393, K54).** Became `tests/test_phase393_quality_ratchet.py`: the six measured counts against their pins both ways, and the coverage gate wired into `.claude/skills/closeout/regression.sh`. This phase adds no finding to any count and lowers no pin; the check in `require_api_key` is one tuple lookup, one call and one raise, with no new `except Exception: pass` block, and the new module is small.
 - **2026-10-26 — R8: an operator paste block's `gh` names its repository (before Phase 391, F222).** Became R8 in `.claude/skills/closeout/roadmap_check.py`, run with every suite and on every push. The handoff's blocks carry `-R Kubanjaze/moto-diag` on every `gh` call or make none.
 - **2026-10-22 — `fleet` joins the procedure folders (after Phase 387).** No check: the entry says the row is text only and no check reads the table. This phase changes nothing under `.claude/skills/fleet/`.
 
@@ -309,11 +335,13 @@ onboarding can include the acceptance step.
 ## Rule-1 stops anticipated
 
 - **A real fork: none known.** The Step 0 report leaves no choice between
-  two plans that would ship different things. Where this plan leaves a
-  build choice (the exempt paths read in `get_current_user` or a sibling
-  dependency on the four routes; the Checkout params built by a function or
-  inside the method; the key phrases the text tests look for), either
-  choice ships the same behaviour.
+  two plans that would ship different things. The one place the first
+  draft of this plan left a build choice, where the first switch's check
+  sits, is now decided: in `require_api_key`, because the knowledge-base
+  routes never reach `get_current_user`. Where this plan still leaves a
+  build choice (the Checkout params built by a function or inside the
+  method; the key phrases the text tests look for), either choice ships
+  the same behaviour.
 - **A threshold or a rule's definition: one foreseeable stop, and three
   readings.** The liability cap's period comes from the template, as the
   prompt says; if the template read at Step 0 names no period, the period
@@ -324,15 +352,16 @@ onboarding can include the acceptance step.
   changed. **Three readings, recorded and told to the operator with the
   pull request:** (1) acceptance is per person: every user who signs in
   accepts for themselves, and a shop's owner accepting does not accept for
-  its staff, because the switch holds the routes a signed-in user calls;
+  its staff, because the switch holds the routes a credential reaches;
   (2) the current version is exactly `TERMS_VERSION`, and a row for an
   older version does not count; (3) an API-key caller is held by the switch
-  as a session caller is, since both pass through `get_current_user`.
+  as a session caller is, since both pass through `require_api_key`.
 - **A test that cannot be made green: none known.** Gate 11 goes red by
   design and is the `app-copy` outcome, not a stop. If a test pins the
-  error table's size, the route count in `docs/guide/api.md`, or the list
-  of `Settings` fields, it is updated with the reason in the commit
-  message; a pin this phase cannot satisfy inside K84's scope is a stop.
+  error table's size, the route count in `docs/guide/api.md`, the list
+  of `Settings` fields, or `require_api_key`'s signature, it is updated
+  with the reason in the commit message; a pin this phase cannot satisfy
+  inside K84's scope is a stop.
 - **A login or a credential: none.** The Stripe keys stay with the operator;
   the Stripe class is tested only through its params, never the network;
   Stripe's Dashboard setting is the operator's step after the merge; no
@@ -388,13 +417,15 @@ onboarding can include the acceptance step.
   `accepted` true with the time; `POST` with another version is 422
   `terms-version-stale` and writes nothing; a second `POST` writes no second
   row and answers the first time. **The switch:** off, a user with no
-  acceptance reaches `GET /v1/vehicles` (the control); on, the same call is
-  403 `terms-not-accepted` and the detail names `GET /v1/terms` and
-  `POST /v1/terms/accept`; on, `GET /v1/terms`, `POST /v1/terms/accept`,
-  `GET /v1/auth/me` and `POST /v1/auth/logout` answer as before, and
-  `POST /v1/auth/login` is untouched; after acceptance the refused call is
-  200; with `TERMS_VERSION` monkeypatched to a new value the same user is
-  refused again until they accept again; an API-key caller is refused and
+  acceptance reaches `GET /v1/vehicles` and `GET /v1/kb/dtc/categories`
+  (the controls: one route through `get_current_user`, one through
+  `require_api_key` directly); on, both calls are 403 `terms-not-accepted`
+  and the detail names `GET /v1/terms` and `POST /v1/terms/accept`; on,
+  `GET /v1/terms`, `POST /v1/terms/accept`, `GET /v1/auth/me` and
+  `POST /v1/auth/logout` answer as before, and `POST /v1/auth/login` is
+  untouched; after acceptance both refused calls are 200; with
+  `TERMS_VERSION` monkeypatched to a new value the same user is refused
+  again on both until they accept again; an API-key caller is refused and
   accepts the same way.
 - `tests/test_phase334_checkout_consent.py`: the Checkout params with the
   switch off carry no `consent_collection` and still carry `mode`,
@@ -411,16 +442,21 @@ onboarding can include the acceptance step.
   file: row 334B exists, is 🔲, names the prompt file, and the prompt file
   exists.
 - Existing tests updated with the reason in the commit message only if one
-  pins the error table's size, the guide's route count or the settings'
-  fields; the Engineer greps before changing a pin.
+  pins the error table's size, the guide's route count, the settings'
+  fields or `require_api_key`'s signature; the Engineer greps before
+  changing a pin. `tests/test_phase176_auth_billing.py` line 386 depends
+  on `require_api_key` with the switch off and is expected to stay green
+  unchanged.
 - Old code: each new test file run against master's `src/`, red, with the
   controls green.
 - Mutations, `334_mutate.py`: the exempt tuple emptied (acceptance becomes
-  unreachable with the switch on); the switch's reading inverted;
-  `has_accepted` matching the user alone, any version; the stale version
-  accepted; `consent_collection` sent with the switch off; `TERMS_VERSION`
-  out of step with the file's header; the rollback leaving the table; a
-  clause deleted from the terms.
+  unreachable with the switch on); the switch's reading inverted; the
+  check moved from `require_api_key` into `get_current_user` (the
+  knowledge-base call stays 200 with the switch on, so the routes test
+  goes red); `has_accepted` matching the user alone, any version; the
+  stale version accepted; `consent_collection` sent with the switch off;
+  `TERMS_VERSION` out of step with the file's header; the rollback leaving
+  the table; a clause deleted from the terms.
 - `COLLECTED_TEST_FLOOR` raised by a diff of collected ids; the floor test
   and the quality ratchet both green.
 - The regression of record through `regression.sh` inside the fence, with
@@ -436,23 +472,26 @@ terms link. The app's screen and its "I agree" button: 334B, a mobile
 session. Stripe's Dashboard settings. Reading Stripe's own consent record
 back from `checkout.session.completed` into `terms_acceptances`. The live
 WebSocket route, which resolves its credential itself and is not held by
-the first switch here. Any change to the prod start-up check, to prices,
-plans, limits or the webhook handlers. Adding `terms_acceptances` to the
-deploy skill's `SERVER_WRITES`, which the Engineer cannot change and which
-is named in the handoff's "What is open" for the operator's master-side
-change, as K59 did for `audit_events`. Any change to `.claude/skills/`, the
-guards or the fleet. No seed data, no split and no eval protocol: this
-phase has none.
+the first switch here: it is the one credentialed route the switch does
+not hold, and the phase log names it for 334B. Moving the knowledge-base
+routes from `require_api_key` onto `get_current_user`: the check sits
+below both, so the move is not needed and they stay as they are. Any
+change to the prod start-up check, to prices, plans, limits or the webhook
+handlers. Adding `terms_acceptances` to the deploy skill's `SERVER_WRITES`,
+which the Engineer cannot change and which is named in the handoff's "What
+is open" for the operator's master-side change, as K59 did for
+`audit_events`. Any change to `.claude/skills/`, the guards or the fleet.
+No seed data, no split and no eval protocol: this phase has none.
 
 ## Planned items
 
-- [ ] Step 0 re-measured: the prompt's search in `src` and the mobile repository with counts and commands in the phase log; the services census; the template's address, licence and date read in `docs/legal/README.md`; the scope file `334_deploy_scope.json`
+- [ ] Step 0 re-measured: the prompt's search in `src` and the mobile repository with counts and commands in the phase log; the services census; the three dependency counts (`Depends(get_current_user)`, `Depends(require_api_key)`, `require_tier`) by route file; the template's address, licence and date read in `docs/legal/README.md`; the scope file `334_deploy_scope.json`
 - [ ] `docs/legal/terms.md` and `docs/legal/privacy.md`, versioned and dated, the six clauses, every service named, the attribution, nothing forbidden
 - [ ] Migration 091, `SCHEMA_VERSION` 91, `terms_acceptance.py` with `TERMS_VERSION`, `record_acceptance` and `has_accepted`
 - [ ] The four settings; `GET /v1/terms` and `POST /v1/terms/accept`; the two error rows; the router mounted; Gate 11 handled as `app-copy`
-- [ ] The first switch in `get_current_user` with the exempt tuple; the second switch in the Checkout params
+- [ ] The first switch in `require_api_key` with the exempt tuple, `get_current_user` unchanged; the second switch in the Checkout params
 - [ ] `docs/guide/api.md`, `docs/guide/payments.md` and `docs/launch-checklist.md` notes; row 334B and its prompt
-- [ ] New tests red on master's code; mutations red; `COLLECTED_TEST_FLOOR` raised; any pin updated with its reason
+- [ ] New tests red on master's code, the knowledge-base control among them; mutations red; `COLLECTED_TEST_FLOOR` raised; any pin updated with its reason
 - [ ] The regression of record; the `deploy` outcome; the operator applies migration 091 from one paste block
 - [ ] The close-out: the ROADMAP row ✅ with CLOSED date and regression line; the handoff with the operator's steps (publish the two pages, read them first, the address settings, Stripe's terms link) and the live step (server restarted with both switches off, `GET /v1/terms` read once) as paste blocks ending in ALL GOOD or SOMETHING IS OFF
 
@@ -460,4 +499,4 @@ phase has none.
 
 | Version | Date | What changed |
 |---|---|---|
-| 1.0 | 2026-11-19 | The plan, before any code |
+| 1.0 | 2026-11-19 | The plan, before any code; revised the same day on the Executive Officer's check: the first switch's check moves from `get_current_user` to `require_api_key`, so the eight knowledge-base routes are held too, and a knowledge-base route joins the finish line, the tests and the mutations |
