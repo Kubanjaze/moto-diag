@@ -37,6 +37,16 @@ SHA = "c" * 64
 BRANCH = "phase-334-terms-of-service-liability-framework"
 
 
+class Gone(io.StringIO):
+    """The Mac's channel after the Mac went away: every write fails."""
+
+    def write(self, s):
+        raise BrokenPipeError(32, "Broken pipe")
+
+    def flush(self):
+        raise BrokenPipeError(32, "Broken pipe")
+
+
 class Desktop(R.Shell):
     """A stand-in desktop. Every command is recorded; the state it answers
     from is plain attributes a test sets before the call."""
@@ -374,13 +384,6 @@ def test_server_update_a_status_not_right_keeps_the_new_code(desk, capsys):
 def test_server_update_runs_to_its_put_back_when_the_mac_goes_away(desk, monkeypatch):
     """The Mac pressed Ctrl-C: every write to the closed channel fails, and
     the step still puts the code back and restarts both (the review's 1)."""
-    class Gone(io.StringIO):
-        def write(self, s):
-            raise BrokenPipeError(32, "Broken pipe")
-
-        def flush(self):
-            raise BrokenPipeError(32, "Broken pipe")
-
     monkeypatch.setattr(sys, "stdout", Gone())
     monkeypatch.setattr(sys, "stderr", Gone())
     desk.healthy_from = 0
@@ -389,6 +392,19 @@ def test_server_update_runs_to_its_put_back_when_the_mac_goes_away(desk, monkeyp
     assert desk.heads[srv] == OLD
     assert desk.did("git", "-C", srv, "reset") and len(desk.did("sudo")) == 2
     assert f"'server-update {NEW}' -> exit 1" in desk.p.log.read_text()
+
+
+@pytest.mark.parametrize("command", ["backups", "fetch 406 dryrun"])
+def test_384s_operations_also_run_to_their_end_when_the_mac_goes_away(desk, monkeypatch,
+                                                                     command):
+    """384's own operations print through `say` too: a Mac gone away does not
+    end one at its next line, and its outcome is logged."""
+    desk.p.outbox.mkdir(parents=True)
+    (desk.p.outbox / "406_dryrun_diff.md").write_text("# the diff\n")
+    monkeypatch.setattr(sys, "stdout", Gone())
+    monkeypatch.setattr(sys, "stderr", Gone())
+    assert call(desk, command) == 0
+    assert f"'{command}' -> exit 0" in desk.p.log.read_text()
 
 
 # ---------------------------------------------------------------- the fleet
@@ -512,11 +528,6 @@ def test_run_passes_each_line_on_and_survives_a_closed_channel(monkeypatch):
     code = shell.run([sys.executable, "-c",
                       "import sys; print('one', flush=True); print('two', file=sys.stderr)"])
     assert code == 0 and got.getvalue() == "one\ntwo\n"
-
-    class Gone(io.StringIO):
-        def write(self, s):
-            raise BrokenPipeError(32, "Broken pipe")
-
     monkeypatch.setattr(sys, "stdout", Gone())
     assert shell.run([sys.executable, "-c", "import sys; print('x'); sys.exit(3)"]) == 3
     assert shell.run([sys.executable, "-c", "import sys; "

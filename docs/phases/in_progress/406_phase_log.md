@@ -115,9 +115,19 @@ a test that a planted fault turns red:
 - **One test was wrong, the code unchanged:** the case for `Shell.run`'s
   lines had its child print one line to a buffered stdout and one to
   stderr, and they arrived in the other order. The child flushes now.
-- **Mutations** (`406_mutate.py`, `406_mutate.out`): 48/48 red. 20 are new,
-  one per fix; D6, D7, D11 and T5 were moved to the rewritten lines.
-- **`COLLECTED_TEST_FLOOR`** 12865 → 12885, by a diff of collected ids
-  against master `3ebeac6` (12779): +106 −0, all in the four new files.
+- **One more, found while writing v1.1:** Phase 384's own operations, in
+  the same file, still printed with `print`, so a Mac gone away mid-step
+  ended the dispatcher at its next line and the request's outcome went
+  unlogged (the steps themselves were already safe: an apply's child runs
+  to its end, and a dry run stops before it starts). Their 18 lines now go
+  through `say` too. It predates 406; fixed here rather than filed,
+  because it is the review's first point in the file 406 owns, and the
+  regression of record had not run. The full whole-tree run started on
+  `e4a2792` was stopped for it, unfinished.
+- **Mutations** (`406_mutate.py`, `406_mutate.out`): 50/50 red. 22 are new,
+  one per fix and two for 384's lines; D6, D7, D11 and T5 were moved to the
+  rewritten lines.
+- **`COLLECTED_TEST_FLOOR`** 12865 → 12887, by a diff of collected ids
+  against master `3ebeac6` (12779): +108 −0, all in the four new files.
 - **The code's counts** (`scripts/code_quality.py counts`) still equal their
   pins: ruff 1108, mypy 202, complex 25, big 5, helpers 19, swallowed 22.

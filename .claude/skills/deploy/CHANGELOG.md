@@ -10,19 +10,27 @@ the Mac must still show me the dry run's list before it asks for yes."
 - `through_fleet.py`: `run` split into its two halves (`dry_run`, `apply`),
   unchanged at the desktop; `--dry-run-only` ends on the dry-run diff's
   sha256, and `--apply <sha256>` applies only the diff that hashes to it,
-  with no new checkout and no new dry run.
+  with no new checkout and no new dry run. Its answer file says the answer
+  was typed on the Mac, not at the desktop, and records it as `> yes`.
 - `remote.py deploy-step`: the dry run's list shown on the Mac, then the
-  yes asked there, then the apply. The other new operations go through as
-  names.
+  yes asked there, then the apply. `deploy-apply` on its own is refused:
+  only `deploy-step` sends it, after the yes. The other new operations go
+  through as names.
 - `ops/desktop/motodiag_remote.py`: ten operations join 384's fixed list
   (`feed-*`, `server-update`, `fleet-status`, `fleet-log`, `fleet-move`,
-  `deploy-dryrun`, `deploy-apply`). The lock is as 384 made it.
+  `deploy-dryrun`, `deploy-apply`). The ones that change something hold
+  one lock. Every operation, 384's too, runs to its end and logs its
+  outcome when the Mac goes away mid-step, and a put-back is checked.
+  `server-update` waits for the payments feed's check-in, as 404's block
+  did. The lock is as 384 made it.
 - `ops/desktop/install_sudoers.sh`: a second line, password-free for the
   payments feed's start, stop and restart and the fleet's restart, nothing
   else; `ops/desktop/update_remote.sh` installs the dispatcher and the
   rules, once, at the desktop.
 
-Held by `tests/test_phase406_*.py` (86 tests). `406_mutate.py`: 28/28 red.
+Held by `tests/test_phase406_*.py` (108 tests), after an independent
+review's seven points were fixed (406's phase log). `406_mutate.py`:
+50/50 red.
 
 ## 2026-10-31 — device_tokens.last_seen_at joins SERVER_WRITES (Phase 385, K39, F212)
 

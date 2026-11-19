@@ -23,9 +23,10 @@ update after a merge; the fleet's state, its log for one issue, and the move
 of its code copy; and the fleet's database step in two calls, the dry run
 and the apply of exactly the diff the Mac showed. No request has a terminal,
 so the yes is asked on the Mac between the two. The steps that change
-something hold one lock, so two cannot run at once, and each runs to its
-end, its put-back included, even when the Mac goes away mid-step: output
-that can no longer reach the Mac is dropped, and the outcome is logged.
+something hold one lock, so two cannot run at once. Every operation runs
+to its end, a put-back included, even when the Mac goes away mid-step: a
+line that can no longer reach the Mac is dropped, and the outcome is
+logged.
 """
 from __future__ import annotations
 
@@ -218,7 +219,7 @@ class Desk:
         _, head = self.sh.capture(["git", "-C", str(dev), "rev-parse", "HEAD"])
         if head != commit:
             raise Refused(f"the checkout is at {head}, not {commit}")
-        print(f"development checkout at {commit}")
+        say(f"development checkout at {commit}")
 
     def to_outbox(self, phase: str, kind: str) -> None:
         rel = f"docs/phases/in_progress/{phase}_{kind}_diff.md"
@@ -234,7 +235,7 @@ class Desk:
             self.sh.run(["git", "-C", str(self.p.dev), "checkout", "--quiet", "--", rel])
         else:
             src.unlink()
-        print(f"outbox: {dst.name} sha256 {hashlib.sha256(dst.read_bytes()).hexdigest()}")
+        say(f"outbox: {dst.name} sha256 {hashlib.sha256(dst.read_bytes()).hexdigest()}")
 
     def deploy_mode(self, mode: str, phase: str, commit: str) -> int:
         self.at(commit)
@@ -248,28 +249,28 @@ class Desk:
         self.at(commit)
         live = self.live()
         if live is None:
-            print("  CHECK 8 FAILED: live is not on this machine")
+            say("  CHECK 8 FAILED: live is not on this machine")
             return 4
         c = sqlite3.connect(f"file:{live}?mode=ro", uri=True)
         q = lambda s: c.execute(s).fetchone()[0]  # noqa: E731
-        print("live", live, "| schema", q("select max(version) from schema_version"),
-              "| rows", q("select count(*) from known_issues"))
+        say("live", live, "| schema", q("select max(version) from schema_version"),
+            "| rows", q("select count(*) from known_issues"))
         c.close()
         if not list(self.p.dev.glob(f"docs/phases/*/{phase}_dryrun_diff.md")):
-            print(f"  {phase} has no dry-run diff: no deploy to verify")
+            say(f"  {phase} has no dry-run diff: no deploy to verify")
             return 0
         return self.sh.run([self.python, "-B", self.deploy, "verify-live", phase],
                            cwd=self.p.dev)
 
     def status(self) -> int:
         _, host = self.sh.capture(["hostname"])
-        print("host:", host, "| user:", os.environ.get("USER", "?"))
+        say("host:", host, "| user:", os.environ.get("USER", "?"))
         live = self.live()
-        print("live.json:", self.p.live_config.read_text().strip()
-              if self.p.live_config.is_file() else "missing")
+        say("live.json:", self.p.live_config.read_text().strip()
+            if self.p.live_config.is_file() else "missing")
         if live is not None:
             c = sqlite3.connect(f"file:{live}?mode=ro", uri=True)
-            print("live:", live, "| schema", c.execute(
+            say("live:", live, "| schema", c.execute(
                 "select max(version) from schema_version").fetchone()[0],
                 "| integrity", c.execute("pragma quick_check").fetchone()[0])
             c.close()
@@ -277,30 +278,30 @@ class Desk:
             _, head = self.sh.capture(["git", "-C", str(repo), "log", "-1", "--format=%h %s"])
             _, branch = self.sh.capture(["git", "-C", str(repo), "branch", "--show-current"])
             _, dirty = self.sh.capture(["git", "-C", str(repo), "status", "--porcelain"])
-            print(f"{name} checkout: {branch or '(detached)'} {head} | "
-                  f"{'clean' if not dirty else 'NOT CLEAN'}")
+            say(f"{name} checkout: {branch or '(detached)'} {head} | "
+                f"{'clean' if not dirty else 'NOT CLEAN'}")
         _, active = self.sh.capture(["systemctl", "is-active", UNIT])
-        print(f"{UNIT}: {active}")
-        print("healthz:", self.sh.healthz())
+        say(f"{UNIT}: {active}")
+        say("healthz:", self.sh.healthz())
         _, ip = self.sh.capture(["tailscale", "ip", "-4"])
-        print("this device's tailnet address:", ip)
+        say("this device's tailnet address:", ip)
         return self.backups()
 
     def backups(self) -> int:
         files = sorted(self.p.backups.glob("*.db")) if self.p.backups.is_dir() else []
-        print(f"backups ({self.p.backups}): {len(files)}")
+        say(f"backups ({self.p.backups}): {len(files)}")
         for f in files:
-            print(f"  {f.name}  {f.stat().st_size} bytes")
+            say(f"  {f.name}  {f.stat().st_size} bytes")
         return 0
 
     def fetch(self, phase: str, kind: str) -> int:
         f = self.p.outbox / f"{phase}_{kind}_diff.md"
         if not f.is_file():
-            print(f"no {f.name} in the outbox", file=sys.stderr)
+            say(f"no {f.name} in the outbox", file=sys.stderr)
             return 1
         data = f.read_bytes()
-        print(json.dumps({"name": f.name, "sha256": hashlib.sha256(data).hexdigest(),
-                          "text": data.decode()}))
+        say(json.dumps({"name": f.name, "sha256": hashlib.sha256(data).hexdigest(),
+                        "text": data.decode()}))
         return 0
 
     def api(self, verb: str) -> int:
@@ -321,7 +322,7 @@ class Desk:
             raise Refused(f"the server's checkout is on {branch or '(detached)'}, not master")
         code = self.sh.run(["git", "-C", srv, "pull", "--ff-only", "--quiet"])
         _, head = self.sh.capture(["git", "-C", srv, "log", "-1", "--format=%h %s"])
-        print("server checkout:", head)
+        say("server checkout:", head)
         return code
 
     # ---- Phase 406 (K93): the steps done in the desktop's Ubuntu window
