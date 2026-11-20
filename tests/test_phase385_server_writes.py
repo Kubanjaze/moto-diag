@@ -22,7 +22,7 @@ import pytest
 
 from support.phase303 import make_user, new_db, sql
 from test_phase358_deploy_contract import (  # noqa: F401  (env is a fixture)
-    D, PHASE, _apply, _commit_diff, _dryrun, _git, _refusal, env,
+    D, PHASE, SCOPE, _apply, _commit_diff, _dryrun, _git, _refusal, env,
 )
 
 TOKEN_SEEN = "2026-10-21T07:12:40.118000+00:00"
@@ -82,10 +82,25 @@ def _verify(env, capsys) -> tuple[int, str]:
     return code, capsys.readouterr().out
 
 
-def _ready(env):
+def _ready(env, touching: str | None = None):
+    if touching:
+        # Phase 405, K91: a scope naming the table, so the change touches it.
+        scope = {"tables": {**SCOPE["tables"], touching: {}}}
+        D.scope_path(env["repo"], PHASE).write_text(json.dumps(scope, indent=1))
+        _git(env["repo"], "commit", "-qam", f"a scope naming {touching}")
     _with_tokens(env)
     assert _dryrun(env) == 0
     _commit_diff(env)
+
+
+def _listed(out: str) -> str:
+    """verify-live's listed lines (Phase 405)."""
+    return out.split("other differences, listed:", 1)[1].split("equals the approved", 1)[0]
+
+
+#: Phase 405: the table each control changes, as the listed lines name it.
+TABLE = {"rebind": "device_tokens +0 ~1 -0", "added_row": "device_tokens +1 ~0 -0",
+         "other_table": "phones +0 ~1 -0"}
 
 
 class TestTheTokenColumnIsSetAside:
@@ -122,17 +137,35 @@ class TestTheTokenColumnIsSetAside:
 @pytest.mark.parametrize("beside", [True, False], ids=["beside", "alone"])
 @pytest.mark.parametrize("control", sorted(CONTROLS))
 class TestTheControlsStillFail:
-    """Each control refuses the apply and fails verify-live: beside a
-    registration, so the set-aside change and the control share a table, and
-    alone, so a widened entry cannot hide behind the registration's own drift
-    (an added row under a `WHOLE_TABLE` entry)."""
+    """Beside a registration, so the set-aside change and the control share a
+    table, and alone, so a widened entry cannot hide behind the
+    registration's own drift (an added row under a `WHOLE_TABLE` entry).
+
+    Phase 405, K91: before the apply, under a scope naming `device_tokens`,
+    the rebind and the added row refuse, and `other_table` (`phones`, which
+    the change does not touch) is listed; under the fixture scope all three
+    are listed. After the apply, all three alter no approved entry and are
+    listed, exit 0."""
 
     def test_before_the_apply(self, env, capsys, control, beside):
+        _ready(env, touching="device_tokens")
+        if beside:
+            _register(env)
+        _sql(env["live"], CONTROLS[control])
+        if control == "other_table":
+            assert _apply(env) == 0
+            assert TABLE[control] in capsys.readouterr().out
+        else:
+            assert "changed since the dry run" in _refusal(env, capsys)
+
+    def test_before_the_apply_under_the_fixture_scope(self, env, capsys, control, beside):
         _ready(env)
         if beside:
             _register(env)
         _sql(env["live"], CONTROLS[control])
-        assert "changed since the dry run" in _refusal(env, capsys)
+        assert _apply(env) == 0
+        assert ("outside the tables this change touches: " + TABLE[control]
+                in capsys.readouterr().out)
 
     def test_after_the_apply(self, env, capsys, control, beside):
         _ready(env)
@@ -141,7 +174,8 @@ class TestTheControlsStillFail:
             _register(env)
         _sql(env["live"], CONTROLS[control])
         code, out = _verify(env, capsys)
-        assert code == 3, out
+        assert code == 0, out
+        assert TABLE[control] in _listed(out)
 
 
 class TestAMigrationThatWritesTheColumn:
@@ -176,6 +210,15 @@ class TestAMigrationThatWritesTheColumn:
         assert D.apply_live(PHASE, db=env["live"], repo=env["repo"],
                             migrate=self._migrate) == 0
         _register(env)
+        code, out = _verify(env, capsys)
+        assert code == 3, out
+
+    def test_the_approved_row_removed_after_the_apply(self, env, capsys):
+        """Phase 405, K91: an approved entry missing on live still fails."""
+        self._scoped(env)
+        assert D.apply_live(PHASE, db=env["live"], repo=env["repo"],
+                            migrate=self._migrate) == 0
+        _sql(env["live"], "delete from schema_version where version = 71")
         code, out = _verify(env, capsys)
         assert code == 3, out
 

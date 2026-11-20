@@ -203,10 +203,12 @@ def test_a_scope_problem_stops_before_the_question(world):
 
 def test_a_live_that_moved_since_the_dry_run_is_refused_by_apply_live(world):
     """apply-live's own refusal, kept: live changed between the dry run and
-    the apply (here, between the question and the answer)."""
+    the apply (here, between the question and the answer). Phase 405, K91:
+    in a table the change touches (`schema_version`, which its scope names);
+    `api_keys`, which it does not, would now be listed and applied."""
     def answer(_):
         c = sqlite3.connect(world["live"])
-        c.execute("insert into api_keys values (2, null)")
+        c.execute("insert into schema_version values (99)")
         c.commit()
         c.close()
         return "yes"

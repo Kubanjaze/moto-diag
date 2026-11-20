@@ -583,7 +583,15 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: +71 -0, the 71 above: test_phase334_legal_texts.py (33),
 #: _checkout_consent.py (6), _migration_091.py (7), _terms_routes.py (24)
 #: and gate 15's rollback case [90]. Measured: 12960.
-COLLECTED_TEST_FLOOR = 12960
+#:
+#: Phase 405 (K91), by a diff of collected ids against 8ba8c66 (12960):
+#: +59 -4. Added: test_phase405_what_the_change_did.py (40); the controls
+#: K91 moves, each in two forms, 358 (1), 379 (2), 383 (9: two new classes
+#: of the listed forms and one approved-row-removed case), 385 (7: the
+#: fixture-scope form of the six before-the-apply cases and one
+#: approved-row-removed case). Removed: 383's four after-the-apply cases,
+#: moved by name into the listed classes. Measured: 13015.
+COLLECTED_TEST_FLOOR = 13015
 
 
 def _collected_count() -> int:
