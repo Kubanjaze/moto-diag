@@ -158,4 +158,4 @@ FAILED (not of record): 12909 passed, 1 failed, 105 skipped, 0 errors at
 - **Verified:** the file, 11 passed; the same loop with the system
   directories ahead of the stand-ins on the PATH prints `/usr/bin/id` and
   the other system paths, which the assertion refuses.
-- **Commit:** recorded in the next entry.
+- **Commit:** `ad60d5e`.
