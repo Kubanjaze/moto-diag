@@ -1,6 +1,6 @@
 # Phase 334 — Terms of Service + liability framework: the terms from templates (K84)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-11-19
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-11-20 (v1.0 `bc78448`)
 
 ---
 
@@ -356,6 +356,11 @@ onboarding can include the acceptance step.
   (2) the current version is exactly `TERMS_VERSION`, and a row for an
   older version does not count; (3) an API-key caller is held by the switch
   as a session caller is, since both pass through `require_api_key`.
+  **As built (v1.1):** the template as the Engineer knows it names no
+  period, so the build stopped with `threshold-or-rule` on 2026-11-19. The
+  operator answered on issue #72: "Cap Mekno's liability to a shop at the
+  fees that shop paid Mekno in the 12 months before the claim." (K92). The
+  three readings stand as built.
 - **A test that cannot be made green: none known.** Gate 11 goes red by
   design and is the `app-copy` outcome, not a stop. If a test pins the
   error table's size, the route count in `docs/guide/api.md`, the list
@@ -398,6 +403,9 @@ onboarding can include the acceptance step.
   that writes the table until the handoff's live step restarts it on the
   merged code; both switches stay off, so the first shop sees no change,
   and `GET /v1/terms` is read once to show the new code is serving.
+- **As applied (v1.1):** the operator answered "yes" to the dry-run diff
+  and applied migration 091 to live on 2026-11-20; the live diff equals
+  the approved diff (Results).
 
 ## Tests
 
@@ -485,18 +493,109 @@ No seed data, no split and no eval protocol: this phase has none.
 
 ## Planned items
 
-- [ ] Step 0 re-measured: the prompt's search in `src` and the mobile repository with counts and commands in the phase log; the services census; the three dependency counts (`Depends(get_current_user)`, `Depends(require_api_key)`, `require_tier`) by route file; the template's address, licence and date read in `docs/legal/README.md`; the scope file `334_deploy_scope.json`
-- [ ] `docs/legal/terms.md` and `docs/legal/privacy.md`, versioned and dated, the six clauses, every service named, the attribution, nothing forbidden
-- [ ] Migration 091, `SCHEMA_VERSION` 91, `terms_acceptance.py` with `TERMS_VERSION`, `record_acceptance` and `has_accepted`
-- [ ] The four settings; `GET /v1/terms` and `POST /v1/terms/accept`; the two error rows; the router mounted; Gate 11 handled as `app-copy`
-- [ ] The first switch in `require_api_key` with the exempt tuple, `get_current_user` unchanged; the second switch in the Checkout params
-- [ ] `docs/guide/api.md`, `docs/guide/payments.md` and `docs/launch-checklist.md` notes; row 334B and its prompt
-- [ ] New tests red on master's code, the knowledge-base control among them; mutations red; `COLLECTED_TEST_FLOOR` raised; any pin updated with its reason
-- [ ] The regression of record; the `deploy` outcome; the operator applies migration 091 from one paste block
-- [ ] The close-out: the ROADMAP row ✅ with CLOSED date and regression line; the handoff with the operator's steps (publish the two pages, read them first, the address settings, Stripe's terms link) and the live step (server restarted with both switches off, `GET /v1/terms` read once) as paste blocks ending in ALL GOOD or SOMETHING IS OFF
+- [x] Step 0 re-measured: the prompt's search in `src` and the mobile repository with counts and commands in the phase log; the services census; the three dependency counts (`Depends(get_current_user)`, `Depends(require_api_key)`, `require_tier`) by route file; the template's address, licence and date read in `docs/legal/README.md`; the scope file `334_deploy_scope.json`
+- [x] `docs/legal/terms.md` and `docs/legal/privacy.md`, versioned and dated, the six clauses, every service named, the attribution, nothing forbidden
+- [x] Migration 091, `SCHEMA_VERSION` 91, `terms_acceptance.py` with `TERMS_VERSION`, `record_acceptance` and `has_accepted`
+- [x] The four settings; `GET /v1/terms` and `POST /v1/terms/accept`; the two error rows; the router mounted; Gate 11 handled as `app-copy`
+- [x] The first switch in `require_api_key` with the exempt tuple, `get_current_user` unchanged; the second switch in the Checkout params
+- [x] `docs/guide/api.md`, `docs/guide/payments.md` and `docs/launch-checklist.md` notes; row 334B and its prompt
+- [x] New tests red on master's code, the knowledge-base control among them; mutations red; `COLLECTED_TEST_FLOOR` raised; any pin updated with its reason
+- [x] The regression of record; the `deploy` outcome; the operator applies migration 091 from one paste block
+- [x] The close-out: the ROADMAP row ✅ with CLOSED date and regression line; the handoff with the operator's steps (publish the two pages, read them first, the address settings, Stripe's terms link) and the live step (server restarted with both switches off, `GET /v1/terms` read once) as paste blocks ending in ALL GOOD or SOMETHING IS OFF
+
+## Deviations
+
+1. **The template was not read from its address.** The fence could not
+   reach github.com (`CONNECT tunnel failed, response 403`), so the texts
+   were written from Basecamp's policies as the Engineer knows them, the
+   attribution names the source and CC BY 4.0, and the handoff asks the
+   operator to open the address once and confirm the licence line. The
+   plan names this case; it is recorded here because the licence line is
+   still unread.
+2. **The build was committed in three parts, not one.** The commit guard
+   refuses a commit to `migrations.py` without a passing `--full` record,
+   and `--full` could not pass while Gate 11 was red (gates 12 to 14 re-run
+   it); Gate 11 turned green only after the fleet refreshed the app's copy
+   from a commit of this branch. So the documents went first (`f53b92c`),
+   the code without migration 091, `SCHEMA_VERSION` and the two test files
+   that need the table second (`eaed639`, the `app-copy` outcome), and the
+   migration, those tests and the mutations third (`6d12ab7`). No code was
+   committed red. The guard is unchanged.
+3. **`COLLECTED_TEST_FLOOR` was raised twice:** 12779 → 12818 (+39) with
+   `eaed639`, then 12818 → 12850 (+32) with `6d12ab7`. The second diff
+   includes one id the plan did not name:
+   `test_phase272_gate15.py::test_rolling_back_peels_every_successor[90]`,
+   parametrized up to `SCHEMA_VERSION`.
+4. **The 334B check is an assertion in the texts file**
+   (`test_row_334B_is_open_and_names_its_prompt`), one of the plan's two
+   options, so there are four new test files, not five.
+5. **The old-code run cannot show the controls green file by file.** Three
+   of the four new files fail at import on master's code (the module
+   `motodiag.auth.terms_acceptance` is new); the fourth,
+   `test_phase334_migration_091.py`, is "2 failed, 1 passed, 4 errors", its
+   control the one that passed. The knowledge-base control passes on this
+   branch.
+6. **`334_mutate.py` was written again** from the plan's list, on 404's
+   harness, after the first draft at `/fleet/run/` did not outlive its
+   run. It holds the plan's nine mutations and no more: 9/9 red.
+7. **The liability cap's period is the operator's** (K92, 12 months),
+   reached through the stop the plan anticipated; one sentence of
+   `docs/legal/terms.md` and its test phrase changed for it, nothing in
+   the code.
+8. **The live step is the operator's, after the merge.** This build cannot
+   reach the home desktop; the server's restart on the merged code with
+   both switches off, and the read of `GET /v1/terms`, are the handoff's
+   first paste block.
+
+## Results
+
+- **The two texts:** `docs/legal/terms.md` and `docs/legal/privacy.md`,
+  Version 1.0 — 2026-11-19, each ending with the attribution line, and
+  `docs/legal/README.md` naming the template, its address, its licence and
+  the date read. The terms carry the six clauses, each its own section; the
+  cap reads "capped at what the shop paid Mekno in fees in the 12 months
+  before the claim." The privacy policy names the seven services the Step 0
+  census and the outbound-address search found: Stripe, Anthropic, OpenAI
+  (Whisper), Sentry, Backblaze, Apple push and NHTSA. Neither file holds a
+  phone number, a price id or a Sentry address.
+- **The record:** `terms_acceptances` (migration 091) and
+  `auth/terms_acceptance.py` (`TERMS_VERSION = "1.0"`, held equal to the
+  terms' header by a test). `GET /v1/terms` and `POST /v1/terms/accept`,
+  with the 422 `terms-version-stale` and the 403 `terms-not-accepted` rows
+  in the error table, and the `terms` tag. Gate 11 passed after the
+  fleet refreshed the app's copy of the API description from `eaed639`.
+- **The switches,** both off by default: `MOTODIAG_TERMS_REQUIRED`, checked
+  in `require_api_key`, so the knowledge-base routes are held too, with the
+  four exempt routes in `TERMS_EXEMPT_PATHS`; `MOTODIAG_CHECKOUT_TERMS_CONSENT`,
+  in `checkout_session_params`. With both off no query is made and the
+  Checkout params are unchanged. The live WebSocket route is the one
+  credentialed route the first switch does not hold, named for 334B.
+- **Documents:** the guide notes in `docs/guide/api.md` and
+  `docs/guide/payments.md`, the launch checklist's dated note, row 334B
+  (🔲) and `docs/prompts/334B_the_apps_terms_screen.txt`.
+- **Tests.** Four new files, 70 tests: `test_phase334_legal_texts.py` (33),
+  `_terms_routes.py` (24), `_migration_091.py` (7), `_checkout_consent.py`
+  (6). `COLLECTED_TEST_FLOOR` 12779 → 12850 (+71 −0, Deviation 3).
+- **Mutations.** `334_mutate.py`: **9/9 red** (`334_mutate.out`).
+- **Regression of record:** 12745 passed, 0 failed, 105 skipped, 0 errors
+  at `6d12ab7`, 37 min 0 s, `python -m pytest -n auto --dist load
+  --cov=motodiag`, exit 0, inside the fleet's fence, after
+  `wholetree.sh --full` on the same commit (5219 passed, 36 skipped). Line
+  coverage 88.35% (the pin is 87.50%). The whole record, skip lines
+  included, is in the phase log. No code changed after it.
+- **Live outcome.** The operator answered "yes" to the dry-run diff
+  (sha256 `06d9f8c83419509b9d0ab40b9af5cddfc3bc61411bf5601ac9befab463bd4a18`)
+  and applied migration 091 to live on 2026-11-20. The dispatcher checked
+  it with `verify-live`. `334_live_diff.md`: **scope problems none**,
+  **equals the approved exact diff: yes**, 0 rows set aside as written by
+  the running API, and F158 census 41. Added: the table
+  `terms_acceptances`, the unique index
+  `idx_terms_acceptances_user_version`, and `schema_version` row 91. No
+  existing row changed or was removed.
 
 ## Version history
 
 | Version | Date | What changed |
 |---|---|---|
 | 1.0 | 2026-11-19 | The plan, before any code; revised the same day on the Executive Officer's check: the first switch's check moves from `get_current_user` to `require_api_key`, so the eight knowledge-base routes are held too, and a knowledge-base route joins the finish line, the tests and the mutations |
+| 1.1 | 2026-11-20 | Phase 334 built (`f53b92c`, `eaed639`, `6d12ab7`), the cap's period from the operator (K92), migration 091 applied live; Deviations and Results |

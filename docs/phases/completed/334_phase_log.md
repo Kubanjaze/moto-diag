@@ -1,6 +1,6 @@
 # Phase 334 — phase log: Terms of Service + liability framework, the terms from templates (K84)
 
-**Status:** In progress — migration 091 committed and the regression of record run; waiting for the operator's live apply before the close-out
+**Status:** Complete
 
 **Started 2026-11-19** by the Chief Engineer, in a fresh clone of
 `phase-334-terms-of-service-liability-framework` at `bc78448`, inside the
@@ -374,3 +374,39 @@ Line coverage of record: 88.35% at `6d12ab7` (the pin is 87.50%): 0.85 points ab
 - **Next: the database step.** The operator applies migration 091 to the
   live database on the home desktop. The close-out follows: v1.1, the
   documents to `completed/`, the ROADMAP row ✅ and the handoff.
+
+## 2026-11-20 — the operator's answer, and migration 091 on live
+
+The dry run ran on a copy on the home desktop (`334_dryrun_diff.md`,
+sha256 `06d9f8c83419509b9d0ab40b9af5cddfc3bc61411bf5601ac9befab463bd4a18`,
+at `a4b5a11`; backup `motodiag_pre334_20261120_002219.db`; migrations
+applied on the copy `[91]`; scope problems none). The file's sha256 in
+this clone, by `sha256sum`, is the same. Asked at
+2026-11-20T00:22:23-05:00, the operator typed, verbatim
+(`334_deploy_answer.md`):
+
+> yes
+
+The operator then applied migration 091 to live and checked it, and the
+dispatcher checked it again with `verify-live`. `334_live_diff.md`, live
+after the apply against the backup: scope problems none; equals the
+approved exact diff, yes; nothing set aside as written by the running
+API (0); F158 census on live 41, as on the copy. What it added: the
+table `terms_acceptances`, the unique index
+`idx_terms_acceptances_user_version`, and `schema_version` row 91
+(2026-11-20 05:22:25 UTC). No existing row changed or was removed.
+
+## 2026-11-20 — the close-out
+
+No code changed after the regression of record: every commit after
+`6d12ab7` changes documents only (`git diff --stat 6d12ab7 HEAD`: the
+ROADMAP, this log and the three deploy files). This round changes nothing
+under `src/`, `tests/`, `scripts/` or `.claude/`. The close-out moves the
+phase's files, the three deploy files and the scope file to
+`docs/phases/completed/`, and writes v1.1, the ROADMAP row, the root
+`phase_log.md` pointer and the handoff
+`docs/handoffs/2026-11-20_334_closed.md`. The handoff carries the
+operator's steps: the server on the merged code with both switches off and
+`GET /v1/terms` read once; the two texts read, the template's licence
+confirmed and both published on getmekno.com; Stripe's terms link.
+No bug fix was needed in this phase, so the log has no register.
