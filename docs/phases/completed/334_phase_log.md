@@ -443,3 +443,31 @@ No code changed in this round; the regression of record stands.
   'motodiag.billing.providers'`. The 2026-11-19 16:04 entry and v1.1's
   Deviation 5 now name both. The count, three files failing at import,
   holds.
+
+## Refuter pass
+
+| claim | verdict | quote | source | round · kind · outcome |
+|---|---|---|---|---|
+| Four new test files hold 70 tests: 33, 24, 7 and 6 | kept | "Four new files, 70 tests: `test_phase334_legal_texts.py` (33)," | docs/phases/completed/334_implementation.md p. 581 | 3 · none · kept |
+| The floor went 12779 → 12818 (+39), then 12818 → 12850 (+32), and the second step includes gate15's [90] | kept | "#: ids against eaed639 (12818): +32 -0, test_phase334_migration_091.py (7)," | tests/test_phase255B_collected_test_floor.py p. 568 | 3 · none · kept |
+| COLLECTED_TEST_FLOOR stands at 12850 | kept | "COLLECTED_TEST_FLOOR = 12850" | tests/test_phase255B_collected_test_floor.py p. 572 | 3 · none · kept |
+| The mutations are 9/9 red | kept | "9/9 red" | docs/phases/completed/334_mutate.out p. 10 | 3 · none · kept |
+| The regression of record is 12745 passed, 105 skipped at 6d12ab7, which makes up the 12850 collected | kept | "Regression of record: 12745 passed, 0 failed, 105 skipped, 0 errors at `6d12ab7`" | docs/phases/completed/334_phase_log.md p. 290 | 3 · none · kept |
+| The live diff equals the approved exact diff, and nothing was set aside | kept | "- **Equals the approved exact diff:** `yes`" | docs/phases/completed/334_live_diff.md p. 4 | 3 · none · kept |
+| Migration 091 adds only the table and its unique index, and the rollback drops both | kept | "DROP TABLE IF EXISTS terms_acceptances;" | src/motodiag/core/migrations.py p. 7904 | 3 · none · kept |
+| SCHEMA_VERSION is 91 | kept | "SCHEMA_VERSION = 91  # Phase 334: the terms acceptances (migration 091)" | src/motodiag/core/database.py p. 10 | 3 · none · kept |
+| The check sits in require_api_key, behind the switch, with the exempt tuple; with the switch off no query is made | kept | "if get_settings().terms_required:" | src/motodiag/auth/deps.py p. 236 | 3 · none · kept |
+| TERMS_EXEMPT_PATHS is exactly the four routes | kept | "\"/v1/auth/logout\"," | src/motodiag/auth/terms_acceptance.py p. 27 | 3 · none · kept |
+| The knowledge-base route is a control in the routes test, so a check only in get_current_user goes red | kept | "HELD = (\"/v1/vehicles\", \"/v1/kb/dtc/categories\")" | tests/test_phase334_terms_routes.py p. 22 | 3 · none · kept |
+| Checkout's consent_collection is added only with the switch on, and F187's subscription_data.metadata is kept | kept | "params[\"consent_collection\"] = {\"terms_of_service\": \"required\"}" | src/motodiag/billing/providers.py p. 219 | 3 · none · kept |
+| The two error rows are 403 terms-not-accepted and 422 terms-version-stale | kept | "(TermsNotAcceptedError, 403, \"terms-not-accepted\"," | src/motodiag/api/errors.py p. 275 | 3 · none · kept |
+| The four settings default to the getmekno.com addresses, with both switches off | kept | "terms_required: bool = False" | src/motodiag/core/config.py p. 281 | 3 · none · kept |
+| The cap reads the operator's 12-month period (K92) | kept | "a shop, for every claim together, is capped at what the shop paid Mekno in" | docs/legal/terms.md p. 66 | 3 · none · kept |
+| The privacy policy names the seven services, NHTSA among them | kept | "- **NHTSA**, the US road-safety agency, for recall and VIN lookups: a bike's" | docs/legal/privacy.md p. 62 | 3 · none · kept |
+| Sentry receives the timing of one request in ten | kept | "telemetry_traces_sample_rate: float = 0.1" | src/motodiag/core/config.py p. 305 | 3 · none · kept |
+| Deviation 9: README's route count is now 119 | kept | "Serves 119 routes on `127.0.0.1:8000` and applies any pending schema" | README.md p. 137 | 3 · none · kept |
+| Deviation 9: TAG_CATALOG has a terms entry, because test_phase183_openapi checks route tags against it | kept | "\"\"\"Every tag used by a route must appear in TAG_CATALOG.\"\"\"" | tests/test_phase183_openapi.py p. 118 | 3 · none · kept |
+| Row 334B is 🔲 and names its prompt | kept | "| 334B | The app's terms screen | 🔲 |" | docs/ROADMAP.md p. 605 | 3 · none · kept |
+| The guide's routes table has the terms row | kept | "| `terms` | 2 | The current Terms of Service and a user's acceptance |" | docs/guide/api.md p. 206 | 3 · none · kept |
+| Deviation 5: the migration file on master's code is 2 failed, 1 passed, 4 errors, and its control is the one that passed | kept | "control, `test_before_it_none_of_the_objects`, is the one that passed." | docs/phases/completed/334_phase_log.md p. 268 | 3 · none · kept |
+| The handoff's applied time, 00:22 EST, matches the live schema_version row | kept | "- added rowid 90: (91, '2026-11-20 05:22:25')" | docs/phases/completed/334_live_diff.md p. 27 | 3 · none · kept |
