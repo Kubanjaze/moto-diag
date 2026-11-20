@@ -1,6 +1,6 @@
 # Phase 405 — phase log
 
-**Status:** In progress
+**Status:** Complete
 
 ## 2026-11-20 — Step 0, re-measured by the Engineer
 
@@ -131,7 +131,7 @@ On this branch at `8ba8c66` (v1.0, the Executive Officer's round 3, K97).
   paragraph, step 5, "From the Mac"'s line on the payments feed, the exit
   codes and "What it holds, and what it cannot"; `CHANGELOG.md`'s entry.
 
-## 2026-11-20 — the first regression run, and bug fix #1
+## 2026-11-20 — the first regression run, and its one failure
 
 `wholetree.sh --full` at `e46955b`: 5341 passed, 36 skipped (1042.6 s
 wall), record written. `regression.sh` at `e46955b`: "Regression run
@@ -141,24 +141,31 @@ FAILED (not of record): 12909 passed, 1 failed, 105 skipped, 0 errors at
 
 ### Bug fix #1 — 2026-11-20 — 406's stand-in test asked dash for several names in one `command -v`
 
-- **Issue:** `tests/test_phase406_install.py::test_the_stand_ins_are_the_ones_the_scripts_shell_finds`
-  failed in the regression inside the fence: `sh -c "command -v id install
-  visudo sha256sum sudo systemctl"` printed one path, where the test
-  expects six. It fails alone, on master's code as on this branch's.
-- **Root cause:** the fence's `/bin/sh` is dash. POSIX defines `command -v`
-  for one name, and dash prints only the first of several; the Mac's sh,
-  where 406 was built and its regression ran, prints all. 334's regression
-  inside the fence (12745 tests) predates 406's tests reaching its branch,
-  so this run is the first inside the fence to include them. The desktop's
-  scripts use `command -v` with one name only (`ops/desktop/*.sh`), so only
-  the test was wrong.
-- **Fix:** one `command -v` per name, joined with `;`. What the test holds
-  is unchanged: the six stand-ins are found first on the PATH.
-- **Files:** `tests/test_phase406_install.py`.
-- **Verified:** the file, 11 passed; the same loop with the system
-  directories ahead of the stand-ins on the PATH prints `/usr/bin/id` and
-  the other system paths, which the assertion refuses.
-- **Commit:** `ad60d5e`.
+**Issue.** `tests/test_phase406_install.py::test_the_stand_ins_are_the_ones_the_scripts_shell_finds`
+failed in the regression inside the fence: `sh -c "command -v id install
+visudo sha256sum sudo systemctl"` printed one path, where the test expects
+six. It fails when run alone too, and nothing this phase changed is in its
+path (it reads the desktop's install scripts and a stand-in PATH).
+
+**Root cause.** The fence's `/bin/sh` is dash. POSIX defines `command -v`
+for one name, and dash prints only the first of several; the Mac's sh,
+where 406 was built and its regression ran, prints all. 334's regression
+inside the fence (12745 tests) predates 406's tests reaching its branch, so
+this run is the first inside the fence to include them. The desktop's
+scripts use `command -v` with one name only (`ops/desktop/*.sh`), so only
+the test was wrong.
+
+**Fix.** One `command -v` per name, joined with `;`. What the test holds is
+unchanged: the six stand-ins are found first on the PATH.
+
+**Files.** `tests/test_phase406_install.py`.
+
+**Verified.** The file, 11 passed; the same loop with the system
+directories ahead of the stand-ins on the PATH prints `/usr/bin/id` and the
+other system paths, which the assertion refuses; the regression of record
+below.
+
+**Commit.** `ad60d5e`.
 
 ## 2026-11-20 — the regression of record
 
@@ -247,3 +254,13 @@ Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:3
 Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:354: inside the fleet's fence: its boundary is proven from the host, not from inside
 Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:360: inside the fleet's fence: its boundary is proven from the host, not from inside
 Line coverage of record: 88.35% at `c8f400b` (the pin is 87.50%): 0.85 points above it; raise COVERAGE_PERCENT to lock it in
+
+## 2026-11-20 — the close-out
+
+v1.1 of `405_implementation.md` (Deviations, Results, the history row);
+F259 and F210 closed in `docs/FOLLOWUPS.md` "once merged and live"; the
+phase's files moved to `docs/phases/completed/`; the ROADMAP row ✅; the
+root `phase_log.md`'s pointer; the handoff,
+`docs/handoffs/2026-11-20_405_closed.md`, with the live step as two paste
+blocks for the Mac. No finding was filed: the build found no case the rule
+does not cover.

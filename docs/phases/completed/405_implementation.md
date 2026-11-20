@@ -1,6 +1,11 @@
 # Phase 405 — The deploy check asks what the change did (F210, F259)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-11-20
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-11-20 (v1.0 `8ba8c66`)
+
+v1.1: built as planned, with the deviations listed under Deviations, and
+the outcome under Results. The sections above Deviations are the plan as
+approved, with every planned item ticked; where the build differed, the
+Deviations say so by item.
 
 ---
 
@@ -688,12 +693,121 @@ phase has none, and it names no path under `data/`.
 
 ## Planned items
 
-- [ ] Step 0 re-measured: the line numbers above, the four callers and what each reads, which commit `remote.py` sends for `live-check` and what the desktop does with it, the `SERVER_WRITES` finding (still used in a touched table before the apply), the scope gate's refusal of an object the migration never creates, the two lines `git grep -n -F 'equals the backup' -- .claude/skills/deploy` finds, and the census in the phase log
-- [ ] `tbl_names` and `touched`: the set as the row defines it, read from the migrated pre-apply copy, printed once per run, with its tests
-- [ ] Before the apply: the drift read and split moved after the fresh dry run's gates; a touched table refuses with "changed since the dry run"; the rest is listed and the apply goes on
-- [ ] After the apply and in `verify-live`: `shape_gaps` kept as the gaps half, walking the approved leaves only, its signature and messages unchanged and the 378 test green without an edit; `entries` (empty dicts dropped, each schema name and each changed field's `before` and `after` its own entry), `listed_differences` and `approved_holds`; the census re-run and recorded; the live diff's header keeps its two lines and gains `Other differences, listed`; exit 3 only on an approved entry absent or different, the F197 lines kept
-- [ ] The existing controls moved where K91 moves the rule: before the apply, kept on a touched table and listed on an untouched one; after the apply, moved to the listed cases, with the approved-row-removed control added under each `_scoped` form; each named in the phase log with its reason; the kept controls still red on their mutations
-- [ ] `SKILL.md`, `CHANGELOG.md`, the module docstring and the `SERVER_WRITES` comment block say what the check now asks, dated, with K91; the grep for `equals the backup` under the deploy folder finds nothing after, both runs in the log
-- [ ] New tests red on master's `deploy.py`; the callers' tests green unchanged; `405_mutate.py` red; `COLLECTED_TEST_FLOOR` raised by a diff of collected ids; the quality counts at their pins
-- [ ] The regression of record inside the fence; `verify_phase.sh`
-- [ ] The close-out: FOLLOWUPS closing lines for F259 and F210 "once merged and live"; any uncovered case filed as a finding; the ROADMAP row ✅ with CLOSED date and regression line; the handoff with the live step as paste blocks ending in ALL GOOD or SOMETHING IS OFF: the fleet's code copy onto the merge and the fleet restarted; from the Mac, first fetch, checkout master, pull fast-forward only, and stop unless HEAD is 405's merge commit, then `verify_phase.sh 404 29e21a3 d797d8e` with check 8 passing and the feed's writes listed, and `verify_phase.sh` for 405 with check 8 printing "no deploy to verify" and passing
+- [x] Step 0 re-measured: the line numbers above, the four callers and what each reads, which commit `remote.py` sends for `live-check` and what the desktop does with it, the `SERVER_WRITES` finding (still used in a touched table before the apply), the scope gate's refusal of an object the migration never creates, the two lines `git grep -n -F 'equals the backup' -- .claude/skills/deploy` finds, and the census in the phase log
+- [x] `tbl_names` and `touched`: the set as the row defines it, read from the migrated pre-apply copy, printed once per run, with its tests
+- [x] Before the apply: the drift read and split moved after the fresh dry run's gates; a touched table refuses with "changed since the dry run"; the rest is listed and the apply goes on
+- [x] After the apply and in `verify-live`: `shape_gaps` kept as the gaps half, walking the approved leaves only, its signature and messages unchanged and the 378 test green without an edit; `entries` (empty dicts dropped, each schema name and each changed field's `before` and `after` its own entry), `listed_differences` and `approved_holds`; the census re-run and recorded; the live diff's header keeps its two lines and gains `Other differences, listed`; exit 3 only on an approved entry absent or different, the F197 lines kept
+- [x] The existing controls moved where K91 moves the rule: before the apply, kept on a touched table and listed on an untouched one; after the apply, moved to the listed cases, with the approved-row-removed control added under each `_scoped` form; each named in the phase log with its reason; the kept controls still red on their mutations
+- [x] `SKILL.md`, `CHANGELOG.md`, the module docstring and the `SERVER_WRITES` comment block say what the check now asks, dated, with K91; the grep for `equals the backup` under the deploy folder finds nothing after, both runs in the log
+- [x] New tests red on master's `deploy.py`; the callers' tests green unchanged; `405_mutate.py` red; `COLLECTED_TEST_FLOOR` raised by a diff of collected ids; the quality counts at their pins
+- [x] The regression of record inside the fence; `verify_phase.sh`
+- [x] The close-out: FOLLOWUPS closing lines for F259 and F210 "once merged and live"; any uncovered case filed as a finding; the ROADMAP row ✅ with CLOSED date and regression line; the handoff with the live step as paste blocks ending in ALL GOOD or SOMETHING IS OFF: the fleet's code copy onto the merge and the fleet restarted; from the Mac, first fetch, checkout master, pull fast-forward only, and stop unless HEAD is 405's merge commit, then `verify_phase.sh 404 29e21a3 d797d8e` with check 8 passing and the feed's writes listed, and `verify_phase.sh` for 405 with check 8 printing "no deploy to verify" and passing
+
+## Deviations
+
+1. **A test outside the plan's list changed:**
+   `tests/test_phase395_through_fleet.py::test_a_live_that_moved_since_the_dry_run_is_refused_by_apply_live`.
+   It wrote to `api_keys` between the question and the answer, a table its
+   scope does not touch, so under K91's "refuses only a change since the
+   dry run in a table the change touches" the change is listed and the
+   apply goes on. Its write now goes to `schema_version`, which its scope
+   names. Its assertions and its docstring's purpose (apply-live's own
+   refusal, kept) are unchanged, so it was made green inside K91's words
+   and was not a stop. Item 4's "the 395 tests pass without a change to
+   their assertions" holds; item 5's "no test outside that list changes"
+   does not, for this one setup line.
+2. **A second test outside the list changed, as bug fix #1:**
+   `tests/test_phase406_install.py::test_the_stand_ins_are_the_ones_the_scripts_shell_finds`
+   failed in the first regression inside the fence (dash prints one name
+   of a several-name `command -v`). It asks one name at a time now. It
+   has nothing to do with the deploy check; it is in the phase log's
+   bug-fix register with its root cause.
+3. **The case that shows `SERVER_WRITES` still deciding a verdict** is a
+   scope naming `api_keys` with nothing expected of it
+   (`test_a_listed_server_write_in_a_touched_table_is_still_set_aside`),
+   not 383's `TestAMigrationThatWritesTheColumn` scope, which item 2 names:
+   under that scope the approved diff names `api_keys` row 2
+   `last_used_at`, and a field the approved diff names is never set aside,
+   so a request there refuses. The same reason gave 383's and 385's
+   before-the-apply controls a scope naming their table with nothing
+   expected of it (`_touching`, and 385's `_ready(touching=…)`), rather
+   than the `_scoped` scope, under which the request beside them would
+   refuse before the control was reached.
+4. **`approved_holds` and an empty side.** It calls `shape_gaps` only when
+   the approved side has entries and `listed_differences` only when live's
+   has, as item 3 says. It still hands the other side over as `{}` when
+   that side has none: each function walks only one side's leaves, so
+   `_leaves({})`'s single leaf is never read. The finish lines on both
+   (384's shape; a live with nothing listed) hold.
+5. **`listed_differences` folds a listed object's `sql` entry into its
+   `schema added: name` line,** and lists an `sql` entry with no such
+   line as `schema sql: name`; no case reaches the second. Listed lines
+   print up to 20 in `verify-live` and 10 in the live diff's header.
+6. **Fourteen mutations, not eleven, and one control.** The plan's eleven
+   are T1 to T4, G1 to G3, E1 to E3 and H1. Three run the same edit against
+   the kept tests: T2b (the touched set empty, against 358, 383, 385 and
+   395's refusals), G3b (the clock rule dropped, against 378's test) and
+   E2b (empty dicts kept, against 379's old shape). C1 runs G2's edit
+   against 378's clock test and requires it to stay green.
+7. **The callers' check 8 case** reuses 379's harness, whose stand-in
+   `deploy.py` prints nothing and exits with the code; check 8 reads only
+   the exit code. The Quartermaster's case runs `database_step` on a real
+   live diff and a real `verify-live` from the fixture.
+8. **A line number:** `stage_deployed` is at `dispatcher.py` line 2087,
+   not 2109 (the phase log's Step 0).
+
+## Results
+
+- **The touched set.** `touched` and `tbl_names`: on the fixture scope,
+  `{workflow_templates, checklist_items, schema_version}`; an index the
+  scope names adds its table, read from the migrated copy; a table only
+  the approved diff names is in; a view adds none. A scope naming an
+  index the migration never creates is refused by the fresh dry run's
+  scope gate, and the split is not reached.
+- **Before the apply.** A feed cursor rewritten, a shop's work order added
+  and a `known_issues` row added are listed ("changed since the dry run,
+  outside the tables this change touches: …") and the apply returns 0,
+  with `Equals the approved exact diff: yes` and the table under `Other
+  differences, listed`. A row added to, changed in or removed from
+  `checklist_items`, a template added, and a `known_issues` row changed
+  when an index makes the table touched, each refuse with exit 2 and live
+  untouched. A fresh dry run that differs refuses first, before the split.
+- **After the apply and in `verify-live`.** Nine listed shapes exit 0,
+  404's check-ins and a later migration's `table later_t` among them; an
+  approved diff with no entries lists every difference; an approved
+  `<clock>` field still holds. An approved row deleted, an approved field
+  written back, an approved row's other field changed and an approved
+  index dropped each exit 3 with the F197 line; a migration writing one
+  value on the copy and another on live makes `apply_live` return 1.
+- **The callers.** No code change: `git diff --stat master --
+  .claude/skills/fleet .claude/skills/closeout
+  .claude/skills/deploy/through_fleet.py .claude/skills/deploy/remote.py
+  ops/` is empty. 406's split test, 395's Q1 tests and 379's check 8
+  tests pass unchanged.
+- **The record.** `SKILL.md`, `CHANGELOG.md`, the module docstring and the
+  `SERVER_WRITES` block say what the check now asks. `git grep -n -F
+  'equals the backup' -- .claude/skills/deploy`: two lines before, none
+  after.
+- **Tests.** `tests/test_phase405_what_the_change_did.py`, 40 collected
+  ids: on `8ba8c66`'s `deploy.py`, 23 failed and the 17 controls passed.
+  `COLLECTED_TEST_FLOOR` 12960 to 13015 (+59 −4).
+- **Mutations.** `405_mutate.py`: **14/14 red**, the control green
+  (`405_mutate.out`).
+- **Quality counts.** At their pins (`tests/test_phase393_quality_ratchet.py`
+  green); no function in `deploy.py` is over McCabe 20.
+- **Regression of record:** 12910 passed, 0 failed, 105 skipped, 0 errors
+  at `c8f400b`, 36 min 13 s, `python -m pytest -n auto --dist load
+  --cov=motodiag`, exit 0, inside the fleet's fence, after
+  `wholetree.sh --full` (5341 passed, 36 skipped). Line coverage 88.35%
+  (the pin is 87.50%). Gate 11 passed: the API's description did not
+  change. Bug fix #1 is in it.
+- **Live outcome.** No migration and no change to live. The fleet's code
+  copy and the Mac's checkout move onto the merge, and 404's and 405's
+  checks are read, from the handoff's two steps.
+
+## Version history
+
+| Version | Date | What changed |
+|---|---|---|
+| 1.0 | 2026-11-20 | The plan, before any code (`dfb2b77`; revised for the Executive Officer, `bd19285`, `f2ff104`, `8ba8c66`) |
+| 1.1 | 2026-11-20 | Phase 405 built (`c076825`, `e46955b`), bug fix #1 (`ad60d5e`), the regression of record at `c8f400b`; Deviations and Results |

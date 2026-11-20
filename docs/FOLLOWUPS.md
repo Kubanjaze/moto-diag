@@ -3625,7 +3625,7 @@ To close: reproduce or rule out (a send to a closed socket from a thread
 while it exits, with the plugin on and off), then either keep SIGPIPE off
 the registered list or show that the crash has another cause.
 
-### F210
+### F210 — CLOSED by Phase 405
 
 **The deploy gates' list of columns the API writes cannot hold once a shop's traffic reaches live: any ordinary write refuses the apply or fails check 8**
 
@@ -3660,6 +3660,20 @@ the approved scope by anything but the API still fails.
   platform: the upsert changes `user_id` or `platform`, which the
   other-column control keeps failing.
 - **A shop's ordinary writes**, this finding's own case.
+
+Closed 2026-11-20 by Phase 405, once merged and live (K91, 383's option
+2C as this finding names it):
+- Before the apply, a shop's write since the dry run (a stand-in
+  `work_orders` row) is listed and the apply goes on; a change in a table
+  the change touches still refuses.
+- After the apply and in `verify-live`, the approved changes must hold, and
+  every other difference is listed, not failed; an approved row, field or
+  schema object missing or different still fails (exit 3). The controls
+  this finding names (383's and 385's) are kept in their refusing form on
+  a touched table and listed elsewhere.
+
+It is live when the handoff's step 2 prints ALL GOOD
+(`docs/handoffs/2026-11-20_405_closed.md`).
 
 ### F211
 
@@ -5466,7 +5480,7 @@ What would close it: a later phase that touches these documents fixes the wordin
 
 Closed 2026-11-09 in Phase 371 itself: "(K72)" is deleted from the handoff's step 4, whose reason is already under "What is open".
 
-### F259
+### F259 — CLOSED by Phase 405
 
 **The payments feed writes five live tables while the server runs, and no deploy gate expects it, so the next deploy's "live still equals the backup" check meets them as drift**
 
@@ -5499,6 +5513,22 @@ not the phase's to change):
 - the deploy's paste block stopping `motodiag-payments.service` beside
   `motodiag-api.service` for the apply, and starting it after; the job
   catches up from its stored place.
+
+Closed 2026-11-20 by Phase 405, once merged and live (K91, neither option
+above: option C):
+- Before the apply, a change since the dry run refuses only in a table the
+  change touches (the tables its scope and its approved diff name); the
+  feed's writes elsewhere are listed and the apply goes on
+  (`tests/test_phase405_what_the_change_did.py`, a stand-in
+  `stripe_event_cursors` row rewritten between the dry run and the apply).
+- After the apply and in `verify-live`, every approved change must hold;
+  the feed's writes, its check-ins in the table 404 created among them,
+  are listed, not failed.
+- `SERVER_WRITES` is unchanged, and a database step no longer needs the
+  feed stopped.
+
+It is live when the handoff's step 2 prints ALL GOOD
+(`docs/handoffs/2026-11-20_405_closed.md`).
 
 ### F260
 
