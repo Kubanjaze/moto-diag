@@ -26,6 +26,12 @@ dry-run list before it asks for yes, and nothing it changes in the deploy
 check lands on the live server before your review and my merge." (K95,
 quoted in `405_step0.md`).
 
+Revised for the Executive Officer's round 3 by the advisor session, at the
+operator's word on that verdict ("A, do it up", 2026-11-20; K97, the
+Yeoman's row on master, like K95's): item 1's views, item 3's entries,
+item 6's `SERVER_WRITES` block, and the tests and mutations they need.
+Nothing else in the plan changed.
+
 After this phase, the deploy check stops asking whether live stood still
 since the backup and asks whether the change did what was approved:
 
@@ -102,16 +108,24 @@ item 7 says what the handoff does about it.
 
 1. **What a change touches** (`.claude/skills/deploy/deploy.py`, one new
    function beside `server_masked`, and one small reader beside `schema`).
-   - `tbl_names(path)` reads `{"index i": "t", "trigger g": "t", "view v":
-     "t", "table t": "t"}` from a database's `sqlite_master` (`type`,
-     `name`, `tbl_name`), the same rows `schema` reads.
+   - `tbl_names(path)` reads `{"index i": "t", "trigger g": "t", "table t":
+     "t"}` from a database's `sqlite_master` (`type`, `name`, `tbl_name`),
+     the same rows `schema` reads. A view is left out: SQLite stores a
+     view's own name as its `tbl_name` (measured: `create view v as select
+     a from t` reads back as `('view', 'v', 'v')`), so a view names no
+     table. No migration creates one today (`git grep -n -i -E 'create
+     +(temp(orary)? +)?view' -- src/motodiag/core/migrations.py` finds no
+     line), so a view named in a scope or the approved diff contributes no
+     table to the touched set until a phase that creates one says what it
+     touches.
    - `touched(scope, approved, names)` returns the set of tables the change
      touches, as the ROADMAP row defines it: "the tables its approved diff
      and its scope name". That is: every key of the scope's `tables`; every
      table under the approved exact diff's `rows`; every object under the
      scope's `schema` and the approved diff's `schema` (`added`, `removed`,
-     `changed`) that is a `table`, by its name; and for an `index`,
-     `trigger` or `view` named there, the table `names` maps it to.
+     `changed`) that is a `table`, by its name; and for an `index` or
+     `trigger` named there, the table `names` maps it to (a `view` adds
+     none, above).
      `schema_version` is in every real scope, so it is always touched.
    - **Where `names` comes from.** The set is computed once, in
      `preflight`, and its source is the fresh pre-apply copy's
@@ -171,15 +185,54 @@ item 7 says what the handoff does about it.
 3. **After the apply, and in `verify-live`: the approved changes hold,
    the rest is listed** (`apply_live`, `verify_live`, `shape_gaps` kept as
    the gaps half, and one new function beside it for the listed half).
-   - `approved_holds(approved, now)` returns two lists: `gaps`, every leaf
-     of the approved exact diff that is absent from live's diff or holds a
-     different value (rows added, removed or changed, their fields, and
-     every schema object with its SQL), and `listed`, what live's diff
-     holds that the approved diff does not, grouped as `table +a ~c -r` for
-     rows the approved diff does not name, `table rowid column` for a field
-     that moved in a row it names, and `schema added: name` for an object
-     it does not name. An approved value masked as `<clock>` matches any
-     timestamp-shaped value, as today.
+   - `approved_holds(approved, now)` returns two lists: `gaps`, every entry
+     of the approved exact diff (an entry as the next bullet defines it)
+     that is absent from live's diff or holds a different value (rows
+     added, removed or changed, their fields, and every schema object with
+     its SQL), and `listed`, the entries live's diff holds that the approved
+     diff does not, grouped as `table +a ~c -r` for rows the approved diff
+     does not name, `table rowid column` for a field that moved in a row it
+     names, and `schema added: name` (or `removed:`, `changed:`) for an
+     object it does not name, with that object's `sql` entry. An approved
+     value masked as `<clock>` matches any timestamp-shaped value, as today.
+   - **An entry, defined here: `entries(d)`,** one new function beside
+     `_leaves`, called only by `approved_holds`. `_leaves` (line 282) makes
+     one leaf of an empty dict and one leaf of a whole list, and `exact`
+     (line 260) writes `"added": {}`, `"removed": {}` and `"changed": {}`
+     for every table it lists, the schema's `added`, `removed` and `changed`
+     as lists of names, and each changed field as one `[before, after]`
+     list. Walked that way, an approved empty dict is a value live lacks
+     once live has a row there, and a later migration's object makes live's
+     list of names differ from the approved one: both gaps, the old rule
+     again. So `entries(d)` is the diff with three changes, made on both
+     sides:
+     - every empty dict dropped, at any depth, with a dict left empty by
+       that: an approved table with nothing added, removed or changed holds
+       nothing, so a row live adds to or removes from it is listed;
+     - each of `schema.added`, `schema.removed` and `schema.changed` made
+       one key per name (`{"table t": true}`): each approved name is its own
+       entry, a gap when live's same list lacks it, and a name only live's
+       list holds is listed;
+     - each changed field's `[before, after]` made two entries,
+       `{"before": old, "after": new}`, so the `<clock>` rule, which
+       matches one value, reads the after-value. No test asserts a gap
+       message on a changed field's list (`git grep -n -E "approved
+       \[|live \[" -- tests` finds no line), and
+       383's and 385's column-writing migrations write
+       `2020-01-01T00:00:00Z`, which is never masked, so their "written
+       again" controls still exit 3.
+     `exact` writes no other list. `docs/phases/in_progress/405_entries_census.py`
+     reads every approved diff committed under `docs/phases/completed/`: 21
+     hold an exact diff, the 20 that list a table all hold empty dicts, and
+     none holds `<clock>` inside a changed field's list. The Engineer re-runs
+     it at Step 0 and records its output in the phase log. A side with no
+     entries left is `{}`, which holds none: an approved diff with no
+     entries (384's, which changed nothing) has no gaps, and a live diff
+     with none lists nothing. `_leaves` reads `{}` as one leaf, so
+     `approved_holds` passes neither side to `shape_gaps` or
+     `listed_differences` as `{}`; it answers those cases itself. `_leaves` is
+     unchanged, so `exact_gaps` still compares the fresh dry run with the
+     approved diff exactly, both ways, empty dicts and whole lists included.
    - **`shape_gaps` is kept, as the gaps half, with its signature and its
      messages.** `shape_gaps(approved, now) -> list[str]` keeps producing
      `"{path}: approved {va!r}, live {vb!r}"`, and the `<clock>` rule
@@ -192,22 +245,26 @@ item 7 says what the handoff does about it.
      assertions puts the same leaves on both sides or fewer on live's, so
      the narrowed walk returns what it returned before, in the same words.
      The Engineer runs that test unchanged as the control that the
-     signature and messages held, and `approved_holds` calls `shape_gaps`
-     for its first list. The second list comes from a new function,
-     `listed_differences(approved, now)`, walking the leaves only live
-     holds and grouping them as above. `exact_gaps` keeps its job on the
+     signature and messages held, and `approved_holds` calls
+     `shape_gaps(entries(approved), entries(now))` for its first list. The
+     second list comes from a new function, `listed_differences(approved,
+     now)`, walking the leaves of `entries(now)` that `entries(approved)`
+     lacks and grouping them as above (a changed field's two entries are one
+     field there). `exact_gaps` keeps its job on the
      fresh dry run in `preflight`, where the copy must equal the approved
      diff both ways.
    - **What is a gap and what is listed, settled here.** A gap is only an
-     approved leaf absent or different: an approved added row gone, an
+     approved entry absent or different: an approved added row gone, an
      approved changed field holding neither its approved after-value nor
      `<clock>` where that was approved, an approved added row's field
-     changed, an approved schema object gone or with other SQL. Everything
-     else is listed, whatever table it is in: a field the approved diff
-     does not name moved in a row it does name (383's `api_keys` row 2
-     `is_active` after a `last_used_at` migration), a row added to or
-     removed from a table the change touches or created (404's check-ins,
-     379's later row), and any change in a table the change does not touch.
+     changed, an approved schema name missing from live's same list or its
+     SQL different. Everything else is listed, whatever table it is in: a
+     field the approved diff does not name moved in a row it does name
+     (383's `api_keys` row 2 `is_active` after a `last_used_at` migration),
+     a row added to or removed from a table the change touches or created
+     (404's check-ins, 379's later row; an approved `{}` holds nothing), a
+     schema object a later migration added (334's two, on live past 404's
+     backup), and any change in a table the change does not touch.
      This is the row's "other differences are listed", and the tests under
      item 5 follow it.
    - **`apply_live`, after the migration:** `gaps` are the scope problems
@@ -239,7 +296,14 @@ item 7 says what the handoff does about it.
      to `known_issues` or to a stand-in `stripe_event_cursors` is listed and
      `verify-live` exits 0; a migration that creates `stripe_feed_checkins`
      and rows written to it afterwards, as 404's check-ins, are listed and
-     the exit is 0; an approved added row deleted from live exits 3; an
+     the exit is 0; a later migration that adds a schema object the
+     approved diff does not name is listed as `schema added: …` and the
+     exit is 0 (404's check 8 needs exactly this: live holds 334's two
+     objects past 404's backup); a row removed from a touched table whose
+     approved `removed` is `{}` is listed, exit 0; an approved diff with no
+     entries lists every difference, exit 0; an approved changed field
+     masked `<clock>`, read back as a later timestamp, holds, exit 0; an
+     approved added row deleted from live exits 3; an
      approved changed field written again exits 3 (383's
      `test_a_later_request_on_that_field_fails_verify_live` stays as it
      is); an approved schema object dropped exits 3; a migration that
@@ -287,7 +351,8 @@ item 7 says what the handoff does about it.
      with the K91 sentence that changes it; no test outside that list
      changes; each class docstring says which shape it holds.
 6. **The deploy skill's record** (`.claude/skills/deploy/SKILL.md`,
-   `.claude/skills/deploy/CHANGELOG.md`, `deploy.py`'s module docstring).
+   `.claude/skills/deploy/CHANGELOG.md`, `deploy.py`'s module docstring and
+   its `SERVER_WRITES` comment block).
    - `SKILL.md`: step 4's bullet "live still equals the backup, but for
      the columns the running API writes" (line 129) becomes the rule above,
      dated, with K91; step 5 says what `verify-live` now asks and what exit
@@ -306,6 +371,13 @@ item 7 says what the handoff does about it.
    - `deploy.py`'s docstring (lines 18 to 34) says the same in its
      `apply-live` and `verify-live` lines; today its `apply-live` line
      reads "live / equals the backup" across lines 25 and 26.
+   - `deploy.py`'s `SERVER_WRITES` comment block (lines 172 to 182): its
+     two sentences ending "so either one is drift" (K59: an `audit_events`
+     row changed or removed; F212: a token row rebound, or a new one)
+     describe the old rule after the apply. Each gains what holds after
+     405: before the apply, such a change in a table the change touches
+     refuses; after the apply, it is listed unless it alters an approved
+     entry. The rest of the block, and K59's and F212's words, are kept.
    - Finish line: `git grep -n -F 'equals the backup' -- .claude/skills/deploy`
      finds exactly two lines before the work, `SKILL.md:129` and
      `deploy.py:26`, measured on this branch at `bd19285`, and finds none
@@ -415,9 +487,10 @@ rule it needs.
   entry added to or removed from `SERVER_WRITES`; stopping or starting the
   payments feed or the server inside a database step.
   **Four readings, recorded, told to the operator with the pull
-  request:** (1) an index, trigger or view the scope or the approved diff
-  names counts its table as touched, by `tbl_name` in the fresh pre-apply
-  copy's `sqlite_master` after the migration has run on it, merged with
+  request:** (1) an index or trigger the scope or the approved diff names
+  counts its table as touched (a view names none: item 1), by `tbl_name`
+  in the fresh pre-apply copy's `sqlite_master` after the migration has
+  run on it, merged with
   the backup's for a dropped object, and the drift split moves after the
   fresh dry run's gates to read it; (2) the after-apply scope check over
   the whole live diff is replaced by the approved-holds comparison,
@@ -425,8 +498,9 @@ rule it needs.
   scope stays checked twice before the apply; (3) after the apply, a
   field the approved diff does not name, moved in a row it does name, and
   a row added to or removed from a touched table, are listed, because the
-  approved leaf still holds, and only an approved leaf absent or
-  different fails; (4) `verify-live` for an older phase passes when every
+  approved entry still holds, and only an approved entry (item 3's
+  `entries`) absent or different fails; (4) `verify-live` for an older
+  phase passes when every
   approved change still holds and later migrations only added other
   objects, and still fails, naming the later migration, when one altered
   or removed an approved change. If the Engineer finds a case where any of
@@ -479,7 +553,14 @@ rule it needs.
     written to it afterwards, as 404's check-ins; a later phase's
     `schema_version` row and a new row in a touched table (379's old
     case); a field the approved diff does not name moved in a row it
-    names; each `verify_live` exits 0 and prints the table in the listed
+    names; a later migration that adds a schema object (`table later_t`)
+    the approved diff does not name, listed as `schema added: table
+    later_t` (the handoff's 404 run depends on this case); a row removed
+    from a touched table whose approved `removed` is `{}`; an approved diff
+    with no entries (384's shape), every difference listed; an approved
+    changed field masked `<clock>` by a migration that writes the run's
+    time, read back with a timestamp outside the masking day; each
+    `verify_live` exits 0 and prints the table or object in the listed
     lines;
   - **after the apply, failing:** an approved added row deleted from live;
     an approved changed field written back to its old value; an approved
@@ -492,7 +573,11 @@ rule it needs.
     diff holding one extra leaf returns `[]`, and `listed_differences`
     returns that leaf grouped; on an approved leaf absent, `shape_gaps`
     returns the one message in the 378 format and `listed_differences`
-    returns `[]`;
+    returns `[]`; `entries` alone: an empty dict dropped at any depth,
+    each schema name its own key, a changed field's list split into
+    `before` and `after`, and the input not modified; and `exact_gaps`
+    still reporting an approved `{}` that a fresh diff lacks, which shows
+    `_leaves` was not the one changed;
   - **the other gates unchanged, run again here as controls:** a fresh dry
     run differing in one field refuses (357's case); a scope file changed
     refuses; the backup gone refuses; a foreign-key break exits 1; a
@@ -562,7 +647,12 @@ rule it needs.
   rule); an index's table left out of the touched set (the index case goes
   red); the clock rule dropped from `shape_gaps` (the clean read-back and
   the 378 test go red); the `tbl_names` map read from the backup instead
-  of the migrated copy (the index case goes red).
+  of the migrated copy (the index case goes red); `entries` keeping the
+  schema's lists whole (the later-schema-object case goes red); `entries`
+  keeping empty dicts (the removed-row case and 379's old shape go red);
+  `entries` keeping a changed field's list whole (the masked-clock field
+  case goes red); `approved_holds` calling `shape_gaps` on an approved
+  diff with no entries (the 384-shape case goes red).
 - `COLLECTED_TEST_FLOOR` raised by a diff of collected ids; the floor test
   and the quality ratchet both green.
 - The regression of record through `regression.sh` inside the fence, with
@@ -601,9 +691,9 @@ phase has none, and it names no path under `data/`.
 - [ ] Step 0 re-measured: the line numbers above, the four callers and what each reads, which commit `remote.py` sends for `live-check` and what the desktop does with it, the `SERVER_WRITES` finding (still used in a touched table before the apply), the scope gate's refusal of an object the migration never creates, the two lines `git grep -n -F 'equals the backup' -- .claude/skills/deploy` finds, and the census in the phase log
 - [ ] `tbl_names` and `touched`: the set as the row defines it, read from the migrated pre-apply copy, printed once per run, with its tests
 - [ ] Before the apply: the drift read and split moved after the fresh dry run's gates; a touched table refuses with "changed since the dry run"; the rest is listed and the apply goes on
-- [ ] After the apply and in `verify-live`: `shape_gaps` kept as the gaps half, walking the approved leaves only, its signature and messages unchanged and the 378 test green without an edit; `listed_differences` and `approved_holds`; the live diff's header keeps its two lines and gains `Other differences, listed`; exit 3 only on an approved leaf absent or different, the F197 lines kept
+- [ ] After the apply and in `verify-live`: `shape_gaps` kept as the gaps half, walking the approved leaves only, its signature and messages unchanged and the 378 test green without an edit; `entries` (empty dicts dropped, each schema name and each changed field's `before` and `after` its own entry), `listed_differences` and `approved_holds`; the census re-run and recorded; the live diff's header keeps its two lines and gains `Other differences, listed`; exit 3 only on an approved entry absent or different, the F197 lines kept
 - [ ] The existing controls moved where K91 moves the rule: before the apply, kept on a touched table and listed on an untouched one; after the apply, moved to the listed cases, with the approved-row-removed control added under each `_scoped` form; each named in the phase log with its reason; the kept controls still red on their mutations
-- [ ] `SKILL.md`, `CHANGELOG.md` and the module docstring say what the check now asks, dated, with K91; the grep for `equals the backup` under the deploy folder finds nothing after, both runs in the log
+- [ ] `SKILL.md`, `CHANGELOG.md`, the module docstring and the `SERVER_WRITES` comment block say what the check now asks, dated, with K91; the grep for `equals the backup` under the deploy folder finds nothing after, both runs in the log
 - [ ] New tests red on master's `deploy.py`; the callers' tests green unchanged; `405_mutate.py` red; `COLLECTED_TEST_FLOOR` raised by a diff of collected ids; the quality counts at their pins
 - [ ] The regression of record inside the fence; `verify_phase.sh`
 - [ ] The close-out: FOLLOWUPS closing lines for F259 and F210 "once merged and live"; any uncovered case filed as a finding; the ROADMAP row ✅ with CLOSED date and regression line; the handoff with the live step as paste blocks ending in ALL GOOD or SOMETHING IS OFF: the fleet's code copy onto the merge and the fleet restarted; from the Mac, first fetch, checkout master, pull fast-forward only, and stop unless HEAD is 405's merge commit, then `verify_phase.sh 404 29e21a3 d797d8e` with check 8 passing and the feed's writes listed, and `verify_phase.sh` for 405 with check 8 printing "no deploy to verify" and passing
