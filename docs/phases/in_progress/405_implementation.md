@@ -56,37 +56,49 @@ stopped or started.
 
 The live step, in the handoff: the fleet's own copy of the code moves onto
 the merge and the fleet restarts, so the dispatcher's re-check and the
-operator's database step run the new rule; then, from the Mac,
-`verify_phase.sh` for 404 (`404 29e21a3 d797d8e`), whose check 8 passes
-with the payments feed's writes listed, and `verify_phase.sh` for this
-phase with its own two commits, whose check 8 prints the live line and "has
-no dry-run diff: no deploy to verify" and passes. Phase 405 has no dry-run
-diff, so its own run lists nothing; only 404's run shows the listed writes.
+operator's database step run the new rule. Then, from the Mac, the Mac's
+own checkout is first put on master at 405's merge, clean, because
+`remote.py` sends the Mac's HEAD as the commit the desktop checks out and
+runs `deploy.py` from; only then `verify_phase.sh` for 404
+(`404 29e21a3 d797d8e`), whose check 8 passes with the payments feed's
+writes listed, and `verify_phase.sh` for this phase with its own two
+commits, whose check 8 prints the live line and "has no dry-run diff: no
+deploy to verify" and passes. Phase 405 has no dry-run diff, so its own run
+lists nothing; only 404's run shows the listed writes. Run with the Mac
+still on an older commit, 404's check 8 would run the old `deploy.py` and
+fail, so the handoff's block refuses to go on unless the Mac's HEAD is the
+merge commit.
 
 ## Logic
 
 Causes and measurements: `405_step0.md`. The Engineer re-measures each line
 below before changing it (CLAUDE.md, Step 0) and records the census in the
-phase log. What this plan's own reading found, at `9707177`:
+phase log. What this plan's own reading found, at `bd19285`:
 `SERVER_WRITES` at `deploy.py` line 184, `server_masked` 189, `schema` 229,
 `exact` 260, `exact_gaps` 291, `check_scope` 358 (its schema names at 362),
-`shape_gaps` 748, `preflight` 567 with the drift read at 593, the drift
-refusal at 598 and the fresh copy migrated at 609, `apply_live` 626,
-`verify_live` 762; the callers: `through_fleet.py` calls `apply_live` at
-line 450 and `verify_live` at 340 and 473 and reads only their exit codes;
-the dispatcher's `verify_live_here` (`.claude/skills/fleet/dispatcher.py`
-line 701) runs the fleet's own copy of `deploy.py` and `stage_deployed`
-(line 2109) stops on any exit but 0; the Quartermaster's `database_step`
+`shape_gaps` 748 (called once, at line 804 in `verify_live`), `preflight`
+567 with the drift read at 593, the drift refusal at 598 and the fresh copy
+migrated at 609, `apply_live` 626, `verify_live` 762; the callers:
+`through_fleet.py` calls `apply_live` at line 450 and `verify_live` at 340
+and 473 and reads only their exit codes; the dispatcher's
+`verify_live_here` (`.claude/skills/fleet/dispatcher.py` line 701) runs the
+fleet's own copy of `deploy.py` and `stage_deployed` (line 2109) stops on
+any exit but 0; the Quartermaster's `database_step`
 (`.claude/skills/fleet/quartermaster.py` line 153) reads the live diff's
 header lines `Scope problems` and `Equals the approved exact diff` and the
 exit code; `verify_phase.sh` check 8 (line 69) runs `verify-live` only when
-a dry-run diff exists (line 90) and fails on any exit but 0 and 2; the
-Mac's way in runs the same check from `live_check`
-(`ops/desktop/motodiag_remote.py` line 247, not 183 as the prompt says),
-and prints "has no dry-run diff: no deploy to verify" with exit 0 when the
-phase has none (lines 259 to 261). None of those callers needs a code
+a dry-run diff exists (line 90) and fails on any exit but 0 and 2; where
+live is elsewhere it runs `remote.py live-check` (line 83), and `remote.py`
+adds the Mac's own pushed HEAD as the commit (`AT_COMMIT` line 44,
+`pushed_head` line 78, used at line 189); the desktop's `live_check`
+(`ops/desktop/motodiag_remote.py` line 247, not 183 as the prompt says)
+checks that commit out, detached and clean, in the development checkout
+(`at`, line 209) and runs that checkout's `deploy.py verify-live`, or
+prints "has no dry-run diff: no deploy to verify" with exit 0 when the
+phase has none (lines 259 to 263). None of those callers needs a code
 change: they read exit codes and two header lines, and both keep their
-meaning.
+meaning. What the Mac sends decides which `deploy.py` the desktop runs, and
+item 7 says what the handoff does about it.
 
 1. **What a change touches** (`.claude/skills/deploy/deploy.py`, one new
    function beside `server_masked`, and one small reader beside `schema`).
@@ -157,21 +169,35 @@ meaning.
      changed when the scope's `schema` adds an index on `known_issues`
      refuses.
 3. **After the apply, and in `verify-live`: the approved changes hold,
-   the rest is listed** (`apply_live`, `verify_live`, and one new comparison
-   beside `exact_gaps` and `shape_gaps`).
-   - `approved_holds(approved, now, clock_rule)` returns two lists: `gaps`,
-     every leaf of the approved exact diff that is absent from live's diff
-     or holds a different value (rows added, removed or changed, their
-     fields, and every schema object with its SQL), and `listed`, what
-     live's diff holds that the approved diff does not, grouped as
-     `table +a ~c -r` for rows the approved diff does not name, `table rowid
-     column` for a field that moved in a row it names, and `schema added:
-     name` for an object it does not name. An approved value masked as
-     `<clock>` matches any timestamp-shaped value, as `shape_gaps` already
-     does. `exact_gaps` keeps its job on the fresh dry run in `preflight`,
-     where the copy must equal the approved diff both ways; `shape_gaps` is
-     replaced by the new comparison in `verify_live` or kept as its gaps
-     half, the Engineer's choice, said in the log.
+   the rest is listed** (`apply_live`, `verify_live`, `shape_gaps` kept as
+   the gaps half, and one new function beside it for the listed half).
+   - `approved_holds(approved, now)` returns two lists: `gaps`, every leaf
+     of the approved exact diff that is absent from live's diff or holds a
+     different value (rows added, removed or changed, their fields, and
+     every schema object with its SQL), and `listed`, what live's diff
+     holds that the approved diff does not, grouped as `table +a ~c -r` for
+     rows the approved diff does not name, `table rowid column` for a field
+     that moved in a row it names, and `schema added: name` for an object
+     it does not name. An approved value masked as `<clock>` matches any
+     timestamp-shaped value, as today.
+   - **`shape_gaps` is kept, as the gaps half, with its signature and its
+     messages.** `shape_gaps(approved, now) -> list[str]` keeps producing
+     `"{path}: approved {va!r}, live {vb!r}"`, and the `<clock>` rule
+     stays. One change to its body: it walks the approved diff's leaves
+     (`sorted(a)`), not the union of both sides (`sorted(set(a) | set(b))`,
+     line 754 today), so a leaf only live holds is no longer a gap. That is
+     the whole of the rule change on this function, and
+     `tests/test_phase378_verify_live.py::test_a_masked_clock_matches_any_timestamp_and_nothing_else`
+     (lines 122 to 138) stays as it is and stays green: each of its five
+     assertions puts the same leaves on both sides or fewer on live's, so
+     the narrowed walk returns what it returned before, in the same words.
+     The Engineer runs that test unchanged as the control that the
+     signature and messages held, and `approved_holds` calls `shape_gaps`
+     for its first list. The second list comes from a new function,
+     `listed_differences(approved, now)`, walking the leaves only live
+     holds and grouping them as above. `exact_gaps` keeps its job on the
+     fresh dry run in `preflight`, where the copy must equal the approved
+     diff both ways.
    - **What is a gap and what is listed, settled here.** A gap is only an
      approved leaf absent or different: an approved added row gone, an
      approved changed field holding neither its approved after-value nor
@@ -199,15 +225,16 @@ meaning.
      first entries or `none`. The Quartermaster's Q1 and the 395 and 406
      tests read the first two lines and keep working.
    - **`verify_live`:** the same comparison on live read now against the
-     backup. It prints the schema lines and the `rows:` lines as today, the
-     set-aside line, then the listed differences, then `equals the approved
-     exact diff: yes` when `gaps` is empty, `no` with the gaps when not.
-     Exit 3 only on gaps; the F197 lines stay with them: when live's schema
-     head is past the phase's own, "later migrations explain the
-     difference", else "the difference is not a later migration's". A later
-     phase's own additions with every approved change still holding are
-     listed, and the exit is 0. Integrity and foreign keys are unchanged
-     and still exit 1. Exit 2 with no deploy is unchanged.
+     backup, at the one call site (line 804). It prints the schema lines
+     and the `rows:` lines as today, the set-aside line, then the listed
+     differences, then `equals the approved exact diff: yes` when `gaps` is
+     empty, `no` with the gaps when not. Exit 3 only on gaps; the F197
+     lines stay with them: when live's schema head is past the phase's own,
+     "later migrations explain the difference", else "the difference is not
+     a later migration's". A later phase's own additions with every
+     approved change still holding are listed, and the exit is 0. Integrity
+     and foreign keys are unchanged and still exit 1. Exit 2 with no deploy
+     is unchanged.
    - Finish line: on the fixture database, after a clean apply, a row added
      to `known_issues` or to a stand-in `stripe_event_cursors` is listed and
      `verify-live` exits 0; a migration that creates `stripe_feed_checkins`
@@ -217,7 +244,8 @@ meaning.
      `test_a_later_request_on_that_field_fails_verify_live` stays as it
      is); an approved schema object dropped exits 3; a migration that
      writes one value on the copy and another on live makes `apply_live`
-     return 1 and the live diff say `no`.
+     return 1 and the live diff say `no`; the 378 `shape_gaps` test passes
+     without an edit.
 4. **The callers, unchanged and shown to be so** (`through_fleet.py`,
    `remote.py`, `ops/desktop/motodiag_remote.py`, the dispatcher, the
    Quartermaster, `verify_phase.sh`).
@@ -261,10 +289,10 @@ meaning.
 6. **The deploy skill's record** (`.claude/skills/deploy/SKILL.md`,
    `.claude/skills/deploy/CHANGELOG.md`, `deploy.py`'s module docstring).
    - `SKILL.md`: step 4's bullet "live still equals the backup, but for
-     the columns the running API writes" becomes the rule above, dated,
-     with K91; step 5 says what `verify-live` now asks and what exit 3 now
-     means; the line under "From the Mac" that reads "Before Phase 405
-     lands, a database step stops the payments feed and stays at the
+     the columns the running API writes" (line 129) becomes the rule above,
+     dated, with K91; step 5 says what `verify-live` now asks and what exit
+     3 now means; the line under "From the Mac" that reads "Before Phase
+     405 lands, a database step stops the payments feed and stays at the
      desktop (K91)" is replaced by what holds after it: a database step no
      longer needs the feed stopped; "What it holds, and what it cannot"
      gains the new rule's limit: after the apply, a row the migration wrote
@@ -275,10 +303,15 @@ meaning.
    - `CHANGELOG.md`: a dated entry at the top, "2026-11-2x — the check
      asks what the change did (Phase 405, K91, F210, F259)", naming the
      functions, the moved drift split, the tests and the mutation count.
-   - `deploy.py`'s docstring (lines 18 to 34) says the same in its `apply-live`
-     and `verify-live` lines.
-   - Finish line: `git grep -n -F 'live equals the backup' -- .claude/skills/deploy`
-     finds no line that still states the old rule as current.
+   - `deploy.py`'s docstring (lines 18 to 34) says the same in its
+     `apply-live` and `verify-live` lines; today its `apply-live` line
+     reads "live / equals the backup" across lines 25 and 26.
+   - Finish line: `git grep -n -F 'equals the backup' -- .claude/skills/deploy`
+     finds exactly two lines before the work, `SKILL.md:129` and
+     `deploy.py:26`, measured on this branch at `bd19285`, and finds none
+     after it. The phase log records both runs. A historical mention of
+     the old rule, if one is wanted in `CHANGELOG.md`'s new entry, is
+     worded without that phrase, so the grep stays a clean zero.
 7. **Documents.** `docs/FOLLOWUPS.md` gains, at close-out, the closing lines
    for F259 and F210 in the form F270's has, each saying "once merged and
    live" until the handoff records the live step; if Step 0 or the build
@@ -287,12 +320,26 @@ meaning.
    row moves with the work. The handoff carries the live step as paste
    blocks, each saying which computer and which window, ending in ALL GOOD
    or SOMETHING IS OFF, every `gh` call naming `-R Kubanjaze/moto-diag`
-   (R8). The Mac's blocks expect what each run can print: 404's run shows
-   check 8 passing with the feed's writes in the listed lines; 405's run
-   shows check 8 printing "has no dry-run diff: no deploy to verify" and
-   passing, and lists nothing. `docs/decisions.md` on this branch ends at
-   K94; K95's row is the Yeoman's, on master, and this plan cites it from
-   the Step 0 report.
+   (R8).
+   - **The Mac's block puts the Mac on the merge first.** `remote.py`
+     sends the Mac's own HEAD as the commit for `live-check`, and the
+     desktop checks that commit out in its development checkout and runs
+     that checkout's `deploy.py`. So the Mac's block, before either
+     `verify_phase.sh` run, does `git fetch origin`, `git checkout master`
+     and `git pull --ff-only`, confirms the tree is clean, and prints
+     SOMETHING IS OFF and stops unless `git rev-parse HEAD` equals 405's
+     merge commit on master (written into the block after the merge). The
+     block says in plain words why: with the Mac on an older commit, 404's
+     check 8 would run the old deploy check and fail. If the desktop's
+     development checkout is not clean, `live_check` refuses and the block
+     prints SOMETHING IS OFF; the handoff says that the desktop's checkout
+     is then tidied at the desktop, not from the Mac.
+   - The Mac's blocks expect what each run can print: 404's run shows
+     check 8 passing with the feed's writes in the listed lines; 405's run
+     shows check 8 printing "has no dry-run diff: no deploy to verify" and
+     passing, and lists nothing.
+   - `docs/decisions.md` on this branch ends at K94; K95's row is the
+     Yeoman's, on master, and this plan cites it from the Step 0 report.
 8. **Finish line for the phase:** every test under Tests green and the new
    file seen red on master's `deploy.py`; the mutations red;
    `COLLECTED_TEST_FLOOR` raised by a diff of collected ids; the quality
@@ -352,9 +399,9 @@ rule it needs.
 - **A real fork: none known.** K91 chose option C over A and B, and the
   Step 0 report leaves no second plan that would ship something different.
   Where this plan leaves a build choice (the wording of the refusal and of
-  the listed lines, whether `shape_gaps` is kept as the gaps half or
-  replaced, the names of the new functions), either choice ships the same
-  behaviour.
+  the listed lines, the name of the new listing function), either choice
+  ships the same behaviour. `shape_gaps` is kept, as item 3 fixes; that is
+  no longer a choice left to the build.
 - **A threshold or a rule's definition: one change, approved; anything
   else is a stop.** K91 is the operator's approval of exactly the
   comparison above, and K95 of the fleet building it. The Engineer applies
@@ -388,15 +435,17 @@ rule it needs.
 - **A test that cannot be made green: none known.** The existing controls
   that change are named under Tests, each with the reason in the commit
   message. If a test outside that list (357's exact comparison, 358's other
-  refusals, 395's and 406's caller tests, 379's check 8 tests) cannot be
-  made green inside K91's words, the Engineer stops.
+  refusals, 378's `shape_gaps` test, 395's and 406's caller tests, 379's
+  check 8 tests) cannot be made green inside K91's words, the Engineer
+  stops.
 - **A login or a credential: none.** Every test runs on fixture databases
   in a temporary git repository, through 358's deploy contract; nothing
   reads live, the backups folder or the network.
 - **A live-database change that alters or deletes rows: none.** The phase
   has no migration and changes no live row. The live step after the merge
-  moves the fleet's code copy and runs read-only checks. Any live write,
-  or any stop or start of the payments feed or the server, is a stop.
+  moves the fleet's code copy, moves the Mac's checkout to the merge, and
+  runs read-only checks. Any live write, or any stop or start of the
+  payments feed or the server, is a stop.
 
 ## Tests
 
@@ -439,6 +488,11 @@ rule it needs.
     a later migration explains it; and the apply's own check: a migration
     that writes one value on the copy and another on live makes
     `apply_live` return 1, the live diff say `no`, and `verify_live` exit 3;
+  - **the two halves, alone:** `shape_gaps` on an approved diff and a live
+    diff holding one extra leaf returns `[]`, and `listed_differences`
+    returns that leaf grouped; on an approved leaf absent, `shape_gaps`
+    returns the one message in the 378 format and `listed_differences`
+    returns `[]`;
   - **the other gates unchanged, run again here as controls:** a fresh dry
     run differing in one field refuses (357's case); a scope file changed
     refuses; the backup gone refuses; a foreign-key break exits 1; a
@@ -459,6 +513,9 @@ rule it needs.
   - `tests/test_phase378_verify_live.py`
     `test_a_row_outside_the_approved_diff_is_reported`: exit 0, the row
     listed and still printed as `rows: known_issues +0 ~1 -0`;
+    `test_a_masked_clock_matches_any_timestamp_and_nothing_else` is
+    **unchanged**, and is the control that `shape_gaps` kept its signature
+    and messages;
   - `tests/test_phase379_verify_live_fails.py`
     `test_an_approved_diff_missing_a_live_row_fails`: becomes "an approved
     row missing on live" (the row deleted from live), exit 3; its old
@@ -498,13 +555,14 @@ rule it needs.
 - Mutations, `405_mutate.py`, each a string in `deploy.py` replaced and the
   named tests run, every file restored: the touched set returned as every
   table of the backup (the old rule; the listed-and-applied cases go red);
-  the touched set returned empty (the refused cases go red); the gaps half
-  of the comparison returning `[]` (the failing cases go red); the listed
-  half counted as gaps (the listed-and-passing cases go red); an index's
-  table left out of the touched set (the index case goes red); the clock
-  rule dropped from the comparison (the clean read-back goes red); the
-  `tbl_names` map read from the backup instead of the migrated copy (the
-  index case goes red).
+  the touched set returned empty (the refused cases go red); `shape_gaps`
+  returning `[]` (the failing cases go red); `shape_gaps` walking the
+  union of both sides again (the listed-and-passing cases go red, and the
+  378 test stays green, which shows that test alone does not hold the new
+  rule); an index's table left out of the touched set (the index case goes
+  red); the clock rule dropped from `shape_gaps` (the clean read-back and
+  the 378 test go red); the `tbl_names` map read from the backup instead
+  of the migrated copy (the index case goes red).
 - `COLLECTED_TEST_FLOOR` raised by a diff of collected ids; the floor test
   and the quality ratchet both green.
 - The regression of record through `regression.sh` inside the fence, with
@@ -526,8 +584,11 @@ code change to `through_fleet.py`, `remote.py`,
 `dispatcher.py`: they read exit codes and two header lines whose meaning is
 kept; `verify_phase.sh`'s comment "3 live differs from the approved diff"
 stays true, and its "no dry-run diff" skip, which makes 405's own check 8
-print nothing listed, is not changed. The desktop's installed dispatcher
-and sudoers (406's, installed once; nothing here changes the fixed list). A
+print nothing listed, is not changed. Changing which commit `remote.py`
+sends for `live-check`: it stays the Mac's pushed HEAD, and the handoff
+puts the Mac on the merge instead. Renaming `shape_gaps` or changing its
+signature or message format. The desktop's installed dispatcher and
+sudoers (406's, installed once; nothing here changes the fixed list). A
 shop's own traffic and onboarding (330). The engineer gate's deploy-folder
 refusal (`engineer.verify_deploy`), which K95 says does not apply here and
 which is not changed. The K95 row in `docs/decisions.md` (the Yeoman's, on
@@ -537,12 +598,12 @@ phase has none, and it names no path under `data/`.
 
 ## Planned items
 
-- [ ] Step 0 re-measured: the line numbers above, the four callers and what each reads, the `SERVER_WRITES` finding (still used in a touched table before the apply), the scope gate's refusal of an object the migration never creates, and the census in the phase log
+- [ ] Step 0 re-measured: the line numbers above, the four callers and what each reads, which commit `remote.py` sends for `live-check` and what the desktop does with it, the `SERVER_WRITES` finding (still used in a touched table before the apply), the scope gate's refusal of an object the migration never creates, the two lines `git grep -n -F 'equals the backup' -- .claude/skills/deploy` finds, and the census in the phase log
 - [ ] `tbl_names` and `touched`: the set as the row defines it, read from the migrated pre-apply copy, printed once per run, with its tests
 - [ ] Before the apply: the drift read and split moved after the fresh dry run's gates; a touched table refuses with "changed since the dry run"; the rest is listed and the apply goes on
-- [ ] After the apply and in `verify-live`: `approved_holds`; the live diff's header keeps its two lines and gains `Other differences, listed`; exit 3 only on an approved leaf absent or different, the F197 lines kept
+- [ ] After the apply and in `verify-live`: `shape_gaps` kept as the gaps half, walking the approved leaves only, its signature and messages unchanged and the 378 test green without an edit; `listed_differences` and `approved_holds`; the live diff's header keeps its two lines and gains `Other differences, listed`; exit 3 only on an approved leaf absent or different, the F197 lines kept
 - [ ] The existing controls moved where K91 moves the rule: before the apply, kept on a touched table and listed on an untouched one; after the apply, moved to the listed cases, with the approved-row-removed control added under each `_scoped` form; each named in the phase log with its reason; the kept controls still red on their mutations
-- [ ] `SKILL.md`, `CHANGELOG.md` and the module docstring say what the check now asks, dated, with K91
+- [ ] `SKILL.md`, `CHANGELOG.md` and the module docstring say what the check now asks, dated, with K91; the grep for `equals the backup` under the deploy folder finds nothing after, both runs in the log
 - [ ] New tests red on master's `deploy.py`; the callers' tests green unchanged; `405_mutate.py` red; `COLLECTED_TEST_FLOOR` raised by a diff of collected ids; the quality counts at their pins
 - [ ] The regression of record inside the fence; `verify_phase.sh`
-- [ ] The close-out: FOLLOWUPS closing lines for F259 and F210 "once merged and live"; any uncovered case filed as a finding; the ROADMAP row ✅ with CLOSED date and regression line; the handoff with the live step (the fleet's code copy onto the merge and the fleet restarted; from the Mac, `verify_phase.sh 404 29e21a3 d797d8e` with check 8 passing and the feed's writes listed, and `verify_phase.sh` for 405 with check 8 printing "no deploy to verify" and passing) as paste blocks ending in ALL GOOD or SOMETHING IS OFF
+- [ ] The close-out: FOLLOWUPS closing lines for F259 and F210 "once merged and live"; any uncovered case filed as a finding; the ROADMAP row ✅ with CLOSED date and regression line; the handoff with the live step as paste blocks ending in ALL GOOD or SOMETHING IS OFF: the fleet's code copy onto the merge and the fleet restarted; from the Mac, first fetch, checkout master, pull fast-forward only, and stop unless HEAD is 405's merge commit, then `verify_phase.sh 404 29e21a3 d797d8e` with check 8 passing and the feed's writes listed, and `verify_phase.sh` for 405 with check 8 printing "no deploy to verify" and passing
