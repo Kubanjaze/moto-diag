@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F284** (this file). The
+At the time of writing the highest assigned is **F286** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -6545,3 +6545,13 @@ stand-ins: 11 cases, and 3 planted faults, each caught. It printed:
   the new file.
 - The old log keeps its 448241 bytes and its 200 zero bytes, beside the
   new one. Reading it still needs `grep -a`.
+
+### F286
+
+**Wording the Red Team left open on phase 405, round 1**
+
+Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 392, F228). K9: "after round 3, remaining wording defects go to one finding". The rows, from the refute table in the Red Team's round 1 on phase 405:
+
+- SKILL.md says a database step no longer needs the feed stopped, "the feed's writes are in tables the change does not touch": "  feed stopped: the feed's writes are in tables the change does not touch," (.claude/skills/deploy/SKILL.md p. 244)
+
+What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).

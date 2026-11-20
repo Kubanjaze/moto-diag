@@ -264,3 +264,40 @@ root `phase_log.md`'s pointer; the handoff,
 `docs/handoffs/2026-11-20_405_closed.md`, with the live step as two paste
 blocks for the Mac. No finding was filed: the build found no case the rule
 does not cover.
+
+## Refuter pass
+
+| claim | verdict | quote | source | round · kind · outcome |
+|---|---|---|---|---|
+| The new test file has 40 collected ids | kept | "`tests/test_phase405_what_the_change_did.py` (40)" | tests/test_phase255B_collected_test_floor.py p. 588 | 1 · none · kept |
+| COLLECTED_TEST_FLOOR goes from 12960 to 13015, +59 −4 | kept | "+59 -4. Added: test_phase405_what_the_change_did.py (40); the controls" | tests/test_phase255B_collected_test_floor.py p. 588 | 1 · none · kept |
+| The floor equals the regression's passed plus skipped (12910 + 105) | kept | "COLLECTED_TEST_FLOOR = 13015" | tests/test_phase255B_collected_test_floor.py p. 594 | 1 · none · kept |
+| The regression of record is 12910 passed, 0 failed, 105 skipped at c8f400b | kept | "Regression of record: 12910 passed, 0 failed, 105 skipped, 0 errors at `c8f400b` (36 min 13 s wall" | docs/phases/completed/405_phase_log.md p. 174 | 1 · none · kept |
+| Line coverage is 88.35% against a pin of 87.50% | kept | "Line coverage of record: 88.35% at `c8f400b` (the pin is 87.50%)" | docs/phases/completed/405_phase_log.md p. 256 | 1 · none · kept |
+| Mutations: 14/14 red, the one control green | kept | "14/14 red; 1/1 controls green" | docs/phases/completed/405_mutate.out p. 16 | 1 · none · kept |
+| Deviation 6: the mutations are T1–T4, G1–G3, E1–E3, H1, plus T2b, G3b, E2b and the control C1 | kept | "C1 the union walk: 378's clock test stays green: green, as expected" | docs/phases/completed/405_mutate.out p. 15 | 1 · none · kept |
+| Deviation 8: stage_deployed is at dispatcher.py line 2087 | kept | "    def stage_deployed(self, issue: int, phase: str, body: str, branch: str, held: pathlib.Path," | .claude/skills/fleet/dispatcher.py p. 2087 | 1 · none · kept |
+| The Quartermaster reads the two header lines | kept | "    if live and (\"**Scope problems:** `none`\" not in live" | .claude/skills/fleet/quartermaster.py p. 167 | 1 · none · kept |
+| remote.py sends the Mac's pushed HEAD for live-check | kept | "        words = argv + [pushed_head(repo)] if argv[0] in AT_COMMIT else argv" | .claude/skills/deploy/remote.py p. 189 | 1 · none · kept |
+| The desktop prints "no dry-run diff: no deploy to verify" at line 260 | kept | "            say(f\"  {phase} has no dry-run diff: no deploy to verify\")" | ops/desktop/motodiag_remote.py p. 260 | 1 · none · kept |
+| The drift split runs after the fresh dry run's two gates | kept | "    drift_gate(bk, db, approved, touched(scope, approved, names))" | .claude/skills/deploy/deploy.py p. 681 | 1 · none · kept |
+| names is read from the backup, then the migrated copy, before _drop | kept | "        names = {**tbl_names(bk), **tbl_names(fresh)}" | .claude/skills/deploy/deploy.py p. 672 | 1 · none · kept |
+| The refusal still contains "changed since the dry run" and ends "Stop and ask." | kept | "        raise Refused(f\"live changed since the dry run in a table this change touches: \"" | .claude/skills/deploy/deploy.py p. 705 | 1 · none · kept |
+| shape_gaps walks the approved leaves only | kept | "    for p in sorted(a):" | .claude/skills/deploy/deploy.py p. 841 | 1 · none · kept |
+| approved_holds skips a side with no entries | kept | "    gaps = shape_gaps(ea, eb) if ea else []" | .claude/skills/deploy/deploy.py p. 888 | 1 · none · kept |
+| The live diff gains the line `Other differences, listed` | kept | "        f\"- **Other differences, listed:** `{len(listed)}` \"" | .claude/skills/deploy/deploy.py p. 735 | 1 · none · kept |
+| A view is left out of tbl_names | kept | "        \"and type != 'view'\")}" | .claude/skills/deploy/deploy.py p. 273 | 1 · none · kept |
+| The SERVER_WRITES block's two "so either one is drift" sentences say what holds after 405 | kept | "not listed (F210), so either one is drift. After Phase 405 (K91): before" | .claude/skills/deploy/deploy.py p. 191 | 1 · none · kept |
+| SKILL.md says a database step no longer needs the feed stopped, "the feed's writes are in tables the change does not touch" | killed | "  feed stopped: the feed's writes are in tables the change does not touch," | .claude/skills/deploy/SKILL.md p. 244 | 1 · wording · open F286 |
+| Deviation 1: 395's test now writes to schema_version, which its scope names | kept | "SCOPE = {\"tables\": {\"schema_version\": {\"added\": 1}}," | tests/test_phase395_through_fleet.py p. 32 | 1 · none · kept |
+| Deviation 2 / bug fix #1: 406's test asks one name per command -v | kept | "    r = subprocess.run([\"sh\", \"-c\", \"; \".join(f\"command -v {n}\" for n in STAND_INS)]," | tests/test_phase406_install.py p. 139 | 1 · none · kept |
+| Deviation 3: SERVER_WRITES is shown deciding under a scope naming api_keys with nothing expected | kept | "        _ready(env, scope={\"tables\": {**SCOPE[\"tables\"], \"api_keys\": {}}})" | tests/test_phase405_what_the_change_did.py p. 153 | 1 · none · kept |
+| Deviation 7: the check 8 case reuses 379's harness and reads only the exit | kept | "        assert _check_8(tmp_path / \"gap\", 3)[0] == 1" | tests/test_phase405_what_the_change_did.py p. 405 | 1 · none · kept |
+| 358's old control is now listed, and a new sibling keeps the refusal | kept | "    def test_when_a_touched_table_changed_since_the_backup(self, env, capsys):" | tests/test_phase358_deploy_contract.py p. 210 | 1 · none · kept |
+| F259 is closed "once merged and live" by Phase 405 | kept | "Closed 2026-11-20 by Phase 405, once merged and live (K91, neither option" | docs/FOLLOWUPS.md p. 5517 | 1 · none · kept |
+| F210 is closed "once merged and live" by Phase 405 | kept | "Closed 2026-11-20 by Phase 405, once merged and live (K91, 383's option" | docs/FOLLOWUPS.md p. 3664 | 1 · none · kept |
+| The grep for "equals the backup" under the deploy folder finds no line after the work | kept | "  the work: no line (two before, at Step 0)." | docs/phases/completed/405_phase_log.md p. 129 | 1 · none · kept |
+| The ROADMAP row is ✅ with its CLOSED date and regression line | kept | "**CLOSED 2026-11-20.** Built by the fleet (K91)." | docs/ROADMAP.md p. 687 | 1 · none · kept |
+| The handoff's gh calls name the repository (R8) | kept | "MERGE=$(gh pr list -R \"$R\" --state merged --head \"$BRANCH\"" | docs/handoffs/2026-11-20_405_closed.md p. 158 | 1 · none · kept |
+| The handoff's Mac block stops unless HEAD is the merge | kept | "[ \"$HEAD_NOW\" = \"$MERGE\" ] || bad" | docs/handoffs/2026-11-20_405_closed.md p. 165 | 1 · none · kept |
+| The CHANGELOG entry is dated, cites K91, F210 and F259, and gives the mutation count | kept | "## 2026-11-20 — the check asks what the change did (Phase 405, K91, F210, F259)" | .claude/skills/deploy/CHANGELOG.md p. 3 | 1 · none · kept |
