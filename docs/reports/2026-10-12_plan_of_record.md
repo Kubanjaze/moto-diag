@@ -6,7 +6,7 @@ Written 2026-10-12 by the advisor session that verified Phases 373–381. This c
 
 The fleet reads this table exactly (`.claude/skills/fleet/plan_order.py`): the first row whose ROADMAP row is not ✅ is the next mission. A row built by a builder session is waited for. A row that needs the operator is asked first, in plain English. Otherwise the fleet opens the mission's issue and a one-row pull request that marks its row 🚧, and the operator merges it by hand (K49). The list changes only by a dated entry under "Changes to the order" with a K-id, written on the operator's word (K48).
 
-As of 2026-11-19, K91.
+As of 2026-11-20, K94.
 
 | # | phase | kind | built by | needs the operator | entry |
 |---|---|---|---|---|---|
@@ -29,8 +29,9 @@ As of 2026-11-19, K91.
 | 17 | 334 | shop | fleet | nothing | Wave 1, item 5 · K48, K84 |
 | 18 | 405 | shop | fleet | nothing | 2026-11-19 · K91 |
 | 19 | 330 | shop | fleet | a rule change: F210's general rule comes first ("F210's general rule is still needed before onboarding (330)", 2026-10-21); it changes the set-aside list's definition, which is the operator's call | Wave 1, item 5 · K48, K52 |
-| 20 | 344 | shop | fleet | nothing | Wave 1, item 5 · K48 |
-| 21 | 210 | shop | fleet | nothing | Wave 1, item 6 · K48 |
+| 20 | 293 | shop | fleet | a rule change: what each plan may store in manuals (the brief suggests 500 MB on Individual and 10 GB on Shop) and the terms' clause on uploads are the operator's call | 2026-11-20 · K94 |
+| 21 | 344 | shop | fleet | nothing | Wave 1, item 5 · K48 |
+| 22 | 210 | shop | fleet | nothing | Wave 1, item 6 · K48 |
 
 The ROADMAP stays the ledger: this file records the order of the open rows, and why. A Step 0 that measures something new can change the order. Any change is recorded here, dated.
 
@@ -148,6 +149,12 @@ The operator's words:
   - **Built by the advisor session on the Mac,** as a pull request the operator merges after review. The fleet does not wait for it, and it does not wait for the fleet.
   - **The order does not change:** after 334 comes 405, then 330.
   - **The prompt** is `docs/prompts/406_the_mac_runs_the_rest.txt`. Row 406 is on master, 🚧.
+- **2026-11-20: 293, the shop manual library, goes after 330 (K94).** A shop uploads the PDF manuals it owns, private to that shop, and the app finds the page for the bike, searches it, zooms it and keeps it offline. Licensed diagrams come later, into the same screens.
+  - **Why:** the brief of 2026-11-20 (`docs/reports/2026-11-20_manuals_and_parts_breakdowns_brief.md`) found that the diagrams shops want are publishers' licensed data with no price yet, and that a library of a shop's own manuals needs no licence and is the screen licensed data would plug into.
+  - **The operator's words:** "Decision: build the shop manual library (shops upload their own PDF manuals, per-shop, pages by bike, search, zoom, offline) as planned row 293, after 330. Licensed diagrams come later into the same screens. Priority is getting to market: 405, then 330, then 293."
+  - **293 comes straight after 330,** so 344 and 210 move down one place, to 21 and 22. Row 293 is reshaped from "Factory service manual references"; the rest of Track P stays in Wave 2.
+  - **What 293 needs from the operator,** asked before it starts: what each plan may store in manuals, and the terms' clause on uploads.
+  - **No prompt yet:** one is written before 330 closes, from the brief's plan outline. Row 293 is on master, 🔲.
 
 ## Where the ledger stands
 
