@@ -531,7 +531,8 @@ No seed data, no split and no eval protocol: this phase has none.
    options, so there are four new test files, not five.
 5. **The old-code run cannot show the controls green file by file.** Three
    of the four new files fail at import on master's code (the module
-   `motodiag.auth.terms_acceptance` is new); the fourth,
+   `motodiag.auth.terms_acceptance` is new, and so is
+   `checkout_session_params`, the checkout file's import); the fourth,
    `test_phase334_migration_091.py`, is "2 failed, 1 passed, 4 errors", its
    control the one that passed. The knowledge-base control passes on this
    branch.

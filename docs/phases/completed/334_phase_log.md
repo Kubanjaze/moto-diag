@@ -257,9 +257,11 @@ Run on its own: "9/9 red", exit 0 (`334_mutate.out`).
 `PYTHONPATH`, removed afterwards). Master has no `src/` change since the
 branch point `0fa4d89`, so 091 is still the next number.
 - `test_phase334_legal_texts.py`, `_checkout_consent.py` and
-  `_terms_routes.py` are each "1 error": `cannot import name
-  'terms_acceptance' from 'motodiag.auth'`. The module is new, so these
-  files cannot run their controls against master's code one by one. The
+  `_terms_routes.py` are each "1 error" at import. The texts and routes
+  files: `cannot import name 'terms_acceptance' from 'motodiag.auth'`; the
+  checkout file: `cannot import name 'checkout_session_params' from
+  'motodiag.billing.providers'`. Both names are new, so these files cannot
+  run their controls against master's code one by one. The
   knowledge-base control (the switch off, an unaccepted user reaches
   both) passes on this branch.
 - `test_phase334_migration_091.py`: "2 failed, 1 passed, 4 errors". Its
@@ -428,3 +430,16 @@ No code changed in this round; the regression of record stands.
 - **v1.1's Deviations** gain item 9: `README.md`'s route count and the
   `terms` entry in `TAG_CATALOG`, both recorded in the build entry and
   missing from the list.
+
+## 2026-11-20 — the Red Team's second round: one factual fix
+
+No code changed in this round; the regression of record stands.
+
+- **The old-code entry quoted one import error for three files.** Rerun
+  on master's `src/` (`b741ec1`, a detached worktree at
+  `/fleet/run/oldcode`, removed afterwards): the texts and routes files
+  stop at `cannot import name 'terms_acceptance' from 'motodiag.auth'`;
+  the checkout file at `cannot import name 'checkout_session_params' from
+  'motodiag.billing.providers'`. The 2026-11-19 16:04 entry and v1.1's
+  Deviation 5 now name both. The count, three files failing at import,
+  holds.
