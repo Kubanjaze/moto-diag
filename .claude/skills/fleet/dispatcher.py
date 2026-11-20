@@ -42,7 +42,10 @@ starts no model stage until the reset, then resumes the stage with
 Fable stage at or above 70% of Fable's own week, or when either cannot be
 read. A stage that needs the operator adds `needs-admiral` (a decision) or
 `needs-hands` (a login) and comments in plain English; the dispatcher then
-leaves the issue alone until the operator takes the label off.
+leaves the issue alone until the operator takes the label off. A Step 0
+report classified reshape, the operator's call (`plan_check` P4), does so as
+soon as it is written, and again before any plan-writer call: no model is
+called on a plan the checklist would refuse (Phase 407, F285).
 
 **A stage a restart cuts off is resumed** (Phase 390, F219). Each stage
 keeps a journal (`journal.py`) beside its clone, written before it starts
@@ -103,6 +106,7 @@ import engineer  # noqa: E402
 import finding_check  # noqa: E402
 import fleet_git  # noqa: E402
 import journal  # noqa: E402
+import plan_check  # noqa: E402
 import plan_order  # noqa: E402
 import quality_report  # noqa: E402
 import quartermaster  # noqa: E402
@@ -987,6 +991,23 @@ class Fleet:
                   lambda: label in self.labels_of(issue))
         self.log(f"issue {issue}: {label} ({rank}): {text[:200]}")
 
+    def ask_reshape(self, issue: int, rank: str, phase: str, step0: str) -> bool:
+        """A Step 0 report classified reshape is the operator's call
+        (`plan_check` P4): `needs-admiral` with a plain question, before any
+        plan-writer call (Phase 407, F285). True when it asked."""
+        if plan_check.classification(step0) != "reshape":
+            return False
+        found = re.search(r"^\W*Classification\W*\s*reshape\W*(.*)$", step0, re.M | re.I)
+        reason = (found.group(1).strip() if found else "").split(". ")[0].rstrip(".")[:300]
+        self.escalate(issue, rank, "needs-admiral",
+                      f"Phase {phase}'s first step calls it a reshape, which is your call"
+                      + (f": {reason}." if reason else ".")
+                      + " Answer in your own words: (A) the fleet builds it, the report's "
+                        "classification becomes extension with your words beside it, as K90 and "
+                        "K95 did; or (B) a builder session builds it. Once the report says "
+                        "extension, take `needs-admiral` off and the plan writer starts.")
+        return True
+
     # ---- GitHub reads
     def label_events(self, issue: int) -> list[dict]:
         out = self.gh("api", "--paginate", f"repos/{REPO}/issues/{issue}/events", "--jq",
@@ -1490,6 +1511,8 @@ class Fleet:
         self.say_once(issue, f"{SCOUT_M} step0 commit={head[:12]} -->",
                       f"**Science Officer, phase {phase}: Step 0 written** on `{branch}` "
                       f"(`{written[0]}`). Next: the Captain writes v1.0.")
+        self.ask_reshape(issue, "scout", phase,
+                         (clone / written[0]).read_text(encoding="utf-8"))
         self.label_once(issue, "step0:done")
         return f"step 0 pushed on {branch}"
 
@@ -1508,6 +1531,8 @@ class Fleet:
         step0 = clone / "docs" / "phases" / "in_progress" / f"{phase}_step0.md"
         if not step0.is_file():
             raise Stop(f"no {step0.name} on {branch}: the Captain writes from Step 0")
+        if self.ask_reshape(issue, "captain", phase, step0.read_text(encoding="utf-8")):
+            return "reshape: the operator is asked"
         prompts = sorted((clone / "docs" / "prompts").glob(f"{phase}_*.txt"))
         row = next((ln for ln in (clone / "docs" / "ROADMAP.md").read_text(encoding="utf-8")
                     .splitlines() if re.match(rf"\| *{re.escape(phase)} *\|", ln)), "")

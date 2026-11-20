@@ -663,6 +663,23 @@ Each was measured on a real phase; its artefact is in `fixtures/slips396/`.
    Without one, the brief says the plan is its first commit, never "as
    approved".
 
+## A reshape is asked first (Phase 407, K96, F285)
+
+A Step 0 report classified **reshape** is the operator's call (`plan_check`
+P4). `Fleet.ask_reshape` puts `needs-admiral` on the issue, through
+`escalate`, with a plain-English question: the report's reason (its first
+sentence) and the two answers K90 and K95 gave. Two stages call it:
+- `stage_scout`, as soon as the report is pushed. It still applies
+  `step0:done` after.
+- `stage_captain`, before any model call, for a report written before 407
+  or edited by hand. On a reshape it calls no model and returns.
+
+The release is the decision recorded, the report relabelled (extension,
+with the operator's words beside it), then `needs-admiral` taken off. The
+plan writer is then due on `step0:done`, because no plan-writer marker is
+newer. Before 407, 404 (#68) and 405 (#77) each cost two plan-writer calls
+on a plan P4 refuses, and each stopped with a note and no label.
+
 ## What is held by a test
 
 `tests/test_phase387_fleet_contract.py` (the checklist, every known-bad
@@ -704,4 +721,6 @@ mirror, its refusals, a real terminal), `test_phase395_engineer_deploy.py`
 (the `deploy` outcome and the round after the apply, on
 `fixtures/deploy/known_bad/`), `test_phase395_dispatcher_deploy.py` (the
 hand-over, the resume, its kill point, the planners) and
-`test_phase395_q1.py`.
+`test_phase395_q1.py`; Phase 407's `tests/test_phase407_reshape_asks_first.py`
+(a reshape asked at the scout and at the plan writer with no model call, the
+extension control, the release).

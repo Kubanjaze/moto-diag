@@ -1,5 +1,25 @@
 # fleet — changelog
 
+## 2026-11-20 — a reshape is asked first, with its label (Phase 407, K96, F285)
+
+The operator: "do that and let me know where issues stand" (K96), answering
+the advisor's proposal for F285. The prompt is
+`docs/prompts/407_the_operators_decision_asked_first.txt`; Step 0 is
+`407_step0.md`.
+
+- **`Fleet.ask_reshape`:** on a Step 0 report classified reshape, it puts
+  `needs-admiral` and a plain question through `escalate`, and returns True
+  when it asked.
+- **`stage_scout`** calls it once the report is pushed, and still labels
+  `step0:done`, so taking `needs-admiral` off starts the plan writer.
+- **`stage_captain`** calls it before any model call. On a reshape it
+  returns with no model called.
+- **Why:** 404 (#68) and 405 (#77) each cost two plan-writer calls on a plan
+  P4 refuses, and each stopped with a note and no label. The operator heard
+  of 405's from a summary on their phone.
+- **Held by** `tests/test_phase407_reshape_asks_first.py` (8 tests), and
+  `407_mutate.py` 7/7.
+
 ## 2026-11-16 — the fleet's stops: work kept, the answer carried, the app's copy refreshed (Phase 403, K84, K88)
 
 The operator: "yes go with templates, and approve both drafts" (K84), and
