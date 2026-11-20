@@ -546,6 +546,10 @@ No seed data, no split and no eval protocol: this phase has none.
    reach the home desktop; the server's restart on the merged code with
    both switches off, and the read of `GET /v1/terms`, are the handoff's
    first paste block.
+9. **Two files the plan does not name changed.** `README.md`'s route
+   count, 117 → 119, for the two terms routes; and a `terms` entry in
+   `TAG_CATALOG` (`src/motodiag/api/openapi.py`), because
+   `test_phase183_openapi.py` holds every route tag to the catalogue.
 
 ## Results
 
@@ -598,4 +602,4 @@ No seed data, no split and no eval protocol: this phase has none.
 | Version | Date | What changed |
 |---|---|---|
 | 1.0 | 2026-11-19 | The plan, before any code; revised the same day on the Executive Officer's check: the first switch's check moves from `get_current_user` to `require_api_key`, so the eight knowledge-base routes are held too, and a knowledge-base route joins the finish line, the tests and the mutations |
-| 1.1 | 2026-11-20 | Phase 334 built (`f53b92c`, `eaed639`, `6d12ab7`), the cap's period from the operator (K92), migration 091 applied live; Deviations and Results |
+| 1.1 | 2026-11-20 | Phase 334 built (`f53b92c`, `eaed639`, `6d12ab7`), the cap's period from the operator (K92), migration 091 applied live; Deviations and Results; on the Red Team's first round, Deviation 9 added |

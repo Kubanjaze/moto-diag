@@ -112,7 +112,7 @@ with no period, until the operator names one.
 `test_phase334_legal_texts.py` (33), `test_phase334_terms_routes.py` (24),
 `test_phase334_migration_091.py` (7), `test_phase334_checkout_consent.py`
 (6). `COLLECTED_TEST_FLOOR` 12779 → 12850 by a diff of collected ids
-against `bc78448` (12780): +70 −0.
+against `bc78448`.
 
 **Pins grepped before changing.** No test pins the error table's size, the
 guide's route count, the settings' fields or `require_api_key`'s
@@ -410,3 +410,21 @@ operator's steps: the server on the merged code with both switches off and
 `GET /v1/terms` read once; the two texts read, the template's licence
 confirmed and both published on getmekno.com; Stripe's terms link.
 No bug fix was needed in this phase, so the log has no register.
+
+## 2026-11-20 — the Red Team's first round: three document fixes
+
+No code changed in this round; the regression of record stands.
+
+- **K92 resolves on master.** The operator's row is at line 98 of
+  `docs/decisions.md` on `origin/master`, added by `4858cde` (2026-11-19
+  14:52 EST), after this branch's base `0fa4d89`; `git merge-base
+  --is-ancestor 4858cde origin/master` holds. This branch does not carry
+  it, and the merge into master brings the citation and the row
+  together. The citations stay as written.
+- **The floor sentence of the 2026-11-19 build entry** gave the base as
+  12780 and the diff as +70; both were wrong (the base is 12779, and the
+  diff to 12850 is +71 with `test_phase272_gate15.py`'s `[90]`, as the
+  floor file and v1.1's Results say). The parenthesis is deleted.
+- **v1.1's Deviations** gain item 9: `README.md`'s route count and the
+  `terms` entry in `TAG_CATALOG`, both recorded in the build entry and
+  missing from the list.
