@@ -172,7 +172,7 @@ The operator's words:
   - **The operator's words:** "yes add the staff sign-in screen to the list too", answering the advisor's question after 334B's prompt was checked against the app's code.
   - **Built by a builder session on the app's repository** (moto-diag-mobile), like 334B and 372B. It comes first of the three: the terms screen follows signing in, and the payment screens need a signed-in member.
   - **334B, 372B and 210 move down one place,** to 23, 24 and 25.
-  - **No prompt yet:** one is written before its session starts. Row 303B is on master, 🔲.
+  - **The prompt** is `docs/prompts/303B_the_apps_staff_sign_in_screen.txt`, written the same evening against both repositories' code. Row 303B is on master, 🔲.
 
 ## Where the ledger stands
 
