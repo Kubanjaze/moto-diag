@@ -1,0 +1,12 @@
+{
+ "_comment": "Phase 334, migration 091 (K84): adds one empty table (terms_acceptances), one unique index and one schema_version row. No existing row changes or is removed; every table not named here must not change at all.",
+ "tables": {
+  "schema_version": {"added": 1}
+ },
+ "schema": {
+  "added": [
+   "index idx_terms_acceptances_user_version",
+   "table terms_acceptances"
+  ]
+ }
+}

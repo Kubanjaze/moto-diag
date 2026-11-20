@@ -1,0 +1,59 @@
+Phase 334B, the app half of Phase 334: the phone app's terms screen.
+
+You are working in the mobile repository, moto-diag-mobile. The backend
+repository's Phase 334 (Kubanjaze/moto-diag) added the Terms of Service, a
+record of who accepted which version, and two server routes. Your job is
+the app screen that shows the terms and records the user's acceptance. Read
+the backend's plan, docs/phases/completed/334_implementation.md (or
+in_progress/ until it closes), items 4 to 6, and docs/legal/README.md,
+before you start. Build what this prompt says and nothing more.
+
+Start only after Phase 334's API description has reached the app's main:
+api-schema/openapi.json names the two routes below. If it does not, stop
+and say so; do not write the snapshot yourself. Then run
+`npm run generate-api-types` and commit only src/api-types.ts, before any
+screen.
+
+THE TWO SERVER ROUTES
+
+- GET /v1/terms
+  Anyone may call it. Answers version, date, terms_url and privacy_url.
+  Signed in, it also answers accepted (true or false) and accepted_at
+  (UTC, or null). For an anonymous caller both are null.
+- POST /v1/terms/accept, body {"version": "<the version shown>"}
+  Signed in. Records the caller's acceptance and answers version and
+  accepted_at. A second call for the same version answers the first time.
+  A version that is not the current one is 422, problem type ending
+  "terms-version-stale": the text changed while the screen was open, so
+  read GET /v1/terms again and show the new version.
+
+THE SWITCH ON THE SERVER
+
+While the operator's MOTODIAG_TERMS_REQUIRED is on, every route that takes
+a credential answers 403 with the problem type ending "terms-not-accepted"
+until the signed-in user has accepted the current version. These four
+still answer: GET /v1/terms, POST /v1/terms/accept, GET /v1/auth/me and
+POST /v1/auth/logout. Acceptance is per person: every user who signs in
+accepts for themselves; an owner's acceptance does not cover the staff. A
+new version must be accepted again. The switch is off until the operator
+turns it on, once this screen is in the app.
+
+WHAT TO BUILD
+
+1. The terms screen: the version and its date, a link that opens the terms
+   (terms_url) and one that opens the privacy policy (privacy_url) in the
+   browser, an "I agree" button that posts the version shown, and a way to
+   sign out instead.
+2. After sign-in, read GET /v1/terms; if accepted is false, show the
+   screen before anything else.
+3. Anywhere a call answers 403 terms-not-accepted, open the screen; after
+   acceptance, return the user to where they were.
+4. On 422 terms-version-stale, read GET /v1/terms again and show the new
+   version on the same screen.
+5. Tests for each of the above against mocked responses, in the app's own
+   test style.
+
+NOT IN THIS PHASE
+
+The text of the terms (the server's pages carry it), any server change,
+the store listings' privacy links, and turning the switch on.

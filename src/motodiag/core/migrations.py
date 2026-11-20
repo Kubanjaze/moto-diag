@@ -7878,6 +7878,32 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS stripe_feed_checkins;
         """,
     ),
+    Migration(
+        version=91,
+        name="terms_acceptances",
+        description=(
+            "Phase 334 (K84), who accepted which version of the Terms of "
+            "Service, and when. One row per user per version accepted; the "
+            "unique index holds a second acceptance of the same version to "
+            "the first. The API writes it on POST /v1/terms/accept and reads "
+            "it when MOTODIAG_TERMS_REQUIRED is on. Adds an empty table and "
+            "one index; changes and removes no existing row."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS terms_acceptances (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL REFERENCES users(id),
+                version TEXT NOT NULL,
+                accepted_at TEXT NOT NULL
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_terms_acceptances_user_version
+                ON terms_acceptances(user_id, version);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_terms_acceptances_user_version;
+            DROP TABLE IF EXISTS terms_acceptances;
+        """,
+    ),
 ]
 
 

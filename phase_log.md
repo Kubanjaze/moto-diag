@@ -3952,3 +3952,8 @@ Write-up: [`404_implementation.md`](docs/phases/completed/404_implementation.md)
 
 Log: [`docs/phases/completed/406_phase_log.md`](docs/phases/completed/406_phase_log.md).
 Write-up: [`406_implementation.md`](docs/phases/completed/406_implementation.md).
+
+## Phase 334 — Terms of Service + liability framework: the terms from templates (K84) — CLOSED 2026-11-20
+
+Log: [`docs/phases/completed/334_phase_log.md`](docs/phases/completed/334_phase_log.md).
+Write-up: [`334_implementation.md`](docs/phases/completed/334_implementation.md).

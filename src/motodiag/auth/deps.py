@@ -27,12 +27,14 @@ from fastapi import Depends, Header, Request
 from pydantic import BaseModel, ConfigDict
 
 from motodiag.api.deps import get_db_path
+from motodiag.auth import terms_acceptance as terms
 from motodiag.auth.api_key_repo import (
     ApiKey,
     InvalidApiKeyError,
     verify_api_key,
 )
 from motodiag.auth.sessions_repo import SESSION_PREFIX, verify_session
+from motodiag.core.config import get_settings
 
 API_KEY_PREFIX = "mdk_"
 
@@ -215,14 +217,28 @@ async def get_api_key(
 
 
 async def require_api_key(
+    request: Request,
     api_key: Optional[ApiKey] = Depends(get_api_key),
+    db_path: str = Depends(get_db_path),
 ) -> ApiKey:
-    """401 if the caller has no valid API key or session token."""
+    """401 if the caller has no valid API key or session token.
+
+    Phase 334: with ``MOTODIAG_TERMS_REQUIRED`` on, 403
+    ``terms-not-accepted`` until the caller has accepted the current
+    version, except on ``TERMS_EXEMPT_PATHS``. Every signed-in route passes
+    through here, the knowledge-base routes included.
+    """
     if api_key is None:
         raise InvalidApiKeyError(
             "valid API key or session token required (X-API-Key header "
             "or Authorization: Bearer <key or token>)"
         )
+    if get_settings().terms_required:
+        if (request.url.path not in terms.TERMS_EXEMPT_PATHS
+                and not terms.has_accepted(api_key.user_id, terms.TERMS_VERSION,
+                                           db_path)):
+            raise terms.TermsNotAcceptedError(
+                terms.not_accepted_message(terms.TERMS_VERSION))
     return api_key
 
 

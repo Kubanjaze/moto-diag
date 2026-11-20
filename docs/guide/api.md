@@ -203,6 +203,18 @@ you stand; `motodiag subscription show` shows the subscription behind it.
 | `meta` | 2 | `/healthz`, `/v1/version` |
 | `audit` | 1 | A shop's activity log: who did what, when |
 | `payments` | 5 | A shop's Stripe account, its onboarding, an invoice paid online or at the reader, and the invoice's payments |
+| `terms` | 2 | The current Terms of Service and a user's acceptance |
+
+Two switches, both off by default, are the operator's to turn on.
+`MOTODIAG_TERMS_REQUIRED` holds every route that takes a credential, in
+`require_api_key`, the knowledge-base routes included and the live
+WebSocket excepted: until the signed-in user has accepted the current
+version, each answers 403 `terms-not-accepted` with "Accept the current
+Terms of Service (version 1.0) first: read GET /v1/terms, then POST
+/v1/terms/accept." Four routes stay reachable: `GET /v1/terms`,
+`POST /v1/terms/accept`, `GET /v1/auth/me` and `POST /v1/auth/logout`.
+`MOTODIAG_CHECKOUT_TERMS_CONSENT` makes Stripe Checkout ask a subscriber
+to accept the terms (`docs/guide/payments.md`).
 
 Every request that changes something (POST, PUT, PATCH or DELETE) is
 recorded in the activity log: who made it, the path, the status and

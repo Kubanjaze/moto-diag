@@ -168,6 +168,12 @@ unverified path.
 A hard App Store requirement. Submission is blocked without a reachable
 URL, and there is currently no page and no URL.
 
+**2026-11-19, Phase 334:** the text is now `docs/legal/privacy.md`
+(version 1.0, from Basecamp's policies under CC BY 4.0), naming every
+service the server sends data to. The URL is the operator's page on
+getmekno.com, `https://getmekno.com/privacy/` by default
+(`MOTODIAG_PRIVACY_URL`), published by the operator.
+
 The content is genuinely short, because the honest answer is that
 **MotoDiag operates no server** — every deployment is the shop's own, so
 "Data Not Collected" is accurate across the entire questionnaire. The

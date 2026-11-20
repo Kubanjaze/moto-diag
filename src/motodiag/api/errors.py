@@ -71,6 +71,12 @@ def _exc_class_chain():
         LoginSessionNotFoundError,
         NotASessionError,
     )
+
+    # Phase 334 — the Terms of Service
+    from motodiag.auth.terms_acceptance import (
+        TermsNotAcceptedError,
+        TermsVersionStaleError,
+    )
     from motodiag.billing.providers import (
         BillingProviderError,
         StripeLibraryMissingError,
@@ -265,6 +271,11 @@ def _exc_class_chain():
          "Rate limit exceeded"),
         # Phase 303 — staff logins
         (LoginFailedError, 401, "login-failed", "Login failed"),
+        # Phase 334 — the Terms of Service
+        (TermsNotAcceptedError, 403, "terms-not-accepted",
+         "Terms of Service not accepted"),
+        (TermsVersionStaleError, 422, "terms-version-stale",
+         "Terms version is not the current one"),
         (NotASessionError, 400, "not-a-session",
          "This action needs a session token, not an API key"),
         (LoginSessionNotFoundError, 404, "login-session-not-found",

@@ -565,7 +565,25 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: 12865; the review's fixes added 20 (12885), 384's operations printing
 #: through `say` 2 (12887), and server-update's reads after its change 2.
 #: Measured: 12889.
-COLLECTED_TEST_FLOOR = 12889
+#:
+#: Phase 334 (the terms from templates), first commit, by a diff of
+#: collected ids against the branch's v1.0 commit bc78448 (12779 in a
+#: worktree): +39 -0, all in test_phase334_legal_texts.py (33) and
+#: _checkout_consent.py (6). Migration 091 and its two test files follow in
+#: the next commit. Measured: 12818.
+#:
+#: Phase 334, second commit (migration 091 restored), by a diff of collected
+#: ids against eaed639 (12818): +32 -0, test_phase334_migration_091.py (7),
+#: test_phase334_terms_routes.py (24), and test_phase272_gate15.py's
+#: rollback test gaining [90], parametrized up to SCHEMA_VERSION (1).
+#: Measured: 12850.
+#:
+#: The two merged (334 after 406, 2026-11-20), by a diff of collected ids
+#: against master at b741ec1 (12889), each side read with its own src/:
+#: +71 -0, the 71 above: test_phase334_legal_texts.py (33),
+#: _checkout_consent.py (6), _migration_091.py (7), _terms_routes.py (24)
+#: and gate 15's rollback case [90]. Measured: 12960.
+COLLECTED_TEST_FLOOR = 12960
 
 
 def _collected_count() -> int:

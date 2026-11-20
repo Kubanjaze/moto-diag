@@ -230,6 +230,18 @@ TAG_CATALOG: list[dict[str, Any]] = [
         ),
     },
     {
+        "name": "terms",
+        "description": (
+            "Phase 334 — the Terms of Service. `GET /terms` gives the "
+            "current version, its date and the addresses of the terms "
+            "and the privacy policy, and, signed in, whether the caller "
+            "accepted that version; `POST /terms/accept` records the "
+            "caller's acceptance of the current version. With "
+            "`MOTODIAG_TERMS_REQUIRED` on, every other route that takes "
+            "a credential answers 403 `terms-not-accepted` until then."
+        ),
+    },
+    {
         "name": "audit",
         "description": (
             "Phase 348 — the audit log. `GET /shop/{shop_id}/audit` "
