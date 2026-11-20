@@ -166,7 +166,7 @@ The operator's words:
   - **The operator's words:** "yes add both app screens to the list", answering the advisor's proposal that they be built in a session on the app's repository while the fleet works through the server-side phases.
   - **Built by a builder session on the app's repository** (moto-diag-mobile), so the fleet waits for them only when it reaches them, after 344 and before 210. Meanwhile it goes on through 405, 330, 293 and 344.
   - **210 moves down two places, to 24.**
-  - **No prompt yet:** each is written before its session starts. Rows 334B and 372B are on master, 🔲.
+  - **The prompts were written when the rows were split:** `docs/prompts/334B_the_apps_terms_screen.txt` and `docs/prompts/372_the_apps_payment_screens.txt`. Each is read again against master before its session starts. Rows 334B and 372B are on master, 🔲.
 
 ## Where the ledger stands
 
