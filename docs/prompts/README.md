@@ -36,4 +36,4 @@ The GLM run folders still hold what is not a prompt: `start.sh`,
 | file | for | written |
 |---|---|---|
 | `372_the_apps_payment_screens.txt` | Phase 372's app screens (card-payments setup, an invoice's payment, the plan screen), in `moto-diag-mobile` on the branch `phase-372-payment-api-routes-and-the-app` | 2026-11-12 |
-| `334B_the_apps_terms_screen.txt` | Phase 334B, the app's terms screen (the terms by their address, "I agree", the 403 `terms-not-accepted`), in `moto-diag-mobile`, after 334's description reaches the app's `main` | 2026-11-19 |
+| `334B_the_apps_terms_screen.txt` | Phase 334B, the app's terms screen (the terms by their address, "I agree", the 403 `terms-not-accepted`), in `moto-diag-mobile` on the branch `phase-334B-the-apps-terms-screen`, from the plan the advisor writes in this repository first | 2026-11-19; corrected 2026-11-20 against both repositories' code (K98) |
