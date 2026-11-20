@@ -130,3 +130,32 @@ On this branch at `8ba8c66` (v1.0, the Executive Officer's round 3, K97).
 - **The deploy skill:** `SKILL.md` step 4's bullet, step 4's closing
   paragraph, step 5, "From the Mac"'s line on the payments feed, the exit
   codes and "What it holds, and what it cannot"; `CHANGELOG.md`'s entry.
+
+## 2026-11-20 — the first regression run, and bug fix #1
+
+`wholetree.sh --full` at `e46955b`: 5341 passed, 36 skipped (1042.6 s
+wall), record written. `regression.sh` at `e46955b`: "Regression run
+FAILED (not of record): 12909 passed, 1 failed, 105 skipped, 0 errors at
+`e46955b` (36 min 11 s wall, ...)". The one failure is below; no
+`deploy.py` test failed.
+
+### Bug fix #1 — 2026-11-20 — 406's stand-in test asked dash for several names in one `command -v`
+
+- **Issue:** `tests/test_phase406_install.py::test_the_stand_ins_are_the_ones_the_scripts_shell_finds`
+  failed in the regression inside the fence: `sh -c "command -v id install
+  visudo sha256sum sudo systemctl"` printed one path, where the test
+  expects six. It fails alone, on master's code as on this branch's.
+- **Root cause:** the fence's `/bin/sh` is dash. POSIX defines `command -v`
+  for one name, and dash prints only the first of several; the Mac's sh,
+  where 406 was built and its regression ran, prints all. 334's regression
+  inside the fence (12745 tests) predates 406's tests reaching its branch,
+  so this run is the first inside the fence to include them. The desktop's
+  scripts use `command -v` with one name only (`ops/desktop/*.sh`), so only
+  the test was wrong.
+- **Fix:** one `command -v` per name, joined with `;`. What the test holds
+  is unchanged: the six stand-ins are found first on the PATH.
+- **Files:** `tests/test_phase406_install.py`.
+- **Verified:** the file, 11 passed; the same loop with the system
+  directories ahead of the stand-ins on the PATH prints `/usr/bin/id` and
+  the other system paths, which the assertion refuses.
+- **Commit:** recorded in the next entry.

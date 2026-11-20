@@ -134,8 +134,10 @@ def test_the_dispatcher_goes_where_384_puts_it():
 
 # ---------------------------------------------------------------- the run
 def test_the_stand_ins_are_the_ones_the_scripts_shell_finds(desk):
-    r = subprocess.run(["sh", "-c", "command -v " + " ".join(STAND_INS)], env=desk["env"],
-                       capture_output=True, text=True)
+    # One name per `command -v`: POSIX defines it for one, and dash (Ubuntu's
+    # sh) prints only the first of several (Phase 405, bug fix #1).
+    r = subprocess.run(["sh", "-c", "; ".join(f"command -v {n}" for n in STAND_INS)],
+                       env=desk["env"], capture_output=True, text=True)
     assert r.stdout.split() == [str(desk["bin"] / name) for name in STAND_INS]
 
 
