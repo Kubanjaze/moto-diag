@@ -103,12 +103,17 @@ THE RECORD
 Row 334B and its documents belong to the backend repository
 (ROADMAP_AUTHORITY.md: 205 and up; every phase's own files live in the
 backend's docs/phases/). The advisor session writes 334B's Step 0 and
-plan there, and marks the row in progress, before this session starts:
-read ../moto-diag/docs/phases/in_progress/334B_implementation.md and build
-what it says. If it is not there, stop and say so. Do not write anything
-in ../moto-diag; the advisor keeps the log and closes the row from your
-pull request. The app's phase_log.md covers Phases 185 to 204 only; leave
-it alone.
+plan before this session starts, and marks the row in progress. They stay
+on the backend's branch of this one's name until the close-out, so read
+them from GitHub, not from ../moto-diag, whose checkout may be on any
+branch:
+
+  gh api -H 'Accept: application/vnd.github.raw' 'repos/Kubanjaze/moto-diag/contents/docs/phases/in_progress/334B_implementation.md?ref=phase-334B-the-apps-terms-screen'
+
+and the same for 334B_step0.md. Build what the plan says. If it is not
+there, stop and say so. Do not write anything in ../moto-diag; the advisor
+keeps the log and closes the row from your pull request. The app's
+phase_log.md covers Phases 185 to 204 only; leave it alone.
 
 HOW TO WORK HERE
 
