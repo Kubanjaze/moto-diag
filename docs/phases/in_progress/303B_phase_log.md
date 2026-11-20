@@ -28,3 +28,12 @@ Row 303B is marked 🚧 in the same commit.
 `moto-diag-mobile` on `phase-303B-the-apps-staff-sign-in-screen`; it writes
 nothing in this repository. The advisor keeps this log, the row and the
 close-out here, from the app's pull request.
+
+**A guard block, recorded as rule 6 asks.** The first try put these three
+files on master through a local merge. The push guard refused the push to
+master before anything was sent: "closeout is not complete for phase 303B;
+push blocked", naming A1, A2, A3, A5 and A7. A phase's files reach master
+only at its close-out. So they live on this repository's branch of the same
+name, `phase-303B-the-apps-staff-sign-in-screen`, until then; the unpushed
+merge was dropped, and the app's session reads the plan from that branch on
+GitHub (the prompt says how). The guard is unchanged.
