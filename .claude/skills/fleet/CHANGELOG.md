@@ -10,15 +10,29 @@ the advisor's proposal for F285. The prompt is
 - **`Fleet.ask_reshape`:** on a Step 0 report classified reshape, it puts
   `needs-admiral` and a plain question through `escalate`, and returns True
   when it asked.
-- **`stage_scout`** calls it once the report is pushed, and still labels
-  `step0:done`, so taking `needs-admiral` off starts the plan writer.
+- **`stage_scout`** labels `step0:done` once the report is pushed, then
+  calls it, so a question GitHub refuses leaves the plan writer due and its
+  guard asks again; taking `needs-admiral` off starts the plan writer.
 - **`stage_captain`** calls it before any model call. On a reshape it
   returns with no model called.
+- **`reshape_reason`:** the reason, read on the Classification line only,
+  cut at its first sentence, with no `*` or backtick and an @name in a code
+  span, so the comment notifies no one.
+- **The sweep:** on a held issue (`needs-admiral`, `needs-hands`) it names
+  only the hold, since no rank moves a label under it.
 - **Why:** 404 (#68) and 405 (#77) each cost two plan-writer calls on a plan
   P4 refuses, and each stopped with a note and no label. The operator heard
   of 405's from a summary on their phone.
-- **Held by** `tests/test_phase407_reshape_asks_first.py` (8 tests), and
-  `407_mutate.py` 7/7.
+- **Known limits.** A Classification line that does not start with its word
+  (a hand relabel such as "Classification (by the operator): extension")
+  reads as that first word, and P4 refuses it after two plan-writer calls
+  with no label, as before 407; the scout writes the word first, and the
+  question says the line becomes `Classification: extension`, that word
+  first. A plan writer cut between its question and the label, with the
+  report relabelled while the dispatcher was down, puts `needs-admiral` back
+  on resume; taking it off again starts the plan writer.
+- **Held by** `tests/test_phase407_reshape_asks_first.py` (16 tests), and
+  `407_mutate.py` 16/16.
 
 ## 2026-11-16 — the fleet's stops: work kept, the answer carried, the app's copy refreshed (Phase 403, K84, K88)
 

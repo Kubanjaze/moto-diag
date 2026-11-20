@@ -27,13 +27,15 @@ def pytest(*args: str) -> list[str]:
 
 T_407 = pytest("tests/test_phase407_reshape_asks_first.py")
 
-SCOUT_CALL = ('        self.ask_reshape(issue, "scout", phase,\n'
-              '                         (clone / written[0]).read_text(encoding="utf-8"))\n')
+LABEL = '        self.label_once(issue, "step0:done")\n'
+ASK = '        self.ask_reshape(issue, "scout", phase, report)\n'
+SCOUT_TAIL = LABEL + ASK
 CAPTAIN_GUARD = ('        if self.ask_reshape(issue, "captain", phase, step0.read_text(encoding="utf-8")):\n'
                  '            return "reshape: the operator is asked"\n')
+SPLIT = 're.split(r"(?<=[.!?])\\s+(?=[A-Z])", found.group(1).strip())[0]'
 
 MUTATIONS = [
-    ("Z1 the scout stage asks nothing", [(DIS, SCOUT_CALL, "")], T_407),
+    ("Z1 the scout stage asks nothing", [(DIS, SCOUT_TAIL, LABEL)], T_407),
     ("Z2 the plan writer's stage asks nothing", [(DIS, CAPTAIN_GUARD, "")], T_407),
     ("Z3 the helper asks on every word", [(DIS,
      '        if plan_check.classification(step0) != "reshape":\n',
@@ -41,14 +43,36 @@ MUTATIONS = [
     ("Z4 the helper asks on none", [(DIS,
      '        if plan_check.classification(step0) != "reshape":\n',
      '        if plan_check.classification(step0) != "never":\n')], T_407),
-    ("Z5 a reshape leaves no step0:done", [(DIS, SCOUT_CALL,
-     '        if self.ask_reshape(issue, "scout", phase,\n'
-     '                            (clone / written[0]).read_text(encoding="utf-8")):\n'
-     '            return "asked"\n')], T_407),
+    ("Z5 a reshape leaves no step0:done", [(DIS, SCOUT_TAIL,
+     '        if self.ask_reshape(issue, "scout", phase, report):\n'
+     '            return "asked"\n' + LABEL)], T_407),
     ("Z6 the plan writer's guard asks, then goes on to the model", [(DIS,
      '            return "reshape: the operator is asked"\n', "            pass\n")], T_407),
     ("Z7 the reason is not cut at its first sentence", [(DIS,
-     '.split(". ")[0]', '.split("\\0")[0]')], T_407),
+     SPLIT, 'found.group(1).strip()')], T_407),
+    # Since the review (407's phase log, "the review, and its fixes").
+    ("Z8 the scout asks before it labels", [(DIS, SCOUT_TAIL, ASK + LABEL)], T_407),
+    ("Z9 a held issue is worked", [(DIS,
+     '            if labels & set(OPERATOR) or not labels & {"mission", *STATE_LABELS}:\n',
+     '            if not labels & {"mission", *STATE_LABELS}:\n')], T_407),
+    ("Z10 the reason runs onto the next line", [(DIS,
+     'reshape[^\\w\\n]*(.*)$', 'reshape\\W*(.*)$')], T_407),
+    ("Z11 the reason is cut at e.g.", [(DIS, SPLIT, 'found.group(1).strip().split(". ")[0]')],
+     T_407),
+    ("Z12 an @name is left bare", [(DIS,
+     '    return re.sub(r"(?<!\\w)@([\\w-]+)", r"`@\\1`", text)\n', '    return text\n')], T_407),
+    ("Z13 the reason keeps its asterisks", [(DIS,
+     're.sub(r"[*`]", "", text).rstrip', 'text.rstrip')], T_407),
+    ("Z14 the sweep names every label on a held issue", [(DIS,
+     '            on = [x for x in on if x in OPERATOR] or on\n', '')], T_407),
+    ("Z15 the scout's note always names the plan writer", [(DIS,
+     '                      + ("the operator\'s call, asked below." if reshape\n'
+     '                         else "the Captain writes v1.0."))\n',
+     '                      + "the Captain writes v1.0.")\n')], T_407),
+    ("Z16 a resumed question does not ask GitHub first", [(DIS,
+     '            lambda: (label in self.labels_of(issue)\n'
+     '                     or self.has_comment(issue, f"{MARKER} {kind} -->")))\n',
+     '            None)\n')], T_407),
 ]
 
 

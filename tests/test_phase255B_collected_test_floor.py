@@ -588,7 +588,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: 3908d99 (12960): +8 -0, all of test_phase407_reshape_asks_first.py (four
 #: tests and the four cases of test_ask_reshape_asks_only_on_a_reshape).
 #: Measured: 12968.
-COLLECTED_TEST_FLOOR = 12968
+#:
+#: Phase 407's review fixes (2026-11-20), by a diff of the file's collected
+#: ids against 6eaf13c (8): +8 -0, all in test_phase407_reshape_asks_first.py
+#: (four tests, and the four cases of
+#: test_the_reason_stays_on_its_line_and_safe_in_a_comment); no other test
+#: file changed. 12968 + 8.
+COLLECTED_TEST_FLOOR = 12976
 
 
 def _collected_count() -> int:
