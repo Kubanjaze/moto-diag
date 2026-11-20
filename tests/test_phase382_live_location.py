@@ -231,7 +231,9 @@ class TestTheServerFiles:
 
     def test_sudo_without_a_password_covers_only_the_units_three_verbs(self):
         text = (OPS / "install_sudoers.sh").read_text()
-        rule = text.split("<<'RULES'\n", 1)[1].split("\nRULES", 1)[0]
+        # Phase 406 (K93) adds a second line, for the payments feed and the
+        # fleet: tests/test_phase406_install.py holds it. This one is 382's.
+        rule = text.split("<<'RULES'\n", 1)[1].split("\nRULES", 1)[0].splitlines()[0]
         user, rest = rule.split(" NOPASSWD: ")
         assert user == "lilcu ALL=(root)"
         assert [c.strip() for c in rest.split(",")] == [

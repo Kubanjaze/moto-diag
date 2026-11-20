@@ -471,3 +471,39 @@ No code changed in this round; the regression of record stands.
 | The guide's routes table has the terms row | kept | "| `terms` | 2 | The current Terms of Service and a user's acceptance |" | docs/guide/api.md p. 206 | 3 · none · kept |
 | Deviation 5: the migration file on master's code is 2 failed, 1 passed, 4 errors, and its control is the one that passed | kept | "control, `test_before_it_none_of_the_objects`, is the one that passed." | docs/phases/completed/334_phase_log.md p. 268 | 3 · none · kept |
 | The handoff's applied time, 00:22 EST, matches the live schema_version row | kept | "- added rowid 90: (91, '2026-11-20 05:22:25')" | docs/phases/completed/334_live_diff.md p. 27 | 3 · none · kept |
+
+## 2026-11-20 — master merged in after 406 (the advisor, for the operator)
+
+- **Why.** PR #75 could not merge: Phase 406 (PR #74) reached master
+  first, at `be1e43a`, with its after-merge record at `b741ec1`, and both
+  phases had written the same three places. Master at `b741ec1` is merged
+  into this branch's head `ccfe212`, keeping both phases' entries, 406's
+  first:
+  - `implementation.md`: both took version 0.13.137. 406 keeps it; this
+    phase's header line becomes **0.13.138**. 406's history row first,
+    then this phase's.
+  - `phase_log.md`: 406's entry, then this phase's.
+  - `tests/test_phase255B_collected_test_floor.py`: 406's comment as
+    master has it, then this phase's two. **`COLLECTED_TEST_FLOOR` 12960**,
+    by a diff of collected ids against master at `b741ec1` (12889), each
+    side read with its own `src/`: +71 −0, this phase's 71 (the four new
+    files and gate 15's `[90]`). The Red Team's round-3 table quotes
+    12850, the branch's figure as it was reviewed.
+- **No code of this phase changed.** `git diff --name-only ccfe212` on
+  the merge, under `src/`, prints nothing; the merge brings in 406's
+  deploy tools, the desktop's dispatcher and their tests, and the record
+  files. K92's row arrives with master's `docs/decisions.md`, so the
+  citation resolves on this branch too.
+- **Checked on the merge, on the Mac:** `roadmap_check.py` (ok),
+  `closeout_check.py . 334` and `. 406` (exit 0), `finding_check.py`
+  (exit 0), and 20 test files, the floor, the ROADMAP, the plan's order,
+  406's four, 384's and 382's, this phase's four, gate 15, the OpenAPI
+  tags and the close-out, finding and review contracts: 539 passed.
+- **Gate 11 needs the app's copy on the app's `main`.** On the Mac, with
+  the app's `main` (`9045c32`) beside the merged tree: 2 failed, the two
+  terms routes and the three schemas missing from the app's copy. With the
+  fleet's copy from the app's branch of this phase's name (`eb903ef`)
+  beside it instead: 21 passed. Until that copy reaches the app's `main`,
+  gates 11 to 14 are red on master for any run that reads the app's
+  `main`: the Mac's, and a fleet stage on a phase with no app branch of
+  its own.
