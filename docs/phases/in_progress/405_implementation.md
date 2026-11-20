@@ -37,7 +37,11 @@ since the backup and asks whether the change did what was approved:
    `verify-live`, the dispatcher's re-check, the Quartermaster's Q1 and
    `verify_phase.sh` check 8, from the desktop or through the Mac's way
    in), the check passes when everything approved is on live exactly as
-   approved. Other differences are listed, not counted as failures.
+   approved. Other differences are listed, not counted as failures. After
+   the apply the touched set decides nothing: a row the running code adds
+   to a table the change created, or a field it moves in a row the
+   approved diff names, is a listed difference, because the approved leaf
+   still holds.
 3. **Still refused or failed:** an approved change missing on live or
    different from what was approved, and a change since the dry run to a
    table the change touches. Every gate that is not this comparison stays
@@ -53,49 +57,81 @@ stopped or started.
 The live step, in the handoff: the fleet's own copy of the code moves onto
 the merge and the fleet restarts, so the dispatcher's re-check and the
 operator's database step run the new rule; then, from the Mac,
-`verify_phase.sh` for 404 (`404 29e21a3 d797d8e`) and for this phase, with
-check 8 passing and the payments feed's writes listed.
+`verify_phase.sh` for 404 (`404 29e21a3 d797d8e`), whose check 8 passes
+with the payments feed's writes listed, and `verify_phase.sh` for this
+phase with its own two commits, whose check 8 prints the live line and "has
+no dry-run diff: no deploy to verify" and passes. Phase 405 has no dry-run
+diff, so its own run lists nothing; only 404's run shows the listed writes.
 
 ## Logic
 
 Causes and measurements: `405_step0.md`. The Engineer re-measures each line
 below before changing it (CLAUDE.md, Step 0) and records the census in the
 phase log. What this plan's own reading found, at `9707177`:
-`SERVER_WRITES` at `deploy.py` line 184, `server_masked` 189, `exact_gaps`
-291, `shape_gaps` 748, `preflight` 567 with the drift refusal at 598,
-`apply_live` 626, `verify_live` 762; the callers: `through_fleet.py` calls
-`apply_live` at line 450 and `verify_live` at 340 and 473 and reads only
-their exit codes; the dispatcher's `verify_live_here`
-(`.claude/skills/fleet/dispatcher.py` line 701) runs the fleet's own copy of
-`deploy.py` and `stage_deployed` (line 2109) stops on any exit but 0; the
-Quartermaster's `database_step` (`.claude/skills/fleet/quartermaster.py`
-line 153) reads the live diff's header lines `Scope problems` and `Equals
-the approved exact diff` and the exit code; `verify_phase.sh` check 8 (line
-69) fails on any exit but 0 and 2; the Mac's way in runs the same check from
-`live_check` (`ops/desktop/motodiag_remote.py` line 247, not 183 as the
-prompt says). None of those callers needs a code change: they read exit
-codes and two header lines, and both keep their meaning.
+`SERVER_WRITES` at `deploy.py` line 184, `server_masked` 189, `schema` 229,
+`exact` 260, `exact_gaps` 291, `check_scope` 358 (its schema names at 362),
+`shape_gaps` 748, `preflight` 567 with the drift read at 593, the drift
+refusal at 598 and the fresh copy migrated at 609, `apply_live` 626,
+`verify_live` 762; the callers: `through_fleet.py` calls `apply_live` at
+line 450 and `verify_live` at 340 and 473 and reads only their exit codes;
+the dispatcher's `verify_live_here` (`.claude/skills/fleet/dispatcher.py`
+line 701) runs the fleet's own copy of `deploy.py` and `stage_deployed`
+(line 2109) stops on any exit but 0; the Quartermaster's `database_step`
+(`.claude/skills/fleet/quartermaster.py` line 153) reads the live diff's
+header lines `Scope problems` and `Equals the approved exact diff` and the
+exit code; `verify_phase.sh` check 8 (line 69) runs `verify-live` only when
+a dry-run diff exists (line 90) and fails on any exit but 0 and 2; the
+Mac's way in runs the same check from `live_check`
+(`ops/desktop/motodiag_remote.py` line 247, not 183 as the prompt says),
+and prints "has no dry-run diff: no deploy to verify" with exit 0 when the
+phase has none (lines 259 to 261). None of those callers needs a code
+change: they read exit codes and two header lines, and both keep their
+meaning.
 
 1. **What a change touches** (`.claude/skills/deploy/deploy.py`, one new
-   function beside `server_masked`).
-   - `touched(scope, approved, schema_of)` returns the set of tables the
-     change touches, as the ROADMAP row defines it: "the tables its approved
-     diff and its scope name". That is: every key of the scope's `tables`;
-     every table under the approved exact diff's `rows`; every object under
-     the scope's `schema` and the approved diff's `schema` that is a
-     `table`, by its name; and for an `index`, `trigger` or `view` named
-     there, the table SQLite records it on (`tbl_name` in `sqlite_master`,
-     read from the backup, or from live after the apply when the object is
-     new). `schema_version` is in every real scope, so it is always touched.
-     The set is printed once per run, so the operator can read what the
-     check protected.
+   function beside `server_masked`, and one small reader beside `schema`).
+   - `tbl_names(path)` reads `{"index i": "t", "trigger g": "t", "view v":
+     "t", "table t": "t"}` from a database's `sqlite_master` (`type`,
+     `name`, `tbl_name`), the same rows `schema` reads.
+   - `touched(scope, approved, names)` returns the set of tables the change
+     touches, as the ROADMAP row defines it: "the tables its approved diff
+     and its scope name". That is: every key of the scope's `tables`; every
+     table under the approved exact diff's `rows`; every object under the
+     scope's `schema` and the approved diff's `schema` (`added`, `removed`,
+     `changed`) that is a `table`, by its name; and for an `index`,
+     `trigger` or `view` named there, the table `names` maps it to.
+     `schema_version` is in every real scope, so it is always touched.
+   - **Where `names` comes from.** The set is computed once, in
+     `preflight`, and its source is the fresh pre-apply copy's
+     `sqlite_master` read after `migrate(fresh)` has run on it and before
+     `_drop(fresh)`. That copy holds every object the change adds (the
+     backup predates them) and every object it keeps (a dropped object's
+     table comes from the backup's `sqlite_master`, read the same way and
+     merged under the fresh copy's entries). So the drift read and split
+     (today lines 593 to 599) move to after the fresh dry run's two gates,
+     the scope check and the exact comparison, which are unchanged. The
+     drift is then read from live later than today, a narrower window
+     before the apply, not a wider one. An object the scope or the approved
+     diff names that the fresh copy and the backup both lack contributes no
+     table; the fresh dry run's scope gate (`check_scope`, line 362) refuses
+     such a run before the split is reached, and the Engineer confirms that
+     at Step 0 with a planted scope naming an index the migration never
+     creates. If that gate lets it through, the case is a stop, not a
+     fallback the Engineer invents.
+   - The set is printed once per run, `tables this change touches: …`, so
+     the operator can read what the check protected. After the apply and
+     in `verify-live` the set decides nothing and is not computed: the
+     comparison there is item 3's.
    - Finish line: on the deploy contract's fixture scope the set is
      `{workflow_templates, checklist_items, schema_version}`; a scope whose
-     `schema` adds `index idx_x` on `known_issues` puts `known_issues` in the
-     set; a table only the approved diff names (none in the scope) is in
-     the set; a table in neither is not.
+     `schema` adds `index idx_x` and a migration that creates it on
+     `known_issues` put `known_issues` in the set, read from the migrated
+     copy; a table only the approved diff names (none in the scope) is in
+     the set; a table in neither is not; the planted scope naming an index
+     the migration never creates is refused by the scope gate before the
+     split runs.
 2. **Before the apply: refuse only a touched table** (`preflight`, the
-   drift refusal at line 598).
+   drift refusal, moved as item 1 says).
    - `drift, aside = server_masked(diff(dump(bk), dump(db)), approved)` stays
      as it is, so a listed server write in a touched table is still set
      aside, and a field the approved diff names never is. The drift is then
@@ -117,7 +153,9 @@ codes and two header lines, and both keep their meaning.
      returns 0; a row added to, changed in or removed from `checklist_items`
      or `workflow_templates` (touched) refuses with exit 2 and live is
      untouched; a stand-in `stripe_event_cursors` row rewritten between the
-     dry run and the apply is listed, not refused.
+     dry run and the apply is listed, not refused; a `known_issues` row
+     changed when the scope's `schema` adds an index on `known_issues`
+     refuses.
 3. **After the apply, and in `verify-live`: the approved changes hold,
    the rest is listed** (`apply_live`, `verify_live`, and one new comparison
    beside `exact_gaps` and `shape_gaps`).
@@ -134,6 +172,18 @@ codes and two header lines, and both keep their meaning.
      where the copy must equal the approved diff both ways; `shape_gaps` is
      replaced by the new comparison in `verify_live` or kept as its gaps
      half, the Engineer's choice, said in the log.
+   - **What is a gap and what is listed, settled here.** A gap is only an
+     approved leaf absent or different: an approved added row gone, an
+     approved changed field holding neither its approved after-value nor
+     `<clock>` where that was approved, an approved added row's field
+     changed, an approved schema object gone or with other SQL. Everything
+     else is listed, whatever table it is in: a field the approved diff
+     does not name moved in a row it does name (383's `api_keys` row 2
+     `is_active` after a `last_used_at` migration), a row added to or
+     removed from a table the change touches or created (404's check-ins,
+     379's later row), and any change in a table the change does not touch.
+     This is the row's "other differences are listed", and the tests under
+     item 5 follow it.
    - **`apply_live`, after the migration:** `gaps` are the scope problems
      recorded, as `live differs from the approved diff: …` is today, and
      the exit is 1 when any exists, else 0. The after-apply `check_scope`
@@ -185,13 +235,29 @@ codes and two header lines, and both keep their meaning.
 5. **The existing controls, moved where K91 moves the rule** (the tests
    named under Tests). A control that holds the old rule changes only
    where K91 changes it, each change named in the phase log with the test
-   id and the reason; the controls on a touched table keep failing. Each
-   control that changed an untouched table is kept in two forms: on a
-   touched table (the scope names it) it still refuses before the apply
-   and still exits 3 after; on an untouched table it is listed and passes.
+   id and the reason. The two positions differ, and the plan says which is
+   which:
+   - **Before the apply,** a control that changed a table the fixture
+     scope does not touch is kept in two forms: under a scope that names
+     the table (383's and 385's `_scoped` form) it still refuses with
+     "changed since the dry run"; under the fixture scope it is listed and
+     the apply returns 0. The touched-table form is the control, and its
+     mutation (the touched set returned empty) turns it red.
+   - **After the apply,** every existing control changes a field or row
+     the approved diff does not name (383's `api_keys` row 2 `is_active`
+     and `devices`, its `audit_events` row removed and `devices` row added;
+     385's `rebind`, `added_row` and `other_table`, beside and alone). By
+     item 3 those are the listed shape and exit 0, so they move to the
+     listed cases, each asserting exit 0 and its change in the listed
+     lines. The after-apply control that still fails is an approved leaf
+     altered or missing: each file keeps its existing `_scoped` test (the
+     approved field written again, exit 3) and gains one more under
+     `_scoped`, the approved `schema_version` row deleted from live after
+     the apply, exit 3. Item 3's "still exits 3" after the apply means
+     those shapes and no other.
    - Finish line: every changed assertion is in the phase log's list, each
      with the K91 sentence that changes it; no test outside that list
-     changes.
+     changes; each class docstring says which shape it holds.
 6. **The deploy skill's record** (`.claude/skills/deploy/SKILL.md`,
    `.claude/skills/deploy/CHANGELOG.md`, `deploy.py`'s module docstring).
    - `SKILL.md`: step 4's bullet "live still equals the backup, but for
@@ -208,7 +274,7 @@ codes and two header lines, and both keep their meaning.
      surprise is caught.
    - `CHANGELOG.md`: a dated entry at the top, "2026-11-2x — the check
      asks what the change did (Phase 405, K91, F210, F259)", naming the
-     functions, the tests and the mutation count.
+     functions, the moved drift split, the tests and the mutation count.
    - `deploy.py`'s docstring (lines 18 to 34) says the same in its `apply-live`
      and `verify-live` lines.
    - Finish line: `git grep -n -F 'live equals the backup' -- .claude/skills/deploy`
@@ -221,15 +287,19 @@ codes and two header lines, and both keep their meaning.
    row moves with the work. The handoff carries the live step as paste
    blocks, each saying which computer and which window, ending in ALL GOOD
    or SOMETHING IS OFF, every `gh` call naming `-R Kubanjaze/moto-diag`
-   (R8). `docs/decisions.md` on this branch ends at K94; K95's row is the
-   Yeoman's, on master, and this plan cites it from the Step 0 report.
+   (R8). The Mac's blocks expect what each run can print: 404's run shows
+   check 8 passing with the feed's writes in the listed lines; 405's run
+   shows check 8 printing "has no dry-run diff: no deploy to verify" and
+   passing, and lists nothing. `docs/decisions.md` on this branch ends at
+   K94; K95's row is the Yeoman's, on master, and this plan cites it from
+   the Step 0 report.
 8. **Finish line for the phase:** every test under Tests green and the new
    file seen red on master's `deploy.py`; the mutations red;
    `COLLECTED_TEST_FLOOR` raised by a diff of collected ids; the quality
    counts at their pins (no function in `deploy.py` crosses McCabe 20: the
-   new comparison and the touched set are their own functions; coverage
-   does not fall); the regression of record inside the fence after
-   `wholetree.sh`; `verify_phase.sh`; the handoff.
+   new comparison, the touched set and the drift split are their own
+   functions; coverage does not fall); the regression of record inside the
+   fence after `wholetree.sh`; `verify_phase.sh`; the handoff.
 
 ## The change log's three newest entries
 
@@ -297,17 +367,24 @@ rule it needs.
   integrity, foreign keys, the regression gate, the committed diff); any
   entry added to or removed from `SERVER_WRITES`; stopping or starting the
   payments feed or the server inside a database step.
-  **Three readings, recorded, told to the operator with the pull
+  **Four readings, recorded, told to the operator with the pull
   request:** (1) an index, trigger or view the scope or the approved diff
-  names counts its table as touched, by `tbl_name` in `sqlite_master`;
-  (2) the after-apply scope check over the whole live diff is replaced by
-  the approved-holds comparison, because K91 says a difference the running
-  code made is listed, and the scope stays checked twice before the apply;
-  (3) `verify-live` for an older phase passes when every approved change
-  still holds and later migrations only added other objects, and still
-  fails, naming the later migration, when one altered or removed an
-  approved change. If the Engineer finds a case where any of the three
-  could go two ways on live, that is a stop.
+  names counts its table as touched, by `tbl_name` in the fresh pre-apply
+  copy's `sqlite_master` after the migration has run on it, merged with
+  the backup's for a dropped object, and the drift split moves after the
+  fresh dry run's gates to read it; (2) the after-apply scope check over
+  the whole live diff is replaced by the approved-holds comparison,
+  because K91 says a difference the running code made is listed, and the
+  scope stays checked twice before the apply; (3) after the apply, a
+  field the approved diff does not name, moved in a row it does name, and
+  a row added to or removed from a touched table, are listed, because the
+  approved leaf still holds, and only an approved leaf absent or
+  different fails; (4) `verify-live` for an older phase passes when every
+  approved change still holds and later migrations only added other
+  objects, and still fails, naming the later migration, when one altered
+  or removed an approved change. If the Engineer finds a case where any of
+  the four could go two ways on live, or a scope naming an object the
+  migration never creates reaches the drift split, that is a stop.
 - **A test that cannot be made green: none known.** The existing controls
   that change are named under Tests, each with the reason in the commit
   message. If a test outside that list (357's exact comparison, 358's other
@@ -329,8 +406,11 @@ rule it needs.
   `stripe_event_cursors`, `stripe_feed_checkins` and `work_orders` the
   fixture adds, named for the writers F259 and F210 describe):
   - **the touched set:** the fixture scope's three tables; a scope whose
-    `schema` adds an index on `known_issues` adds that table; a table only
-    the approved diff names is in; a table in neither is out;
+    `schema` adds an index on `known_issues`, with a migration that
+    creates it, adds that table, read from the migrated copy; a table only
+    the approved diff names is in; a table in neither is out; a scope
+    naming an index the migration never creates is refused by the fresh
+    dry run's scope gate, and the split is not reached;
   - **before the apply, listed and applied:** a `stripe_event_cursors` row
     rewritten between the dry run and the apply; a `work_orders` row added
     (a shop's own write, F210); a `known_issues` row added (358's old
@@ -340,16 +420,17 @@ rule it needs.
     approved exact diff: yes` with the table under `Other differences,
     listed`;
   - **before the apply, refused:** a row added to, changed in and removed
-    from `checklist_items`; a row added to `workflow_templates`; a change
-    to a table that is touched only through an index the scope names; each
-    exits 2 with "changed since the dry run", and live is untouched (358's
-    `_refusal`);
+    from `checklist_items`; a row added to `workflow_templates`; a
+    `known_issues` row changed when the table is touched only through an
+    index the scope names and the migration creates; each exits 2 with
+    "changed since the dry run", and live is untouched (358's `_refusal`);
   - **after the apply, listed and passing:** a new `known_issues` row; a
     `stripe_event_cursors` row rewritten; a migration that creates
     `stripe_feed_checkins` (the scope's `schema` names it) and three rows
     written to it afterwards, as 404's check-ins; a later phase's
     `schema_version` row and a new row in a touched table (379's old
-    case); each `verify_live` exits 0 and prints the table in the listed
+    case); a field the approved diff does not name moved in a row it
+    names; each `verify_live` exits 0 and prints the table in the listed
     lines;
   - **after the apply, failing:** an approved added row deleted from live;
     an approved changed field written back to its old value; an approved
@@ -360,7 +441,9 @@ rule it needs.
     `apply_live` return 1, the live diff say `no`, and `verify_live` exit 3;
   - **the other gates unchanged, run again here as controls:** a fresh dry
     run differing in one field refuses (357's case); a scope file changed
-    refuses; the backup gone refuses; a foreign-key break exits 1;
+    refuses; the backup gone refuses; a foreign-key break exits 1; a
+    touched-table drift and a fresh-dry-run gap together refuse on the
+    gap first, showing the split now runs after the fresh dry run's gates;
   - **the callers:** `verify_phase.sh` check 8 on a stand-in `deploy.py`
     exiting 0 with listed lines passes, and on 3 fails (379's harness);
     the Quartermaster's `database_step` passes on exit 0 with `yes` and
@@ -383,14 +466,30 @@ rule it needs.
     case; `test_a_later_migration_is_named_as_the_cause_and_still_fails`:
     the later migration alters an approved row, exit 3 with the F197 line;
     its old shape (a later row added) becomes a listed case;
-  - `tests/test_phase383_server_writes.py` `TestTheControlsStillFail` and
-    `TestAWholeTableKeepsItsControls`: each control kept on a touched
-    table under a scope that names it (383's `_scoped` form), and its
-    untouched form moved to the listed cases; `test_the_list_is_exactly_this`
-    and `TestAMigrationThatWritesTheColumn` unchanged;
-  - `tests/test_phase385_server_writes.py` `TestTheControlsStillFail`: the
-    same, under a scope naming `device_tokens`; `other_table` becomes a
-    listed case in both positions;
+  - `tests/test_phase383_server_writes.py`: in `TestTheControlsStillFail`,
+    the three before-the-apply controls are each kept under a scope that
+    names their table (the `_scoped` form, `api_keys` for the first two;
+    a scope naming `devices` for the third), still refusing, and their
+    fixture-scope forms become listed cases with exit 0;
+    `test_another_column_after_the_apply` and
+    `test_another_table_after_the_apply` move to the listed cases, exit 0
+    with the change in the listed lines; `TestAWholeTableKeepsItsControls`:
+    `test_a_changed_row_before_the_apply` kept under a scope naming
+    `audit_events`, refusing, and its fixture-scope form listed;
+    `test_a_removed_row_after_the_apply` and
+    `test_another_table_s_added_row_after_the_apply` move to the listed
+    cases; `TestAMigrationThatWritesTheColumn` unchanged and gains
+    `test_the_approved_row_removed_after_the_apply` (the approved
+    `schema_version` row 71 deleted from live, exit 3);
+    `test_the_list_is_exactly_this` unchanged;
+  - `tests/test_phase385_server_writes.py` `TestTheControlsStillFail`:
+    `test_before_the_apply` runs `rebind` and `added_row` under a scope
+    naming `device_tokens` (the `_scoped` form), still refusing, beside
+    and alone, and under the fixture scope as listed cases; `other_table`
+    (`phones`) is a listed case in both scopes; `test_after_the_apply`
+    becomes the listed case for all six parametrizations, exit 0;
+    `TestAMigrationThatWritesTheColumn` unchanged and gains
+    `test_the_approved_row_removed_after_the_apply`, exit 3;
   - `tests/test_phase348_server_writes.py`: unchanged (it tests
     `server_masked` alone);
   - `tests/test_phase357_deploy_exact.py`: unchanged.
@@ -403,7 +502,9 @@ rule it needs.
   of the comparison returning `[]` (the failing cases go red); the listed
   half counted as gaps (the listed-and-passing cases go red); an index's
   table left out of the touched set (the index case goes red); the clock
-  rule dropped from the comparison (the clean read-back goes red).
+  rule dropped from the comparison (the clean read-back goes red); the
+  `tbl_names` map read from the backup instead of the migrated copy (the
+  index case goes red).
 - `COLLECTED_TEST_FLOOR` raised by a diff of collected ids; the floor test
   and the quality ratchet both green.
 - The regression of record through `regression.sh` inside the fence, with
@@ -424,22 +525,24 @@ code change to `through_fleet.py`, `remote.py`,
 `ops/desktop/motodiag_remote.py`, `verify_phase.sh`, `quartermaster.py` or
 `dispatcher.py`: they read exit codes and two header lines whose meaning is
 kept; `verify_phase.sh`'s comment "3 live differs from the approved diff"
-stays true. The desktop's installed dispatcher and sudoers (406's, installed
-once; nothing here changes the fixed list). A shop's own traffic and
-onboarding (330). The engineer gate's deploy-folder refusal
-(`engineer.verify_deploy`), which K95 says does not apply here and which is
-not changed. The K95 row in `docs/decisions.md` (the Yeoman's, on master).
-No seed data, no split and no eval protocol: this phase has none, and it
-names no path under `data/`.
+stays true, and its "no dry-run diff" skip, which makes 405's own check 8
+print nothing listed, is not changed. The desktop's installed dispatcher
+and sudoers (406's, installed once; nothing here changes the fixed list). A
+shop's own traffic and onboarding (330). The engineer gate's deploy-folder
+refusal (`engineer.verify_deploy`), which K95 says does not apply here and
+which is not changed. The K95 row in `docs/decisions.md` (the Yeoman's, on
+master). A touched set computed after the apply or in `verify-live`: it
+decides nothing there. No seed data, no split and no eval protocol: this
+phase has none, and it names no path under `data/`.
 
 ## Planned items
 
-- [ ] Step 0 re-measured: the line numbers above, the four callers and what each reads, the `SERVER_WRITES` finding (still used in a touched table before the apply) and the census in the phase log
-- [ ] `touched`: the set as the row defines it, printed once per run, with its tests
-- [ ] Before the apply: the drift split by the touched set; a touched table refuses with "changed since the dry run"; the rest is listed and the apply goes on
-- [ ] After the apply and in `verify-live`: `approved_holds`; the live diff's header keeps its two lines and gains `Other differences, listed`; exit 3 only on gaps, the F197 lines kept
-- [ ] The existing controls moved where K91 moves the rule, each named in the phase log with its reason; the controls on a touched table still red on their mutations
+- [ ] Step 0 re-measured: the line numbers above, the four callers and what each reads, the `SERVER_WRITES` finding (still used in a touched table before the apply), the scope gate's refusal of an object the migration never creates, and the census in the phase log
+- [ ] `tbl_names` and `touched`: the set as the row defines it, read from the migrated pre-apply copy, printed once per run, with its tests
+- [ ] Before the apply: the drift read and split moved after the fresh dry run's gates; a touched table refuses with "changed since the dry run"; the rest is listed and the apply goes on
+- [ ] After the apply and in `verify-live`: `approved_holds`; the live diff's header keeps its two lines and gains `Other differences, listed`; exit 3 only on an approved leaf absent or different, the F197 lines kept
+- [ ] The existing controls moved where K91 moves the rule: before the apply, kept on a touched table and listed on an untouched one; after the apply, moved to the listed cases, with the approved-row-removed control added under each `_scoped` form; each named in the phase log with its reason; the kept controls still red on their mutations
 - [ ] `SKILL.md`, `CHANGELOG.md` and the module docstring say what the check now asks, dated, with K91
 - [ ] New tests red on master's `deploy.py`; the callers' tests green unchanged; `405_mutate.py` red; `COLLECTED_TEST_FLOOR` raised by a diff of collected ids; the quality counts at their pins
 - [ ] The regression of record inside the fence; `verify_phase.sh`
-- [ ] The close-out: FOLLOWUPS closing lines for F259 and F210 "once merged and live"; any uncovered case filed as a finding; the ROADMAP row ✅ with CLOSED date and regression line; the handoff with the live step (the fleet's code copy onto the merge and the fleet restarted; from the Mac, `verify_phase.sh 404 29e21a3 d797d8e` and for 405, check 8 passing with the feed's writes listed) as paste blocks ending in ALL GOOD or SOMETHING IS OFF
+- [ ] The close-out: FOLLOWUPS closing lines for F259 and F210 "once merged and live"; any uncovered case filed as a finding; the ROADMAP row ✅ with CLOSED date and regression line; the handoff with the live step (the fleet's code copy onto the merge and the fleet restarted; from the Mac, `verify_phase.sh 404 29e21a3 d797d8e` with check 8 passing and the feed's writes listed, and `verify_phase.sh` for 405 with check 8 printing "no deploy to verify" and passing) as paste blocks ending in ALL GOOD or SOMETHING IS OFF
