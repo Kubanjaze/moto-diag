@@ -1,0 +1,53 @@
+D1 any branch passes: red
+D2 any sha256 passes: red
+D3 feed-stop stops the app server: red
+D4 server-update skips GitHub's master: red
+D5 a checkout changed by hand is moved: red
+D6 server-update keeps the new code when the server fails: red
+D7 the feed's restart seen from 'running' alone: red
+D8 the app server always healthy: red
+D9 fleet-move ignores a running stage: red
+D10 fleet-move ignores the search on start: red
+D11 fleet-move keeps the new code when the fleet fails: red
+D12 the fleet's start not waited for: red
+D13 the fleet's log read up to its first zero byte: red
+D14 deploy-apply drops the sha256: red
+D15 feed-status keeps the caller's MOTODIAG_*: red
+D16 the put-back not checked: red
+D17 the put-back checked by its exit alone: red
+D18 two changing steps at once: red
+D19 a Mac gone away ends the step: red
+D20 commands write to the Mac's channel themselves: red
+D21 server-update reads the settings after the change: red
+D22 server-update reads the check-ins after the change: red
+D23 a feed that never checks in passes: red
+D24 a feed systemd restarted after a crash passes: red
+D25 a feed that died after its check-in passes: red
+D26 the search on start's exit not read: red
+D27 the search on start with sshd's PATH: red
+D28 SIGHUP ends the step: red
+D29 the fleet's start seen while it is not running: red
+D30 a line that is not UTF-8 ends the step: red
+D31 384's backups print to the closed channel: red
+D32 384's fetch prints to the closed channel: red
+D33 a check-in unreadable after the change is a refusal: red
+D34 server-update reads the settings again after the change: red
+T1 the apply skips the sha256: red
+T2 the apply skips a moved branch: red
+T3 the apply without a dry run: red
+T4 the dry run alone prints no sha256: red
+T5 the answer says the desktop asked: red
+T7 the answer says the operator's words were seen: red
+T6 the apply of another commit's dry run: red
+C1 yes asked before the list: red
+C2 any answer is a yes: red
+C3 the first of several sha256 lines taken: red
+C4 deploy-step's arguments unchecked: red
+C5 deploy-apply sent on its own: red
+I1 a wider password-free rule: red
+I2 the update touches the SSH listener: red
+I3 the dispatcher installed group-writable: red
+I4 a dispatcher that does not parse is installed: red
+I5 the update runs for any user: red
+I6 the rules installed before visudo checks them: red
+52/52 red

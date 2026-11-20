@@ -3947,3 +3947,8 @@ Write-up: [`403_implementation.md`](docs/phases/completed/403_implementation.md)
 
 Log: [`docs/phases/completed/404_phase_log.md`](docs/phases/completed/404_phase_log.md).
 Write-up: [`404_implementation.md`](docs/phases/completed/404_implementation.md).
+
+## Phase 406 — The Mac runs the rest of the desktop's steps — CLOSED 2026-11-19
+
+Log: [`docs/phases/completed/406_phase_log.md`](docs/phases/completed/406_phase_log.md).
+Write-up: [`406_implementation.md`](docs/phases/completed/406_implementation.md).

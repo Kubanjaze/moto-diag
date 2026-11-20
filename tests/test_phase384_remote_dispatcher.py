@@ -84,9 +84,13 @@ def test_outside_the_list_is_refused_and_runs_nothing(cmd, paths, capsys):
 
 
 def test_the_list_is_exactly_these():
+    # Phase 406 added the last ten, by K93; any other name is a new decision.
     assert set(R.OPS) == {"status", "dryrun", "apply-live", "verify-live", "live-check",
                           "media-check", "backup", "backups", "fetch", "api-stop",
-                          "api-start", "api-restart", "server-pull"}
+                          "api-start", "api-restart", "server-pull",
+                          "feed-status", "feed-stop", "feed-start", "feed-restart",
+                          "server-update", "fleet-status", "fleet-log", "fleet-move",
+                          "deploy-dryrun", "deploy-apply"}
 
 
 def _deploy_calls(shell, paths):

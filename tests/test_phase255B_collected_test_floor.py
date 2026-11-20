@@ -557,7 +557,15 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: and test_phase177_vehicle_api.py's test_shop_has_no_limit, which replaces
 #: the removed test_shop_limit_50 (the Shop plan's bike cap is gone, K84).
 #: Measured: 12779.
-COLLECTED_TEST_FLOOR = 12779
+#:
+#: Phase 406 (the Mac runs the rest of the desktop's steps, K93), by a diff
+#: of collected ids against master 3ebeac6 (12779): +110 -0, all in the four
+#: new files test_phase406_remote_ops.py (67), _through_fleet_split.py (12),
+#: _remote_client.py (20) and _install.py (11). The build's +86 measured
+#: 12865; the review's fixes added 20 (12885), 384's operations printing
+#: through `say` 2 (12887), and server-update's reads after its change 2.
+#: Measured: 12889.
+COLLECTED_TEST_FLOOR = 12889
 
 
 def _collected_count() -> int:
