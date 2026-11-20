@@ -155,6 +155,11 @@ The operator's words:
   - **293 comes straight after 330,** so 344 and 210 move down one place, to 21 and 22. Row 293 is reshaped from "Factory service manual references"; the rest of Track P stays in Wave 2.
   - **What 293 needs from the operator,** asked before it starts: what each plan may store in manuals, and the terms' clause on uploads.
   - **No prompt yet:** one is written before 330 closes, from the brief's plan outline. Row 293 is on master, 🔲.
+- **2026-11-20, later: 407 runs beside this list, not in it (K96).** When the fleet's first step calls a phase a reshape, the dispatcher asks the operator at once and labels the issue `needs-admiral`, instead of two plan-writer calls and a stop with no label (F285).
+  - **The operator's words:** "do that and let me know where issues stand", answering the advisor's proposal.
+  - **Built by the advisor session on the Mac,** as a pull request the operator merges after review, as 406 was. The fleet does not wait for it, and it does not wait for the fleet.
+  - **The order does not change:** after 405 comes 330, then 293.
+  - **The prompt** is `docs/prompts/407_the_operators_decision_asked_first.txt`. Row 407 is on master, 🚧.
 
 ## Where the ledger stands
 
