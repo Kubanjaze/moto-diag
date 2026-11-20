@@ -207,3 +207,79 @@ Line coverage of record: 88.36% at `d844fba` (the pin is 87.50%): 0.86 points ab
   step 1 (the desktop) in 11 cases, with 4 planted faults each caught;
   step 2 (the Mac) in 6 cases, with 2. The merge block, given to the
   operator in the session, in 13 cases, with 3.
+
+## 2026-11-20 — after the merge
+
+- **The merge** was the operator's, from the Mac: pull request #74 as
+  `be1e43a`, at 23:45:47 EST on 2026-11-19. The block's first paste
+  stopped at its first GitHub call ("error connecting to
+  api.github.com"), having changed nothing. A few minutes later, from
+  the same Mac, GitHub answered, the head was still `09e5f76`, its check
+  had passed and master had not moved. The second paste merged. Master's
+  tree is `6b90f37`, `09e5f76`'s own.
+- **Step 1's check was wrong, and was corrected before it ran.** Found on
+  reading the step again after the merge.
+  - The handoff's block asked `sudo -n -l /usr/bin/systemctl <verb>
+    <unit>` of the five approved restarts. It asked the same of `restart
+    ssh.socket` and `stop motodiag-fleet.service`, which must not run
+    without a password.
+  - `sudo -l` with a command says whether the policy permits it, with a
+    password or without, and lilcu has `(ALL : ALL) ALL`. 390's log
+    measured this on the desktop: "`sudo -n -l <cmd>` passes before the
+    rule exists".
+  - So the first loop could not fail, and the second would fail on any
+    desktop: the block would install correctly, then print a false
+    SOMETHING IS OFF.
+  - The first bench's stand-in `sudo` answered `-n -l` from a list of
+    password-free commands, which is not what sudo does.
+- **The corrected block reads the rules themselves.** It reads them with
+  the password typed once for the install, before `sudo -k`.
+  - The restarts' file, `/etc/sudoers.d/motodiag-api`, must equal the
+    two approved lines exactly.
+  - It lists every sudoers file with a line that lets a command run
+    without a password: `NOPASSWD` or `!authenticate`, comments left out.
+    It reads `/etc/sudoers`, `/etc/sudoers.d`, and `/etc/sudoers-rs`
+    when there is one, with GNU `grep -R`, so a linked file is read too.
+  - Only two files may be on that list: the restarts' file, and the disk
+    clean-up's (`/etc/sudoers.d/motodiag-fstrim`) holding its one line.
+  - None of it depends on how `sudo -l` prints, which differs between
+    sudo and sudo-rs. The desktop's sudo words its refusal as sudo-rs
+    does ("interactive authentication is required", 390's reclaim line).
+- **Its bench** is bench30, in the advisor's scratchpad.
+  - The stand-in `sudo` is the policy as 390 measured it. `-n -l <cmd>`
+    lists any command. A password typed once is cached until `-k`, and
+    `-n cat` and `-n grep` run only while it is.
+  - The install writes the merged `install_sudoers.sh`'s own lines,
+    taken from `be1e43a`.
+  - grep is GNU grep 3.12, as on the desktop, installed on the Mac from
+    Homebrew for this bench (rule 6, K26).
+  - 19 cases, all as expected: the first bench's 11, and 8 on the rules.
+    The 8: another file; a `!authenticate` default; a wider clean-up
+    rule; `/etc/sudoers-rs`; a linked file; comments that must not
+    count; a wider install; a password that ran out.
+  - The first version, run there as a control, fails a good install with
+    "systemctl restart ssh.socket runs without a password".
+  - 10 planted faults, 10 caught.
+- **Step 1, run by the operator:** ALL GOOD. `visudo` parsed the new
+  rules and the policy, and the installed dispatcher hashes to
+  `938af2952962b66e…`, the merged file's.
+- **No finding was filed.** 334's branch is open, so a number taken on
+  master now could be handed out twice (F230). This entry and the
+  handoff are the record.
+- **Step 2 lost its move of the fleet's code copy,** before it ran. The
+  fleet was holding 334 for its database step, the move restarts the
+  fleet, and nothing that night needed it. The copy, at `ce12882`, moves
+  after 405.
+  - The read-only block ran first from the advisor, then from the
+    operator: ALL GOOD both times. These were the first runs of
+    `feed-status`, `fleet-status` and `fleet-log` against the real
+    desktop.
+  - One refusal along the way was the advisor's own. `fleet-log 72 6`,
+    from the advisor's zsh, which does not split an unquoted variable,
+    went out as one word. The desktop refused it, as it should ("'fleet-log
+    72 6' is not an operation"). The operator's blocks run under bash.
+- **334's database step stayed at the PC** (K93), with the advisor's
+  stop-the-feed block, checked first against the real note on issue #72.
+  Migration 091 is live (schema 91). `verify-live 334` equals the
+  approved exact diff, and the fleet's own check matched. The payments
+  feed was stopped about 3 minutes. The handoff has the lines.
