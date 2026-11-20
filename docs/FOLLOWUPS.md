@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F284** (this file). The
+At the time of writing the highest assigned is **F285** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -6515,3 +6515,43 @@ stand-ins: 11 cases, and 3 planted faults, each caught. It printed:
   the new file.
 - The old log keeps its 448241 bytes and its 200 zero bytes, beside the
   new one. Reading it still needs `grep -a`.
+
+### F285
+
+**A plan stop that goes to the operator carries no `needs-admiral` label, and a Step 0 report classified reshape still costs the plan writer two calls first**
+
+Found 2026-11-20 by the operator, from a summary on their phone ("No
+needs-admiral label, but the fleet's waiting on your call"), and checked
+by the advisor session the same day. The operator: "lets get that
+addressed to".
+
+What is wrong, measured in the code and on issues #68 and #77:
+- `.claude/skills/fleet/plan_check.py` P4 fails a Step 0 report
+  classified reshape with "the step-0 classification is reshape, which
+  goes to the Admiral". The plan writer gets one more call. Then the
+  dispatcher posts `<!-- fleet-dispatcher: stopped rank=captain run=… -->`
+  through `say_stopped` and leaves the labels as they were (`mission`,
+  `step0:done`).
+- The dispatcher's own docstring says "A stage that needs the operator
+  adds `needs-admiral` (a decision) or `needs-hands`". The Engineer's
+  stops do (`escalate(…, "needs-admiral", …)`); this stop does not.
+- It has happened twice. Phase 404: issue #68, 2026-11-18, answered by
+  K90. Phase 405: issue #77, run 20261120_104358_captain_405, stopped at
+  10:57 EST, answered by K95. Each time the issue showed only
+  `mission,step0:done`, so nothing that reads labels marked it as waiting
+  on the operator.
+- Each time, the plan writer (Fable) ran two calls on a plan the checklist
+  was bound to refuse: about 13 minutes on 405, from 10:44 to 10:57 EST.
+  The Science Officer's report already said reshape before the first call.
+
+What would close it:
+- When a Step 0 report says reshape, the dispatcher adds `needs-admiral`
+  with a plain-English question, and does not start the plan writer.
+- A plan stop whose only failures are the operator's (P4 reshape) adds
+  `needs-admiral` too.
+- The operator's release (the decision recorded, the report relabelled,
+  `needs-admiral` taken off) starts the plan writer as the label put back
+  does today.
+- No rank may change `.claude/skills/fleet/` (`fleet_git.NEVER`), so a
+  builder session builds it, with planted cases: a reshape report labelled
+  at once with no plan-writer call, and an extension report not labelled.
