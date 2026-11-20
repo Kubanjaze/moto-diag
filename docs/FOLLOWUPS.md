@@ -6516,7 +6516,7 @@ stand-ins: 11 cases, and 3 planted faults, each caught. It printed:
 - The old log keeps its 448241 bytes and its 200 zero bytes, beside the
   new one. Reading it still needs `grep -a`.
 
-### F285
+### F285 — CLOSED by Phase 407
 
 **A plan stop that goes to the operator carries no `needs-admiral` label, and a Step 0 report classified reshape still costs the plan writer two calls first**
 
@@ -6555,3 +6555,23 @@ What would close it:
 - No rank may change `.claude/skills/fleet/` (`fleet_git.NEVER`), so a
   builder session builds it, with planted cases: a reshape report labelled
   at once with no plan-writer call, and an extension report not labelled.
+
+Closed 2026-11-20 by Phase 407, once merged and the fleet's code copy has
+moved:
+- A Step 0 report classified reshape gets `needs-admiral` and a
+  plain-English question from the scout stage, after `step0:done`, and from
+  the plan writer's stage before any model call; no model is called
+  (`Fleet.ask_reshape`, `.claude/skills/fleet/dispatcher.py`).
+- So the plan stop whose only failure is P4's reshape no longer happens:
+  the plan writer does not run on such a report.
+- The release (the decision recorded, the report's line made
+  `Classification: extension`, `needs-admiral` taken off) starts the plan
+  writer, as the label put back did.
+- Held by `tests/test_phase407_reshape_asks_first.py` (16 tests) and
+  `407_mutate.py` (16/16 red).
+- Outside F285, and recorded as a known limit in the fleet's
+  `CHANGELOG.md`: a Classification line that does not start with its word
+  still costs two plan-writer calls with no label.
+
+It takes effect when the fleet's code copy moves to a master that holds the
+merge (`docs/handoffs/2026-11-20_407_closed.md`, "What is open").

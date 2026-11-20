@@ -1,0 +1,123 @@
+"""Phase 407's mutations: each breaks one thing the phase built, and a test must go red.
+
+Run from the repository root: `.venv/bin/python docs/phases/in_progress/407_mutate.py`
+(ROOT is three levels up from in_progress/ or completed/). 388's harness, as
+334 used it: exact strings (each must occur once), the tests run after
+clearing `__pycache__` (the fleet's folder too), every file restored
+whatever happens. Exits 1 if any mutation stays green. An argument runs only
+the mutations whose name starts with it.
+"""
+
+from __future__ import annotations
+
+import pathlib
+import shutil
+import subprocess
+import sys
+
+ROOT = pathlib.Path(__file__).resolve().parents[3]
+
+DIS = ".claude/skills/fleet/dispatcher.py"
+
+
+def pytest(*args: str) -> list[str]:
+    return [sys.executable, "-B", "-m", "pytest", "-q", "-x", "-p", "no:cacheprovider",
+            "-p", "no:xdist", "-o", "addopts=", *args]
+
+
+T_407 = pytest("tests/test_phase407_reshape_asks_first.py")
+
+LABEL = '        self.label_once(issue, "step0:done")\n'
+ASK = '        self.ask_reshape(issue, "scout", phase, report)\n'
+SCOUT_TAIL = LABEL + ASK
+CAPTAIN_GUARD = ('        if self.ask_reshape(issue, "captain", phase, step0.read_text(encoding="utf-8")):\n'
+                 '            return "reshape: the operator is asked"\n')
+SPLIT = 're.split(r"(?<=[.!?])\\s+(?=[A-Z])", found.group(1).strip())[0]'
+
+MUTATIONS = [
+    ("Z1 the scout stage asks nothing", [(DIS, SCOUT_TAIL, LABEL)], T_407),
+    ("Z2 the plan writer's stage asks nothing", [(DIS, CAPTAIN_GUARD, "")], T_407),
+    ("Z3 the helper asks on every word", [(DIS,
+     '        if plan_check.classification(step0) != "reshape":\n',
+     "        if False:\n")], T_407),
+    ("Z4 the helper asks on none", [(DIS,
+     '        if plan_check.classification(step0) != "reshape":\n',
+     '        if plan_check.classification(step0) != "never":\n')], T_407),
+    ("Z5 a reshape leaves no step0:done", [(DIS, SCOUT_TAIL,
+     '        if self.ask_reshape(issue, "scout", phase, report):\n'
+     '            return "asked"\n' + LABEL)], T_407),
+    ("Z6 the plan writer's guard asks, then goes on to the model", [(DIS,
+     '            return "reshape: the operator is asked"\n', "            pass\n")], T_407),
+    ("Z7 the reason is not cut at its first sentence", [(DIS,
+     SPLIT, 'found.group(1).strip()')], T_407),
+    # Since the review (407's phase log, "the review, and its fixes").
+    ("Z8 the scout asks before it labels", [(DIS, SCOUT_TAIL, ASK + LABEL)], T_407),
+    ("Z9 a held issue is worked", [(DIS,
+     '            if labels & set(OPERATOR) or not labels & {"mission", *STATE_LABELS}:\n',
+     '            if not labels & {"mission", *STATE_LABELS}:\n')], T_407),
+    ("Z10 the reason runs onto the next line", [(DIS,
+     'reshape[^\\w\\n]*(.*)$', 'reshape\\W*(.*)$')], T_407),
+    ("Z11 the reason is cut at e.g.", [(DIS, SPLIT, 'found.group(1).strip().split(". ")[0]')],
+     T_407),
+    ("Z12 an @name is left bare", [(DIS,
+     '    return re.sub(r"(?<!\\w)@([\\w-]+)", r"`@\\1`", text)\n', '    return text\n')], T_407),
+    ("Z13 the reason keeps its asterisks", [(DIS,
+     're.sub(r"[*`]", "", text).rstrip', 'text.rstrip')], T_407),
+    ("Z14 the sweep names every label on a held issue", [(DIS,
+     '            on = [x for x in on if x in OPERATOR] or on\n', '')], T_407),
+    ("Z15 the scout's note always names the plan writer", [(DIS,
+     '                      + ("the operator\'s call, asked below." if reshape\n'
+     '                         else "the Captain writes v1.0."))\n',
+     '                      + "the Captain writes v1.0.")\n')], T_407),
+    ("Z16 a resumed question does not ask GitHub first", [(DIS,
+     '            lambda: (label in self.labels_of(issue)\n'
+     '                     or self.has_comment(issue, f"{MARKER} {kind} -->")))\n',
+     '            None)\n')], T_407),
+]
+
+
+def clear_caches() -> None:
+    for base in (ROOT / "src", ROOT / "tests", ROOT / ".claude" / "skills"):
+        for cache in base.rglob("__pycache__"):
+            shutil.rmtree(cache, ignore_errors=True)
+
+
+def run(command: list[str]) -> int:
+    clear_caches()
+    return subprocess.run(command, cwd=ROOT, capture_output=True, text=True).returncode
+
+
+def main(argv: list[str]) -> int:
+    chosen = [m for m in MUTATIONS if not argv or m[0].startswith(argv[0])]
+    commands = []
+    for m in chosen:
+        if m[2] not in commands:
+            commands.append(m[2])
+    for command in commands:
+        assert run(command) == 0, f"not green before mutating: {command}"
+    survivors = []
+    for name, edits, command in chosen:
+        originals = {}
+        try:
+            for rel, old, new in edits:
+                path = ROOT / rel
+                originals.setdefault(rel, path.read_text())
+                current = path.read_text()
+                assert current.count(old) == 1, f"{name}: the text occurs {current.count(old)} times in {rel}"
+                path.write_text(current.replace(old, new))
+            code = run(command)
+        finally:
+            for rel, text in originals.items():
+                (ROOT / rel).write_text(text)
+        verdict = "red" if code != 0 else "GREEN (survived)"
+        print(f"{name}: {verdict}", flush=True)
+        if code == 0:
+            survivors.append(name)
+    for command in commands:
+        assert run(command) == 0, f"not green after restoring: {command}"
+    print(f"{len(chosen) - len(survivors)}/{len(chosen)} red")
+    return 1 if survivors else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

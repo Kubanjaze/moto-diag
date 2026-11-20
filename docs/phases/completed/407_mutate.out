@@ -1,0 +1,17 @@
+Z1 the scout stage asks nothing: red
+Z2 the plan writer's stage asks nothing: red
+Z3 the helper asks on every word: red
+Z4 the helper asks on none: red
+Z5 a reshape leaves no step0:done: red
+Z6 the plan writer's guard asks, then goes on to the model: red
+Z7 the reason is not cut at its first sentence: red
+Z8 the scout asks before it labels: red
+Z9 a held issue is worked: red
+Z10 the reason runs onto the next line: red
+Z11 the reason is cut at e.g.: red
+Z12 an @name is left bare: red
+Z13 the reason keeps its asterisks: red
+Z14 the sweep names every label on a held issue: red
+Z15 the scout's note always names the plan writer: red
+Z16 a resumed question does not ask GitHub first: red
+16/16 red
