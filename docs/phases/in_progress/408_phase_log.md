@@ -50,3 +50,23 @@ schema; 0.135.0 passes both (124 routes, and `d43910b0…`, the app's copy);
 checkout uses 0.135.0. `pyproject.toml` says only `fastapi>=0.110`, so a
 fresh install today gets a version this suite fails on; that is filed at
 close-out, not fixed here. With that, `wholetree.sh` passed, exit 0.
+
+## Bug fixes
+
+### Bug fix #1 — 2026-11-21 — a test's planted date became a real one
+
+- **Issue:** the first regression run on this branch (at `2164c64`, after
+  master's K117 merged in) failed
+  `tests/test_phase392_plan_order.py::TestCheckRefuses::test_each_on_its_own_copy[as-of-undated]`
+  with "the dated entry of 2026-11-21 does not cite K99". It fails on
+  master too, from `c144fa7` on, in a checkout of master alone.
+- **Root cause:** the test plants "As of 2026-11-21, K99." as a date with no
+  entry in the plan of record's changes. On 2026-11-21 the plan of record
+  gained an entry with that date (K117's, then K118's), so the planted date
+  stopped being one with no entry, and `plan_order.check` gave its next
+  refusal instead.
+- **Fix:** the planted date is 2001-01-01, which no entry can carry; the
+  refusal it tests is unchanged.
+- **Files:** `tests/test_phase392_plan_order.py`.
+- **Verified:** the file's 49 tests pass; with the old date, the case fails
+  as above.

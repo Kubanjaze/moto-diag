@@ -84,7 +84,8 @@ class TestCheckRefuses:
     @pytest.mark.parametrize("rel,old,new,why", [
         (P.PLAN, "## Next, in order\n", "## The order\n", "has no '## Next, in order'"),
         (P.PLAN, "As of 2026-11-20, K99.", "As of now.", "no 'As of"),
-        (P.PLAN, "As of 2026-11-20, K99.", "As of 2026-11-21, K99.", "no entry under"),
+        # A date no entry can carry (Phase 408, bug fix #1: 2026-11-21 gained an entry).
+        (P.PLAN, "As of 2026-11-20, K99.", "As of 2001-01-01, K99.", "no entry under"),
         (P.PLAN, "As of 2026-11-20, K99.", "As of 2026-11-20, K999.", "K999, which does not"),
         (P.PLAN, "As of 2026-11-20, K99.", "As of 2026-11-20, K47.", "does not cite K47"),
         (P.PLAN, "| 2 | 303 | shop | fleet | nothing |", "| 2 | 303 | shop | robots | nothing |",
