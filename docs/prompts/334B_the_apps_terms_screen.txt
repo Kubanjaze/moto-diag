@@ -1,59 +1,141 @@
 Phase 334B, the app half of Phase 334: the phone app's terms screen.
 
-You are working in the mobile repository, moto-diag-mobile. The backend
-repository's Phase 334 (Kubanjaze/moto-diag) added the Terms of Service, a
-record of who accepted which version, and two server routes. Your job is
-the app screen that shows the terms and records the user's acceptance. Read
-the backend's plan, docs/phases/completed/334_implementation.md (or
-in_progress/ until it closes), items 4 to 6, and docs/legal/README.md,
-before you start. Build what this prompt says and nothing more.
+You are working in the mobile repository, moto-diag-mobile, on a new
+branch from main, phase-334B-the-apps-terms-screen. The backend
+repository's Phase 334 (Kubanjaze/moto-diag, closed and merged on
+2026-11-20) added the Terms of Service, a record of who accepted which
+version, and two server routes. Your job is the app screen that shows the
+terms and records the user's acceptance. Before you start, read the
+backend's plan, ../moto-diag/docs/phases/completed/334_implementation.md,
+its Logic items 4 to 6, and ../moto-diag/docs/legal/README.md. Build what
+this prompt says and nothing more.
 
-Start only after Phase 334's API description has reached the app's main:
-api-schema/openapi.json names the two routes below. If it does not, stop
-and say so; do not write the snapshot yourself. Then run
-`npm run generate-api-types` and commit only src/api-types.ts, before any
-screen.
+(Corrected 2026-11-20 by the advisor against both repositories' code, K98:
+the app's sign-in, its sign-out, the types step already done, where the
+text lives, the record, the working rules the app's repository lacks, and
+the branch and pull request.)
 
-THE TWO SERVER ROUTES
+WHAT IS ALREADY ON THE APP'S MAIN
+
+Phase 334's API description and types reached the app's main in its pull
+request 10 (merge 2267ea5): api-schema/openapi.json and src/api-types.ts
+both name the two routes below. Check that they still do, then run
+`npm run generate-api-types`: it should change nothing. If it changes
+src/api-types.ts, or a route is missing, stop and say so; do not write the
+snapshot yourself.
+
+HOW THE APP SIGNS IN TODAY
+
+The app has no sign-in screen. It holds one API key, pasted in
+src/screens/ApiKeyModal.tsx and kept in the phone's Keychain by
+src/contexts/ApiKeyProvider.tsx (apiKey, setApiKey, clearApiKey). So in
+this phase "signed in" means "the app holds a key", and "sign out" means
+clearApiKey. Do not call POST /v1/auth/logout: it ends a session, and for
+an API key the server answers 400 with the problem type ending
+"not-a-session". The server's staff logins (Phase 303, session tokens)
+have no app screen yet. Build nothing for them here, but do not write the
+screen so that it only works with a key.
+
+THE TWO SERVER ROUTES (../moto-diag/src/motodiag/api/routes/terms.py)
 
 - GET /v1/terms
   Anyone may call it. Answers version, date, terms_url and privacy_url.
-  Signed in, it also answers accepted (true or false) and accepted_at
-  (UTC, or null). For an anonymous caller both are null.
+  With a credential it also answers accepted (true or false) and
+  accepted_at (UTC, or null). For an anonymous caller both are null.
 - POST /v1/terms/accept, body {"version": "<the version shown>"}
-  Signed in. Records the caller's acceptance and answers version and
-  accepted_at. A second call for the same version answers the first time.
-  A version that is not the current one is 422, problem type ending
-  "terms-version-stale": the text changed while the screen was open, so
-  read GET /v1/terms again and show the new version.
+  Needs a credential. Records the caller's acceptance and answers version
+  and accepted_at. A second call for the same version answers the first
+  time. A version that is not the current one is 422, a ProblemDetail
+  whose type ends "terms-version-stale": the text changed while the screen
+  was open, so read GET /v1/terms again and show the new version. This is
+  not FastAPI's validation 422; src/api/errors.ts already tells the two
+  shapes apart.
 
 THE SWITCH ON THE SERVER
 
 While the operator's MOTODIAG_TERMS_REQUIRED is on, every route that takes
 a credential answers 403 with the problem type ending "terms-not-accepted"
-until the signed-in user has accepted the current version. These four
+until the caller's user has accepted the current version. Four routes
 still answer: GET /v1/terms, POST /v1/terms/accept, GET /v1/auth/me and
-POST /v1/auth/logout. Acceptance is per person: every user who signs in
-accepts for themselves; an owner's acceptance does not cover the staff. A
-new version must be accepted again. The switch is off until the operator
-turns it on, once this screen is in the app.
+POST /v1/auth/logout. Acceptance is per person: every user accepts for
+themselves, and an owner's acceptance does not cover the staff. A new
+version must be accepted again. The switch is off until the operator turns
+it on, once this screen is in the app.
 
 WHAT TO BUILD
 
-1. The terms screen: the version and its date, a link that opens the terms
-   (terms_url) and one that opens the privacy policy (privacy_url) in the
-   browser, an "I agree" button that posts the version shown, and a way to
-   sign out instead.
-2. After sign-in, read GET /v1/terms; if accepted is false, show the
-   screen before anything else.
+1. The terms screen: the version and its date; a link that opens the
+   terms (terms_url) and one that opens the privacy policy (privacy_url)
+   in the phone's browser, through React Native's Linking (nothing in the
+   app opens a link yet); an "I agree" button that posts the version
+   shown; and a way to sign out instead (clearApiKey).
+2. When the app holds a key, at start-up and when a key is entered, read
+   GET /v1/terms; if accepted is false, show the screen before anything
+   else.
 3. Anywhere a call answers 403 terms-not-accepted, open the screen; after
-   acceptance, return the user to where they were.
+   acceptance, return the user to where they were. The API client
+   (src/api/client.ts, openapi-fetch) takes middleware through use(); one
+   handler there is the place to see the 403, rather than every screen.
 4. On 422 terms-version-stale, read GET /v1/terms again and show the new
    version on the same screen.
 5. Tests for each of the above against mocked responses, in the app's own
-   test style.
+   test style (__tests__/api/client.test.ts stands in for the server with
+   a mocked fetch; the screens have *.smoke.test.tsx files).
 
 NOT IN THIS PHASE
 
-The text of the terms (the server's pages carry it), any server change,
-the store listings' privacy links, and turning the switch on.
+The text of the terms: it is two pages on the operator's website,
+getmekno.com/terms/ and getmekno.com/privacy/, whose addresses
+GET /v1/terms gives. Any server change. A sign-in screen. The store
+listings' privacy links. Turning the switch on.
+
+ONE STEP THAT IS THE OPERATOR'S, NOT YOURS
+
+On 2026-11-20 both pages on getmekno.com still showed an older text
+("Last updated: November 9, 2026"), not version 1.0 of 2026-11-19, the
+version the server asks users to accept. Publishing the new texts is step
+2 of 334's handoff (../moto-diag/docs/handoffs/2026-11-20_334_closed.md).
+Build and test the screen regardless; the switch must not go on until the
+pages show version 1.0.
+
+THE RECORD
+
+Row 334B and its documents belong to the backend repository
+(ROADMAP_AUTHORITY.md: 205 and up; every phase's own files live in the
+backend's docs/phases/). The advisor session writes 334B's Step 0 and
+plan before this session starts, and marks the row in progress. They stay
+on the backend's branch of this one's name until the close-out, so read
+them from GitHub, not from ../moto-diag, whose checkout may be on any
+branch:
+
+  gh api -H 'Accept: application/vnd.github.raw' 'repos/Kubanjaze/moto-diag/contents/docs/phases/in_progress/334B_implementation.md?ref=phase-334B-the-apps-terms-screen'
+
+and the same for 334B_step0.md. Build what the plan says. If it is not
+there, stop and say so. Do not write anything in ../moto-diag; the advisor
+keeps the log and closes the row from your pull request. The app's
+phase_log.md covers Phases 185 to 204 only; leave it alone.
+
+HOW TO WORK HERE
+
+The app's repository has no CLAUDE.md of its own, so these come with the
+prompt:
+- Read a file before you change it, change only what the plan names, and
+  say in the pull request anything you did that it does not.
+- Small commits, each with its tests. Before each, run `npx tsc --noEmit`,
+  `npx eslint .` and `npx jest`, and commit only when all three are clean.
+  The pre-commit hook lints what you stage; never skip it.
+- Write commit messages through a file or a quoted heredoc, never with a
+  backtick inside `-m "..."`.
+- Never force-push, never rebase a pushed branch, never merge.
+- When something blocks you, stop and say what, in plain English; do not
+  work around it.
+
+FINISHING
+
+- `npx tsc --noEmit` and `npx eslint .` clean; `npx jest` green.
+- Open the pull request in Kubanjaze/moto-diag-mobile from this branch to
+  main, with the Jest count and the tsc and eslint results in its
+  description. Do not merge it: the operator merges it by hand, after the
+  advisor's review.
+- Tell the operator, in plain English, the branch's last commit hash, so
+  the backend's close-out can name it.

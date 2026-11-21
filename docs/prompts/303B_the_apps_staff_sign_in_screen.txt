@@ -1,0 +1,130 @@
+Phase 303B, the app half of Phase 303: the phone app's staff sign-in screen.
+
+You are working in the mobile repository, moto-diag-mobile, on a new
+branch from main, phase-303B-the-apps-staff-sign-in-screen. The backend
+repository's Phase 303 (Kubanjaze/moto-diag, closed 2026-10-28) added staff
+logins: a user with a username and password signs in and gets a session
+token. The app cannot use them yet: its only way in is one pasted API key,
+so at a shop each staff member needs a key made for them by hand. Your job
+is the app's sign-in screen, and signing out and in again around it.
+Before you start, read ../moto-diag/docs/phases/completed/303_implementation.md
+and the server's routes in ../moto-diag/src/motodiag/api/routes/auth.py.
+Build what this prompt says and nothing more.
+
+(Written 2026-11-20 by the advisor against both repositories' code, K99.)
+
+WHAT IS ALREADY ON THE APP'S MAIN
+
+api-schema/openapi.json and src/api-types.ts (the app's pull request 10,
+merge 2267ea5) already describe the routes below. Check that they do, then
+run `npm run generate-api-types`: it should change nothing. If it changes
+src/api-types.ts, or a route is missing, stop and say so; do not write the
+snapshot yourself.
+
+HOW THE APP SIGNS IN TODAY
+
+- The home screen (src/screens/HomeScreen.tsx) opens ApiKeyModal, and its
+  handleSubmitKey stores the pasted key through ApiKeyProvider.setApiKey
+  (src/contexts/ApiKeyProvider.tsx, the phone's Keychain), then calls
+  resyncPushRegistration() (src/services/pushRegistration.ts).
+- Its handleClearKey is today's sign-out: deregisterPushToken() first,
+  while the credential still works, then clearApiKey().
+- src/api/auth.ts sends the stored credential as the X-API-Key header. The
+  server reads a session token from that header the same way it reads a
+  key (../moto-diag/src/motodiag/auth/deps.py, get_api_key), so a session
+  token can live in the same Keychain slot and go out the same way.
+
+THE SERVER'S ROUTES (../moto-diag/src/motodiag/api/routes/auth.py)
+
+- POST /v1/auth/login, body {"username", "password", "client"}. No
+  credential needed. "client" is optional, at most 64 characters: send a
+  short label for the phone, such as the app's name and platform. Answers
+  token (it starts "mds_" and is shown only this once), expires_at (UTC),
+  user (id, username, full_name, email) and memberships (each shop_id,
+  shop_name, role, permissions). A wrong username or password is 401 with
+  the problem type ending "login-failed". The server has no lockout or
+  throttle on failed logins, so the screen shows none.
+- GET /v1/auth/me. Answers user, memberships, credential (kind is
+  "session" or "api_key", id, prefix) and tier.
+- POST /v1/auth/logout. Ends the calling session: 204. For an API key it
+  answers 400 with the problem type ending "not-a-session", so call it
+  only for a session.
+- A session lasts session_lifetime_days (30 by default). An expired or
+  ended one no longer resolves, and every route that needs a credential
+  answers 401 with the problem type ending "invalid-api-key".
+
+WHAT TO BUILD
+
+1. The sign-in screen: username and password fields and a "Sign in"
+   button that posts POST /v1/auth/login. On success, store the token
+   through ApiKeyProvider.setApiKey and call resyncPushRegistration(), as
+   handleSubmitKey does. On "login-failed", say in plain words that the
+   username or password is wrong, and clear the password field.
+2. Where the app asks for a key today, it asks to sign in, and keeps
+   "Use an API key instead", which opens ApiKeyModal as before, for owners
+   and for setting the app up.
+3. Show who is signed in (full_name, or else username) where the app
+   shows its key today.
+4. Sign-out: deregisterPushToken() first, then, for a session only,
+   POST /v1/auth/logout, then clearApiKey(). Tell a session from a key by
+   GET /v1/auth/me's credential.kind, or by the "mds_" prefix of what the
+   app stored.
+5. While the app holds a session, a 401 "invalid-api-key" from any call
+   means the session has ended or expired: clear it and open the sign-in
+   screen, saying the session ended. The API client (src/api/client.ts,
+   openapi-fetch) takes middleware through use(); one handler there is the
+   place to see it. For a pasted key, keep today's behaviour.
+6. Tests for each of the above against mocked responses, in the app's own
+   test style (__tests__/api/client.test.ts stands in for the server with
+   a mocked fetch; the screens have *.smoke.test.tsx files).
+
+NOT IN THIS PHASE
+
+Changing a password, an owner resetting a member's password, the list of
+open sessions, showing or editing roles, adding staff, the terms screen
+(334B, which comes next and builds on this sign-in and sign-out), any
+server change, and the store listings.
+
+THE RECORD
+
+Row 303B and its documents belong to the backend repository
+(ROADMAP_AUTHORITY.md: 205 and up; every phase's own files live in the
+backend's docs/phases/). The advisor session writes 303B's Step 0 and
+plan before this session starts, and marks the row in progress. They stay
+on the backend's branch of this one's name until the close-out, so read
+them from GitHub, not from ../moto-diag, whose checkout may be on any
+branch:
+
+  gh api -H 'Accept: application/vnd.github.raw' 'repos/Kubanjaze/moto-diag/contents/docs/phases/in_progress/303B_implementation.md?ref=phase-303B-the-apps-staff-sign-in-screen'
+
+and the same for 303B_step0.md. Build what the plan says. If it is not
+there, stop and say so. Do not write anything in ../moto-diag; the advisor
+keeps the log and closes the row from your pull request. The app's
+phase_log.md covers Phases 185 to 204 only; leave it alone.
+
+HOW TO WORK HERE
+
+The app's repository has no CLAUDE.md of its own, so these come with the
+prompt:
+- Read a file before you change it, change only what the plan names, and
+  say in the pull request anything you did that it does not.
+- Small commits, each with its tests. Before each, run `npx tsc --noEmit`,
+  `npx eslint .` and `npx jest`, and commit only when all three are clean.
+  The pre-commit hook lints what you stage; never skip it.
+- Write commit messages through a file or a quoted heredoc, never with a
+  backtick inside `-m "..."`.
+- Never force-push, never rebase a pushed branch, never merge.
+- Never put a real password or token in a test, a log line or a commit:
+  the tests use made-up values.
+- When something blocks you, stop and say what, in plain English; do not
+  work around it.
+
+FINISHING
+
+- `npx tsc --noEmit` and `npx eslint .` clean; `npx jest` green.
+- Open the pull request in Kubanjaze/moto-diag-mobile from this branch to
+  main, with the Jest count and the tsc and eslint results in its
+  description. Do not merge it: the operator merges it by hand, after the
+  advisor's review.
+- Tell the operator, in plain English, the branch's last commit hash, so
+  the backend's close-out can name it.

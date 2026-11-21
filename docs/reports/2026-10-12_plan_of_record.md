@@ -6,7 +6,7 @@ Written 2026-10-12 by the advisor session that verified Phases 373–381. This c
 
 The fleet reads this table exactly (`.claude/skills/fleet/plan_order.py`): the first row whose ROADMAP row is not ✅ is the next mission. A row built by a builder session is waited for. A row that needs the operator is asked first, in plain English. Otherwise the fleet opens the mission's issue and a one-row pull request that marks its row 🚧, and the operator merges it by hand (K49). The list changes only by a dated entry under "Changes to the order" with a K-id, written on the operator's word (K48).
 
-As of 2026-11-20, K94.
+As of 2026-11-20, K99.
 
 | # | phase | kind | built by | needs the operator | entry |
 |---|---|---|---|---|---|
@@ -31,7 +31,10 @@ As of 2026-11-20, K94.
 | 19 | 330 | shop | fleet | a rule change: F210's general rule comes first ("F210's general rule is still needed before onboarding (330)", 2026-10-21); it changes the set-aside list's definition, which is the operator's call | Wave 1, item 5 · K48, K52 |
 | 20 | 293 | shop | fleet | a rule change: what each plan may store in manuals (the brief suggests 500 MB on Individual and 10 GB on Shop) and the terms' clause on uploads are the operator's call | 2026-11-20 · K94 |
 | 21 | 344 | shop | fleet | nothing | Wave 1, item 5 · K48 |
-| 22 | 210 | shop | fleet | nothing | Wave 1, item 6 · K48 |
+| 22 | 303B | shop | builder | nothing | 2026-11-20, evening, later · K99 |
+| 23 | 334B | shop | builder | nothing | 2026-11-20, evening · K98 |
+| 24 | 372B | shop | builder | nothing | 2026-11-20, evening · K98 |
+| 25 | 210 | shop | fleet | nothing | Wave 1, item 6 · K48 |
 
 The ROADMAP stays the ledger: this file records the order of the open rows, and why. A Step 0 that measures something new can change the order. Any change is recorded here, dated.
 
@@ -155,6 +158,21 @@ The operator's words:
   - **293 comes straight after 330,** so 344 and 210 move down one place, to 21 and 22. Row 293 is reshaped from "Factory service manual references"; the rest of Track P stays in Wave 2.
   - **What 293 needs from the operator,** asked before it starts: what each plan may store in manuals, and the terms' clause on uploads.
   - **No prompt yet:** one is written before 330 closes, from the brief's plan outline. Row 293 is on master, 🔲.
+- **2026-11-20, later: 407 runs beside this list, not in it (K96).** When the fleet's first step calls a phase a reshape, the dispatcher asks the operator at once and labels the issue `needs-admiral`, instead of two plan-writer calls and a stop with no label (F285).
+  - **The operator's words:** "do that and let me know where issues stand", answering the advisor's proposal.
+  - **Built by the advisor session on the Mac,** as a pull request the operator merges after review, as 406 was. The fleet does not wait for it, and it does not wait for the fleet.
+  - **The order does not change:** after 405 comes 330, then 293.
+  - **The prompt** is `docs/prompts/407_the_operators_decision_asked_first.txt`. Row 407 is on master, 🚧.
+- **2026-11-20, evening: 334B and 372B, the app's terms and payment screens, join the list before 210 (K98).** Without them a shop cannot accept the terms or take card payments in the app. They were split from 334 and 372 into rows of their own (K84, K81) and were on no list.
+  - **The operator's words:** "yes add both app screens to the list", answering the advisor's proposal that they be built in a session on the app's repository while the fleet works through the server-side phases.
+  - **Built by a builder session on the app's repository** (moto-diag-mobile), so the fleet waits for them only when it reaches them, after 344 and before 210. Meanwhile it goes on through 405, 330, 293 and 344.
+  - **210 moves down two places, to 24.**
+  - **The prompts were written when the rows were split:** `docs/prompts/334B_the_apps_terms_screen.txt` and `docs/prompts/372_the_apps_payment_screens.txt`. Each is read again against master before its session starts. Rows 334B and 372B are on master, 🔲.
+- **2026-11-20, evening, later: 303B, the app's staff sign-in screen, joins the list first of the app's three screens (K99).** The server has had staff logins since 303, but the app's only way in is a pasted API key, so each staff member needs a key made by hand.
+  - **The operator's words:** "yes add the staff sign-in screen to the list too", answering the advisor's question after 334B's prompt was checked against the app's code.
+  - **Built by a builder session on the app's repository** (moto-diag-mobile), like 334B and 372B. It comes first of the three: the terms screen follows signing in, and the payment screens need a signed-in member.
+  - **334B, 372B and 210 move down one place,** to 23, 24 and 25.
+  - **The prompt** is `docs/prompts/303B_the_apps_staff_sign_in_screen.txt`, written the same evening against both repositories' code. Row 303B is on master, 🔲.
 
 ## Where the ledger stands
 

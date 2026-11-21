@@ -42,7 +42,11 @@ starts no model stage until the reset, then resumes the stage with
 Fable stage at or above 70% of Fable's own week, or when either cannot be
 read. A stage that needs the operator adds `needs-admiral` (a decision) or
 `needs-hands` (a login) and comments in plain English; the dispatcher then
-leaves the issue alone until the operator takes the label off.
+leaves the issue alone until the operator takes the label off. A Step 0
+report classified reshape, the operator's call (`plan_check` P4), does so as
+soon as it is written, and again before any plan-writer call: no model is
+called on a plan the checklist would refuse (Phase 407, F285). On a held
+issue the 24-hour sweep names only the hold.
 
 **A stage a restart cuts off is resumed** (Phase 390, F219). Each stage
 keeps a journal (`journal.py`) beside its clone, written before it starts
@@ -103,6 +107,7 @@ import engineer  # noqa: E402
 import finding_check  # noqa: E402
 import fleet_git  # noqa: E402
 import journal  # noqa: E402
+import plan_check  # noqa: E402
 import plan_order  # noqa: E402
 import quality_report  # noqa: E402
 import quartermaster  # noqa: E402
@@ -764,6 +769,18 @@ def _time(s: str) -> dt.datetime:
     return dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
 
 
+def reshape_reason(step0: str) -> str:
+    """The first sentence after `reshape` on a Step 0 report's Classification
+    line, fit for a comment (Phase 407): read on that line only, cut at a
+    full stop before a capital (so "e.g. the" stays whole), at most 300
+    characters, with no `*` or backtick to break the bold it sits in, and an
+    @name in a code span, so GitHub notifies no one."""
+    found = re.search(r"^\W*Classification\W*\s*reshape[^\w\n]*(.*)$", step0, re.M | re.I)
+    text = re.split(r"(?<=[.!?])\s+(?=[A-Z])", found.group(1).strip())[0] if found else ""
+    text = re.sub(r"[*`]", "", text).rstrip(".")[:300].strip()
+    return re.sub(r"(?<!\w)@([\w-]+)", r"`@\1`", text)
+
+
 class Fleet:
     def __init__(self, *, state: pathlib.Path = STATE, token: str = "",
                  host: Runner = subprocess.run, fence: pathlib.Path = FENCE,
@@ -986,6 +1003,23 @@ class Fleet:
                                                     label),
                   lambda: label in self.labels_of(issue))
         self.log(f"issue {issue}: {label} ({rank}): {text[:200]}")
+
+    def ask_reshape(self, issue: int, rank: str, phase: str, step0: str) -> bool:
+        """A Step 0 report classified reshape is the operator's call
+        (`plan_check` P4): `needs-admiral` with a plain question, before any
+        plan-writer call (Phase 407, F285). True when it asked."""
+        if plan_check.classification(step0) != "reshape":
+            return False
+        reason = reshape_reason(step0)
+        self.escalate(issue, rank, "needs-admiral",
+                      f"Phase {phase}'s first step calls it a reshape, which is your call"
+                      + (f": {reason}." if reason else ".")
+                      + " Answer in your own words: (A) the fleet builds it, and the report's "
+                        "line becomes `Classification: extension`, that word first and your "
+                        "words after it, as you decided for phases 404 and 405; or (B) a "
+                        "builder session builds it. Once the report says extension, take "
+                        "`needs-admiral` off and the plan writer starts.")
+        return True
 
     # ---- GitHub reads
     def label_events(self, issue: int) -> list[dict]:
@@ -1487,10 +1521,17 @@ class Fleet:
                                 f"Phase {phase} Step 0: the Science Officer's report", "scout")
         self.push_once(clone, head, rank="scout", phase=phase, branch=branch, ident=ident,
                        tested=self.fast(clone))
+        report = (clone / written[0]).read_text(encoding="utf-8")
+        reshape = plan_check.classification(report) == "reshape"
         self.say_once(issue, f"{SCOUT_M} step0 commit={head[:12]} -->",
                       f"**Science Officer, phase {phase}: Step 0 written** on `{branch}` "
-                      f"(`{written[0]}`). Next: the Captain writes v1.0.")
+                      f"(`{written[0]}`). Next: "
+                      + ("the operator's call, asked below." if reshape
+                         else "the Captain writes v1.0."))
+        # The label first: a question GitHub refuses leaves the plan writer
+        # due, and its guard asks again with no model call (Phase 407).
         self.label_once(issue, "step0:done")
+        self.ask_reshape(issue, "scout", phase, report)
         return f"step 0 pushed on {branch}"
 
     def stage_captain(self, issue: int, phase: str, body: str, branch: str, *,
@@ -1508,6 +1549,8 @@ class Fleet:
         step0 = clone / "docs" / "phases" / "in_progress" / f"{phase}_step0.md"
         if not step0.is_file():
             raise Stop(f"no {step0.name} on {branch}: the Captain writes from Step 0")
+        if self.ask_reshape(issue, "captain", phase, step0.read_text(encoding="utf-8")):
+            return "reshape: the operator is asked"
         prompts = sorted((clone / "docs" / "prompts").glob(f"{phase}_*.txt"))
         row = next((ln for ln in (clone / "docs" / "ROADMAP.md").read_text(encoding="utf-8")
                     .splitlines() if re.match(rf"\| *{re.escape(phase)} *\|", ln)), "")
@@ -2836,6 +2879,9 @@ class Fleet:
         posted = 0
         for issue in issues:
             on = [lab["name"] for lab in issue["labels"] if lab["name"] in STATE_LABELS]
+            # A held issue waits on the operator: only its hold is swept, since
+            # no rank moves a label under it (Phase 407).
+            on = [x for x in on if x in OPERATOR] or on
             if not on:
                 continue
             n = issue["number"]

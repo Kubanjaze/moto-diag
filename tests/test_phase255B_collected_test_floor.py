@@ -584,6 +584,17 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: _checkout_consent.py (6), _migration_091.py (7), _terms_routes.py (24)
 #: and gate 15's rollback case [90]. Measured: 12960.
 #:
+#: Phase 407 (2026-11-20), by a diff of collected ids against master at
+#: 3908d99 (12960): +8 -0, all of test_phase407_reshape_asks_first.py (four
+#: tests and the four cases of test_ask_reshape_asks_only_on_a_reshape).
+#: Measured: 12968.
+#:
+#: Phase 407's review fixes (2026-11-20), by a diff of the file's collected
+#: ids against 6eaf13c (8): +8 -0, all in test_phase407_reshape_asks_first.py
+#: (four tests, and the four cases of
+#: test_the_reason_stays_on_its_line_and_safe_in_a_comment); no other test
+#: file changed. 12968 + 8.
+#:
 #: Phase 405 (K91), by a diff of collected ids against 8ba8c66 (12960):
 #: +59 -4. Added: test_phase405_what_the_change_did.py (40); the controls
 #: K91 moves, each in two forms, 358 (1), 379 (2), 383 (9: two new classes
@@ -591,7 +602,10 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: fixture-scope form of the six before-the-apply cases and one
 #: approved-row-removed case). Removed: 383's four after-the-apply cases,
 #: moved by name into the listed classes. Measured: 13015.
-COLLECTED_TEST_FLOOR = 13015
+#:
+#: The two merged (405 after 407, 2026-11-20), both from 12960: 407 +16,
+#: 405 +55 (+59 -4), on separate files. 12960 + 16 + 55.
+COLLECTED_TEST_FLOOR = 13031
 
 
 def _collected_count() -> int:
