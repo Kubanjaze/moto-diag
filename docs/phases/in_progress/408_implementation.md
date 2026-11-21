@@ -1,10 +1,12 @@
 # Phase 408 — The site's basics and trust, with the terms and privacy published
 
-**Version 1.0, 2026-11-21.** Built in the operator's project thread (the
+**Version 1.1, 2026-11-21.** Built in the operator's project thread (the
 operator, 2026-11-21: "do this as a thread or in this project so we keep it
-altogether"), on `phase-408-the-sites-basics-and-trust` from master
-`4b71dac`. Classification: **extension** (`408_step0.md`). This v1.0 is
-committed and pushed before any file under `site/`, `scripts/` or `tests/`.
+altogether"; K118), on the local branch `phase-408-the-sites-basics-and-trust`
+from master `4b71dac`, pushed as `phase-408-thread-build` (Deviations, 3).
+Classification: **extension** (`408_step0.md`). v1.0 was committed
+(`be1ebf0`) before any file under `site/`, `scripts/` or `tests/`; its push
+waited for the operator's word (Deviations, 4).
 
 ## Goal
 
@@ -106,10 +108,18 @@ SoftwareApplication whose `offers` are the two priced plans, Individual at
   voice note and a video, with no accuracy claim.
 - **The FAQ** (item 8): the four answers of the marketing thread's job 4
   draft, as the operator edits them, on the home page under `id="faq"`. The
-  data answer quotes privacy and terms 1.0 word for word.
+  data answer quotes privacy and terms 1.0 word for word; the accuracy
+  answer says only what the phone app shows (a confidence and a severity
+  for each diagnosis, `SessionDetailScreen.tsx`'s `DiagnosisCard`).
 - **The founder block** (item 9, K103, K110): the operator's full name, one
-  line and a photo, from the operator in this thread. If it is not ready
-  when the rest is, the operator is asked whether to upload without it.
+  line and a photo, from the operator (2026-11-21, "yes yes yes", the third
+  to the name and the line), above the FAQ under `id="founder"`, and
+  `founder` in the Organization data. The photo is the operator's own file
+  from the Mac's Downloads, re-encoded by `site_images.py photo` (400×400,
+  no Exif).
+- **The top paragraph** says "add a voice note or a video" in place of
+  "record how it sounds", for the reason the card changes (S0-3); the
+  operator approved it with the rest.
 
 Every sentence a visitor will read that is new or changed is shown to the
 operator in plain words, before and after, and nothing goes up without the
@@ -167,9 +177,13 @@ the network, in every suite:
 11. every image has no metadata, and the two images have their sizes;
 12. the card's old sentence is gone; `docs/legal/README.md` names `site/`.
 
+13. the founder block is whole (photo, name, line, `founder` in the data) or
+    absent.
+
+69 tests in all (68, and one more image check for the photo).
 `docs/phases/in_progress/408_mutate.py` plants one break per check and
-requires each to go red (N/N). `COLLECTED_TEST_FLOOR` rises by the diff of
-collected ids.
+requires each to go red: 32/32. `COLLECTED_TEST_FLOOR` 13031 → 13100 by a
+diff of collected ids (+69 −0).
 
 ## Non-goals
 
@@ -180,8 +194,71 @@ collected ids.
 - No signup form (K101), no analytics, no `sameAs` (K108 stands).
 - No HeyCatch re-audit unless the operator asks (K104).
 
+## Deviations
+
+1. **Built as a project thread, in a cloud checkout,** not a session on the
+   Mac (the operator's words above). The container cannot reach
+   getmekno.com, so Step 0 read the live site through the Mac's built-in
+   browser pane and the zip through a read-only grant of the Mac's
+   Downloads. The www, http and pages.dev measurements were not repeated
+   in Step 0; the handoff's read-back measures them after the upload.
+2. **The checkout's test environment** needed master's whole history, the
+   extras, a sibling clone of the mobile repository and FastAPI 0.135.0
+   (`408_phase_log.md`). The unbounded `fastapi>=0.110` is F287.
+3. **A second builder.** The advisor recorded K117 ("build 408 on the
+   Mac") at 12:36 EST and pushed its own Step 0, v1.0 and a build to
+   `phase-408-the-sites-basics-and-trust`. This thread found it when its
+   first push was refused, pushed nothing to that branch, and pushed its
+   own work as `phase-408-thread-build`. The operator chose this thread on a
+   decision card at 13:17 EST; the advisor stopped and recorded K118,
+   undoing K117. This branch takes nothing from the advisor's.
+4. **Pushes waited for the operator's word** (the coordinator's brief: any
+   push needs it). v1.0 was committed first and pushed with the build,
+   after "yes yes yes" at 13:10 EST.
+5. **Commits.** The terms and privacy pages went in before HSTS (item 14
+   first, K109's order); the heads, sitemap, images and home page are one
+   commit, not one each, because their tests share one file.
+6. **Words beyond the request,** each shown to the operator before and
+   after and approved: the top paragraph; the accuracy answer cut to what
+   the app shows; the data answer's "below" left out of its quote (the
+   support page is not below it on the home page), its two sentences
+   quoted apart; the terms description, because terms 1.0 has no
+   "payments to shops" section; Company's line "Email
+   support@getmekno.com and we will work out a plan with you"; the
+   prices' footnote.
+7. **The www redirect** is one Redirect Rule in the zone, not Bulk
+   Redirects: one rule, on the domain the operator already opens; the
+   prompt allows either. The dashboard's labels were not read by this
+   thread; the handoff says to stop if a screen differs, and the read-back
+   checks the outcome.
+8. **The guards.** This thread's session did not start at the repository
+   root, so the edit and push guards may not have fired. `wholetree.sh` ran
+   by hand before every commit and passed each time.
+9. **The regression of record** ran on the Mac (Results): the cloud run
+   cannot pass the tests that need macOS or the fleet's fence (bwrap,
+   osacompile, the Subconscious login).
+10. **Bug fix #1** is a test on master that the date 2026-11-21 broke; it
+    is fixed here because the regression of record must be green.
+
+## Results
+
+- `site/`: 14 files: the deployment's 10, of which `thanks/index.html`,
+  `404.html` and `favicon.svg` are unchanged, and `sitemap.xml`, `og.png`,
+  `logo.png` and `founder.jpg`.
+- `scripts/site_build.py` (legal, sitemap, check) and
+  `scripts/site_images.py` (brand, photo).
+- `tests/test_phase408_site.py`: 69 tests; mutations 32/32 red
+  (`408_mutate.out`).
+- `wholetree.sh --full` at `2164c64`: 5425 passed, 37 skipped, exit 0, in
+  the cloud checkout. A full run there at the same commit: 13006 passed,
+  5 failed, 38 errors, all in tests that need macOS or the fleet's fence,
+  and bug fix #1's test.
+- REGRESSION_RESULT
+- F287 filed. No migration, no live change: the upload is the operator's.
+
 ## Version history
 
 | version | date | what |
 |---|---|---|
 | 1.0 | 2026-11-21 | the plan, before any code |
+| 1.1 | 2026-11-21 | as built: the founder block, the top paragraph, Deviations and Results |
