@@ -598,7 +598,7 @@ Commercial launch infrastructure: billing, onboarding, data migration from compe
 |-------|-------|--------|-------|
 | 328 | Subscription billing foundation | 🔲 | Stripe integration from Track O wired to subscription tiers, tier enforcement flips to hard mode here |
 | 329 | Self-service signup flow (web) | 🔲 | Trial signup, credit card capture, email verification, onboarding trigger |
-| 330 | Onboarding wizard for new shops | 🔲 | Bike inventory import, staff setup, initial data entry, first diagnostic walkthrough |
+| 330 | Onboarding wizard for new shops | 🚧 | Bike inventory import, staff setup, initial data entry, first diagnostic walkthrough |
 | 331 | Data migration: Mitchell 1 → MotoDiag | 🔲 | Import existing shop data from Mitchell 1 (auto/moto), vehicle history, work orders |
 | 332 | Data migration: ShopKey → MotoDiag | 🔲 | Import from Snap-on ShopKey, SMS Pro |
 | 333 | Data migration: ALLDATA → MotoDiag | 🔲 | Import from AutoZone ALLDATA Shop Management |
