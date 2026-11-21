@@ -1,11 +1,12 @@
 > Committed by the advisor on 2026-11-21 from the operator's paste of the
-> marketing thread's draft, version 8, with two kinds of change and no other. The
-> operator's name is replaced by "the operator" throughout, with "he",
-> "his" and "him" to match: the brief's rule 8 and K110 keep the name to
-> the site's pages in `site/`. And one sentence quoting the operator on social
-> media and a trademark filing is left out where marked: it is not in
-> `docs/decisions.md`, and it differs from K108, which stands. The operator
-> answered the four open questions at its end in K114.
+> marketing thread's draft, version 8, with one kind of change and no other:
+> the operator's name is replaced by "the operator" throughout, with "he",
+> "his" and "him" to match, because the brief's rule 8 and K110 keep the
+> name to the site's pages in `site/`. One sentence, quoting the operator on
+> social media and a trademark filing (item 7), was left out of the first
+> commit because it was not in `docs/decisions.md` and differed from K108;
+> it is back since the operator recorded it the same day as K115. The
+> operator answered the four open questions at its end in K114.
 
 # Phase request for the advisor: site basics and trust (K109)
 
@@ -86,7 +87,7 @@ Early-access signups are not in this phase (K101, K109). They are kept apart in
    1200×630 PNG of the logo and the name, with no product claim. Real app screens can
    replace it later.
 7. **Organization JSON-LD** on the home page: name Mekno, url, logo, email
-   support@getmekno.com. No `sameAs` until real profiles exist. ([left out here: see the note at the top] Once a profile exists, and the operator OKs it, its address goes in `sameAs`.) Add `founder` only if
+   support@getmekno.com. No `sameAs` until real profiles exist. (the operator, 2026-11-20: free social media only, with no trademark filing for now. Once a profile exists, and the operator OKs it, its address goes in `sameAs`.) Add `founder` only if
    item 9 goes ahead.
 8. **The FAQ** (on the home page or at /faq/): accuracy, who stays in charge,
    shop-software fit and data ownership. The text comes from the marketing thread's job

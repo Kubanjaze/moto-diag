@@ -43,13 +43,14 @@ one exception to the brief's rule 8, on the site's pages in `site/` only.
 | K105 | **Shops first, not shops only.** "Built for working shops" stays; "not for home garages" is never printed. |
 | K106 | **The site's source moves into `site/` in this repository.** |
 | K107 | **The record:** this folder for the brief, the HeyCatch summary, positioning, approved copy and phase requests; decisions as K-numbers; call lists, call notes and shop contacts in a new private repository. |
-| K108 | **The name:** a free USPTO search on Mekno first, then the operator's own filing, before any paid ad or social account under the name. |
+| K108 | **The name:** a free USPTO search on Mekno first, then the operator's own filing, before any paid ad or social account under the name. Changed by K115. |
 | K109 | **The order:** 334's step 2 (publishing the terms and privacy 1.0) before any public push; the "site basics and trust" phase on the Mac beside the fleet, after the marketing thread reports where the site's source lives and hands over its phase request (the thread drafts it, the advisor writes the row and the prompt); "early-access signups" waits until a form is worth having. |
 | K110 | **The founder's name:** the operator's own full name and photo are the one exception to the brief's rule 8, on the site's pages in `site/` only. |
 | K111 | **The privacy text:** version 1.0 gains, before it is published, its section "The website": "The website sets no cookies and runs no scripts. Cloudflare, which serves it, keeps standard request logs." |
 | K112 | **The terms and privacy pages are published by the site phase.** A Cloudflare upload replaces the whole site, so 334's step 2 moves into the site phase: both pages built from `docs/legal/`, in its one upload. Stripe's links (334's step 3) follow that upload. |
 | K113 | **Privacy stays 1.0,** and Cloudflare is not added to its list of services: the website section (K111) is enough. |
 | K114 | **The site phase's four answers:** privacy stays 1.0; HSTS is the advisor's call, a year from the first upload, without `includeSubDomains` or `preload`; no price beside Company; www.getmekno.com redirects to getmekno.com. |
+| K115 | **The name, changed:** no trademark filing for now. Marketing is free social media only, and a social account under the name is fine before filing. Filing comes before any paid ad. Changes K108. |
 
 ## Where it stands, 2026-11-21
 

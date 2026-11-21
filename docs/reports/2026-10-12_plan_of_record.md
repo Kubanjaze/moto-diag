@@ -173,6 +173,11 @@ The operator's words:
   - **Built by a builder session on the app's repository** (moto-diag-mobile), like 334B and 372B. It comes first of the three: the terms screen follows signing in, and the payment screens need a signed-in member.
   - **334B, 372B and 210 move down one place,** to 23, 24 and 25.
   - **The prompt** is `docs/prompts/303B_the_apps_staff_sign_in_screen.txt`, written the same evening against both repositories' code. Row 303B is on master, 🔲.
+- **2026-11-21: 408 runs beside this list, not in it (K109, K117).** getmekno.com's basics and trust, with the terms and privacy 1.0 published, from the marketing thread's phase request; the operator answered its questions in K114.
+  - **The operator's words:** "build 408 on the Mac".
+  - **Built by the advisor session on the Mac,** as a pull request the operator merges after review, as 406 and 407 were. The fleet does not wait for it, and it does not wait for the fleet.
+  - **The order does not change:** 330 is in progress (K116), then 293.
+  - **The prompt** is `docs/prompts/408_the_sites_basics_and_trust.txt`. Row 408 is on master, 🚧.
 
 ## Where the ledger stands
 

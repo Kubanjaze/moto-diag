@@ -43,4 +43,4 @@ The GLM run folders still hold what is not a prompt: `start.sh`,
 
 | file | for | written |
 |---|---|---|
-| `marketing_thread.txt` | The "Mekno marketing" thread in the home desktop's Ubuntu project: reads and drafts only; its rules, what it reads first, the HeyCatch audit of 2026-11-20, the operator's decisions K100 to K114, and its first four jobs. Its record is `docs/marketing/` | 2026-11-20 (K100 to K113); K114 added 2026-11-21 |
+| `marketing_thread.txt` | The "Mekno marketing" thread in the home desktop's Ubuntu project: reads and drafts only; its rules, what it reads first, the HeyCatch audit of 2026-11-20, the operator's decisions K100 to K115, and its first four jobs. Its record is `docs/marketing/` | 2026-11-20 (K100 to K113); K114 and K115 added 2026-11-21 |
