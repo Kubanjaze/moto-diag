@@ -1,6 +1,11 @@
 # Phase 330 — Onboarding wizard for new shops
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-11-21
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-11-21 (v1.0 `bc2f7bf`)
+
+v1.1: built as planned, with the deviations listed under Deviations, and
+the outcome under Results. The sections above Deviations are the plan as
+approved, with every planned item ticked; where the build differed, the
+Deviations say so by item.
 
 The plan, before any code. Built by the fleet (the plan of record's 'Next, in order' #19; released by the operator on 2026-11-21, K116). The Chief Engineer builds to this document, and the Executive Officer checks it before any code is written. This text answers the Executive Officer's items on two rounds: round 1 (the already-done path, the terms row on a fresh database, the live step's pass condition, the test root) and round 2 (`status` with several shops on live, the walkthrough's powertrain, one owner at the keyboard for the terms, and the reachability test's form).
 
@@ -144,18 +149,99 @@ A migration, a database step, or any write to live inside the phase. An API rout
 
 ## Planned items
 
-- [ ] Step 0 re-measured: the line numbers above, the `onboard` name search under `src/motodiag/cli` with its count, the default owner in `create_shop`, `list_shops` and `get_shop_by_name`, `_resolve_shop_identifier`'s several-shops refusal and `run_cmd`'s powertrain exit, the `cli_db` fixture's form, `main.py`'s registrations of `shop`, `user`, `garage` and `workflow`, and any existing test that pins the `shop` sub-groups, the root's commands or the guide's text; the census in the phase log
-- [ ] `src/motodiag/cli/shop_onboard.py`: `register_onboard`, the `onboard` group, `status` with one function per row (the terms row `not yet` until an owner exists and all owners have accepted), one block per shop and exit 0 with no `--shop` whatever the database holds, and the two lines in `shop.py`
-- [ ] `run`: the shop (refusing with `_resolve_shop_identifier`'s message when several shops and no `--shop`), the owner's login, the staff, the terms (one keyboard question, a Choice over the owners not yet accepted plus `none`, then one question to that one person), the bikes, each asking nothing when its row is done; the walkthrough behind its own question, by `ctx.invoke(run_cmd, ...)` with a `click.Choice` slug and a `click.Choice` powertrain over the chosen template's `applicable_powertrains`; the closing screen
-- [ ] `src/motodiag/crm/bike_import.py`: `read_bike_rows` (all rows checked, problems with line numbers), `import_bikes` (VIN skip, exact customer match within the shop, `shop_id` on every new customer, the link), and `import-bikes` with `--dry-run`
-- [ ] `docs/guide/shop-workflow.md` section 0's paragraph with recorded output
-- [ ] `tests/test_phase330_onboarding.py` on `motodiag.cli.main.cli`, with the three written-out input strings for `run`, the two-shops `status` case, the two-owner terms case as two runs, the `ice`-only template case, and a reachability test that reads `shop.py`'s text and no `git diff`; red on master's code with the controls green; `330_mutate.py` red; `COLLECTED_TEST_FLOOR` raised by a diff of collected ids; the quality counts at their pins; any pin updated with its reason
-- [ ] The five readings in the phase log and in the pull request's text for the operator
-- [ ] The regression of record inside the fence after `wholetree.sh`; `verify_phase.sh`
-- [ ] The close-out: the ROADMAP row ✅ with CLOSED date and regression line; the handoff with the live step (the server's code on the merge, `shop onboard status` with no `--shop` run once, passing on exit 0 alone, its output recorded) and the later block for the first shop (backup, then `run`, with `--shop` when `profile list` shows more than one) as paste blocks ending in ALL GOOD or SOMETHING IS OFF, and "What is open" naming the app screen's possible row and 293's prompt
+- [x] Step 0 re-measured: the line numbers above, the `onboard` name search under `src/motodiag/cli` with its count, the default owner in `create_shop`, `list_shops` and `get_shop_by_name`, `_resolve_shop_identifier`'s several-shops refusal and `run_cmd`'s powertrain exit, the `cli_db` fixture's form, `main.py`'s registrations of `shop`, `user`, `garage` and `workflow`, and any existing test that pins the `shop` sub-groups, the root's commands or the guide's text; the census in the phase log
+- [x] `src/motodiag/cli/shop_onboard.py`: `register_onboard`, the `onboard` group, `status` with one function per row (the terms row `not yet` until an owner exists and all owners have accepted), one block per shop and exit 0 with no `--shop` whatever the database holds, and the two lines in `shop.py`
+- [x] `run`: the shop (refusing with `_resolve_shop_identifier`'s message when several shops and no `--shop`), the owner's login, the staff, the terms (one keyboard question, a Choice over the owners not yet accepted plus `none`, then one question to that one person), the bikes, each asking nothing when its row is done; the walkthrough behind its own question, by `ctx.invoke(run_cmd, ...)` with a `click.Choice` slug and a `click.Choice` powertrain over the chosen template's `applicable_powertrains`; the closing screen
+- [x] `src/motodiag/crm/bike_import.py`: `read_bike_rows` (all rows checked, problems with line numbers), `import_bikes` (VIN skip, exact customer match within the shop, `shop_id` on every new customer, the link), and `import-bikes` with `--dry-run`
+- [x] `docs/guide/shop-workflow.md` section 0's paragraph with recorded output
+- [x] `tests/test_phase330_onboarding.py` on `motodiag.cli.main.cli`, with the three written-out input strings for `run`, the two-shops `status` case, the two-owner terms case as two runs, the `ice`-only template case, and a reachability test that reads `shop.py`'s text and no `git diff`; red on master's code with the controls green; `330_mutate.py` red; `COLLECTED_TEST_FLOOR` raised by a diff of collected ids; the quality counts at their pins; any pin updated with its reason
+- [x] The five readings in the phase log and in the pull request's text for the operator
+- [x] The regression of record inside the fence after `wholetree.sh`; `verify_phase.sh`
+- [x] The close-out: the ROADMAP row ✅ with CLOSED date and regression line; the handoff with the live step (the server's code on the merge, `shop onboard status` with no `--shop` run once, passing on exit 0 alone, its output recorded) and the later block for the first shop (backup, then `run`, with `--shop` when `profile list` shows more than one) as paste blocks ending in ALL GOOD or SOMETHING IS OFF, and "What is open" naming the app screen's possible row and 293's prompt
+
+## Deviations
+
+1. **`import_bikes` takes two keywords the plan's signature does not
+   name:** `problems=` and `dry_run=`. Item 4 says nothing is written when
+   problems is not empty and that `--dry-run` prints the report the write
+   would produce; the function has to be told both. A dry run walks the
+   same code and writes nothing, keeping the customers it would make in
+   memory so a later row matches them as the write does.
+2. **Mutations M10 and M16 differ from the plan's list, and M17 is
+   added.** M10 (the terms row's owner-exists condition removed) does not
+   turn the fresh-database `status` case red: with no shop at all, the
+   terms row is `not yet` through the no-shop branch first. It runs the
+   no-owner-shop case instead, red. The plan's LIKE mutation names the
+   other-shop case, but that case is held by `search_customers`'s
+   `shop_id` scope, not by the exact comparison: M16 (the exact comparison
+   dropped) is held by a test added for it, a phone that contains another
+   customer's phone; M17 (the shop scope dropped) turns the other-shop
+   case red. 17/17 red.
+3. **"Every one of those tables is empty afterwards"** (Tests, run
+   declined) is read as "unchanged from a fresh database": a fresh
+   database holds the seeded system user and "Unassigned" customer. The
+   test checks all eight counts equal and `shops` at 0.
+4. **Choices item 3 left open, recorded in the phase log:** the four steps
+   after the shop still ask "Do this step now?" when no shop exists (so the
+   declined string has its five answers), and say the step needs the shop
+   on `y`; the terms step with no owner says the owner's login comes
+   first; the hand path asks "Add one bike by hand?" after `n` to the CSV
+   question, with `unknown` as its powertrain's default; the walkthrough's
+   default powertrain reads the shop's newest linked bike, from this run or
+   an earlier one.
+5. **The live block checks the schema first.** `status` opens the
+   database through `init_db()`, as every existing `shop` command does,
+   which applies any pending migration; the server runs with
+   `--skip-migrations`. With no migration in this phase nothing is
+   pending, but the handoff's live block reads live's schema version and
+   the server code's `SCHEMA_VERSION` and stops, running nothing, unless
+   they are equal. No code changed for it.
+6. **`verify_phase.sh`** runs after the merge, from the handoff: it takes
+   the merge's tip, which does not exist inside the build.
+
+## Results
+
+- **`motodiag shop onboard`,** registered beside `register_inventory` in
+  `shop.py` (two lines), reachable from the real root: `status`, `run`,
+  `import-bikes`.
+- **`status`:** five rows per shop from existing tables; on a fresh
+  database all `not yet` (staff `none yet`), exit 0; two shops and no
+  `--shop` print two blocks and exit 0; `--json` one object per shop; an
+  older version's acceptance, or a shop with no owner, leaves `terms` at
+  `not yet`.
+- **`run`:** the five steps in order, each asking nothing when done; one
+  keyboard question for the terms, then one question to that owner only;
+  the walkthrough through `workflow run`, unchanged, saving nothing; the
+  closing screen. Several shops and no `--shop`: `_resolve_shop_identifier`'s
+  refusal, exit 1, nothing written. The three input strings: the happy
+  path ends with five `done`; run again asks one question and moves no
+  count; declined writes nothing.
+- **The import:** `read_bike_rows` and `import_bikes` in
+  `src/motodiag/crm/bike_import.py`; a good three-row file adds three
+  bikes, two customers under the shop, three links; again, three skips; a
+  bad year and a duplicate VIN write nothing and name lines 3 and 4.
+- **The guide:** section 0 of `docs/guide/shop-workflow.md`, with output
+  from a fresh database.
+- **Tests.** `tests/test_phase330_onboarding.py`, 35 collected ids: on
+  `bc2f7bf`'s `src` it fails at collection (no `motodiag.crm.bike_import`);
+  the controls pass there (197) and here (389). `COLLECTED_TEST_FLOOR`
+  13031 to 13066 (+35 −0).
+- **Mutations.** `330_mutate.py`: **17/17 red** (`330_mutate.out`).
+- **Quality counts.** ruff 1108, mypy 202, complex 25, big 5, helpers 19,
+  swallowed 22: every one at its pin.
+- **Regression of record:** 12961 passed, 0 failed, 105 skipped, 0 errors
+  at `3d6bc4d`, 41 min 19 s, `python -m pytest -n auto --dist load
+  --cov=motodiag`, exit 0, inside the fleet's fence, after
+  `wholetree.sh --full` (5357 passed, 36 skipped). Line coverage 88.42%
+  (the pin is 87.50%). Gate 11 passed: the API's description did not
+  change.
+- **Live outcome.** No migration and no change to live. After the merge,
+  the server's code moves onto it and `motodiag shop onboard status` runs
+  once on the home desktop, from the handoff.
 
 ## Version history
 
 | Version | Date | What changed |
 |---|---|---|
 | 1.0 | 2026-11-21 | The plan, before any code, from `330_step0.md`, the ROADMAP row and the prompt; revised the same day to the Executive Officer's round 1 (the already-done path and the three input strings, the terms row on a fresh database, the live step's pass condition, the test root) and round 2 (`status` prints every shop and exits 0 with no `--shop`, so the live block cannot fail on several shops; the walkthrough's powertrain is a Choice over the chosen template's `applicable_powertrains`, so `run_cmd`'s exit is unreachable and the closing screen always follows; the terms step asks once who is at the keyboard and puts one question to that one owner, with the two-owner test as two runs; the reachability test reads `shop.py`'s text, never `git diff` against `master`) |
+| 1.1 | 2026-11-21 | Phase 330 built (`4a7248f`, `3d6bc4d`), the regression of record at `3d6bc4d`; Deviations and Results |

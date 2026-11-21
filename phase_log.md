@@ -3962,3 +3962,8 @@ Write-up: [`334_implementation.md`](docs/phases/completed/334_implementation.md)
 
 Log: [`docs/phases/completed/405_phase_log.md`](docs/phases/completed/405_phase_log.md).
 Write-up: [`405_implementation.md`](docs/phases/completed/405_implementation.md).
+
+## Phase 330 — Onboarding wizard for new shops — CLOSED 2026-11-21
+
+Log: [`docs/phases/completed/330_phase_log.md`](docs/phases/completed/330_phase_log.md).
+Write-up: [`330_implementation.md`](docs/phases/completed/330_implementation.md).
