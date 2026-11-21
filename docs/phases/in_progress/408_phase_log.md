@@ -130,3 +130,6 @@ refusal it tests is unchanged.
 above.
 
 **Commit.** `d3b0677`
+
+Master's `873c001` carries the same fix with the new anchors (the pins
+moved to K119); the merge `a67450e` took master's file.
