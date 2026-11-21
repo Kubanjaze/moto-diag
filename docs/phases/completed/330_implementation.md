@@ -233,9 +233,10 @@ A migration, a database step, or any write to live inside the phase. An API rout
 - **Quality counts.** ruff 1108, mypy 202, complex 25, big 5, helpers 19,
   swallowed 22: every one at its pin.
 - **Regression of record:** 12961 passed, 0 failed, 105 skipped, 0 errors
-  at `3d6bc4d`, 41 min 19 s, `python -m pytest -n auto --dist load
+  at `b722a4a`, 36 min 54 s, `python -m pytest -n auto --dist load
   --cov=motodiag`, exit 0, inside the fleet's fence, after
-  `wholetree.sh --full` (5357 passed, 36 skipped). Line coverage 88.42%
+  `wholetree.sh --full` (5357 passed, 36 skipped), run again after bug
+  fix #1. Line coverage 88.42%
   (the pin is 87.50%). Gate 11 passed: the API's description did not
   change.
 - **Live outcome.** No migration and no change to live. After the merge,
@@ -247,4 +248,4 @@ A migration, a database step, or any write to live inside the phase. An API rout
 | Version | Date | What changed |
 |---|---|---|
 | 1.0 | 2026-11-21 | The plan, before any code, from `330_step0.md`, the ROADMAP row and the prompt; revised the same day to the Executive Officer's round 1 (the already-done path and the three input strings, the terms row on a fresh database, the live step's pass condition, the test root) and round 2 (`status` prints every shop and exits 0 with no `--shop`, so the live block cannot fail on several shops; the walkthrough's powertrain is a Choice over the chosen template's `applicable_powertrains`, so `run_cmd`'s exit is unreachable and the closing screen always follows; the terms step asks once who is at the keyboard and puts one question to that one owner, with the two-owner test as two runs; the reachability test reads `shop.py`'s text, never `git diff` against `master`) |
-| 1.1 | 2026-11-21 | Phase 330 built (`4a7248f`, `3d6bc4d`), the regression of record at `3d6bc4d`; Deviations and Results |
+| 1.1 | 2026-11-21 | Phase 330 built (`4a7248f`, `3d6bc4d`), bug fix #1 (`ef2cfff`), the regression of record at `b722a4a`; Deviations and Results |
