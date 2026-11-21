@@ -317,3 +317,13 @@ the guard is never loosened.
 
 Neither guard was changed. The merge's outcome is in the handoff, under
 "After the merge".
+
+## 2026-11-20 — a third guard block, testing the block that closes issue 77
+
+At 23:03 EST, while the advisor tested the block that closes issue 77
+(405's mission issue) against stand-ins in the scratchpad, the edit guard
+refused one command because a redirect's target was built from a variable
+it could not resolve. Nothing in that command ran. It ran again without
+writing files. The guard was not changed. The operator ran the block on
+2026-11-21; it printed ALL GOOD, and GitHub shows issue 77 closed at
+15:08:23 UTC (10:08 EST).
