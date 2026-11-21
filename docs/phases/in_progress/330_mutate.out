@@ -1,0 +1,19 @@
+M01 the registration line removed from shop.py: red
+M02 the VIN skip removed: red
+M03 the problems check removed before the write: red
+M04 shop_id dropped from the created customer: red
+M05 the owner's role written as tech: red
+M06 the acceptance recorded before the answer is read: red
+M07 the acceptance recorded for each staff user too: red
+M08 the keyboard question removed: every owner not yet accepted asked in turn: red
+M09 status counts an acceptance of any version: red
+M10 the terms row's owner-exists condition removed: red
+M11 the already-done check removed from the staff step: red
+M12 create_shop called with the owner's user id: red
+M13 the walk replaced by start_cmd: red
+M14 the powertrain Choice widened to POWERTRAINS, the bike's as default: red
+M15 status with no --shop routed through _resolve_shop_identifier(None): red
+M16 the customer match widened to a LIKE on the phone: red
+M17 the customer match not scoped to the shop: red
+17/17 red
+exit 0
