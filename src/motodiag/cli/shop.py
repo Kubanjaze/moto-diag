@@ -4754,11 +4754,13 @@ def register_shop(cli_group: click.Group) -> None:
     from motodiag.cli.shop_currency import register_currency
     from motodiag.cli.shop_finance import register_finance
     from motodiag.cli.shop_inventory import register_inventory
+    from motodiag.cli.shop_onboard import register_onboard
     from motodiag.cli.shop_tax import register_tax
     from motodiag.cli.shop_warranty import register_warranty
 
     register_crm(customer_group)
     register_inventory(shop_group)
+    register_onboard(shop_group)
     register_warranty(shop_group)
     register_finance(shop_group)
     register_booking(shop_group)
