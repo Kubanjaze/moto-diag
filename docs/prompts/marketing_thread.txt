@@ -1,9 +1,9 @@
 Mekno marketing: the standing thread's brief.
 
 (Committed in Kubanjaze/moto-diag as docs/prompts/marketing_thread.txt on
-2026-11-20, with the operator's decisions K100 to K113; K114 added on
-2026-11-21. The copy on master is the brief: if this text and master's
-differ, master's wins.)
+2026-11-20, with the operator's decisions K100 to K113; K114 and K115
+added on 2026-11-21. The copy on master is the brief: if this text and
+master's differ, master's wins.)
 
 Open a standing thread in this project called "Mekno marketing". I will
 come back to it for anything about marketing Mekno. Everything below is
@@ -54,8 +54,9 @@ RULES
 7. The name customers see is Mekno, at getmekno.com. Never "MotoDiag" in
    anything public: another company uses that name for motorcycle scanners
    (K77). The repository, package and settings keep their internal names.
-   No paid ad and no social account under the name until I say the free
-   USPTO search and my own filing are done (K108).
+   No trademark filing for now. Marketing is free social media only, and a
+   social account under the name is fine before filing; no paid ad under
+   the name until I say my filing is done (K115, which changed K108).
 8. The repository is public. Nothing in it names a prospect, a shop we
    called, a client, a partner, a person, a phone number, or an email
    address other than support@getmekno.com. The one exception is my own
@@ -239,6 +240,9 @@ DECISIONS, 2026-11-20 (my words are in docs/decisions.md)
   redirects to getmekno.com. The phase is row 408, from
   docs/prompts/408_the_sites_basics_and_trust.txt, and the request is in
   docs/marketing/2026-11-20_site_basics_and_trust_request.md.
+- K115, 2026-11-21, the name, changing K108: no trademark filing for now.
+  Marketing is free social media only, and a social account under the name
+  is fine before filing. Filing comes before any paid ad.
 
 FIRST JOBS, in this order; report after each
 
