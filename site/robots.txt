@@ -1,2 +1,4 @@
 User-agent: *
 Disallow: /thanks/
+
+Sitemap: https://getmekno.com/sitemap.xml
