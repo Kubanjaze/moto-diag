@@ -35,8 +35,15 @@ lawyer's review comes later, as a new version.
 
 ## Publishing
 
-The operator's site, getmekno.com, lies outside this repository. Each file
-is published as a page at the address above; the server gives the two
-addresses in `GET /v1/terms` (`MOTODIAG_TERMS_URL` and
-`MOTODIAG_PRIVACY_URL` override the defaults). Nothing here publishes
-anything.
+The operator's site, getmekno.com, is in this repository's `site/` since
+Phase 408 (K106). Each file is built into a page at the address above by
+`python scripts/site_build.py legal`, which writes `site/terms/index.html`
+and `site/privacy/index.html` word for word from the two texts;
+`tests/test_phase408_site.py` fails while a committed page is not the
+build's output. The site goes live only when the operator uploads `site/`
+to Cloudflare Pages by hand. The server gives the two addresses in
+`GET /v1/terms` (`MOTODIAG_TERMS_URL` and `MOTODIAG_PRIVACY_URL` override
+the defaults). Nothing in the repository publishes anything by itself.
+
+Step 3 of "A new version" is therefore: run the build, commit the two
+pages with the text, and upload `site/` from master.
