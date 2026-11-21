@@ -401,3 +401,32 @@ Line coverage of record: 88.42% at `b722a4a` (the pin is 87.50%): 0.92 points ab
 
 The skips are the same 105 as at `3d6bc4d`, in another order. This record
 replaces the one above as the record of the phase.
+
+## Refuter pass
+
+| claim | verdict | quote | source | round · kind · outcome |
+|---|---|---|---|---|
+| The test file has 35 collected ids from 31 functions | kept | "Phase 330 (the onboarding wizard), by a diff of collected ids against" | tests/test_phase255B_collected_test_floor.py p. 609 | 1 · none · kept |
+| `COLLECTED_TEST_FLOOR` went from 13031 to 13066 | kept | "COLLECTED_TEST_FLOOR = 13066" | tests/test_phase255B_collected_test_floor.py p. 613 | 1 · none · kept |
+| 18/18 mutations red | kept | "18/18 red" | docs/phases/completed/330_mutate.out p. 19 | 1 · none · kept |
+| M10 now runs the no-owner-shop case, not the fresh-database case (Deviation 2) | kept | "pytest(\"test_a_shop_with_no_owner_leaves_terms_not_yet_whatever_acceptances_hold\")" | docs/phases/completed/330_mutate.py p. 103 | 1 · none · kept |
+| M16 drops the exact comparison and M17 drops the shop scope (Deviation 2) | kept | "search_customers(wanted, db_path=db_path)\")]" | docs/phases/completed/330_mutate.py p. 138 | 1 · none · kept |
+| M18 puts `status` back in name order | kept | "M18 status with no --shop in list_shops()'s name order, not id order: red" | docs/phases/completed/330_mutate.out p. 16 | 1 · none · kept |
+| `status` with no `--shop` prints shops in id order (bug fix #1) | kept | "by_id: list[dict] = sorted(list_shops(), key=lambda s: s[\"id\"])" | src/motodiag/cli/shop_onboard.py p. 197 | 1 · none · kept |
+| `list_shops()` orders by name, which is what bug fix #1 corrected | kept | "query += \"GROUP BY s.id ORDER BY s.name, s.id\"" | src/motodiag/shop/shop_repo.py p. 232 | 1 · none · kept |
+| The Deviations name every place the build differed from the plan | killed | "v1.1: built as planned, with the deviations listed under Deviations" | docs/phases/completed/330_implementation.md p. 5 | 1 · wording · open F288 |
+| `import_bikes` takes `problems=` and `dry_run=` as keywords (Deviation 1) | kept | "problems: Optional[list[str]] = None," | src/motodiag/crm/bike_import.py p. 229 | 1 · none · kept |
+| The registration sits beside `register_inventory` in `shop.py` (two lines) | kept | "register_onboard(shop_group)" | src/motodiag/cli/shop.py p. 4763 | 1 · none · kept |
+| A bad year and a duplicate VIN name lines 3 and 4 | kept | "assert any(p.startswith(\"line 4:\") and \"A1\" in p for p in report.problems)" | tests/test_phase330_onboarding.py p. 500 | 1 · none · kept |
+| The good file makes two customers under the shop and three links | kept | "len(report.links)) == (3, 2, 1, 3)" | tests/test_phase330_onboarding.py p. 484 | 1 · none · kept |
+| Quality counts are at their pins (ruff 1108, mypy 202, complex 25, big 5, helpers 19, swallowed 22) | kept | "MYPY_ERRORS = 202" | tests/support/quality_counts.py p. 28 | 1 · none · kept |
+| Line coverage 88.42% against a pin of 87.50% | kept | "COVERAGE_PERCENT = 87.5" | tests/support/quality_counts.py p. 50 | 1 · none · kept |
+| Regression of record: 12961 passed, 105 skipped at b722a4a | kept | "Regression of record: 12961 passed, 0 failed, 105 skipped, 0 errors at `b722a4a`" | docs/phases/completed/330_phase_log.md p. 318 | 1 · none · kept |
+| `status` opens the database through `init_db()`, which applies pending migrations (Deviation 5) | kept | "apply_pending_migrations(path)" | src/motodiag/core/database.py p. 218 | 1 · none · kept |
+| The server has a `--skip-migrations` switch (Deviation 5) | kept | "\"--skip-migrations\", is_flag=True, default=False," | src/motodiag/cli/serve.py p. 102 | 1 · none · kept |
+| The handoff's live block reads `schema_version.version` against `SCHEMA_VERSION` | kept | "SCHEMA_VERSION = 91  # Phase 334: the terms acceptances (migration 091)" | src/motodiag/core/database.py p. 10 | 1 · none · kept |
+| The handoff calls `verify_phase.sh` with the phase, the regression hash and the tip (Deviation 6) | kept | "# Usage:  verify_phase.sh <PHASE> <REG_HASH> <TIP>" | .claude/skills/closeout/verify_phase.sh p. 23 | 1 · none · kept |
+| The handoff's later block takes a backup with the deploy skill's command | kept | "ap.add_argument(\"mode\", choices=[\"dryrun\", \"apply-live\", \"verify-live\", \"backup\"])" | .claude/skills/deploy/deploy.py p. 995 | 1 · none · kept |
+| The guide's section 0 shows `status` output from a fresh database | kept | "  staff  none yet  no shop yet" | docs/guide/shop-workflow.md p. 75 | 1 · none · kept |
+| The ROADMAP row carries the regression line at b722a4a | kept | "12961 passed / 0 failed / 105 skipped at `b722a4a`, coverage 88.42%, inside the fence" | docs/ROADMAP.md p. 601 | 1 · none · kept |
+| A customer match is exact within the shop, not the LIKE `search_customers` does | kept | "if found.get(column) == wanted:" | src/motodiag/crm/bike_import.py p. 219 | 1 · none · kept |
