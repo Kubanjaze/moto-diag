@@ -25,7 +25,6 @@ _spec.loader.exec_module(site_build)
 
 #: 408_step0.md S0-2: the zip and the live site, equal on 2026-11-21.
 PINNED = {
-    "_headers": "0db0814825652ec99c9879473fcd883495e10336a020a55be38175d13bd6bf2e",
     "index.html": "25d10976e91edb02362576cb1b99cdd58d97783b0f2ccf20953f4e6b8bf42ace",
     "404.html": "db6deb9f1a05b4f383ea87a5aa7f37506b4d7c847ba89ae51672d50f7462bd4a",
     "robots.txt": "39ebecbb8c9fce53c69912f2c47c83ca70e2358ed65ef900d96847d12f733423",
@@ -39,7 +38,20 @@ PINNED = {
 #: Built from docs/legal/ by scripts/site_build.py (item 14).
 BUILT = set(site_build.LEGAL_PAGES)
 #: The served set (408_implementation.md, Logic 2).
-SERVED = set(PINNED) | BUILT
+SERVED = set(PINNED) | BUILT | {"_headers"}
+#: 408_step0.md S0-2: the five headers the site sent on 2026-11-21, byte for byte.
+CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'none'; "
+       "frame-ancestors 'none'; base-uri 'self'; form-action 'none'")
+HEADERS = (
+    "/*\n"
+    f"  Content-Security-Policy: {CSP}\n"
+    "  X-Content-Type-Options: nosniff\n"
+    "  Referrer-Policy: strict-origin-when-cross-origin\n"
+    "  Permissions-Policy: camera=(), microphone=(), geolocation=()\n"
+    "  X-Frame-Options: DENY\n"
+    # Item 2 and K114: a year, no includeSubDomains, no preload.
+    "  Strict-Transport-Security: max-age=31536000\n"
+)
 ATTRIBUTION = ("Adapted from Basecamp's policies (https://github.com/basecamp/policies), "
                "used under the Creative Commons Attribution 4.0 International licence (CC BY 4.0).")
 
@@ -113,3 +125,8 @@ def test_each_legal_page_shows_its_version_and_the_attribution(page):
 
 def test_the_legal_readme_names_site():
     assert "`site/`" in (LEGAL / "README.md").read_text(encoding="utf-8")
+
+
+# ------------------------------------------------------------- item 2: HSTS
+def test_headers_are_the_five_of_today_and_hsts_alone():
+    assert _read("_headers") == HEADERS
