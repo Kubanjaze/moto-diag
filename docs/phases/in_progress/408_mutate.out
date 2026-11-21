@@ -1,0 +1,31 @@
+M1 a file that is not served sits in site/: red
+M2 the Stripe return page changes: red
+M3 the CSP lets a script run: red
+M4 HSTS covers every subdomain: red
+M5 a script that runs: red
+M6 a form: red
+M7 an on* attribute: red
+M8 a link to another host: red
+M9 the old name: red
+M10 a second email address: red
+M11 a phone number: red
+M12 a price beside Company: red
+M13 a title over 60 characters: red
+M14 a description under 110 characters: red
+M15 a canonical on www: red
+M16 the 404 page may be indexed: red
+M17 the sitemap lists /thanks/: red
+M18 robots.txt loses the sitemap: red
+M19 an internal link to nothing: red
+M20 a rating in the data: red
+M21 a plan's price drifts: red
+M22 the privacy text changes and the page is not rebuilt: red
+M23 the build links an outside address: red
+M24 an image carries a text chunk: red
+M25 the old card comes back: red
+M26 a FAQ quote is not the policy's words: red
+M27 the old early-access line comes back: red
+M28 a page links the thanks page: red
+M29 a lastmod that is not the page's: red
+M30 the legal README forgets site/: red
+30/30 red

@@ -126,8 +126,12 @@ def test_each_legal_page_shows_its_version_and_the_attribution(page):
     assert "Last updated" not in _read(page)
 
 
-def test_the_legal_readme_names_site():
-    assert "`site/`" in (LEGAL / "README.md").read_text(encoding="utf-8")
+def test_the_legal_readmes_publishing_names_site():
+    text = (LEGAL / "README.md").read_text(encoding="utf-8")
+    publishing = " ".join(text[text.index("## Publishing"):].split())
+    assert "is in this repository's `site/`" in publishing
+    assert "lies outside this repository" not in text
+    assert "`python scripts/site_build.py legal`" in publishing
 
 
 # ------------------------------------------------------------- item 2: HSTS
@@ -448,3 +452,21 @@ def test_each_image_carries_no_metadata(image):
 def test_the_two_brand_images_have_their_sizes():
     assert png_size((SITE / "og.png").read_bytes()) == (1200, 630)
     assert png_size((SITE / "logo.png").read_bytes()) == (512, 512)
+
+
+# ------------------------------------------- item 9: the founder block (K103, K110)
+def test_the_founder_block_is_whole_or_absent():
+    """Name, line and photo go in together, with `founder` in the data; or none of them."""
+    import re
+    text = _read("index.html")
+    org = next(b for b in jsonld("index.html") if b["@type"] == "Organization")
+    if "founder.jpg" not in _served():
+        assert 'id="founder"' not in text and "founder" not in org
+        return
+    block = text[text.index('id="founder"'):]
+    block = block[:block.index("</section>")]
+    assert re.search(r'<img src="/founder\.jpg" alt="[^"]+"', block)
+    name = re.search(r"<h3>([^<]+), founder</h3>", block)
+    assert name, "the founder's name, then ', founder'"
+    assert org["founder"] == {"@type": "Person", "name": name.group(1)}
+    assert "@getmekno.com" not in block.replace("support@getmekno.com", "")
