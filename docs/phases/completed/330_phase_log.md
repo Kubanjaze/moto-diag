@@ -260,8 +260,51 @@ it. The handoff names it.
   `SCHEMA_VERSION`, and stops, having run nothing on live, unless they are
   equal. No code changed for it: `status` keeps the existing commands'
   form, and the plan's pass condition (exit 0) is unchanged.
-- **Bug fixes:** none in this build; no register is written.
 - **Documents:** v1.1 of `330_implementation.md`; the ROADMAP row ✅; the
   root `implementation.md` (0.13.141, its row) and `phase_log.md` pointer;
   the handoff `docs/handoffs/2026-11-21_330_closed.md`; the phase's files
   moved to `docs/phases/completed/`.
+
+## 2026-11-21 — fix round 1: the Red Team's two findings
+
+### Bug fix #1 — 2026-11-21 — `status` with no `--shop` printed shops in name order, not id order
+
+**Issue.** Item 2's finish line and the Tests section say that with two
+shops and no `--shop`, two blocks print in id order. `status` printed them
+in `list_shops()`'s order, `ORDER BY s.name, s.id`
+(`src/motodiag/shop/shop_repo.py` line 232). The test named its shops
+"Alpha Moto" (id 1) and "Bravo Cycles" (id 2), so name order and id order
+were the same and it passed either way.
+
+**Root cause.** The build reused `profile list`'s order, as the build entry
+above records ("by name, then id"), and the test's fixture could not tell
+the two orders apart.
+
+**Fix.** `status` sorts `list_shops()` by id. The test's shops are now
+"Zulu Cycles" (id 1) and "Alpha Moto" (id 2), so name order is the
+reverse of id order. `330_mutate.py` gains M18 (the sort removed, name
+order back), red; M15's target string follows the new line.
+
+**Files.** `src/motodiag/cli/shop_onboard.py`,
+`tests/test_phase330_onboarding.py`, `docs/phases/completed/330_mutate.py`,
+`docs/phases/completed/330_mutate.out`.
+
+**Verified.** The changed test failed on the old line and passes on the
+new; the file's 35 tests pass; `330_mutate.py` 18/18 red. The first form
+of the fix (`sorted(...)` assigned straight to the `Optional` list) read
+mypy 203 against its pin 202 in `wholetree.sh`; a typed local brought it
+back to 202 before the commit. No test was added or removed, so
+`COLLECTED_TEST_FLOOR` is unchanged.
+
+**Commit.** `ef2cfff`.
+
+### The handoff did not run `verify_phase.sh` — 2026-11-21
+
+v1.1's Deviation 6 said `verify_phase.sh` runs after the merge from the
+handoff, and the planned item was ticked, but no paste block in the
+handoff called it. Step 1's block now does, on the Mac, after the server
+moves onto the merge: it brings the Mac's copy to the merge (stopping
+unless the Mac's master is at it, with nothing changed by hand, as 405's
+block does), takes the phase's last commit from the merged pull request,
+and runs `verify_phase.sh 330` with the regression's commit and that one.
+Deviation 6 now names step 1.

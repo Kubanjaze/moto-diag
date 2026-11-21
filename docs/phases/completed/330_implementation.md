@@ -167,8 +167,9 @@ A migration, a database step, or any write to live inside the phase. An API rout
    would produce; the function has to be told both. A dry run walks the
    same code and writes nothing, keeping the customers it would make in
    memory so a later row matches them as the write does.
-2. **Mutations M10 and M16 differ from the plan's list, and M17 is
-   added.** M10 (the terms row's owner-exists condition removed) does not
+2. **Mutations M10 and M16 differ from the plan's list, and M17 and M18
+   are added.** M18 (bug fix #1's: `status` back in name order) turns the
+   two-shops case red. M10 (the terms row's owner-exists condition removed) does not
    turn the fresh-database `status` case red: with no shop at all, the
    terms row is `not yet` through the no-shop branch first. It runs the
    no-owner-shop case instead, red. The plan's LIKE mutation names the
@@ -176,7 +177,7 @@ A migration, a database step, or any write to live inside the phase. An API rout
    `shop_id` scope, not by the exact comparison: M16 (the exact comparison
    dropped) is held by a test added for it, a phone that contains another
    customer's phone; M17 (the shop scope dropped) turns the other-shop
-   case red. 17/17 red.
+   case red. 18/18 red.
 3. **"Every one of those tables is empty afterwards"** (Tests, run
    declined) is read as "unchanged from a fresh database": a fresh
    database holds the seeded system user and "Unassigned" customer. The
@@ -196,8 +197,9 @@ A migration, a database step, or any write to live inside the phase. An API rout
    pending, but the handoff's live block reads live's schema version and
    the server code's `SCHEMA_VERSION` and stops, running nothing, unless
    they are equal. No code changed for it.
-6. **`verify_phase.sh`** runs after the merge, from the handoff: it takes
-   the merge's tip, which does not exist inside the build.
+6. **`verify_phase.sh`** runs after the merge, in the handoff's step 1 on
+   the Mac: it takes the merged branch's last commit, which does not exist
+   inside the build.
 
 ## Results
 
@@ -206,7 +208,8 @@ A migration, a database step, or any write to live inside the phase. An API rout
   `import-bikes`.
 - **`status`:** five rows per shop from existing tables; on a fresh
   database all `not yet` (staff `none yet`), exit 0; two shops and no
-  `--shop` print two blocks and exit 0; `--json` one object per shop; an
+  `--shop` print two blocks, in id order (bug fix #1, `ef2cfff`), and
+  exit 0; `--json` one object per shop; an
   older version's acceptance, or a shop with no owner, leaves `terms` at
   `not yet`.
 - **`run`:** the five steps in order, each asking nothing when done; one
@@ -226,7 +229,7 @@ A migration, a database step, or any write to live inside the phase. An API rout
   `bc2f7bf`'s `src` it fails at collection (no `motodiag.crm.bike_import`);
   the controls pass there (197) and here (389). `COLLECTED_TEST_FLOOR`
   13031 to 13066 (+35 −0).
-- **Mutations.** `330_mutate.py`: **17/17 red** (`330_mutate.out`).
+- **Mutations.** `330_mutate.py`: **18/18 red** (`330_mutate.out`).
 - **Quality counts.** ruff 1108, mypy 202, complex 25, big 5, helpers 19,
   swallowed 22: every one at its pin.
 - **Regression of record:** 12961 passed, 0 failed, 105 skipped, 0 errors
