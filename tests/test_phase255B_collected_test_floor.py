@@ -605,7 +605,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #:
 #: The two merged (405 after 407, 2026-11-20), both from 12960: 407 +16,
 #: 405 +55 (+59 -4), on separate files. 12960 + 16 + 55.
-COLLECTED_TEST_FLOOR = 13031
+#:
+#: Phase 408 (K109, K114), by a diff of collected ids against 4b71dac
+#: (13031): +69 -0, all in test_phase408_site.py, the site's checks (68, and
+#: one more image check once the founder's photo is in).
+#: Measured: 13100.
+COLLECTED_TEST_FLOOR = 13100
 
 
 def _collected_count() -> int:

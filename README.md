@@ -145,6 +145,15 @@ motodiag apikey create --user 1 --name laptop
 The key is shown **once**. See the [API guide](docs/guide/api.md) for
 the auth model, tiers, error shape, and share links.
 
+## The website
+
+getmekno.com's source is in [`site/`](site/): static pages, no scripts,
+no forms, no cookies. The terms and privacy pages are built from
+`docs/legal/` with `python scripts/site_build.py legal`, and
+`tests/test_phase408_site.py` fails if they are not rebuilt. The site is
+deployed by uploading `site/` to Cloudflare Pages by hand; nothing deploys
+it from git.
+
 ## Architecture
 
 ```
