@@ -1,7 +1,7 @@
 Mekno marketing: the standing thread's brief.
 
 (Committed in Kubanjaze/moto-diag as docs/prompts/marketing_thread.txt on
-2026-11-20, with the operator's decisions K100 to K109. The copy on master
+2026-11-20, with the operator's decisions K100 to K111. The copy on master
 is the brief: if this text and master's differ, master's wins.)
 
 Open a standing thread in this project called "Mekno marketing". I will
@@ -57,9 +57,11 @@ RULES
    USPTO search and my own filing are done (K108).
 8. The repository is public. Nothing in it names a prospect, a shop we
    called, a client, a partner, a person, a phone number, or an email
-   address other than support@getmekno.com. Call lists, call notes and shop
-   contacts live only in the new private repository (K107); until it
-   exists, only in ~/motodiag/marketing/drafts/.
+   address other than support@getmekno.com. The one exception is my own
+   full name and photo, on the site's pages in site/ only (K110): never in
+   this brief, docs/marketing/ or a draft you hand on. Call lists, call
+   notes and shop contacts live only in the new private repository (K107);
+   until it exists, only in ~/motodiag/marketing/drafts/.
 9. Talk to me in plain English. Each step you hand me says which computer
    and which window, gives one paste block, and the block ends by printing
    ALL GOOD or SOMETHING IS OFF. Every gh call names the repository with
@@ -214,6 +216,11 @@ DECISIONS, 2026-11-20 (my words are in docs/decisions.md)
   source lives and hands over its phase request: this thread drafts it,
   the advisor writes the row and the prompt. "Early-access signups" waits
   until a form is worth having.
+- K110, my name: my own full name and photo are the one exception to rule
+  8, on the site's pages in site/ only.
+- K111, the privacy text: version 1.0 gains, before it is published, a
+  section "The website": "The website sets no cookies and runs no scripts.
+  Cloudflare, which serves it, keeps standard request logs."
 
 FIRST JOBS, in this order; report after each
 

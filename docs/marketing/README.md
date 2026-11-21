@@ -28,7 +28,8 @@ This repository is public. So, never here:
 - anything the operator said privately.
 
 The founder's name and photo appear on the site's own pages, by K103, and
-nowhere else here.
+nowhere else here: K110 makes the operator's own full name and photo the
+one exception to the brief's rule 8, on the site's pages in `site/` only.
 
 ## The standing rules (2026-11-20)
 
@@ -43,6 +44,8 @@ nowhere else here.
 | K106 | **The site's source moves into `site/` in this repository.** |
 | K107 | **The record:** this folder for the brief, the HeyCatch summary, positioning, approved copy and phase requests; decisions as K-numbers; call lists, call notes and shop contacts in a new private repository. |
 | K108 | **The name:** a free USPTO search on Mekno first, then the operator's own filing, before any paid ad or social account under the name. |
+| K110 | **The founder's name:** the operator's own full name and photo are the one exception to the brief's rule 8, on the site's pages in `site/` only. |
+| K111 | **The privacy text:** version 1.0 gains, before it is published, its section "The website": "The website sets no cookies and runs no scripts. Cloudflare, which serves it, keeps standard request logs." |
 | K109 | **The order:** 334's step 2 (publishing the terms and privacy 1.0) before any public push; the "site basics and trust" phase on the Mac beside the fleet, after the marketing thread reports where the site's source lives and hands over its phase request (the thread drafts it, the advisor writes the row and the prompt); "early-access signups" waits until a form is worth having. |
 
 ## Where it stands, 2026-11-20
