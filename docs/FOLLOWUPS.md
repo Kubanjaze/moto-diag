@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F287** (this file). The
+At the time of writing the highest assigned is **F289** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -6640,3 +6640,73 @@ rebuilt `.venv` or the fleet's next clean install would. What would close
 it: an upper bound (or an exact pin, as 393 pinned the quality tools) on
 `fastapi` at a version both tests pass on, with the live server's version
 read first.
+
+### F288
+
+**The plan-order test pins the plan of record's live text, and neither whole-tree mode runs it**
+
+Found by the advisor on 2026-11-21. `tests/test_phase392_plan_order.py`
+pins the real plan of record (`docs/reports/2026-10-12_plan_of_record.md`):
+`test_the_list_is_the_plans_order` asserts the list and its "As of" line,
+and its refusal cases plant edits on the live text, four of them on that
+exact line (one plants a date that must have no dated entry). It
+enumerates no directory, so `wholetree.py`'s membership rule leaves it out
+of both modes: on 2026-11-21 `members('fast')` held 104 files and
+`members('full')` 158, and neither held this one. Of the five test files
+that read the plan of record or `docs/decisions.md`, it is the only one in
+neither mode; only the full regression reaches it.
+
+On 2026-11-21 two record commits passed their pre-commit check and turned
+master red:
+- `c144fa7` (K117) gave the plan a dated entry for 2026-11-21, the date
+  one refusal case planted as having none: 1 failed. 408's thread found
+  it (408's bug fix #1).
+- `13de345` (K119) moved the list to "As of 2026-11-21, K119.": 5 failed,
+  44 passed in this file, while fast `wholetree.sh` passed (2897 passed).
+
+`873c001` moved the pins, and the full suite then passed (12982 passed).
+408's branch had inherited both failures by merging master. Every earlier
+commit that changed the list (K84, K91, K94, K98, K99, K100 to K109) moved
+these pins by hand in the same commit.
+
+What would close it: the whole-tree rule takes in tests that read the
+record's files, as F175 added the ledger class, or the refusal cases read
+the "As of" line from the plan itself, so that only the deliberate pin
+moves. The phase that takes it chooses.
+
+### F289
+
+**Nested pytest runs in gate tests can outlive their test and spin at exit for about 15 minutes, holding the whole-tree command's output open**
+
+Seen by the advisor on 2026-11-21, on the Mac. Fast `wholetree.sh` on a
+clean master (`873c001`) took 1154 s, while its pytest reported "2897
+passed … (231.2 s wall)". Three nested pytest runs were still alive after
+their workers had moved on to other tests, each at about 40% CPU with no
+child processes:
+- `-n 2 --dist load -p no:cacheprovider -rA test_planted.py`, under gw3;
+- `-p no:cacheprovider -p support.worker_loss -p support.alarm_left_armed
+  -v -n 1 test_planted.py`, under gw1;
+- `-q -n auto --dist load …/test_every_failed_line_and_the0/test_planted_failures.py`,
+  under gw4.
+
+By the planted names, their spawners are
+`tests/test_phase379_wholetree_output.py::test_every_failed_line_and_the_whole_log`,
+`tests/test_phase369_worker_loss.py`, and `tests/test_phase355_parallel_suite.py`
+or `tests/test_phase392_open_files.py` (both start `-n 2`). macOS `sample` put
+one in `_Py_Finalize` → `atexit_callfuncs`, running Python code that raised
+and freed `OSError` in a loop; which handler was not found. All three exited
+by themselves after about 15 minutes, and only then did the whole-tree
+command see the end of its pipe. Ruled out: the disk (532 GB free) and
+memory (51% free). Spotlight's indexer was busy at the time (68% CPU), and
+the temp folder held 7.2 GB. It was 1 of 8 timed runs that day: the other
+seven (four fast, one `--full`, one full suite, one regression of record)
+took no longer than their pytest time.
+
+What it affects: the push guard's own fast run has a 285 s limit and fails
+closed, so a push with no record would have been refused; a regression of
+record can run about 15 minutes long; and the printed wall time understates
+the command's.
+
+What would close it: the gate tests start their nested runs so that one
+stuck at exit cannot hold the outer run's output (their own process group,
+killed and reaped when the test ends), and the loop at exit is found.
