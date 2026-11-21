@@ -301,3 +301,19 @@ does not cover.
 | The handoff's gh calls name the repository (R8) | kept | "MERGE=$(gh pr list -R \"$R\" --state merged --head \"$BRANCH\"" | docs/handoffs/2026-11-20_405_closed.md p. 158 | 1 · none · kept |
 | The handoff's Mac block stops unless HEAD is the merge | kept | "[ \"$HEAD_NOW\" = \"$MERGE\" ] || bad" | docs/handoffs/2026-11-20_405_closed.md p. 165 | 1 · none · kept |
 | The CHANGELOG entry is dated, cites K91, F210 and F259, and gives the mutation count | kept | "## 2026-11-20 — the check asks what the change did (Phase 405, K91, F210, F259)" | .claude/skills/deploy/CHANGELOG.md p. 3 | 1 · none · kept |
+
+## 2026-11-20 — after the merge: two guard blocks in the advisor's work
+
+The advisor session on the Mac, testing the merge's paste block and step 1
+before the operator ran them. Rule 6: a guard block is recorded here, and
+the guard is never loosened.
+- Between 20:05 and 20:14 EST, the edit guard refused one command because
+  it carried `sed -i`: a one-word change to a copied stand-in in the
+  scratchpad. Nothing in that command ran. The stand-in was written whole
+  instead.
+- At 20:53 EST, the edit guard refused one command because a redirect's
+  target was built from a variable it could not resolve. Nothing in that
+  command ran. It ran again with a literal path.
+
+Neither guard was changed. The merge's outcome is in the handoff, under
+"After the merge".
