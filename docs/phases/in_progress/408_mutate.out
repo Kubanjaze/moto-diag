@@ -27,5 +27,7 @@ M26 a FAQ quote is not the policy's words: red
 M27 the old early-access line comes back: red
 M28 a page links the thanks page: red
 M29 a lastmod that is not the page's: red
+M31 the founder's photo carries Exif: red
+M32 the founder block loses the name: red
 M30 the legal README forgets site/: red
-30/30 red
+32/32 red

@@ -92,6 +92,9 @@ MUTATIONS = [
     ("M28 a page links the thanks page", [(HOME, '<a href="#faq">FAQ</a>', '<a href="/thanks/">FAQ</a>')], T),
     ("M29 a lastmod that is not the page's", [("site/sitemap.xml", TERMS_LASTMOD,
      "<loc>https://getmekno.com/terms/</loc>\n    <lastmod>2001-01-01</lastmod>")], T),
+    ("M31 the founder's photo carries Exif", [("site/founder.jpg", b"\xff\xd8\xff\xe0",
+     b"\xff\xd8\xff\xe1\x00\x0eExif\x00\x00MM\x00*\xff\xe0")], T),
+    ("M32 the founder block loses the name", [(HOME, ", founder</h3>", "</h3>")], T),
     ("M30 the legal README forgets site/", [("docs/legal/README.md", "is in this repository's `site/`",
      "is in this repository")], T),
 ]

@@ -91,4 +91,6 @@ section.block .prose h3 { font-size: 19px; margin: 26px 0 6px; }
 .founder { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
 .founder img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; flex: none; }
 .founder p { margin: 0; }
+.founder > div { flex: 1 1 260px; }
+.founder h3 { margin: 0 0 6px; }
 hr { border: 0; border-top: 1px solid var(--line); margin: 32px 0 16px; }
