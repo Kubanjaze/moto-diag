@@ -181,7 +181,7 @@ the network, in every suite:
     absent.
 
 69 tests in all (68, and one more image check for the photo).
-`docs/phases/in_progress/408_mutate.py` plants one break per check and
+`docs/phases/completed/408_mutate.py` plants one break per check and
 requires each to go red: 32/32. `COLLECTED_TEST_FLOOR` 13031 → 13100 by a
 diff of collected ids (+69 −0).
 
@@ -253,7 +253,9 @@ diff of collected ids (+69 −0).
   the cloud checkout. A full run there at the same commit: 13006 passed,
   5 failed, 38 errors, all in tests that need macOS or the fleet's fence,
   and bug fix #1's test.
-- REGRESSION_RESULT
+- The regression of record, on the Mac at `c66b36e`: 13051 passed,
+  0 failed, 49 skipped (the Mac's expected skips), 0 errors, coverage
+  88.39%.
 - F287 filed. No migration, no live change: the upload is the operator's.
 
 ## Version history

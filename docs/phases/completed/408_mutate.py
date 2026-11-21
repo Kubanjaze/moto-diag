@@ -1,6 +1,6 @@
 """Phase 408's mutations: each breaks one thing the phase built, and a test must go red.
 
-Run from the repository root: `.venv/bin/python docs/phases/in_progress/408_mutate.py`
+Run from the repository root: `.venv/bin/python docs/phases/completed/408_mutate.py`
 (ROOT is three levels up from in_progress/ or completed/). 407's harness, with
 two additions: an edit whose old text is None creates a file (removed after),
 and an edit on bytes (an image) works on bytes. Exact strings, each must
