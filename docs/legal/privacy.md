@@ -62,6 +62,11 @@ Mekno sends data to these services, and only for the reason given:
 - **NHTSA**, the US road-safety agency, for recall and VIN lookups: a bike's
   VIN, or its make, model and year.
 
+## The website
+
+The website sets no cookies and runs no scripts. Cloudflare, which serves
+it, keeps standard request logs.
+
 ## How long it is kept
 
 - **While the shop uses Mekno,** for as long as its account is open.
