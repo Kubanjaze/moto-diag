@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F286** (this file). The
+At the time of writing the highest assigned is **F287** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -6615,3 +6615,28 @@ Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 
 - SKILL.md says a database step no longer needs the feed stopped, "the feed's writes are in tables the change does not touch": "  feed stopped: the feed's writes are in tables the change does not touch," (.claude/skills/deploy/SKILL.md p. 244)
 
 What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).
+
+### F287
+
+**`fastapi>=0.110` lets a fresh install pick a FastAPI this suite fails on**
+
+Found by Phase 408 on 2026-11-21, setting up a clean cloud checkout
+(`408_phase_log.md`). `pyproject.toml`'s `api` extra pins only
+`fastapi>=0.110`; pip chose 0.165.0. Measured, from the same tree:
+- 0.165.0, 0.150.0 and 0.140.0: `create_app()` lists 4 routes with
+  methods (the docs routes), not 124, so
+  `tests/test_phase244J_guidance_surface.py::TestTheEndpointExists` fails;
+  whether the app still serves its routes under those versions was not
+  measured;
+- 0.124.4: the routes register, but the schema the fleet's app-copy
+  generator makes differs from the app's (`tests/test_phase403_app_copy.py`,
+  both pairs);
+- 0.135.0: both pass (124 routes; the generator's sha256 equals the app's
+  `d43910b0…`).
+
+The machines that run the suite today (the Mac, the home desktop) have
+their own installed versions, so nothing fails there. A new machine, a
+rebuilt `.venv` or the fleet's next clean install would. What would close
+it: an upper bound (or an exact pin, as 393 pinned the quality tools) on
+`fastapi` at a version both tests pass on, with the live server's version
+read first.
