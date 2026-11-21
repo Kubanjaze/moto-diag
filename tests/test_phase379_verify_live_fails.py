@@ -34,8 +34,23 @@ def _verify(env, capsys) -> tuple[int, str]:
 
 
 def test_an_approved_diff_missing_a_live_row_fails(env, capsys):
-    """The known-bad case F197 asks for: the approved diff lacks one row that
-    live holds, at the phase's own schema head."""
+    """Phase 405, K91: an approved row missing on live, at the phase's own
+    schema head, fails. (F197's first shape, live holding a row the approved
+    diff does not, is now listed: the test after this one.)"""
+    _deployed(env)
+    c = sqlite3.connect(env["live"])
+    c.execute("delete from workflow_templates where id = 2")
+    c.commit()
+    c.close()
+    code, out = _verify(env, capsys)
+    assert code == 3
+    assert "equals the approved exact diff: no" in out
+    assert "the difference is not a later migration's" in out
+
+
+def test_a_live_row_the_approved_diff_lacks_is_listed(env, capsys):
+    """F197's first shape: the approved diff lacks one row that live holds.
+    Phase 405, K91: listed, not failed."""
     _deployed(env)
     f = D.diff_path(env["repo"], PHASE)
     text = f.read_text()
@@ -46,12 +61,27 @@ def test_an_approved_diff_missing_a_live_row_fails(env, capsys):
     f.write_text(head + D.EXACT + "\n```json\n" + json.dumps(body, indent=1, sort_keys=True)
                  + "\n```\n")
     code, out = _verify(env, capsys)
-    assert code == 3
-    assert "equals the approved exact diff: no" in out
-    assert "the difference is not a later migration's" in out
+    assert code == 0, out
+    assert "equals the approved exact diff: yes" in out
+    assert "    workflow_templates +1 ~0 -0" in out
 
 
 def test_a_later_migration_is_named_as_the_cause_and_still_fails(env, capsys):
+    """Phase 405, K91: the later migration alters an approved row."""
+    _deployed(env)
+    c = sqlite3.connect(env["live"])
+    c.execute("insert into schema_version values (72)")
+    c.execute("update checklist_items set instruction_text = 'a later phase' where id = 1")
+    c.commit()
+    c.close()
+    code, out = _verify(env, capsys)
+    assert code == 3
+    assert "live is at schema 72, past this phase's 71: later migrations explain" in out
+
+
+def test_a_later_migration_that_only_adds_is_listed(env, capsys):
+    """The old shape of the test above, a later phase's rows added beside
+    every approved change. Phase 405, K91: listed, not failed."""
     _deployed(env)
     c = sqlite3.connect(env["live"])
     c.execute("insert into schema_version values (72)")
@@ -59,8 +89,8 @@ def test_a_later_migration_is_named_as_the_cause_and_still_fails(env, capsys):
     c.commit()
     c.close()
     code, out = _verify(env, capsys)
-    assert code == 3
-    assert "live is at schema 72, past this phase's 71: later migrations explain" in out
+    assert code == 0, out
+    assert "    schema_version +1 ~0 -0" in out and "    workflow_templates +1 ~0 -0" in out
 
 
 def test_equal_still_passes(env, capsys):

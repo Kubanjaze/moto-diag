@@ -194,13 +194,27 @@ class TestTheApplyRefuses:
         assert "records scope problems" in _refusal(env, capsys)
 
     def test_when_live_changed_since_the_backup(self, env, capsys):
+        """Phase 405, K91: a table the change does not touch (`known_issues`)
+        is listed and the apply goes on; the sibling below keeps the
+        refusal, on a table it touches."""
         _dryrun(env)
         _commit_diff(env)
         c = sqlite3.connect(env["live"])
         c.execute("insert into known_issues values (2, 'written after the backup')")
         c.commit()
         c.close()
-        assert "live differs from the backup" in _refusal(env, capsys)
+        assert _apply(env) == 0
+        assert ("outside the tables this change touches: known_issues +1 ~0 -0"
+                in capsys.readouterr().out)
+
+    def test_when_a_touched_table_changed_since_the_backup(self, env, capsys):
+        _dryrun(env)
+        _commit_diff(env)
+        c = sqlite3.connect(env["live"])
+        c.execute("insert into checklist_items values (3, 1, 3, 'written after the backup')")
+        c.commit()
+        c.close()
+        assert "changed since the dry run" in _refusal(env, capsys)
 
     def test_when_a_fresh_dry_run_leaves_the_scope(self, env, capsys):
         _dryrun(env)

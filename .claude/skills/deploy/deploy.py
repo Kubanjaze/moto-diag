@@ -22,16 +22,22 @@ and unchanged."
                                    exists, is committed
                                    and unchanged, and records no scope problem;
                                    its backup still hashes as recorded; the
-                                   scope file is the one it was made with; live
-                                   equals the backup; and a fresh dry run on a
-                                   new copy stays in scope and EQUALS the
-                                   committed diff, field for field, clock
-                                   values masked (F172, Phase 357). Then it
-                                   migrates live, writes <phase>_live_diff.md
-                                   and checks the scope and the equality again.
+                                   scope file is the one it was made with; a
+                                   fresh dry run on a new copy stays in scope
+                                   and EQUALS the committed diff, field for
+                                   field, clock values masked (F172, Phase
+                                   357); and no table the change touches (its
+                                   scope's and its approved diff's) changed
+                                   on live since the dry run; a change in any
+                                   other table is listed (Phase 405, K91).
+                                   Then it migrates live, writes
+                                   <phase>_live_diff.md and checks that every
+                                   approved change holds; other differences
+                                   are listed, not failed.
     deploy.py verify-live <phase>  read-only (Phase 378, K25): live against the
-                                   phase's backup, the approved diff, integrity
-                                   and foreign keys.
+                                   phase's backup; every approved change must
+                                   hold, other differences are listed (Phase
+                                   405); integrity and foreign keys.
     deploy.py backup [label]       a backup-API copy of live to the backup
                                    folder, 5 kept, its sha256 printed (Phase 382).
 
@@ -172,14 +178,19 @@ def diff(a: dict, b: dict) -> dict:
 #: K59 (Phase 348, the operator): "audit_events joins SERVER_WRITES as a whole
 #: table: it is append-only and only the server writes it." For a WHOLE_TABLE
 #: entry the rows the API adds are set aside; a row changed or removed is not,
-#: since the table's triggers refuse both, so either one is drift.
+#: since the table's triggers refuse both, so either one is drift. After
+#: Phase 405 (K91): before the apply, such a change in a table the change
+#: touches refuses; after the apply, it is listed unless it alters an
+#: approved entry.
 #:
 #: F212, K39 (Phase 385, the operator): "add device_tokens.last_seen_at to the
 #: list as its own phase". The app's push registration (`POST
 #: /v1/push/register`, `push/registry.py` `register_token`) refreshes it on
 #: every registration, in its upsert's `ON CONFLICT(token) DO UPDATE`. The
 #: same upsert's rebind of `user_id` and `platform`, and a new token row, are
-#: not listed (F210), so either one is drift.
+#: not listed (F210), so either one is drift. After Phase 405 (K91): before
+#: the apply, such a change in a table the change touches refuses; after the
+#: apply, it is listed unless it alters an approved entry.
 WHOLE_TABLE: frozenset[str] = frozenset({"*"})
 SERVER_WRITES: dict[str, frozenset[str]] = {"api_keys": frozenset({"last_used_at"}),
                                             "audit_events": WHOLE_TABLE,
@@ -226,11 +237,40 @@ def server_masked(d: dict, approved: dict | None) -> tuple[dict, list[str]]:
     return out, aside
 
 
+def touched(scope: dict, approved: dict | None, names: dict[str, str]) -> set[str]:
+    """The tables a change touches (Phase 405, K91): "the tables its approved
+    diff and its scope name". Every table of the scope's `tables` and of the
+    approved diff's `rows`, and every schema object either names: a `table`
+    by its name, an `index` or `trigger` by the table `names` maps it to. A
+    view names no table, and an object `names` lacks adds none."""
+    out = set(scope.get("tables", {})) | set((approved or {}).get("rows", {}))
+    sch = (approved or {}).get("schema", {})
+    for kind in ("added", "removed", "changed"):
+        for obj in list(scope.get("schema", {}).get(kind, [])) + list(sch.get(kind, [])):
+            if obj.startswith("table "):
+                out.add(obj.removeprefix("table "))
+            elif obj in names:
+                out.add(names[obj])
+    return out
+
+
 def schema(path: pathlib.Path) -> dict[str, str]:
     """{"table t": its SQL, "index i": …} for every object SQLite did not make."""
     c = _ro(path)
     out = {f"{kind} {name}": sql for kind, name, sql in c.execute(
         "select type, name, sql from sqlite_master where name not like 'sqlite_%'")}
+    c.close()
+    return out
+
+
+def tbl_names(path: pathlib.Path) -> dict[str, str]:
+    """{"index i": "t", "trigger g": "t", "table t": "t"}: each object's table,
+    from the same `sqlite_master` rows `schema` reads. A view is left out:
+    SQLite stores its own name as its `tbl_name`."""
+    c = _ro(path)
+    out = {f"{kind} {name}": tbl for kind, name, tbl in c.execute(
+        "select type, name, tbl_name from sqlite_master where name not like 'sqlite_%' "
+        "and type != 'view'")}
     c.close()
     return out
 
@@ -286,6 +326,28 @@ def _leaves(x: object, path: str = "") -> dict[str, object]:
             out.update(_leaves(v, f"{path}/{k}"))
         return out or {path: {}}
     return {path: x}
+
+
+def entries(d: dict) -> dict:
+    """An exact diff as its entries (Phase 405), for `approved_holds` only:
+    every empty dict dropped at any depth, each name in the schema's `added`,
+    `removed` and `changed` its own key, and each changed field's `[before,
+    after]` two entries, `before` and `after`. The input is not modified."""
+    def walk(x: dict, path: tuple[str, ...]) -> dict:
+        out = {}
+        for k, v in x.items():
+            w: object = v
+            if path == ("schema",) and isinstance(v, list):
+                w = {name: True for name in v}
+            elif len(path) == 4 and path[0] == "rows" and path[2] == "changed" \
+                    and isinstance(v, list):
+                w = {"before": v[0], "after": v[1]}
+            elif isinstance(v, dict):
+                w = walk(v, (*path, k))
+            if w != {}:
+                out[k] = w
+        return out
+    return walk(d, ())
 
 
 def exact_gaps(approved: dict, fresh: dict) -> list[str]:
@@ -590,13 +652,6 @@ def preflight(phase: str, *, db: pathlib.Path, repo: pathlib.Path, migrate: Call
     if sha256(scope_path(repo, phase)) != head.get("Scope sha256"):
         raise Refused("the scope file changed since the dry run")
     approved = _approved_exact(f.read_text())
-    drift, aside = server_masked(diff(dump(bk), dump(db)), approved)
-    if aside:
-        print(f"set aside since the dry run: {len(aside)} change(s) the running API "
-              f"writes: {aside[:5]}")
-    if drift:
-        raise Refused(f"live differs from the backup in {sorted(drift)}: it changed since "
-                      "the dry run. Stop and ask.")
     if approved is None:
         raise Refused(f"{rel} has no exact diff: it was written before F172's fix. "
                       "Run `deploy.py dryrun` again and commit its diff.")
@@ -612,6 +667,9 @@ def preflight(phase: str, *, db: pathlib.Path, repo: pathlib.Path, migrate: Call
         sch = schema_diff(schema(bk), new_schema)
         probs = check_scope(d, scope, allowed, to, sch)
         probs += seed_parity(repo, fresh, d, parity_build or _default_fresh_seed)
+        # Phase 405: a dropped object's table from the backup, under the
+        # migrated copy's, which holds every object the change adds or keeps.
+        names = {**tbl_names(bk), **tbl_names(fresh)}
     finally:
         _drop(fresh)
     if probs:
@@ -620,7 +678,32 @@ def preflight(phase: str, *, db: pathlib.Path, repo: pathlib.Path, migrate: Call
     if gaps:
         raise Refused(f"a fresh dry run differs from the approved diff in {len(gaps)} "
                       f"field(s): {gaps[:10]}. Stop and ask.")
+    drift_gate(bk, db, approved, touched(scope, approved, names))
     return head
+
+
+def _counts(t: str, x: dict) -> str:
+    return f"{t} +{len(x['added'])} ~{len(x['changed'])} -{len(x['removed'])}"
+
+
+def drift_gate(bk: pathlib.Path, db: pathlib.Path, approved: dict, touch: set[str]) -> None:
+    """Live against the backup, just before the apply (Phase 405, K91): a
+    change since the dry run in a table the change touches refuses; one
+    anywhere else is listed and the apply goes on. The running API's listed
+    writes are set aside first, as before (F208)."""
+    print(f"tables this change touches: {', '.join(sorted(touch)) or 'none'}")
+    drift, aside = server_masked(diff(dump(bk), dump(db)), approved)
+    if aside:
+        print(f"set aside since the dry run: {len(aside)} change(s) the running API "
+              f"writes: {aside[:5]}")
+    inside = [_counts(t, x) for t, x in sorted(drift.items()) if t in touch]
+    outside = [_counts(t, x) for t, x in sorted(drift.items()) if t not in touch]
+    if outside:
+        print(f"changed since the dry run, outside the tables this change touches: "
+              f"{', '.join(outside)}")
+    if inside:
+        raise Refused(f"live changed since the dry run in a table this change touches: "
+                      f"{', '.join(inside)}. Stop and ask.")
 
 
 def apply_live(phase: str, *, db: pathlib.Path | None = None, repo: pathlib.Path = ROOT,
@@ -633,23 +716,24 @@ def apply_live(phase: str, *, db: pathlib.Path | None = None, repo: pathlib.Path
         print(f"REFUSED: {e}", file=sys.stderr)
         return 2
     bk = pathlib.Path(head["Backup"])
-    scope = json.loads(scope_path(repo, phase).read_text())
-    allowed, to = resolve(scope, bk), expected(scope, bk)
     clock = _utc_now()
     print("preflight passed; applying live:", migrate(db))
-    approved = _approved_exact(diff_path(repo, phase).read_text())
+    approved = _approved_exact(diff_path(repo, phase).read_text()) or {}
     d, aside = server_masked(diff(dump(bk), dump(db)), approved)
     new_schema = schema(db)
     sch = schema_diff(schema(bk), new_schema)
-    probs = check_scope(d, scope, allowed, to, sch)
-    gaps = exact_gaps(approved, exact(d, sch, new_schema, clock))
-    probs += [f"live differs from the approved diff: {g}" for g in gaps]
+    # Phase 405, K91: the approved changes must hold; anything else live
+    # holds is listed. The scope was checked twice before the apply.
+    gaps, listed = approved_holds(approved, exact(d, sch, new_schema, clock))
+    probs = [f"live differs from the approved diff: {g}" for g in gaps]
     diff_path(repo, phase, "live").write_text(
         f"# Phase {phase}: live after the apply, against the backup\n\n"
         f"- **Scope problems:** `{'; '.join(probs) or 'none'}`\n"
         f"- **Equals the approved exact diff:** `{'no' if gaps else 'yes'}`\n"
         f"- **Set aside, written by the running API:** `{len(aside)}` "
         f"(`{', '.join(aside[:10]) or 'none'}`)\n"
+        f"- **Other differences, listed:** `{len(listed)}` "
+        f"(`{', '.join(listed[:10]) or 'none'}`)\n"
         f"- **F158 census on live:** `{census(db)}`\n\n" + report(d, sch, new_schema))
     print("after (live):", json.dumps(state(db)), "scope problems:", probs or "none")
     return 1 if probs else 0
@@ -748,10 +832,13 @@ def find_diff(repo: pathlib.Path, phase: str) -> pathlib.Path | None:
 def shape_gaps(approved: dict, now: dict) -> list[str]:
     """Where live, read now, differs from the approved exact diff. A field the
     approved diff masked as `<clock>` matches any timestamp-shaped value: the
-    clock it was masked against is long past."""
+    clock it was masked against is long past.
+
+    Phase 405, K91: it walks the approved diff's leaves only, so a leaf only
+    live holds is not a gap; `listed_differences` lists it."""
     a, b = _leaves(approved), _leaves(now)
     gaps = []
-    for p in sorted(set(a) | set(b)):
+    for p in sorted(a):
         va, vb = a.get(p, "(absent)"), b.get(p, "(absent)")
         if va == vb or (va == CLOCK and isinstance(vb, str) and _TIMESTAMP.match(vb)):
             continue
@@ -759,19 +846,64 @@ def shape_gaps(approved: dict, now: dict) -> list[str]:
     return gaps
 
 
+def listed_differences(approved: dict, now: dict) -> list[str]:
+    """The leaves live holds that the approved diff does not (Phase 405,
+    K91), grouped: `table +a ~c -r` for rows the approved diff does not name,
+    `table rowid column` for a field that moved in a row it names, and
+    `schema added: name` (or `removed:`, `changed:`) for an object it does
+    not name, that object's `sql` entry with it."""
+    a = _leaves(approved)
+    named = {tuple(p.split("/")[1:5]) for p in a if p.startswith("/rows/")}
+    rows: dict[str, dict[str, set[str]]] = {}
+    fields, objects, sql = set(), set(), set()
+    for p in _leaves(now):
+        if p in a:
+            continue
+        part = p.split("/")[1:]
+        if part[0] == "rows" and len(part) >= 5:
+            t, kind, k, col = part[1:5]
+            if ("rows", t, kind, k) in named:
+                fields.add(f"{t} {k} {col}")
+            else:
+                rows.setdefault(t, {"added": set(), "changed": set(), "removed": set()})[
+                    kind].add(k)
+        elif part[0] == "schema" and part[1] == "sql":
+            sql.add("/".join(part[2:]))
+        elif part[0] == "schema":
+            objects.add((part[1], "/".join(part[2:])))
+    out = [f"{t} +{len(x['added'])} ~{len(x['changed'])} -{len(x['removed'])}"
+           for t, x in sorted(rows.items())]
+    out += sorted(fields)
+    out += [f"schema {kind}: {name}" for kind, name in sorted(objects)]
+    out += [f"schema sql: {name}" for name in sorted(sql - {n for _, n in objects})]
+    return out
+
+
+def approved_holds(approved: dict, now: dict) -> tuple[list[str], list[str]]:
+    """(gaps, listed), Phase 405, K91: every approved entry absent from live's
+    diff or holding a different value, and every entry live's diff holds
+    that the approved one does not. Both sides are read as `entries`; a side
+    with none holds nothing, so it has no gaps or lists nothing."""
+    ea, eb = entries(approved), entries(now)
+    gaps = shape_gaps(ea, eb) if ea else []
+    listed = listed_differences(ea, eb) if eb else []
+    return gaps, listed
+
+
 def verify_live(phase: str, *, db: pathlib.Path | None = None, repo: pathlib.Path = ROOT) -> int:
     """Read-only: live against the phase's backup (Phase 378, K25).
 
     Copies both through SQLite's backup API (the backup opened immutable),
     and prints the schema objects added, removed and changed, each table whose
-    rows differ, whether that equals the approved exact diff, and live's
-    integrity and foreign keys.
+    rows differ, the other differences listed, whether every approved change
+    holds, and live's integrity and foreign keys.
 
     Exit codes: 1 on an integrity or foreign-key failure or a missing backup;
-    2 when the phase has no deploy; 3 when live does not equal the approved
-    diff (F197, Phase 379: it printed "no" and exited 0), saying whether
-    live's schema is past the phase's own migrations, which then explains the
-    difference; else 0.
+    2 when the phase has no deploy; 3 when an approved change is absent from
+    live or different (F197, Phase 379: it printed "no" and exited 0; Phase
+    405, K91: a difference the approved diff does not name is listed, not
+    failed), saying whether live's schema is past the phase's own
+    migrations, which then explains the difference; else 0.
     """
     db = db or L.where()
     f = find_diff(repo, phase)
@@ -801,8 +933,8 @@ def verify_live(phase: str, *, db: pathlib.Path | None = None, repo: pathlib.Pat
         _drop(live_copy)
         _drop(bk_copy)
     approved = _approved_exact(text)
-    gaps = (shape_gaps(approved, exact(d, sch, new_schema, dt.datetime(1970, 1, 1)))
-            if approved is not None else None)
+    gaps, listed = (approved_holds(approved, exact(d, sch, new_schema, dt.datetime(1970, 1, 1)))
+                    if approved is not None else (None, []))
     print(f"verify-live {phase}: live against {bk.name} (both copied read-only; "
           "the copies are deleted)")
     for kind in ("added", "removed", "changed"):
@@ -813,7 +945,14 @@ def verify_live(phase: str, *, db: pathlib.Path | None = None, repo: pathlib.Pat
     if not d:
         print("  rows: no table differs")
     for t, x in d.items():
-        print(f"  rows: {t} +{len(x['added'])} ~{len(x['changed'])} -{len(x['removed'])}")
+        print(f"  rows: {_counts(t, x)}")
+    # Phase 405, K91: what live holds beyond the approved changes is listed,
+    # and fails nothing.
+    print(f"  other differences, listed: {len(listed) or 'none'}")
+    for item in listed[:20]:
+        print(f"    {item}")
+    if len(listed) > 20:
+        print(f"    … and {len(listed) - 20} more")
     if gaps is None:
         print("  equals the approved exact diff: cannot tell (the diff predates F172)")
     else:
