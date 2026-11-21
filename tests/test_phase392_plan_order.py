@@ -46,7 +46,7 @@ class TestTheRealRecord:
                                                       "371", "372", "403", "404", "334", "405",
                                                       "330", "293", "344", "303B", "334B",
                                                       "372B", "210"]
-        assert order.as_of == ("2026-11-20", "K99")
+        assert order.as_of == ("2026-11-21", "K119")
 
     def test_392_is_a_builders_and_303_348_need_nothing(self):
         e = {x.phase: x for x in P.parse_order((ROOT / P.PLAN).read_text()).entries}
@@ -83,10 +83,11 @@ class TestTheRealRecord:
 class TestCheckRefuses:
     @pytest.mark.parametrize("rel,old,new,why", [
         (P.PLAN, "## Next, in order\n", "## The order\n", "has no '## Next, in order'"),
-        (P.PLAN, "As of 2026-11-20, K99.", "As of now.", "no 'As of"),
-        (P.PLAN, "As of 2026-11-20, K99.", "As of 2026-11-21, K99.", "no entry under"),
-        (P.PLAN, "As of 2026-11-20, K99.", "As of 2026-11-20, K999.", "K999, which does not"),
-        (P.PLAN, "As of 2026-11-20, K99.", "As of 2026-11-20, K47.", "does not cite K47"),
+        (P.PLAN, "As of 2026-11-21, K119.", "As of now.", "no 'As of"),
+        # A date no entry can carry: 2026-11-21 has entries of its own since K117.
+        (P.PLAN, "As of 2026-11-21, K119.", "As of 2001-01-01, K119.", "no entry under"),
+        (P.PLAN, "As of 2026-11-21, K119.", "As of 2026-11-21, K999.", "K999, which does not"),
+        (P.PLAN, "As of 2026-11-21, K119.", "As of 2026-11-21, K47.", "does not cite K47"),
         (P.PLAN, "| 2 | 303 | shop | fleet | nothing |", "| 2 | 303 | shop | robots | nothing |",
          "its builder 'robots'"),
         (P.PLAN, "| 6 | 348 | shop | fleet | nothing |", "| 6 | 348 | store | fleet | nothing |",
