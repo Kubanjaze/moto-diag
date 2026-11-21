@@ -194,7 +194,8 @@ def status_cmd(shop_identifier: Optional[str], as_json: bool) -> None:
     if shop_identifier is not None:
         shops = [_resolve_shop_identifier(shop_identifier)]
     else:
-        shops = list(list_shops()) or [None]
+        by_id: list[dict] = sorted(list_shops(), key=lambda s: s["id"])
+        shops = list(by_id) or [None]
     if as_json:
         click.echo(_json.dumps([
             {

@@ -198,17 +198,18 @@ def test_a_shop_with_no_owner_leaves_terms_not_yet_whatever_acceptances_hold(cli
 
 
 def test_two_shops_and_no_shop_print_two_blocks_in_id_order_and_exit_0(cli_db):
+    # Named so that name order (Alpha first) is the reverse of id order.
+    create_shop(name="Zulu Cycles", db_path=cli_db)
     create_shop(name="Alpha Moto", db_path=cli_db)
-    create_shop(name="Bravo Cycles", db_path=cli_db)
     result = invoke(["shop", "onboard", "status"])
     assert result.exit_code == 0
     assert "Multiple shops exist" not in result.output
-    first = result.output.index("Shop #1: Alpha Moto")
-    second = result.output.index("Shop #2: Bravo Cycles")
+    first = result.output.index("Shop #1: Zulu Cycles")
+    second = result.output.index("Shop #2: Alpha Moto")
     assert first < second
     blocks = status_json()
     assert [b["shop_id"] for b in blocks] == [1, 2]
-    assert [b["shop_name"] for b in blocks] == ["Alpha Moto", "Bravo Cycles"]
+    assert [b["shop_name"] for b in blocks] == ["Zulu Cycles", "Alpha Moto"]
 
 
 def test_status_with_shop_by_name_prints_that_block_alone(cli_db):

@@ -13,7 +13,8 @@ M12 create_shop called with the owner's user id: red
 M13 the walk replaced by start_cmd: red
 M14 the powertrain Choice widened to POWERTRAINS, the bike's as default: red
 M15 status with no --shop routed through _resolve_shop_identifier(None): red
+M18 status with no --shop in list_shops()'s name order, not id order: red
 M16 the customer match widened to a LIKE on the phone: red
 M17 the customer match not scoped to the shop: red
-17/17 red
+18/18 red
 exit 0
