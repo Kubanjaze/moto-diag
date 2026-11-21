@@ -49,12 +49,15 @@ one exception to the brief's rule 8, on the site's pages in `site/` only.
 | K111 | **The privacy text:** version 1.0 gains, before it is published, its section "The website": "The website sets no cookies and runs no scripts. Cloudflare, which serves it, keeps standard request logs." |
 | K112 | **The terms and privacy pages are published by the site phase.** A Cloudflare upload replaces the whole site, so 334's step 2 moves into the site phase: both pages built from `docs/legal/`, in its one upload. Stripe's links (334's step 3) follow that upload. |
 | K113 | **Privacy stays 1.0,** and Cloudflare is not added to its list of services: the website section (K111) is enough. |
+| K114 | **The site phase's four answers:** privacy stays 1.0; HSTS is the advisor's call, a year from the first upload, without `includeSubDomains` or `preload`; no price beside Company; www.getmekno.com redirects to getmekno.com. |
 
-## Where it stands, 2026-11-20
+## Where it stands, 2026-11-21
 
 - The standing thread is open in the home desktop's Ubuntu project, from
   the brief. Its first two jobs are done: the site measured, and the phase
-  request for "site basics and trust" drafted.
+  request for "site basics and trust" drafted. The request is here as
+  `2026-11-20_site_basics_and_trust_request.md`, with the operator's name
+  replaced (the brief's rule 8).
 - The site's source is in no repository. It is on the Mac as one zip,
   getmekno-site.zip in the operator's Downloads folder: nine files and
   `_headers`, saved 2026-11-09, 48 minutes before the deployment. On
@@ -65,6 +68,8 @@ one exception to the brief's rule 8, on the site's pages in `site/` only.
 - The terms and privacy texts, version 1.0, are not yet published. The
   site phase publishes them (K112); Stripe's links follow
   (`docs/handoffs/2026-11-20_334_closed.md`, step 3).
-- "Site basics and trust" has no row yet; its phase request is with the
-  advisor.
+- "Site basics and trust" is row 408, 🔲, built from
+  `docs/prompts/408_the_sites_basics_and_trust.txt` by the advisor session
+  on the Mac when the operator starts it. The operator answered the
+  request's four questions in K114.
 - "Early-access signups" waits until a form is worth having.
