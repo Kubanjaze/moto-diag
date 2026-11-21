@@ -44,19 +44,27 @@ one exception to the brief's rule 8, on the site's pages in `site/` only.
 | K106 | **The site's source moves into `site/` in this repository.** |
 | K107 | **The record:** this folder for the brief, the HeyCatch summary, positioning, approved copy and phase requests; decisions as K-numbers; call lists, call notes and shop contacts in a new private repository. |
 | K108 | **The name:** a free USPTO search on Mekno first, then the operator's own filing, before any paid ad or social account under the name. |
+| K109 | **The order:** 334's step 2 (publishing the terms and privacy 1.0) before any public push; the "site basics and trust" phase on the Mac beside the fleet, after the marketing thread reports where the site's source lives and hands over its phase request (the thread drafts it, the advisor writes the row and the prompt); "early-access signups" waits until a form is worth having. |
 | K110 | **The founder's name:** the operator's own full name and photo are the one exception to the brief's rule 8, on the site's pages in `site/` only. |
 | K111 | **The privacy text:** version 1.0 gains, before it is published, its section "The website": "The website sets no cookies and runs no scripts. Cloudflare, which serves it, keeps standard request logs." |
-| K109 | **The order:** 334's step 2 (publishing the terms and privacy 1.0) before any public push; the "site basics and trust" phase on the Mac beside the fleet, after the marketing thread reports where the site's source lives and hands over its phase request (the thread drafts it, the advisor writes the row and the prompt); "early-access signups" waits until a form is worth having. |
+| K112 | **The terms and privacy pages are published by the site phase.** A Cloudflare upload replaces the whole site, so 334's step 2 moves into the site phase: both pages built from `docs/legal/`, in its one upload. Stripe's links (334's step 3) follow that upload. |
+| K113 | **Privacy stays 1.0,** and Cloudflare is not added to its list of services: the website section (K111) is enough. |
 
 ## Where it stands, 2026-11-20
 
-- The standing thread opens in the home desktop's Ubuntu project, from the
-  brief.
-- The site's source has not been found: it is not in this repository, and
-  the operator's GitHub account has no repository for it. The thread's
-  first job finds it.
-- The terms and privacy texts, version 1.0, are not yet published:
-  `docs/handoffs/2026-11-20_334_closed.md`, step 2.
-- "Site basics and trust" has no row yet; it follows the thread's report
-  and phase request.
+- The standing thread is open in the home desktop's Ubuntu project, from
+  the brief. Its first two jobs are done: the site measured, and the phase
+  request for "site basics and trust" drafted.
+- The site's source is in no repository. It is on the Mac as one zip,
+  getmekno-site.zip in the operator's Downloads folder: nine files and
+  `_headers`, saved 2026-11-09, 48 minutes before the deployment. On
+  2026-11-20 the advisor compared each file's sha256 with what
+  getmekno.com served: all nine equal, and its `_headers` gives the five
+  headers the site sends. The site is a Cloudflare Pages Direct Upload
+  project, "getmekno": an upload replaces the whole site.
+- The terms and privacy texts, version 1.0, are not yet published. The
+  site phase publishes them (K112); Stripe's links follow
+  (`docs/handoffs/2026-11-20_334_closed.md`, step 3).
+- "Site basics and trust" has no row yet; its phase request is with the
+  advisor.
 - "Early-access signups" waits until a form is worth having.
