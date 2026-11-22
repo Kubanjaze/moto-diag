@@ -22,6 +22,12 @@ lawyer's review comes later, as a new version.
   refused at the proxy), so the licence line was not read from the
   repository itself. The handoff asks the operator to open the address
   once and confirm the licence line while reading the two texts.
+- **Read from the repository:** 2026-11-21, before the pages went live
+  (Phase 408). `LICENSE.md` is the "Creative Commons Attribution 4.0
+  International Public License (CC BY 4.0)", and the README says the
+  policies may be used under that licence with attribution. GitHub's
+  licence label for the repository says "Other", because the file is the
+  licence's text in Markdown.
 
 ## A new version
 
