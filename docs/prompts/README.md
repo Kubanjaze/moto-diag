@@ -44,3 +44,4 @@ The GLM run folders still hold what is not a prompt: `start.sh`,
 | file | for | written |
 |---|---|---|
 | `marketing_thread.txt` | The "Mekno marketing" thread in the home desktop's Ubuntu project: reads and drafts only; its rules, what it reads first, the HeyCatch audit of 2026-11-20, the operator's decisions K100 to K115, and its first four jobs. Its record is `docs/marketing/` | 2026-11-20 (K100 to K113); K114 and K115 added 2026-11-21 |
+| `main_chat_pending_review.txt` | The home desktop's main chat: a read-only review of what is pending after Phase 330 (293 and its prompt, 334's Stripe links, the publisher emails, the app's three screens, F288 to F292, the first shop's onboarding, the fleet), and what it sends back. It changes nothing; the advisor records what needs recording | 2026-11-22, the operator's request |

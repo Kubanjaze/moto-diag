@@ -1,0 +1,130 @@
+You are the main chat on the home desktop. This is a read-only review for
+the operator: are we moving in the right direction on everything pending
+after Phase 330? Check each item below against the repository and GitHub,
+and tell the operator, in plain English, where it stands, who moves it
+next, and anything that looks wrong or missing. The advisor (the Mac
+session) wrote this list on 2026-11-22. Don't take its word for anything:
+check the sources, and say where it is wrong.
+
+THE RULES FOR THIS REVIEW
+- Change nothing:
+  - no commits, pushes, merges or branch switches in any checkout;
+  - no label changes and no comments on GitHub;
+  - nothing typed into Stripe or any website, and no emails.
+  Do not take the needs-admiral label off issue 86.
+- Read the repositories from fresh clones, so no working copy moves.
+  Remove the folders first if they are there:
+    gh repo clone Kubanjaze/moto-diag /tmp/review-pending -- -q
+    gh repo clone Kubanjaze/moto-diag-mobile /tmp/review-pending-mobile -- -q
+  moto-diag's master should be at eecb420 or newer. Leave ~/Projects/moto-diag,
+  ~/motodiag/server and the fleet's code copy as they are: the Mac's checks,
+  the server and the fleet run from them.
+- Live: at most one read, the count in item 5, opened read-only (?mode=ro).
+  Never run a motodiag command on live: every one opens the database
+  through init_db, which can write (F292).
+- Every gh call names its repository (-R Kubanjaze/moto-diag).
+- Reply in this chat. Write nothing into the repository; the advisor
+  records what needs recording.
+- Talk to the operator in plain English, as CLAUDE.md's rule 6 says. If the
+  operator has to run something, test it first, say which computer and
+  which window, and give one paste block that ends by printing ALL GOOD or
+  SOMETHING IS OFF. Most likely nothing needs running.
+
+WHAT TO READ FIRST
+- CLAUDE.md.
+- The plan of record, docs/reports/2026-10-12_plan_of_record.md: its "Next,
+  in order" list ("As of 2026-11-21, K119"), and its dated entries from
+  2026-11-20 on.
+- docs/decisions.md: K94, K98, K99, K119 and K120.
+- docs/ROADMAP.md: rows 293, 303B, 334, 334B, 344, 372B and 210.
+- The newest handoffs:
+  - docs/handoffs/2026-11-21_330_closed.md, its "After the merge" section;
+  - docs/handoffs/2026-11-20_334_closed.md, step 3;
+  - docs/handoffs/2026-11-21_408_closed.md.
+- docs/FOLLOWUPS.md, F288 to F292 (the end of the file).
+- The open issues: gh issue list -R Kubanjaze/moto-diag --state open
+
+THE PENDING ITEMS
+1. 293, the shop manual library: next on the plan, built by the fleet.
+   The fleet opened issue 86 on 2026-11-22 at 05:55 UTC, with mission and
+   needs-admiral, and asked the operator for what the plan says 293 needs.
+   When the label comes off, the fleet opens a pull request that starts
+   the phase. Check:
+   - Whether 293's prompt exists in docs/prompts/. The plan's 2026-11-20
+     entry says one is written before 330 closes, from the brief's plan
+     outline (docs/reports/2026-11-20_manuals_and_parts_breakdowns_brief.md).
+     If there is none, find out what the fleet would build from instead
+     (.claude/skills/fleet/scout.py saves the issue's body as the prompt
+     when there is none), and whether that is enough.
+   - Which of 293's needs are answered and which are still the operator's.
+     K119 answered the storage limits and the upload review. Still the
+     operator's: where manual files are backed up; whether the terms wait
+     for a lawyer's read; whether a limit counts the page images made from
+     a file.
+   - Whether the advisor's notes on the storage draft are somewhere 293's
+     builder will read. They are in the plan's K119 entry:
+     - a reviewer at Mekno is a new kind of account across shops;
+     - a new terms version makes everyone accept again;
+     - the privacy policy needs more than one sentence;
+     - a Company's shops are not linked in the data.
+2. 334's last step, the Stripe links: waiting on Stripe support.
+   docs/handoffs/2026-11-20_334_closed.md, step 3: the live dashboard's
+   public details have no fields for the terms and privacy links, although
+   the account is fully activated; nothing was typed. Check:
+   - where those two links are set today, by reading Stripe's own
+     documentation only, with no sign-in;
+   - whether anything else on the plan waits on this step.
+3. The two publisher quote emails (K94): sent, with no reply yet. Replies
+   come to the operator, not to the repository. Check what the plan says
+   happens when a publisher quotes, and suggest when a follow-up is
+   reasonable.
+4. The app's three screens: 303B (staff sign-in), 334B (terms) and 372B
+   (payments). K98 and K99 put them on the list before 210, and builder
+   sessions on moto-diag-mobile build them. Check:
+   - where each stands in both repositories' ROADMAPs;
+   - whether each has a current prompt in docs/prompts/. The advisor's
+     notes say 372B has none: 372_the_apps_payment_screens.txt was written
+     for 372's old branch. They also say 334B's sign-out wording must
+     follow 303B's once 303B merges;
+   - what the branch phase-303B-the-apps-staff-sign-in-screen holds.
+5. The five findings filed on 2026-11-21 and 22, F288 to F292, all open.
+   Check which coming phase or step each bears on, and whether any should
+   be dealt with before something coming soon: F292 before the first real
+   shop's onboarding, F291 before a second shop, F289 before the next long
+   test run. For F292, one read-only count settles whether it would bite
+   today: how many rows live's technical_service_bulletins holds. Open
+   ~/motodiag/live/motodiag.db with ?mode=ro, run that one SELECT COUNT(*),
+   and nothing else.
+6. The first real shop's onboarding on live, a later day: the block "When
+   the first shop arrives" in 330's handoff. Live holds one shop, the
+   smoke-test shop from Phase 199 (id 1). Check:
+   - what that block will do once a second shop exists;
+   - what F292 means for it;
+   - whether the smoke-test shop should stay. Removing it deletes rows on
+     live, which only the operator approves;
+   - whether the operator wants an app screen for onboarding, which 330's
+     handoff leaves to the operator's word.
+7. Small items:
+   - Line coverage: the fleet's run measured 88.42% and the advisor's
+     88.48%, against a pin of 87.50%. Raising the pin is optional.
+   - Two old site zips in the Mac's Downloads wait for the operator's word
+     to delete. There is nothing to check on the desktop.
+8. The fleet itself. The advisor read it through the Mac's way in at about
+   01:30 EST: the service active, no stage running, the fleet's code copy
+   at 30dc540 (405's merge) with nothing newer under .claude/ or ops/, and
+   nothing to resume. Check with:
+     systemctl is-active motodiag-fleet.service
+     cd ~/motodiag/fleet/code && python3 -B .claude/skills/fleet/dispatcher.py recover --dry-run
+   The second command writes nothing. Say whether anything else is waiting
+   on the operator.
+
+WHAT TO SEND BACK
+1. Each item in one or two lines: where it stands, who moves it next (the
+   operator, the advisor, the fleet, an app session, or someone outside),
+   and whether that matches the plan and the decisions, with the file and
+   line you read.
+2. Anything off: something stuck, missing from the plan, out of order,
+   contradicting a decision, or waiting on something nobody owns, each with
+   its evidence.
+3. The operator's open questions, in plain words, each with its choices.
+4. The next three moves, in order, each naming who makes it.
