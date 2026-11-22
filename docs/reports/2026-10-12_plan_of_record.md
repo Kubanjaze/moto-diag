@@ -6,7 +6,7 @@ Written 2026-10-12 by the advisor session that verified Phases 373–381. This c
 
 The fleet reads this table exactly (`.claude/skills/fleet/plan_order.py`): the first row whose ROADMAP row is not ✅ is the next mission. A row built by a builder session is waited for. A row that needs the operator is asked first, in plain English. Otherwise the fleet opens the mission's issue and a one-row pull request that marks its row 🚧, and the operator merges it by hand (K49). The list changes only by a dated entry under "Changes to the order" with a K-id, written on the operator's word (K48).
 
-As of 2026-11-21, K119.
+As of 2026-11-22, K121.
 
 | # | phase | kind | built by | needs the operator | entry |
 |---|---|---|---|---|---|
@@ -29,7 +29,7 @@ As of 2026-11-21, K119.
 | 17 | 334 | shop | fleet | nothing | Wave 1, item 5 · K48, K84 |
 | 18 | 405 | shop | fleet | nothing | 2026-11-19 · K91 |
 | 19 | 330 | shop | fleet | a rule change: F210's general rule comes first ("F210's general rule is still needed before onboarding (330)", 2026-10-21); it changes the set-aside list's definition, which is the operator's call | Wave 1, item 5 · K48, K52 |
-| 20 | 293 | shop | fleet | a rule change: the operator decided on 2026-11-21 what each plan may store in manuals (Individual 2 GB, Shop 20 GB, Company 50 GB shared by its shops, at most 300 MB a file) and that every upload is checked by the server, then approved by a person at Mekno before anyone can open it, with the terms saying so; three more are the operator's, best answered when it starts: where manual files are backed up, whether the terms wait for a lawyer's read, and whether a limit counts the page images made from a file | 2026-11-20 · K94, K119 |
+| 20 | 293 | shop | fleet | a rule change: the operator decided on 2026-11-21 what each plan may store in manuals (Individual 2 GB, Shop 20 GB, Company 50 GB shared by its shops, at most 300 MB a file) and that every upload is checked by the server, then approved by a person at Mekno before anyone can open it, with the terms saying so; and on 2026-11-22 the other three: manual files go in the nightly backup, the upload terms ship before a lawyer's read, and a limit counts only the files a shop uploads | 2026-11-20 · K94, K119, K121, K122, K123 |
 | 21 | 344 | shop | fleet | nothing | Wave 1, item 5 · K48 |
 | 22 | 303B | shop | builder | nothing | 2026-11-20, evening, later · K99 |
 | 23 | 334B | shop | builder | nothing | 2026-11-20, evening · K98 |
@@ -192,17 +192,32 @@ The operator's words:
     - A company's shops are not linked in the data (Company's three locations are only shown, since 404), so until they are, a Company account's 50 GB is one shop's.
   - **The order does not change:** 330 is in progress (K116), then 293. #20 still asks the operator before 293 starts: a limit is a threshold, a rule-1 stop, which the record never answers (K50).
   - **The prompt,** written before 330 closes, carries K119 and the draft, and for Step 0's log one guard block met in this review: the edit guard refused a redirect to a file path held in a variable, and the command was run again with the path written out.
+- **2026-11-22: 293's last three questions are answered, and its prompt is written (K121, K122, K123).** The order does not change: 330 is finished, and 293 is next.
+  - **The operator's words:** "Manual files go in the nightly backup (345), no separate weekly one." (K121) "Upload terms ship now as a version; a lawyer's read becomes a later version, as K84 did." (K122) "The storage limit counts the uploaded files only, not the page images made from them." (K123) They came with "Decisions for 293, record them in decisions.md and write 293's prompt in docs/prompts/ from the brief's section 4, K119 and your four storage notes".
+  - **What they settle:**
+    - the draft's weekly backup is not used, so the privacy policy's Backblaze line ("every upload, each night") stays true;
+    - the upload clause ships in 293 as the next version of the terms, and a lawyer's read becomes a later one, as K84 did for 334;
+    - a plan's manual storage is the bytes of the files a shop sends.
+  - **The prompt** is `docs/prompts/293_shop_manual_library.txt`. It is written from the brief's section 4, K119, the draft, K121 to K123 and the advisor's four notes above, and it carries the guard block for Step 0's log. The plan writer reads it from the phase's branch.
+  - **Row 293** is on master, 🔲, and #20 still asks the operator: the operator takes `needs-admiral` off issue 86 once the prompt is on master.
+  - **Decided the same day, outside the order:**
+    - the test shop on live is marked inactive, not deleted, as a live step of its own, not yet run (K124);
+    - no app screen for onboarding (K125);
+    - a bike two shops share is linked to the second shop's customer too (K126, F291);
+    - the coverage pin goes to 88.0 (K127).
 
 ## Where the ledger stands
 
-On `master` at `60bb480`, rows numbered 100 and up, counted by their status cell (`grep -c -E '^\| *[0-9]{3}[A-Z]? .*\| *<status> *\|' docs/ROADMAP.md`):
+On `master` at `ebefa84`, 2026-11-22, rows numbered 100 and up, counted by their status cell (`grep -c -E '^\| *[0-9]{3}[A-Z]? .*\| *<status> *\|' docs/ROADMAP.md`):
 
 | Status | Rows |
 |---|---|
-| ✅ | 222 |
-| 🔲 | 61 |
-| ⏸️ | 17 |
-| 🚧 | 0 |
+| ✅ | 257 |
+| 🔲 | 58 |
+| ⏸️ | 16 |
+| 🚧 | 2 |
+
+The two in progress are 303B, the app's staff sign-in screen, and 389A, the fleet's first trial. First counted on `60bb480`, 2026-10-12: 222, 61, 17 and 0.
 
 Track O is complete. Phases 373–381 closed between 2026-10-06 and 2026-10-09.
 

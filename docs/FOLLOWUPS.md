@@ -6755,6 +6755,10 @@ share is (linked to the second shop's customer as well, or kept skipped
 with the report saying it is on file elsewhere), and a test of a second
 shop importing a VIN the first already has.
 
+Decided on 2026-11-22 (K126): a bike two shops share is linked to the
+second shop's customer as well. What is left is the change to
+`import_bikes` and that test.
+
 ### F292
 
 **A `motodiag` command run on live writes into it through `init_db`, whose bulletin seed fills an empty table: 330's after-merge status step, as written, was not read-only**
@@ -6830,8 +6834,9 @@ What it affects: nothing on live yet. The corrected block (330's handoff,
 `shop profile init` first and gives the wizard the new shop's id with
 `--shop`, so the first real shop does not meet this. A `shop onboard run`
 on live without `--shop` would meet it. So would an onboarding screen in
-the app built on the same choice, which 330's handoff leaves to the
-operator's word.
+the app built on the same choice. On 2026-11-22 the operator decided
+against one: onboarding stays on the computer, with the operator at the
+keyboard (K125).
 
 What would close it: the wizard uses only a shop it is given. Without
 `--shop`, it registers a new shop, or asks whether to use one it lists.

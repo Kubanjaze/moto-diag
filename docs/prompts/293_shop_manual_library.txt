@@ -1,0 +1,100 @@
+Do this: start Phase 293, the shop manual library (row 293, on master as 🔲: the fleet's row pull request makes it 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out.
+
+My words:
+- K94: "Decision: build the shop manual library (shops upload their own PDF manuals, per-shop, pages by bike, search, zoom, offline) as planned row 293, after 330. Licensed diagrams come later into the same screens. Priority is getting to market: 405, then 330, then 293."
+- K119, the limits and the review: "Individual 2 GB, Shop 20 GB, Company 50 GB shared, 300 MB per file; every upload gets a server check, then a person at Mekno approves it before anyone can open it, and the terms say so, so the review step ships in the same release as uploads".
+- K121: "Manual files go in the nightly backup (345), no separate weekly one."
+- K122: "Upload terms ship now as a version; a lawyer's read becomes a later version, as K84 did."
+- K123: "The storage limit counts the uploaded files only, not the page images made from them."
+
+- **Why:** the diagrams shops want are publishers' licensed data, with no price yet. A library of the manuals a shop already owns needs no licence, and it is the screen licensed data plugs into later (`docs/reports/2026-11-20_manuals_and_parts_breakdowns_brief.md`). A shop's files stay private to that shop: showing one shop's bought manual to another would be redistributing it.
+- **Built by the fleet,** after 330 ('Next, in order' #20; the plan of record, 2026-11-20, 2026-11-21, later, and 2026-11-22). This phase is the server side. The app's screens are 293B, built later by a mobile session.
+- **The plan's sources,** read at Step 0:
+  - the brief: section 4, "Draft phase row and plan outline", and section 2's table of what the server needs;
+  - the draft `docs/reports/2026-11-21_293_storage_and_uploads_draft.md`: sections 1 to 3 and "What changes in 293's plan". Where it differs from K121 to K123, they win;
+  - the plan of record's entry "2026-11-21, later": the advisor's four notes, also below.
+- **What exists, to re-measure at Step 0** (the brief's audit was on `b741ec1`):
+  - Migration 117's `manual_references` and `parts_diagrams` (`src/motodiag/core/migrations.py`, lines 929 and 949), created and empty, with their code in `src/motodiag/reference/`. Its six modules are on the "substrate, awaiting Track P" list in `tests/support/integration_gaps_allowlist.py` (lines 87 to 94). Wiring them to routes removes those entries: the gate fails while a listed module is reachable.
+  - Uploads: `src/motodiag/api/routes/photos.py` stores files under the server's data folder (`settings.data_dir`), in `photos/shop_<id>/…`, and keeps each path relative to that folder (`stored_media_path` and `resolve_media_path`, `src/motodiag/media/paths.py`; F205). The plan checks: `require_tier` (`src/motodiag/auth/deps.py`, line 277).
+  - The plans' limits: `TIER_LIMITS` (`src/motodiag/cli/subscription.py`, line 74).
+  - The nightly backup (345): `MEDIA_DIRS = ("videos", "photos", "audio")` (`src/motodiag/backup/snapshot.py`, line 33). Each file goes once, by its content hash.
+  - The terms:
+    - `TERMS_VERSION` and `TERMS_DATE` in `src/motodiag/auth/terms_acceptance.py`;
+    - the gate in `src/motodiag/auth/deps.py`: with `MOTODIAG_TERMS_REQUIRED` on, a 403 `terms-not-accepted` until the current version is accepted. The switch is off on live (`docs/handoffs/2026-11-20_334_closed.md`), so a new version blocks no one until the operator turns it on;
+    - the texts `docs/legal/terms.md` and `docs/legal/privacy.md`, version 1.0 of 2026-11-19;
+    - the site's pages, made from those texts word for word by `scripts/site_build.py legal`. `tests/test_phase334_legal_texts.py` holds the texts and `tests/test_phase408_site.py` the pages; the home page's questions and answers quote the texts word for word, so a quoted sentence that changes is changed there too.
+  - Roles: every role is a shop's own (`RoleName` in `src/motodiag/auth/models.py`, `SHOP_ROLES` in `src/motodiag/shop/rbac.py`); none is Mekno's.
+  - To measure, as the draft asks: real manuals' sizes (a publisher's PDF, a scan, a parts book), and the free space on the home desktop's disk (the dispatcher's reclaim line prints it).
+- **What it ships** (the brief's outline, with K119 and K121 to K123):
+  1. **One migration.** `manual_references` gains:
+     - the shop that owns the file, the file's sha256 and its size in bytes, who uploaded it, and its page count;
+     - its review state: `status` (`pending_review`, `approved`, `rejected`, `taken_down`, a `Literal` at every contract boundary), `reviewed_by`, `reviewed_at` and `review_reason`.
+     A new table, `manual_pages` (the manual, the page number, the image's path, the page's text), gets an FTS5 index. The rollback follows the `rollback_to_version` pattern. The migration goes live through the deploy skill, under 405's rule.
+  2. **The routes,** scoped to a shop like `photos.py`:
+     - the list, by make, model and year (`GET /v1/shop/{shop_id}/manuals`);
+     - a page (`…/manuals/{id}/pages/{n}`) and search (`…/manuals/search?q`);
+     - the upload (`POST …/manuals`), for the shop's admin roles, which the plan names from `SHOP_ROLES`.
+     A background job turns each page into an image and a thumbnail and takes its text, with a permissively licensed library such as `pypdfium2`, not PyMuPDF, which is AGPL.
+  3. **The review (K119; the draft's section 3).** Until a file passes it, no one sees it except in the uploading shop's own list.
+     - **The server's check:**
+       - a real PDF, by its contents, not its name;
+       - at most 300 MB, and within the plan's storage;
+       - not locked by a password;
+       - no scripts, attachments or launch actions;
+       - a virus scan;
+       - its pages render and its text comes out;
+       - a file the shop already has approved, with the same fingerprint, is not stored twice.
+       A file that fails is refused, with the reason. With no scanner on the machine, every upload is refused; none is let through unscanned.
+     - **A person at Mekno** approves the file, fixes its tag and approves it, or rejects it with a reason the shop sees. Every decision records who made it and when.
+     - **After approval,** any member can send a page back for review, and a complaint takes the file down until it is decided.
+     The read routes return approved files only. The uploader's own list also shows its pending and rejected files, with the reasons.
+  4. **The storage limit (K119, K123):**
+     - Individual 2 GB, Shop 20 GB, Company 50 GB, and at most 300 MB a file;
+     - it counts the bytes of the files the shop uploaded, not the page images or thumbnails made from them;
+     - one new limit, `manual_storage_bytes`, read from `TIER_LIMITS`;
+     - over it, the upload is refused with how much is used and how to free space, and nothing is charged.
+  5. **The backup (K121).** The uploaded manuals' folder joins the nightly backup's upload folders, and each file is sent once, by its content hash. There is no separate weekly backup. The page images are either backed up too or made again from the files after a restore. The plan says which, and a restore test holds it.
+  6. **The terms (K119, K122).** The upload clause (the draft's section 2) ships in this phase as the next version of the terms, with the privacy policy's changes. A lawyer's read becomes a later version, as it did for 334 (K84). These change together:
+     - both texts in `docs/legal/`;
+     - `TERMS_VERSION` and `TERMS_DATE`;
+     - the site's pages, made by `scripts/site_build.py legal`.
+  7. **The wiring guard.** A test that each new route is reachable, and the `motodiag.reference` entries removed from the allowlist.
+  8. **The tests:**
+     - another shop can never list, open or search a shop's file, approved or not (the main risk);
+     - no one but the reviewer can open a file waiting for review;
+     - search finds a torque line;
+     - refused: a renamed non-PDF, a PDF with JavaScript, a locked PDF, a file over 300 MB, and a file over the plan's storage;
+     - the limit counts the uploaded files, not their page images;
+     - a restore brings the manuals back.
+  9. **The app's copy of the API.** The new routes change the API. So the app's snapshot, `api-schema/openapi.json` in moto-diag-mobile, is refreshed on that repository's branch of the same name, never `main`, as 403 allows (K84).
+- **For the plan, from the advisor's review of the draft** (the plan of record, 2026-11-21, later):
+  - **The reviewer is a new kind of account,** the first that can open any shop's files. Every role today is a shop's own, so 293 adds one, with a test that no one else can open a file waiting for review.
+  - **A new version of the terms asks every user to accept it before anything else,** while the terms are required. Until then, a user who has not accepted the current version can only read and accept them, see who they are, or sign out. Asking only on the manuals screens, as the draft suggests, would be new code, and the plan says which way it goes.
+  - **The privacy policy needs more than the draft's one sentence:**
+    - its list of what is kept names photos, videos and voice notes, not manuals;
+    - "looks at it once" is not quite right, since a flagged file goes back to the reviewer;
+    - its Backblaze line ("an encrypted copy of the database and of every upload, each night") stays true under K121.
+  - **A company's shops are not linked in the data.** Company's three locations are only shown, since 404, so until they are linked, a Company account's 50 GB belongs to one shop.
+- **The rule-1 stops it carries, answered:**
+  - the limits and the review rule (K119);
+  - what a limit counts (K123);
+  - where the files are backed up (K121);
+  - the terms shipped before a lawyer's read (K122).
+  Still stops: a change to any other threshold or rule; a database step that would alter or delete an existing live row (new tables and new columns are not that); and an outside account.
+- **Not in this phase:**
+  - the app's screens (293B, a mobile session);
+  - licensed diagrams and torque tables (row 294, after a publisher's quote: K94's two quote emails have no reply yet);
+  - a diagram's callout opening a catalog part;
+  - a review fleet (the draft's "later");
+  - a separate weekly backup (K121);
+  - a lawyer's read (K122: a later version);
+  - page images in the limit (K123);
+  - linking a Company's shops.
+- **The live steps, in the handoff,** in plain English for the operator, each tested before it is handed over:
+  1. the migration, through the deploy skill;
+  2. the server on the merged code, from the Mac (`remote.py server-update`);
+  3. the virus scanner installed on the home desktop, if Step 0 finds it missing: that is the operator's step, with sudo, and until it is done every upload is refused;
+  4. the new terms and privacy pages published on getmekno.com, the operator's step as in 408, in the same sitting as the server update and before it, so the server never asks for a version the site does not show;
+  5. any step that only reads live reads a copy of it (F292).
+- **For Step 0's log** (CLAUDE.md rule 6, a guard block). In the advisor's review of the draft on 2026-11-21, the edit guard refused a redirect to a file path held in a variable. The command was run again with the path written out.
+- **Closes** no finding. If Step 0 finds a case this prompt does not cover, a finding names it.
