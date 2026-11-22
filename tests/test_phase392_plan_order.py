@@ -46,7 +46,7 @@ class TestTheRealRecord:
                                                       "371", "372", "403", "404", "334", "405",
                                                       "330", "293", "344", "303B", "334B",
                                                       "372B", "210"]
-        assert order.as_of == ("2026-11-20", "K99")
+        assert order.as_of == ("2026-11-22", "K121")
 
     def test_392_is_a_builders_and_303_348_need_nothing(self):
         e = {x.phase: x for x in P.parse_order((ROOT / P.PLAN).read_text()).entries}
@@ -83,10 +83,11 @@ class TestTheRealRecord:
 class TestCheckRefuses:
     @pytest.mark.parametrize("rel,old,new,why", [
         (P.PLAN, "## Next, in order\n", "## The order\n", "has no '## Next, in order'"),
-        (P.PLAN, "As of 2026-11-20, K99.", "As of now.", "no 'As of"),
-        (P.PLAN, "As of 2026-11-20, K99.", "As of 2026-11-21, K99.", "no entry under"),
-        (P.PLAN, "As of 2026-11-20, K99.", "As of 2026-11-20, K100.", "K100, which does not"),
-        (P.PLAN, "As of 2026-11-20, K99.", "As of 2026-11-20, K47.", "does not cite K47"),
+        (P.PLAN, "As of 2026-11-22, K121.", "As of now.", "no 'As of"),
+        # A date no entry can carry: 2026-11-22 has an entry of its own since K121.
+        (P.PLAN, "As of 2026-11-22, K121.", "As of 2001-01-01, K121.", "no entry under"),
+        (P.PLAN, "As of 2026-11-22, K121.", "As of 2026-11-22, K999.", "K999, which does not"),
+        (P.PLAN, "As of 2026-11-22, K121.", "As of 2026-11-22, K47.", "does not cite K47"),
         (P.PLAN, "| 2 | 303 | shop | fleet | nothing |", "| 2 | 303 | shop | robots | nothing |",
          "its builder 'robots'"),
         (P.PLAN, "| 6 | 348 | shop | fleet | nothing |", "| 6 | 348 | store | fleet | nothing |",
@@ -100,7 +101,7 @@ class TestCheckRefuses:
         (P.PLAN, "| 25 | 210 |", "| 25 | 999 |", "phase 999 has no ROADMAP row"),
         (P.PLAN, "| 25 | 210 |", "| 25 | 303 |", "phase 303 is listed twice"),
         (P.PLAN, "| 25 | 210 |", "| 26 | 210 |", "not numbered"),
-        (P.PLAN, "Wave 1, item 6 · K48", "Wave 1, item 6 · K100", "cites K100"),
+        (P.PLAN, "Wave 1, item 6 · K48", "Wave 1, item 6 · K999", "cites K999"),
         (P.DECISIONS, "| K51 | 2026-10-27 |", "| K51 | 2026-10-27 |", None),
     ], ids=["no-section", "no-as-of", "as-of-undated", "as-of-unresolved", "as-of-uncited",
             "builder", "kind", "need-unknown", "need-without-what", "entry-no-kid",

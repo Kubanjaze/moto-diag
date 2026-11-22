@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F285** (this file). The
+At the time of writing the highest assigned is **F293** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3625,7 +3625,7 @@ To close: reproduce or rule out (a send to a closed socket from a thread
 while it exits, with the plugin on and off), then either keep SIGPIPE off
 the registered list or show that the crash has another cause.
 
-### F210
+### F210 — CLOSED by Phase 405
 
 **The deploy gates' list of columns the API writes cannot hold once a shop's traffic reaches live: any ordinary write refuses the apply or fails check 8**
 
@@ -3660,6 +3660,20 @@ the approved scope by anything but the API still fails.
   platform: the upsert changes `user_id` or `platform`, which the
   other-column control keeps failing.
 - **A shop's ordinary writes**, this finding's own case.
+
+Closed 2026-11-20 by Phase 405, once merged and live (K91, 383's option
+2C as this finding names it):
+- Before the apply, a shop's write since the dry run (a stand-in
+  `work_orders` row) is listed and the apply goes on; a change in a table
+  the change touches still refuses.
+- After the apply and in `verify-live`, the approved changes must hold, and
+  every other difference is listed, not failed; an approved row, field or
+  schema object missing or different still fails (exit 3). The controls
+  this finding names (383's and 385's) are kept in their refusing form on
+  a touched table and listed elsewhere.
+
+It is live when the handoff's step 2 prints ALL GOOD
+(`docs/handoffs/2026-11-20_405_closed.md`).
 
 ### F211
 
@@ -5466,7 +5480,7 @@ What would close it: a later phase that touches these documents fixes the wordin
 
 Closed 2026-11-09 in Phase 371 itself: "(K72)" is deleted from the handoff's step 4, whose reason is already under "What is open".
 
-### F259
+### F259 — CLOSED by Phase 405
 
 **The payments feed writes five live tables while the server runs, and no deploy gate expects it, so the next deploy's "live still equals the backup" check meets them as drift**
 
@@ -5499,6 +5513,22 @@ not the phase's to change):
 - the deploy's paste block stopping `motodiag-payments.service` beside
   `motodiag-api.service` for the apply, and starting it after; the job
   catches up from its stored place.
+
+Closed 2026-11-20 by Phase 405, once merged and live (K91, neither option
+above: option C):
+- Before the apply, a change since the dry run refuses only in a table the
+  change touches (the tables its scope and its approved diff name); the
+  feed's writes elsewhere are listed and the apply goes on
+  (`tests/test_phase405_what_the_change_did.py`, a stand-in
+  `stripe_event_cursors` row rewritten between the dry run and the apply).
+- After the apply and in `verify-live`, every approved change must hold;
+  the feed's writes, its check-ins in the table 404 created among them,
+  are listed, not failed.
+- `SERVER_WRITES` is unchanged, and a database step no longer needs the
+  feed stopped.
+
+It is live when the handoff's step 2 prints ALL GOOD
+(`docs/handoffs/2026-11-20_405_closed.md`).
 
 ### F260
 
@@ -6575,3 +6605,240 @@ moved:
 
 It takes effect when the fleet's code copy moves to a master that holds the
 merge (`docs/handoffs/2026-11-20_407_closed.md`, "What is open").
+
+### F286
+
+**Wording the Red Team left open on phase 405, round 1**
+
+Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 392, F228). K9: "after round 3, remaining wording defects go to one finding". The rows, from the refute table in the Red Team's round 1 on phase 405:
+
+- SKILL.md says a database step no longer needs the feed stopped, "the feed's writes are in tables the change does not touch": "  feed stopped: the feed's writes are in tables the change does not touch," (.claude/skills/deploy/SKILL.md p. 244)
+
+What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).
+
+### F287
+
+**`fastapi>=0.110` lets a fresh install pick a FastAPI this suite fails on**
+
+Found by Phase 408 on 2026-11-21, setting up a clean cloud checkout
+(`408_phase_log.md`). `pyproject.toml`'s `api` extra pins only
+`fastapi>=0.110`; pip chose 0.165.0. Measured, from the same tree:
+- 0.165.0, 0.150.0 and 0.140.0: `create_app()` lists 4 routes with
+  methods (the docs routes), not 124, so
+  `tests/test_phase244J_guidance_surface.py::TestTheEndpointExists` fails;
+  whether the app still serves its routes under those versions was not
+  measured;
+- 0.124.4: the routes register, but the schema the fleet's app-copy
+  generator makes differs from the app's (`tests/test_phase403_app_copy.py`,
+  both pairs);
+- 0.135.0: both pass (124 routes; the generator's sha256 equals the app's
+  `d43910b0…`).
+
+The machines that run the suite today (the Mac, the home desktop) have
+their own installed versions, so nothing fails there. A new machine, a
+rebuilt `.venv` or the fleet's next clean install would. What would close
+it: an upper bound (or an exact pin, as 393 pinned the quality tools) on
+`fastapi` at a version both tests pass on, with the live server's version
+read first.
+
+### F288
+
+**The plan-order test pins the plan of record's live text, and neither whole-tree mode runs it**
+
+Found by the advisor on 2026-11-21. `tests/test_phase392_plan_order.py`
+pins the real plan of record (`docs/reports/2026-10-12_plan_of_record.md`):
+`test_the_list_is_the_plans_order` asserts the list and its "As of" line,
+and its refusal cases plant edits on the live text, four of them on that
+exact line (one plants a date that must have no dated entry). It
+enumerates no directory, so `wholetree.py`'s membership rule leaves it out
+of both modes: on 2026-11-21 `members('fast')` held 104 files and
+`members('full')` 158, and neither held this one. Of the five test files
+that read the plan of record or `docs/decisions.md`, it is the only one in
+neither mode; only the full regression reaches it.
+
+On 2026-11-21 two record commits passed their pre-commit check and turned
+master red:
+- `c144fa7` (K117) gave the plan a dated entry for 2026-11-21, the date
+  one refusal case planted as having none: 1 failed. 408's thread found
+  it (408's bug fix #1).
+- `13de345` (K119) moved the list to "As of 2026-11-21, K119.": 5 failed,
+  44 passed in this file, while fast `wholetree.sh` passed (2897 passed).
+
+`873c001` moved the pins, and the full suite then passed (12982 passed).
+408's branch had inherited both failures by merging master. Every earlier
+commit that changed the list (K84, K91, K94, K98, K99, K100 to K109) moved
+these pins by hand in the same commit.
+
+What would close it: the whole-tree rule takes in tests that read the
+record's files, as F175 added the ledger class, or the refusal cases read
+the "As of" line from the plan itself, so that only the deliberate pin
+moves. The phase that takes it chooses.
+
+### F289
+
+**Nested pytest runs in gate tests can outlive their test and spin at exit for about 15 minutes, holding the whole-tree command's output open**
+
+Seen by the advisor on 2026-11-21, on the Mac. Fast `wholetree.sh` on a
+clean master (`873c001`) took 1154 s, while its pytest reported "2897
+passed … (231.2 s wall)". Three nested pytest runs were still alive after
+their workers had moved on to other tests, each at about 40% CPU with no
+child processes:
+- `-n 2 --dist load -p no:cacheprovider -rA test_planted.py`, under gw3;
+- `-p no:cacheprovider -p support.worker_loss -p support.alarm_left_armed
+  -v -n 1 test_planted.py`, under gw1;
+- `-q -n auto --dist load …/test_every_failed_line_and_the0/test_planted_failures.py`,
+  under gw4.
+
+By the planted names, their spawners are
+`tests/test_phase379_wholetree_output.py::test_every_failed_line_and_the_whole_log`,
+`tests/test_phase369_worker_loss.py`, and `tests/test_phase355_parallel_suite.py`
+or `tests/test_phase392_open_files.py` (both start `-n 2`). macOS `sample` put
+one in `_Py_Finalize` → `atexit_callfuncs`, running Python code that raised
+and freed `OSError` in a loop; which handler was not found. All three exited
+by themselves after about 15 minutes, and only then did the whole-tree
+command see the end of its pipe. Ruled out: the disk (532 GB free) and
+memory (51% free). Spotlight's indexer was busy at the time (68% CPU), and
+the temp folder held 7.2 GB. It was 1 of 8 timed runs that day: the other
+seven (four fast, one `--full`, one full suite, one regression of record)
+took no longer than their pytest time.
+
+What it affects: the push guard's own fast run has a 285 s limit and fails
+closed, so a push with no record would have been refused; a regression of
+record can run about 15 minutes long; and the printed wall time understates
+the command's.
+
+What would close it: the gate tests start their nested runs so that one
+stuck at exit cannot hold the outer run's output (their own process group,
+killed and reaped when the test ends), and the loop at exit is found.
+
+### F290
+
+**Wording the Red Team left open on phase 330, round 2**
+
+Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 392, F228). K9: "after round 3, remaining wording defects go to one finding". The rows, from the refute table in the Red Team's round 2 on phase 330:
+
+- The Deviations name every place the build differed from the plan: "v1.1: built as planned, with the deviations listed under Deviations" (docs/phases/completed/330_implementation.md p. 5)
+
+What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).
+
+Filed on 330's branch as F288. It was renumbered F290 when the advisor brought master into the branch on 2026-11-21 (K120), because master's own F288 and F289 had reached master first. The two F288s were filed minutes apart. The dispatcher's numbering reads its branch, master and the app's file, and the advisor's reads master and the app's file, so neither saw the other's (F230's gap).
+
+### F291
+
+**330's bike import looks a VIN up across every shop's bikes, and a match skips the row before its customer step, so a second shop's import of a bike already on file links nothing to that shop**
+
+Found by the advisor on 2026-11-21, reviewing phase 330 (pull request
+84), and read again on master at `2fb1bc3`. `import_bikes`
+(`src/motodiag/crm/bike_import.py`) asks `_vehicle_with_vin` for each
+row's VIN, and that query names no shop: `SELECT id FROM vehicles WHERE
+vin = ? ORDER BY id LIMIT 1` (line 201). `vehicles` has no shop column:
+on a fresh database at schema 91 its columns are id, make, model, year,
+engine_cc, vin, protocol, notes, created_at, updated_at, powertrain,
+engine_type, battery_chemistry, motor_kw, bms_present, customer_id,
+mileage, owner_user_id and transmission. A row whose VIN is found goes on
+the report's skipped list and the loop moves on (lines 244 to 247), before
+the customer step: for that row no customer is matched or made, and no
+`customer_bikes` link is written. The module says so ("A row whose VIN is
+already in ``vehicles`` is skipped", line 9), and for one shop it is what
+the plan wanted: importing a file again adds nothing.
+
+What it affects: nothing on live yet. On 2026-11-22 live held one shop,
+the smoke-test shop from Phase 199, by 330's after-merge status. Once a
+second shop onboards, a bike already on file (sold on, or serviced at two
+shops) is reported as skipped and stays unlinked to the second shop's
+customer, and the onboarding's bikes step does not count it:
+`_linked_bikes` (`src/motodiag/cli/shop_onboard.py`) counts only bikes
+linked to the shop's own customers.
+
+What would close it: the operator's decision on what a bike two shops
+share is (linked to the second shop's customer as well, or kept skipped
+with the report saying it is on file elsewhere), and a test of a second
+shop importing a VIN the first already has.
+
+Decided on 2026-11-22 (K126): a bike two shops share is linked to the
+second shop's customer as well. What is left is the change to
+`import_bikes` and that test.
+
+### F292
+
+**A `motodiag` command run on live writes into it through `init_db`, whose bulletin seed fills an empty table: 330's after-merge status step, as written, was not read-only**
+
+Found by the advisor on 2026-11-22, testing 330's handoff steps before
+the operator ran them. `init_db()` (`src/motodiag/core/database.py`) runs
+the baseline schema, then any pending migrations, then a best-effort seed:
+when `count_tsbs(path) == 0` (line 230) it loads
+`advanced/data/tsbs.json` (line 238). The command line opens the database
+through it: `grep -c 'init_db()' src/motodiag/cli/*.py` counts 303 lines
+in 24 files, and `shop onboard status`, `run` and `import-bikes` each call
+it first (`src/motodiag/cli/shop_onboard.py` lines 192, 476 and 493). The
+payments feed's two commands avoid it on purpose
+(`src/motodiag/cli/payments.py` line 97), and nothing else in `src/`
+calls it.
+
+Measured on the Mac with the merged code (`2fb1bc3`), on test databases
+in the scratchpad:
+- `init_db` run a second time on a fresh database at schema 91 (126
+  tables, 44 bulletins): 0 differences in schema or rows.
+- The same database with its bulletin table emptied: `init_db` wrote 44
+  rows into it.
+- 330's step 2 as its handoff wrote it, run against a stand-in desktop
+  whose live had no bulletins: it printed ALL GOOD and wrote the same 44
+  rows. Its schema check keeps a migration from running, but nothing keeps
+  the seed from running.
+
+What it affects: any operator block that runs a `motodiag` command on
+live writes those 44 rows if live's bulletin table is empty, which no one
+has read. 330's status step ran on a read-only copy of live instead (its
+handoff, "After the merge"), so live was only read. 330's first-shop block
+runs `shop onboard run` on live after taking a backup, so there they would
+be new rows after a backup, written without being named.
+
+What would close it: the seed runs only on a database `init_db` has just
+created, or a command that only reads opens the database without
+`init_db`, as the feed's do. Until then, a block that reads live through
+the command line reads a copy.
+
+### F293
+
+**330's setup wizard registers a shop only on a database with none: given no `--shop`, it uses the one shop there is without asking, and `--shop` cannot name a new one, so on live, which holds the test shop, `shop onboard run` sets a new shop's owner, terms and bikes up in the test shop**
+
+Found by the home desktop's main chat on 2026-11-22, in its read-only
+review of what is pending after 330, and measured by the advisor the
+same day. `run` (`src/motodiag/cli/shop_onboard.py`, line 474) takes its
+shop from `_shop_for_run` (line 451), which calls
+`_resolve_shop_identifier(None, require=False)`
+(`src/motodiag/cli/shop.py`, line 258). With exactly one active shop that
+returns the shop (lines 276 and 277), with several it refuses (lines 278
+to 281), and a `--shop` that names no shop is refused as not found (lines
+294 to 298). Step 1, `do_shop` (line 245), runs only when `step_shop`
+finds no shop (line 73), so it can run only on an empty database. Live
+holds one shop, Phase 199's test shop (id 1), so on live step 1 never
+runs.
+
+Measured on the Mac with the code on master (`6b9fe9b`), against a
+stand-in of live: the test shop with two owners, one with a login, and
+one tech, no terms accepted, no bikes, 44 bulletins. The handoff's "When
+the first shop arrives" block was run with its `SHOP=` line empty, as the
+handoff said to for a live with one shop, through a pretend terminal:
+- With the wizard given the terminal (`</dev/tty`), steps 1 to 3 printed
+  "already done" for the test shop. The answers then wrote 4 rows, all
+  for the test shop: a terms acceptance by one of its owners, a customer
+  with `shop_id` 1, a bike and the bike's link.
+- As written, the wizard read the block's own remaining lines as its
+  answers ("Error: invalid input" twice, then "Aborted!") and wrote
+  nothing. That second defect is the block's own, and the corrected block
+  in the handoff fixes it.
+
+What it affects: nothing on live yet. The corrected block (330's handoff,
+"When the first shop arrives") registers the shop with
+`shop profile init` first and gives the wizard the new shop's id with
+`--shop`, so the first real shop does not meet this. A `shop onboard run`
+on live without `--shop` would meet it. So would an onboarding screen in
+the app built on the same choice. On 2026-11-22 the operator decided
+against one: onboarding stays on the computer, with the operator at the
+keyboard (K125).
+
+What would close it: the wizard uses only a shop it is given. Without
+`--shop`, it registers a new shop, or asks whether to use one it lists.
+A `--shop` naming no registered shop offers to register it. A test run
+with one shop already in the database would hold this.

@@ -126,35 +126,52 @@ through `apply-live`, never through a restart.
    - the diff records no scope problem;
    - the backup still hashes as recorded, and the scope file is the one
      the diff was made with;
-   - live still equals the backup, but for the columns the running API
-     writes by itself (`SERVER_WRITES`: `api_keys.last_used_at`; F208, the
-     operator's 2A, Phase 383). Each one set aside is printed and named in
-     the live diff; any other change refuses. A field the approved diff
-     names is never set aside. F210 records where the list stops holding,
-     before onboarding (330). Since K59, `audit_events` (Phase 348's trail)
-     is on the list as a whole table: every row the API adds to it is set
-     aside, and a changed or removed row still refuses, since the table is
-     append-only. Since Phase 385 (F212, the operator's K39),
-     `device_tokens.last_seen_at` is the second column: the app's push
-     registration refreshes it on every registration. The same upsert's
-     rebind of `user_id` or `platform`, and a new token row, stay off the
-     list and still refuse (F210);
    - a fresh dry run on a new copy stays in scope;
    - **that fresh run equals the committed exact diff, field for field**,
      clock values masked (F172, Phase 357). A diff file written before
-     this check has no exact diff and is refused.
+     this check has no exact diff and is refused;
+   - **no table the change touches changed on live since the dry run**
+     (since 2026-11-20, Phase 405, the operator's K91; before it, any
+     change in any table refused). The tables it touches are "the tables
+     its approved diff and its scope name": the scope's `tables`, the
+     approved diff's `rows`, and every schema object either names, a table
+     by its name and an index or trigger by its table, read from the fresh
+     copy after its migration (a view names none). The run prints them as
+     `tables this change touches: …`. A change in any other table (the
+     payments feed's, F259; a shop's, F210; the server's) is printed as
+     `changed since the dry run, outside the tables this change touches:
+     …`, and the apply goes on. This check runs after the fresh dry run's
+     two, so a fresh run that differs refuses first. Inside a touched
+     table, the columns the running API writes by itself are still set
+     aside first (`SERVER_WRITES`: `api_keys.last_used_at`, F208, the
+     operator's 2A, Phase 383; `audit_events` as a whole table, K59, Phase
+     348, its changed or removed rows not set aside, since it is
+     append-only; `device_tokens.last_seen_at`, F212, K39, Phase 385, the
+     same upsert's rebind of `user_id` or `platform` and a new token row
+     not set aside). Each one set aside is printed and named in the live
+     diff. A field the approved diff names is never set aside.
 
-   It then migrates live, writes `<phase>_live_diff.md` and checks the
-   scope and the equality again; the live diff says whether live equals
-   the approved exact diff.
+   It then migrates live, writes `<phase>_live_diff.md` and checks that
+   every approved change holds on live (Phase 405, K91). Its header keeps
+   `Scope problems` (each approved change absent or different, or `none`)
+   and `Equals the approved exact diff` (`yes` when every approved change
+   holds), and gains `Other differences, listed`: what live holds that the
+   approved diff does not name, listed, not failed. It exits 1 when an
+   approved change does not hold. The scope is no longer checked over the
+   whole live diff after the apply: it was checked twice before, and a row
+   the running code wrote since would read as out of scope.
 5. **`deploy.py verify-live <phase>`** (Phase 378, K25), read-only, any
    time after: it copies live and the phase's backup (opened immutable, so
    no `-shm` or `-wal` is left beside it) and prints the schema objects and
-   tables that differ, whether that equals the approved exact diff, and
-   live's integrity and foreign keys. It exits 3 when live does not equal
-   the approved diff, and says when live's schema is past the phase's own
-   migrations (F197, Phase 379); 1 on integrity or a foreign key; 2 with no
-   deploy. verify_phase's check 8 calls it and fails on 1 or 3. It sets
+   tables that differ, the other differences listed, whether every
+   approved change still holds, and live's integrity and foreign keys.
+   Since Phase 405 (K91) it asks only whether the approved changes hold:
+   an approved row, field or schema object absent from live or different
+   is a gap; anything else live holds (a row the running code added or
+   removed, a field the approved diff does not name, a later migration's
+   object) is listed under `other differences, listed`. It exits 3 on a
+   gap, and says when live's schema is past the phase's own migrations
+   (F197, Phase 379); 1 on integrity or a foreign key; 2 with no deploy. verify_phase's check 8 calls it and fails on 1 or 3. It sets
    aside the `SERVER_WRITES` columns as apply-live does, and prints each
    one (F208). Where live is not, check 8 runs through the way in
    (`remote.py live-check`, the operator's (i), Phase 384) and fails on its
@@ -223,8 +240,9 @@ two calls, with the yes asked on the Mac between them:
   The answer file says the answer was typed on the Mac, not at the desktop,
   and records it as `> yes`, the only answer the Mac sends an apply for.
 - **Taking `needs-hands` off** stays in the operator's paste block.
-- **Before Phase 405 lands,** a database step stops the payments feed and
-  stays at the desktop (K91).
+- **Since Phase 405 (K91),** a database step no longer needs the payments
+  feed stopped: the feed's writes are in tables the change does not touch,
+  and are listed, not refused or failed.
 
 The rest of the desktop's routine steps are named operations too
 (`remote.py <name>`): `feed-status`, `feed-stop`, `feed-start`,
@@ -247,8 +265,9 @@ Tests: `tests/test_phase406_*.py`.
   refusal above still runs. The command line would apply no migration, so
   its fresh run would not equal the approved diff, and it refuses.
 - **Exit codes:** 0 done or equal; 1 a scope problem, an integrity or a
-  foreign-key failure; 2 refused (no approved diff, no deploy); 3 live does
-  not equal the approved diff; 4 live is not on this machine.
+  foreign-key failure, an approved change that does not hold after the
+  apply; 2 refused (no approved diff, no deploy); 3 an approved change
+  absent from live or different (Phase 405); 4 live is not on this machine.
 
 ## What it holds, and what it cannot
 
@@ -263,3 +282,8 @@ databases. Each refusal was broken on purpose and seen red.
 - **The clock mask has a ceiling.** A migration edited to write a
   different timestamp that also falls within a day of the run is not told
   apart. A fixed date is compared (`tests/test_phase357_deploy_exact.py`).
+- **After the apply, a row the migration wrote on live but not on the copy
+  cannot be told from a row the running code wrote** (Phase 405, K91): it
+  is listed, not failed. A migration's own surprise is caught before the
+  apply, where the fresh dry run must equal the approved diff
+  (`tests/test_phase405_what_the_change_did.py`).

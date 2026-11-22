@@ -594,7 +594,33 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: (four tests, and the four cases of
 #: test_the_reason_stays_on_its_line_and_safe_in_a_comment); no other test
 #: file changed. 12968 + 8.
-COLLECTED_TEST_FLOOR = 12976
+#:
+#: Phase 405 (K91), by a diff of collected ids against 8ba8c66 (12960):
+#: +59 -4. Added: test_phase405_what_the_change_did.py (40); the controls
+#: K91 moves, each in two forms, 358 (1), 379 (2), 383 (9: two new classes
+#: of the listed forms and one approved-row-removed case), 385 (7: the
+#: fixture-scope form of the six before-the-apply cases and one
+#: approved-row-removed case). Removed: 383's four after-the-apply cases,
+#: moved by name into the listed classes. Measured: 13015.
+#:
+#: The two merged (405 after 407, 2026-11-20), both from 12960: 407 +16,
+#: 405 +55 (+59 -4), on separate files. 12960 + 16 + 55.
+#:
+#: Phase 408 (K109, K114), by a diff of collected ids against 4b71dac
+#: (13031): +69 -0, all in test_phase408_site.py, the site's checks (68, and
+#: one more image check once the founder's photo is in).
+#: Measured: 13100.
+#:
+#: Phase 330 (the onboarding wizard), by a diff of collected ids against
+#: bc2f7bf (13031): +35 -0, all in test_phase330_onboarding.py (31 tests,
+#: one with four cases and one with two); no other test file changed.
+#: Measured: 13066.
+#:
+#: The two merged (330 after 408, 2026-11-21, K120), both from 13031: 408
+#: +69, 330 +35, on separate files. 13031 + 69 + 35. By a diff of collected
+#: ids against master at 1dd1921 (13100): +35 -0, all in
+#: test_phase330_onboarding.py. Measured: 13135.
+COLLECTED_TEST_FLOOR = 13135
 
 
 def _collected_count() -> int:

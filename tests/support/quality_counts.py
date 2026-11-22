@@ -47,4 +47,7 @@ SWALLOWED_EXCEPTIONS = 22
 #: both times. Pinned at 87.5, the measure cut to one decimal, before the
 #: regression of record (393's log): a pin is code, so it cannot follow the
 #: run that tests it, and a pin above the run's own total would refuse it.
-COVERAGE_PERCENT = 87.5
+#: → 88.0 on 2026-11-22 (K127, the operator's "Raise the coverage pin to 88.0
+#: in tests/support/quality_counts.py"): 330's regression of record measured
+#: 88.42% at b722a4a, and the advisor's run on the Mac 88.48% at ffaf26f.
+COVERAGE_PERCENT = 88.0

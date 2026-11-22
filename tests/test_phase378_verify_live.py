@@ -89,11 +89,13 @@ class TestReadingItBack:
         c.commit()
         c.close()
         code, out = _verify(env, capsys)
-        assert code == 3  # Phase 379, F197: a mismatch fails (it was 0)
+        # Phase 405, K91: a row the approved diff does not name is listed,
+        # not failed (379 made it fail; it was 0 before that).
+        assert code == 0, out
         assert "rows: known_issues +0 ~1 -0" in out
-        assert "the difference is not a later migration's" in out
-        assert "equals the approved exact diff: no" in out
-        assert "known_issues" in out.split("equals the approved exact diff: no", 1)[1]
+        assert "equals the approved exact diff: yes" in out
+        listed = out.split("other differences, listed:", 1)[1].split("equals the approved", 1)[0]
+        assert "known_issues +0 ~1 -0" in listed
 
     def test_a_foreign_key_break_fails(self, env, capsys):
         _deployed(env)

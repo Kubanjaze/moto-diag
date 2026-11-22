@@ -1,5 +1,40 @@
 # deploy — changelog
 
+## 2026-11-20 — the check asks what the change did (Phase 405, K91, F210, F259)
+
+The operator, 2026-11-19 (K91): "C as recommended". Option C: "before the
+apply it refuses only a change since the dry run in a table the change
+touches; after the apply, and in every later check, the approved changes
+must hold, and other differences are listed, not failed." The payments
+feed writes live all the time (F259), so 404's database step refused
+before the apply and every check after it failed once the feed ran again;
+a shop's own use would do the same (F210).
+
+- `deploy.py`: `tbl_names` (each schema object's table, from
+  `sqlite_master`, a view left out) and `touched` (the tables the scope
+  and the approved diff name, an index or trigger by its table); the drift
+  read moved out of `preflight`'s top into `drift_gate`, which runs after
+  the fresh dry run's scope and exact gates and refuses only a touched
+  table, listing the rest. `entries` (empty dicts dropped, each schema
+  name and each changed field's `before` and `after` its own entry),
+  `listed_differences` and `approved_holds`; `shape_gaps` keeps its
+  signature and messages and walks the approved leaves only. `apply_live`
+  no longer runs `check_scope` over the whole live diff after the apply;
+  its live diff gains `Other differences, listed`. `verify_live` prints
+  the listed lines and exits 3 only when an approved change is absent or
+  different. `SERVER_WRITES` is unchanged, and still sets aside its
+  columns inside a touched table.
+- Tests: `tests/test_phase405_what_the_change_did.py` (40); the controls
+  K91 moves, in 358, 378, 379, 383 and 385, each kept in the form that
+  still refuses or fails and given a listed form; 395's apply-live refusal
+  now writes to a table its change touches.
+- Mutations: `405_mutate.py`, 14/14 red, and the one control (378's clock
+  test under the union walk) green.
+- No caller changed: `through_fleet.py`, `remote.py`, the desktop's
+  dispatcher, the fleet's dispatcher and Quartermaster, and
+  `verify_phase.sh` read the exit codes and the two header lines, whose
+  meaning is kept.
+
 ## 2026-11-19 — the Mac runs the rest of the desktop's steps (Phase 406, K93)
 
 The operator, 2026-11-19 (K93): "Set it up as phase 406 and build it on the

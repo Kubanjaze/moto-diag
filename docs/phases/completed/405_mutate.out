@@ -1,0 +1,17 @@
+T1 the touched set is every table of the backup (the old rule): red
+T2 the touched set is empty: red
+T2b the touched set is empty: the kept controls: red
+T3 an index's table left out of the touched set: red
+T4 the names read from the backup, not the migrated copy: red
+G1 shape_gaps finds no gap: red
+G2 shape_gaps walks the union of both sides again: red
+G3 the clock rule dropped from shape_gaps: red
+G3b the clock rule dropped: 378's test: red
+E1 entries keeps the schema's lists whole: red
+E2 entries keeps empty dicts: red
+E2b entries keeps empty dicts: 379's old shape: red
+E3 entries keeps a changed field's list whole: red
+H1 approved_holds calls shape_gaps on an approved diff with no entries: red
+C1 the union walk: 378's clock test stays green: green, as expected
+14/14 red; 1/1 controls green
+exit 0

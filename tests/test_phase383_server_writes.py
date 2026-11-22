@@ -8,6 +8,9 @@ following it: `deploy.SERVER_WRITES` names the columns the running API
 writes, and every comparison of live with a backup sets aside a change
 confined to them. The controls: any other change still refuses and still
 fails, and the dry runs (on copies no server writes) do not mask.
+Phase 405 (K91) narrows the controls: before the apply they refuse in a
+table the change touches, and are listed elsewhere; after the apply they
+are listed unless they alter an approved entry.
 
 Fixture databases only, through 358's deploy contract.
 """
@@ -51,10 +54,36 @@ def _verify(env, capsys) -> tuple[int, str]:
     return code, capsys.readouterr().out
 
 
-def _ready(env):
+def _touching(env, table: str) -> None:
+    """Phase 405, K91: the fixture scope with `table` named, nothing expected
+    of it, so the change touches it and a change since the dry run there
+    refuses."""
+    scope = {"tables": {**SCOPE["tables"], table: {}}}
+    D.scope_path(env["repo"], PHASE).write_text(json.dumps(scope, indent=1))
+    _git(env["repo"], "commit", "-qam", f"a scope naming {table}")
+
+
+def _ready(env, touching: str | None = None):
+    if touching:
+        _touching(env, touching)
     _with_keys(env)
     assert _dryrun(env) == 0
     _commit_diff(env)
+
+
+def _listed(out: str) -> str:
+    """verify-live's listed lines (Phase 405)."""
+    return out.split("other differences, listed:", 1)[1].split("equals the approved", 1)[0]
+
+
+def _applied_and_listed(env, capsys, table: str) -> None:
+    """Phase 405, K91: a change since the dry run outside the tables the
+    change touches is listed, and the apply goes on."""
+    assert _apply(env) == 0
+    assert "outside the tables this change touches" in capsys.readouterr().out
+    live_diff = D.diff_path(env["repo"], PHASE, "live").read_text()
+    assert "Equals the approved exact diff:** `yes`" in live_diff
+    assert table in live_diff.split("Other differences, listed:**", 1)[1].splitlines()[0]
 
 
 class TestTheListedColumnIsSetAside:
@@ -86,25 +115,50 @@ class TestTheListedColumnIsSetAside:
 
 
 class TestTheControlsStillFail:
-    """A change outside the list refuses the apply and fails verify-live."""
+    """Before the apply, in a table the change touches (Phase 405, K91: a
+    scope naming it): a change outside the list refuses the apply."""
 
     def test_another_column_of_the_row_before_the_apply(self, env, capsys):
-        _ready(env)
+        _ready(env, touching="api_keys")
         _request(env)
         _sql(env["live"], "update api_keys set name = 'renamed' where id = 2")
         assert "changed since the dry run" in _refusal(env, capsys)
 
     def test_an_added_api_keys_row_before_the_apply(self, env, capsys):
         """Beside a request, so the masked change and the added row share a table."""
-        _ready(env)
+        _ready(env, touching="api_keys")
         _request(env)
         _sql(env["live"], "insert into api_keys values (3, 1, 'new', null, 1)")
         assert "changed since the dry run" in _refusal(env, capsys)
 
     def test_the_same_column_name_in_another_table_before_the_apply(self, env, capsys):
-        _ready(env)
+        _ready(env, touching="devices")
         _sql(env["live"], "update devices set last_used_at = '2026-10-19T22:27:00Z'")
         assert "changed since the dry run" in _refusal(env, capsys)
+
+
+class TestListedOutsideTheTouchedTables:
+    """Phase 405, K91: the same changes, in a table the change does not
+    touch (the fixture scope) before the apply, and after the apply in any
+    table, where they alter no approved entry: listed, not refused or
+    failed."""
+
+    def test_another_column_of_the_row_before_the_apply(self, env, capsys):
+        _ready(env)
+        _request(env)
+        _sql(env["live"], "update api_keys set name = 'renamed' where id = 2")
+        _applied_and_listed(env, capsys, "api_keys")
+
+    def test_an_added_api_keys_row_before_the_apply(self, env, capsys):
+        _ready(env)
+        _request(env)
+        _sql(env["live"], "insert into api_keys values (3, 1, 'new', null, 1)")
+        _applied_and_listed(env, capsys, "api_keys")
+
+    def test_the_same_column_name_in_another_table_before_the_apply(self, env, capsys):
+        _ready(env)
+        _sql(env["live"], "update devices set last_used_at = '2026-10-19T22:27:00Z'")
+        _applied_and_listed(env, capsys, "devices")
 
     def test_another_column_after_the_apply(self, env, capsys):
         _ready(env)
@@ -112,14 +166,16 @@ class TestTheControlsStillFail:
         _request(env)
         _sql(env["live"], "update api_keys set is_active = 0 where id = 2")
         code, out = _verify(env, capsys)
-        assert code == 3, out
+        assert code == 0, out
+        assert "api_keys +0 ~1 -0" in _listed(out)
 
     def test_another_table_after_the_apply(self, env, capsys):
         _ready(env)
         assert _apply(env) == 0
         _sql(env["live"], "update devices set last_used_at = '2026-10-19T22:27:00Z'")
         code, out = _verify(env, capsys)
-        assert code == 3, out
+        assert code == 0, out
+        assert "devices +0 ~1 -0" in _listed(out)
 
 
 class TestAMigrationThatWritesTheColumn:
@@ -154,6 +210,15 @@ class TestAMigrationThatWritesTheColumn:
         assert D.apply_live(PHASE, db=env["live"], repo=env["repo"],
                             migrate=self._migrate) == 0
         _request(env)
+        code, out = _verify(env, capsys)
+        assert code == 3, out
+
+    def test_the_approved_row_removed_after_the_apply(self, env, capsys):
+        """Phase 405, K91: an approved entry missing on live still fails."""
+        self._scoped(env)
+        assert D.apply_live(PHASE, db=env["live"], repo=env["repo"],
+                            migrate=self._migrate) == 0
+        _sql(env["live"], "delete from schema_version where version = 71")
         code, out = _verify(env, capsys)
         assert code == 3, out
 
@@ -217,8 +282,23 @@ class TestAWholeTableIsSetAside:
 
 
 class TestAWholeTableKeepsItsControls:
-    """Append-only: a changed or removed audit row is drift, before the apply
-    and after it."""
+    """Append-only: a changed audit row is drift before the apply, in a
+    table the change touches (Phase 405, K91: a scope naming it)."""
+
+    def test_a_changed_row_before_the_apply(self, env, capsys):
+        _touching(env, "audit_events")
+        _with_audit(env)
+        assert _dryrun(env) == 0
+        _commit_diff(env)
+        _audit_request(env)
+        _sql(env["live"], "update audit_events set path = '/v1/x' where id = 1")
+        assert "changed since the dry run" in _refusal(env, capsys)
+
+
+class TestAWholeTableListedOutsideTheTouchedTables:
+    """Phase 405, K91: the same changes where the change does not touch the
+    table before the apply, and after the apply where they alter no
+    approved entry: listed, not refused or failed."""
 
     def test_a_changed_row_before_the_apply(self, env, capsys):
         _with_audit(env)
@@ -226,7 +306,7 @@ class TestAWholeTableKeepsItsControls:
         _commit_diff(env)
         _audit_request(env)
         _sql(env["live"], "update audit_events set path = '/v1/x' where id = 1")
-        assert "changed since the dry run" in _refusal(env, capsys)
+        _applied_and_listed(env, capsys, "audit_events")
 
     def test_a_removed_row_after_the_apply(self, env, capsys):
         _with_audit(env)
@@ -235,7 +315,8 @@ class TestAWholeTableKeepsItsControls:
         assert _apply(env) == 0
         _sql(env["live"], "delete from audit_events where id = 1")
         code, out = _verify(env, capsys)
-        assert code == 3, out
+        assert code == 0, out
+        assert "audit_events +0 ~0 -1" in _listed(out)
 
     def test_another_table_s_added_row_after_the_apply(self, env, capsys):
         """The same kind of change, outside the list."""
@@ -246,4 +327,5 @@ class TestAWholeTableKeepsItsControls:
         assert _apply(env) == 0
         _sql(env["live"], "insert into devices values (2, null)")
         code, out = _verify(env, capsys)
-        assert code == 3, out
+        assert code == 0, out
+        assert "devices +1 ~0 -0" in _listed(out)
