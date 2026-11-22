@@ -35,7 +35,8 @@ The GLM run folders still hold what is not a prompt: `start.sh`,
 
 | file | for | written |
 |---|---|---|
-| `372_the_apps_payment_screens.txt` | Phase 372's app screens (card-payments setup, an invoice's payment, the plan screen), in `moto-diag-mobile` on the branch `phase-372-payment-api-routes-and-the-app` | 2026-11-12 |
+| `372_the_apps_payment_screens.txt` | Phase 372's app screens (card-payments setup, an invoice's payment, the plan screen), in `moto-diag-mobile` on the branch `phase-372-payment-api-routes-and-the-app`; written for option A, and replaced by `372B_the_apps_payment_screens.txt` after the operator chose B (K81) | 2026-11-12 |
+| `372B_the_apps_payment_screens.txt` | Phase 372B, the app's payment screens (card payments setup, an invoice's payment at the reader or by pay-link with its outcome, the plan screen), in `moto-diag-mobile` on the branch `phase-372B-the-apps-payment-screens`, from the plan on this repository's branch of the same name | 2026-11-22, against both repositories' code (K128) |
 | `303B_the_apps_staff_sign_in_screen.txt` | Phase 303B, the app's staff sign-in screen (username and password, the session kept like today's key, sign-out by `POST /v1/auth/logout`, an ended session asking again), in `moto-diag-mobile` on the branch `phase-303B-the-apps-staff-sign-in-screen`, from the plan the advisor writes in this repository first | 2026-11-20, against both repositories' code (K99) |
 | `334B_the_apps_terms_screen.txt` | Phase 334B, the app's terms screen (the terms by their address, "I agree", the 403 `terms-not-accepted`), in `moto-diag-mobile` on the branch `phase-334B-the-apps-terms-screen`, from the plan on this repository's branch of the same name | 2026-11-19; corrected 2026-11-20 against both repositories' code (K98); read again 2026-11-22 after 303B: the box opens only on the server's 403, one sign-out shared, "Sign in first." (K128) |
 
