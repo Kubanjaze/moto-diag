@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F292** (this file). The
+At the time of writing the highest assigned is **F293** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -6793,3 +6793,47 @@ What would close it: the seed runs only on a database `init_db` has just
 created, or a command that only reads opens the database without
 `init_db`, as the feed's do. Until then, a block that reads live through
 the command line reads a copy.
+
+### F293
+
+**330's setup wizard registers a shop only on a database with none: given no `--shop`, it uses the one shop there is without asking, and `--shop` cannot name a new one, so on live, which holds the test shop, `shop onboard run` sets a new shop's owner, terms and bikes up in the test shop**
+
+Found by the home desktop's main chat on 2026-11-22, in its read-only
+review of what is pending after 330, and measured by the advisor the
+same day. `run` (`src/motodiag/cli/shop_onboard.py`, line 474) takes its
+shop from `_shop_for_run` (line 451), which calls
+`_resolve_shop_identifier(None, require=False)`
+(`src/motodiag/cli/shop.py`, line 258). With exactly one active shop that
+returns the shop (lines 276 and 277), with several it refuses (lines 278
+to 281), and a `--shop` that names no shop is refused as not found (lines
+294 to 298). Step 1, `do_shop` (line 245), runs only when `step_shop`
+finds no shop (line 73), so it can run only on an empty database. Live
+holds one shop, Phase 199's test shop (id 1), so on live step 1 never
+runs.
+
+Measured on the Mac with the code on master (`6b9fe9b`), against a
+stand-in of live: the test shop with two owners, one with a login, and
+one tech, no terms accepted, no bikes, 44 bulletins. The handoff's "When
+the first shop arrives" block was run with its `SHOP=` line empty, as the
+handoff said to for a live with one shop, through a pretend terminal:
+- With the wizard given the terminal (`</dev/tty`), steps 1 to 3 printed
+  "already done" for the test shop. The answers then wrote 4 rows, all
+  for the test shop: a terms acceptance by one of its owners, a customer
+  with `shop_id` 1, a bike and the bike's link.
+- As written, the wizard read the block's own remaining lines as its
+  answers ("Error: invalid input" twice, then "Aborted!") and wrote
+  nothing. That second defect is the block's own, and the corrected block
+  in the handoff fixes it.
+
+What it affects: nothing on live yet. The corrected block (330's handoff,
+"When the first shop arrives") registers the shop with
+`shop profile init` first and gives the wizard the new shop's id with
+`--shop`, so the first real shop does not meet this. A `shop onboard run`
+on live without `--shop` would meet it. So would an onboarding screen in
+the app built on the same choice, which 330's handoff leaves to the
+operator's word.
+
+What would close it: the wizard uses only a shop it is given. Without
+`--shop`, it registers a new shop, or asks whether to use one it lists.
+A `--shop` naming no registered shop offers to register it. A test run
+with one shop already in the database would hold this.
