@@ -1,0 +1,9 @@
+**The plan of record's next mission**, opened by the fleet (Phase 392).
+
+The plan of record puts phase 330 next ('Next, in order' #19): 19. 330 (shop, built by fleet); needs the operator: a rule change: F210's general rule comes first ("F210's general rule is still needed before onboarding (330)", 2026-10-21); it changes the set-aside list's definition, which is the operator's call; from: Wave 1, item 5 · K48, K52
+
+The plan of record on this phase: the plan of record's 'Next, in order' #19; the plan of record, 2026-10-21; the plan of record, 2026-10-22 to 2026-10-25; the plan of record, 2026-10-27; the plan of record, 2026-11-15; the plan of record, 2026-11-19; the plan of record, 2026-11-19, later; the plan of record, 2026-11-20; the plan of record, 2026-11-20, later; the plan of record, 2026-11-20, evening; K48; K52; K84; K91; K94; K98.
+
+The work branch is `phase-330-onboarding-wizard-for-new-shops`: the Science Officer makes it from master once this phase's row is 🚧 there, which the row's pull request does when the operator merges it.
+
+<!-- fleet-next: phase=330 -->

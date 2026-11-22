@@ -610,7 +610,17 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: (13031): +69 -0, all in test_phase408_site.py, the site's checks (68, and
 #: one more image check once the founder's photo is in).
 #: Measured: 13100.
-COLLECTED_TEST_FLOOR = 13100
+#:
+#: Phase 330 (the onboarding wizard), by a diff of collected ids against
+#: bc2f7bf (13031): +35 -0, all in test_phase330_onboarding.py (31 tests,
+#: one with four cases and one with two); no other test file changed.
+#: Measured: 13066.
+#:
+#: The two merged (330 after 408, 2026-11-21, K120), both from 13031: 408
+#: +69, 330 +35, on separate files. 13031 + 69 + 35. By a diff of collected
+#: ids against master at 1dd1921 (13100): +35 -0, all in
+#: test_phase330_onboarding.py. Measured: 13135.
+COLLECTED_TEST_FLOOR = 13135
 
 
 def _collected_count() -> int:

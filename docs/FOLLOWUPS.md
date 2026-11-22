@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F289** (this file). The
+At the time of writing the highest assigned is **F290** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -6710,3 +6710,15 @@ the command's.
 What would close it: the gate tests start their nested runs so that one
 stuck at exit cannot hold the outer run's output (their own process group,
 killed and reaped when the test ends), and the loop at exit is found.
+
+### F290
+
+**Wording the Red Team left open on phase 330, round 2**
+
+Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 392, F228). K9: "after round 3, remaining wording defects go to one finding". The rows, from the refute table in the Red Team's round 2 on phase 330:
+
+- The Deviations name every place the build differed from the plan: "v1.1: built as planned, with the deviations listed under Deviations" (docs/phases/completed/330_implementation.md p. 5)
+
+What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).
+
+Filed on 330's branch as F288. It was renumbered F290 when the advisor brought master into the branch on 2026-11-21 (K120), because master's own F288 and F289 had reached master first. The two F288s were filed minutes apart. The dispatcher's numbering reads its branch, master and the app's file, and the advisor's reads master and the app's file, so neither saw the other's (F230's gap).

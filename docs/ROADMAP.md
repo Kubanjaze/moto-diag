@@ -598,7 +598,7 @@ Commercial launch infrastructure: billing, onboarding, data migration from compe
 |-------|-------|--------|-------|
 | 328 | Subscription billing foundation | 🔲 | Stripe integration from Track O wired to subscription tiers, tier enforcement flips to hard mode here |
 | 329 | Self-service signup flow (web) | 🔲 | Trial signup, credit card capture, email verification, onboarding trigger |
-| 330 | Onboarding wizard for new shops | 🚧 | Bike inventory import, staff setup, initial data entry, first diagnostic walkthrough |
+| 330 | Onboarding wizard for new shops | ✅ | **CLOSED 2026-11-21.** Built by the fleet (K116). `motodiag shop onboard run` walks a new shop through five steps, each skippable and asking nothing once done: the shop, the owner's login, the staff with their roles, the terms accepted by the one owner at the keyboard, and the bikes from a CSV or by hand, each linked to a customer under the shop. It ends with one checklist walked through, saving nothing. `status` reads the five for every shop and never refuses; `import-bikes` has `--dry-run`. No migration, no change to live. 18/18 mutations. Regression 12961 passed / 0 failed / 105 skipped at `b722a4a`, coverage 88.42%, inside the fence. |
 | 331 | Data migration: Mitchell 1 → MotoDiag | 🔲 | Import existing shop data from Mitchell 1 (auto/moto), vehicle history, work orders |
 | 332 | Data migration: ShopKey → MotoDiag | 🔲 | Import from Snap-on ShopKey, SMS Pro |
 | 333 | Data migration: ALLDATA → MotoDiag | 🔲 | Import from AutoZone ALLDATA Shop Management |

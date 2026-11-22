@@ -53,6 +53,53 @@ Tess can now log in from the app or any client at `POST /v1/auth/login`
 ([the API guide](api.md), "A staff login"). `motodiag user list` shows
 who has a password; `motodiag user deactivate tess` ends her access.
 
+**The one-command way.** `motodiag shop onboard run` does all of this in
+one sitting, in five steps: the shop's profile; the owner's own login,
+made the owner of the shop; the staff, each with a login and a role; the
+Terms of Service, accepted by the one owner at the keyboard, for
+themselves; and the bikes, from a CSV file or typed one at a time, each
+linked to its customer. A step already done prints what is there and asks
+nothing, and any step can be skipped, so it is safe to run again. It ends
+by offering one checklist walked through on the terminal, which saves
+nothing. `motodiag shop onboard status` says which steps are done; on a
+new database:
+
+```bash
+motodiag shop onboard status
+```
+
+```
+No shop registered
+  shop   not yet   no shop registered
+  owner  not yet   no shop yet
+  staff  none yet  no shop yet
+  terms  not yet   no shop yet
+  bikes  not yet   no shop yet
+The first diagnostic walkthrough leaves no record; `motodiag shop onboard run` offers it.
+```
+
+A shop's bikes come in from a CSV file with a header row: `make`, `model`
+and `year` are required; `vin`, `engine_cc`, `powertrain`, `engine_type`,
+`protocol`, `notes`, `customer_name`, `customer_phone` and
+`customer_email` are optional. Every row is checked before any is
+written, and `--dry-run` writes nothing. A bike whose VIN is already in
+the garage is skipped; a customer is matched within the shop by exact
+phone, else exact name, and made under the shop when not found. On a file
+of three bikes, two of them one customer's:
+
+```bash
+motodiag shop onboard import-bikes bikes.csv --dry-run
+```
+
+```
+Dry run: nothing was written. The import would do this:
+   Bikes added: 3 (lines 2, 3, 4)
+   Bikes skipped: 0
+   Customers made: 2 (lines 2, 4)
+   Customers matched: 1 (lines 3)
+   Links made: 3 (lines 2, 3, 4)
+```
+
 ## 1. The customer
 
 ```bash
