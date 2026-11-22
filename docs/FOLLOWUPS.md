@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F290** (this file). The
+At the time of writing the highest assigned is **F292** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -6722,3 +6722,74 @@ Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 
 What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).
 
 Filed on 330's branch as F288. It was renumbered F290 when the advisor brought master into the branch on 2026-11-21 (K120), because master's own F288 and F289 had reached master first. The two F288s were filed minutes apart. The dispatcher's numbering reads its branch, master and the app's file, and the advisor's reads master and the app's file, so neither saw the other's (F230's gap).
+
+### F291
+
+**330's bike import looks a VIN up across every shop's bikes, and a match skips the row before its customer step, so a second shop's import of a bike already on file links nothing to that shop**
+
+Found by the advisor on 2026-11-21, reviewing phase 330 (pull request
+84), and read again on master at `2fb1bc3`. `import_bikes`
+(`src/motodiag/crm/bike_import.py`) asks `_vehicle_with_vin` for each
+row's VIN, and that query names no shop: `SELECT id FROM vehicles WHERE
+vin = ? ORDER BY id LIMIT 1` (line 201). `vehicles` has no shop column:
+on a fresh database at schema 91 its columns are id, make, model, year,
+engine_cc, vin, protocol, notes, created_at, updated_at, powertrain,
+engine_type, battery_chemistry, motor_kw, bms_present, customer_id,
+mileage, owner_user_id and transmission. A row whose VIN is found goes on
+the report's skipped list and the loop moves on (lines 244 to 247), before
+the customer step: for that row no customer is matched or made, and no
+`customer_bikes` link is written. The module says so ("A row whose VIN is
+already in ``vehicles`` is skipped", line 9), and for one shop it is what
+the plan wanted: importing a file again adds nothing.
+
+What it affects: nothing on live yet. On 2026-11-22 live held one shop,
+the smoke-test shop from Phase 199, by 330's after-merge status. Once a
+second shop onboards, a bike already on file (sold on, or serviced at two
+shops) is reported as skipped and stays unlinked to the second shop's
+customer, and the onboarding's bikes step does not count it:
+`_linked_bikes` (`src/motodiag/cli/shop_onboard.py`) counts only bikes
+linked to the shop's own customers.
+
+What would close it: the operator's decision on what a bike two shops
+share is (linked to the second shop's customer as well, or kept skipped
+with the report saying it is on file elsewhere), and a test of a second
+shop importing a VIN the first already has.
+
+### F292
+
+**A `motodiag` command run on live writes into it through `init_db`, whose bulletin seed fills an empty table: 330's after-merge status step, as written, was not read-only**
+
+Found by the advisor on 2026-11-22, testing 330's handoff steps before
+the operator ran them. `init_db()` (`src/motodiag/core/database.py`) runs
+the baseline schema, then any pending migrations, then a best-effort seed:
+when `count_tsbs(path) == 0` (line 230) it loads
+`advanced/data/tsbs.json` (line 238). The command line opens the database
+through it: `grep -c 'init_db()' src/motodiag/cli/*.py` counts 303 lines
+in 24 files, and `shop onboard status`, `run` and `import-bikes` each call
+it first (`src/motodiag/cli/shop_onboard.py` lines 192, 476 and 493). The
+payments feed's two commands avoid it on purpose
+(`src/motodiag/cli/payments.py` line 97), and nothing else in `src/`
+calls it.
+
+Measured on the Mac with the merged code (`2fb1bc3`), on test databases
+in the scratchpad:
+- `init_db` run a second time on a fresh database at schema 91 (126
+  tables, 44 bulletins): 0 differences in schema or rows.
+- The same database with its bulletin table emptied: `init_db` wrote 44
+  rows into it.
+- 330's step 2 as its handoff wrote it, run against a stand-in desktop
+  whose live had no bulletins: it printed ALL GOOD and wrote the same 44
+  rows. Its schema check keeps a migration from running, but nothing keeps
+  the seed from running.
+
+What it affects: any operator block that runs a `motodiag` command on
+live writes those 44 rows if live's bulletin table is empty, which no one
+has read. 330's status step ran on a read-only copy of live instead (its
+handoff, "After the merge"), so live was only read. 330's first-shop block
+runs `shop onboard run` on live after taking a backup, so there they would
+be new rows after a backup, written without being named.
+
+What would close it: the seed runs only on a database `init_db` has just
+created, or a command that only reads opens the database without
+`init_db`, as the feed's do. Until then, a block that reads live through
+the command line reads a copy.
