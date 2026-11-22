@@ -6,7 +6,7 @@ Written 2026-10-12 by the advisor session that verified Phases 373–381. This c
 
 The fleet reads this table exactly (`.claude/skills/fleet/plan_order.py`): the first row whose ROADMAP row is not ✅ is the next mission. A row built by a builder session is waited for. A row that needs the operator is asked first, in plain English. Otherwise the fleet opens the mission's issue and a one-row pull request that marks its row 🚧, and the operator merges it by hand (K49). The list changes only by a dated entry under "Changes to the order" with a K-id, written on the operator's word (K48).
 
-As of 2026-11-20, K99.
+As of 2026-11-21, K119.
 
 | # | phase | kind | built by | needs the operator | entry |
 |---|---|---|---|---|---|
@@ -29,7 +29,7 @@ As of 2026-11-20, K99.
 | 17 | 334 | shop | fleet | nothing | Wave 1, item 5 · K48, K84 |
 | 18 | 405 | shop | fleet | nothing | 2026-11-19 · K91 |
 | 19 | 330 | shop | fleet | a rule change: F210's general rule comes first ("F210's general rule is still needed before onboarding (330)", 2026-10-21); it changes the set-aside list's definition, which is the operator's call | Wave 1, item 5 · K48, K52 |
-| 20 | 293 | shop | fleet | a rule change: what each plan may store in manuals (the brief suggests 500 MB on Individual and 10 GB on Shop) and the terms' clause on uploads are the operator's call | 2026-11-20 · K94 |
+| 20 | 293 | shop | fleet | a rule change: the operator decided on 2026-11-21 what each plan may store in manuals (Individual 2 GB, Shop 20 GB, Company 50 GB shared by its shops, at most 300 MB a file) and that every upload is checked by the server, then approved by a person at Mekno before anyone can open it, with the terms saying so; three more are the operator's, best answered when it starts: where manual files are backed up, whether the terms wait for a lawyer's read, and whether a limit counts the page images made from a file | 2026-11-20 · K94, K119 |
 | 21 | 344 | shop | fleet | nothing | Wave 1, item 5 · K48 |
 | 22 | 303B | shop | builder | nothing | 2026-11-20, evening, later · K99 |
 | 23 | 334B | shop | builder | nothing | 2026-11-20, evening · K98 |
@@ -173,6 +173,25 @@ The operator's words:
   - **Built by a builder session on the app's repository** (moto-diag-mobile), like 334B and 372B. It comes first of the three: the terms screen follows signing in, and the payment screens need a signed-in member.
   - **334B, 372B and 210 move down one place,** to 23, 24 and 25.
   - **The prompt** is `docs/prompts/303B_the_apps_staff_sign_in_screen.txt`, written the same evening against both repositories' code. Row 303B is on master, 🔲.
+- **2026-11-21: 408 runs beside this list, not in it (K109, K117, K118).** getmekno.com's basics and trust, with the terms and privacy 1.0 published, from the marketing thread's phase request; the operator answered its questions in K114.
+  - **The operator's words:** "build 408 on the Mac" (K117), undone the same day: "Undo K117 so the record says the thread built 408" (K118).
+  - **Built by the home desktop's main-chat thread,** on `phase-408-thread-build`, with the operator's approved wording, founder block and photo, as a pull request the operator merges. The advisor's branch stops at `6c52577`. The fleet does not wait for 408, and 408 does not wait for the fleet.
+  - **The order does not change:** 330 is in progress (K116), then 293.
+  - **The prompt** is `docs/prompts/408_the_sites_basics_and_trust.txt`. Row 408 is on master, 🚧.
+- **2026-11-21, later: 293's storage limits and its upload review are decided (K119).** They are the two things this plan said 293 needs from the operator before it starts: what each plan may store in manuals, and the terms' clause on uploads.
+  - **The operator's words:** "Review PR 83 on moto-diag: the manual storage limits and the upload-review rule for row 293 (Individual 2 GB, Shop 20 GB, Company 50 GB shared, 300 MB per file; every upload gets a server check, then a person at Mekno approves it before anyone can open it, and the terms say so, so the review step ships in the same release as uploads). It is a document only. If it is sound, merge it and record the limits and the review rule as my decision."
+  - **The draft** is `docs/reports/2026-11-21_293_storage_and_uploads_draft.md`, merged as pull request 83 (fad7927) after the advisor's review. Its limits replace the brief's examples of 500 MB and 10 GB.
+  - **Three more are the operator's, best answered when 293 starts** (#20 says so):
+    - where manual files are backed up: the brief put them in the nightly backup, and the draft recommends a weekly backup of their own, once Step 0 has measured the home desktop's free disk;
+    - whether the terms wait for a lawyer's read: the draft sends its wording to one, and `docs/legal/README.md` says only that a lawyer's review comes later;
+    - whether a limit counts only the files a shop sends, or also the page images made from them: the draft's "about 10 manuals" in 2 GB counts both.
+  - **For 293's plan, from the advisor's review:**
+    - The reviewer is the first account that can open any shop's files. Every role on the server is a shop's own (`src/motodiag/auth/models.py`) and none is Mekno's staff, so 293 adds one, with a test that no one else can open a file waiting for review.
+    - A new version of the terms asks every user to accept it before anything else: while the terms are required, a user who has not accepted the current version can only read and accept them, see who they are, or sign out (`src/motodiag/auth/terms_acceptance.py`). Asking only on the manuals screens, as the draft suggests, would be new code.
+    - The privacy policy needs more than the draft's one sentence. Its list of what is kept names photos, videos and voice notes, not manuals; its Backblaze line says every upload is copied each night, which changes if manuals get a weekly backup; and the sentence's "looks at it once" is not quite right, since a flagged file goes back to the reviewer.
+    - A company's shops are not linked in the data (Company's three locations are only shown, since 404), so until they are, a Company account's 50 GB is one shop's.
+  - **The order does not change:** 330 is in progress (K116), then 293. #20 still asks the operator before 293 starts: a limit is a threshold, a rule-1 stop, which the record never answers (K50).
+  - **The prompt,** written before 330 closes, carries K119 and the draft, and for Step 0's log one guard block met in this review: the edit guard refused a redirect to a file path held in a variable, and the command was run again with the path written out.
 
 ## Where the ledger stands
 

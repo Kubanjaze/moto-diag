@@ -1,0 +1,96 @@
+:root {
+  --bg: #f7f6f3;
+  --surface: #ffffff;
+  --ink: #16181d;
+  --muted: #5b6070;
+  --line: #e3e1db;
+  --accent: #e8590c;
+  --accent-ink: #ffffff;
+  --radius: 14px;
+  --max: 1040px;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1115;
+    --surface: #171a21;
+    --ink: #eef0f4;
+    --muted: #a3a9b8;
+    --line: #262a33;
+    --accent: #ff7a2e;
+    --accent-ink: #14100c;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+a { color: var(--accent); }
+a:focus-visible, .button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.wrap { max-width: var(--max); margin: 0 auto; padding: 0 20px; }
+
+header.site { padding: 22px 0; }
+header.site .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-weight: 800; font-size: 22px; letter-spacing: -0.02em; }
+.brand svg { width: 30px; height: 30px; flex: none; }
+nav.site a { color: var(--muted); text-decoration: none; margin-left: 18px; font-size: 15px; }
+nav.site a:hover { color: var(--ink); }
+
+.hero { padding: 56px 0 40px; }
+.hero h1 { font-size: clamp(36px, 6vw, 62px); line-height: 1.05; letter-spacing: -0.035em; margin: 0 0 18px; max-width: 14ch; }
+.hero p.lede { font-size: clamp(18px, 2.2vw, 21px); color: var(--muted); max-width: 46ch; margin: 0 0 28px; }
+.badges { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.button {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 18px; border-radius: 999px; font-weight: 650; text-decoration: none;
+  background: var(--accent); color: var(--accent-ink); border: 1px solid transparent;
+}
+.button.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.note { color: var(--muted); font-size: 15px; margin-top: 14px; }
+
+section.block { padding: 40px 0; border-top: 1px solid var(--line); }
+section.block h2 { font-size: clamp(24px, 3.2vw, 32px); letter-spacing: -0.02em; margin: 0 0 22px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; }
+.card h3 { margin: 0 0 8px; font-size: 18px; }
+.card p { margin: 0; color: var(--muted); font-size: 16px; }
+.card .icon { width: 34px; height: 34px; color: var(--accent); margin-bottom: 12px; }
+
+.page { padding: 36px 0 56px; }
+.page h1 { font-size: clamp(30px, 4.5vw, 44px); letter-spacing: -0.03em; margin: 0 0 8px; }
+.page .updated { color: var(--muted); font-size: 15px; margin: 0 0 28px; }
+.page h2 { font-size: 21px; margin: 32px 0 8px; }
+.prose { max-width: 70ch; }
+.prose li { margin: 6px 0; }
+
+.center { min-height: 62vh; display: flex; align-items: center; }
+.center .card { max-width: 560px; }
+.center h1 { margin-top: 0; }
+
+footer.site { border-top: 1px solid var(--line); padding: 26px 0 40px; color: var(--muted); font-size: 15px; }
+footer.site .wrap { display: flex; flex-wrap: wrap; gap: 10px 20px; justify-content: space-between; }
+footer.site a { color: var(--muted); text-decoration: none; margin-right: 16px; }
+footer.site a:hover { color: var(--ink); }
+
+@media (max-width: 560px) {
+  nav.site a { margin-left: 12px; }
+  .hero { padding-top: 32px; }
+}
+
+.plan h3 { margin-bottom: 6px; }
+.plan .price { color: var(--ink); font-size: 28px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 12px; }
+.plan .price.ask { font-size: 20px; line-height: 1.3; }
+.plan .price span { color: var(--muted); font-size: 16px; font-weight: 500; letter-spacing: 0; }
+.plan ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 16px; }
+.plan li { margin: 4px 0; }
+section.block .prose h3 { font-size: 19px; margin: 26px 0 6px; }
+.founder { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
+.founder img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; flex: none; }
+.founder p { margin: 0; }
+.founder > div { flex: 1 1 260px; }
+.founder h3 { margin: 0 0 6px; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 32px 0 16px; }

@@ -414,7 +414,7 @@ replaces the one above as the record of the phase.
 | M18 puts `status` back in name order | kept | "M18 status with no --shop in list_shops()'s name order, not id order: red" | docs/phases/completed/330_mutate.out p. 16 | 1 · none · kept |
 | `status` with no `--shop` prints shops in id order (bug fix #1) | kept | "by_id: list[dict] = sorted(list_shops(), key=lambda s: s[\"id\"])" | src/motodiag/cli/shop_onboard.py p. 197 | 1 · none · kept |
 | `list_shops()` orders by name, which is what bug fix #1 corrected | kept | "query += \"GROUP BY s.id ORDER BY s.name, s.id\"" | src/motodiag/shop/shop_repo.py p. 232 | 1 · none · kept |
-| The Deviations name every place the build differed from the plan | killed | "v1.1: built as planned, with the deviations listed under Deviations" | docs/phases/completed/330_implementation.md p. 5 | 1 · wording · open F288 |
+| The Deviations name every place the build differed from the plan | killed | "v1.1: built as planned, with the deviations listed under Deviations" | docs/phases/completed/330_implementation.md p. 5 | 1 · wording · open F290 |
 | `import_bikes` takes `problems=` and `dry_run=` as keywords (Deviation 1) | kept | "problems: Optional[list[str]] = None," | src/motodiag/crm/bike_import.py p. 229 | 1 · none · kept |
 | The registration sits beside `register_inventory` in `shop.py` (two lines) | kept | "register_onboard(shop_group)" | src/motodiag/cli/shop.py p. 4763 | 1 · none · kept |
 | A bad year and a duplicate VIN name lines 3 and 4 | kept | "assert any(p.startswith(\"line 4:\") and \"A1\" in p for p in report.problems)" | tests/test_phase330_onboarding.py p. 500 | 1 · none · kept |
@@ -430,3 +430,35 @@ replaces the one above as the record of the phase.
 | The guide's section 0 shows `status` output from a fresh database | kept | "  staff  none yet  no shop yet" | docs/guide/shop-workflow.md p. 75 | 1 · none · kept |
 | The ROADMAP row carries the regression line at b722a4a | kept | "12961 passed / 0 failed / 105 skipped at `b722a4a`, coverage 88.42%, inside the fence" | docs/ROADMAP.md p. 601 | 1 · none · kept |
 | A customer match is exact within the shop, not the LIKE `search_customers` does | kept | "if found.get(column) == wanted:" | src/motodiag/crm/bike_import.py p. 219 | 1 · none · kept |
+
+## 2026-11-21 — master brought in by the advisor (K120)
+
+The Quartermaster refused pull request 84 in shadow on Q9 (it no longer
+merged onto master) and Q12 (it changes `src/motodiag/cli/shop.py`). The
+operator's K120: "Yes, go ahead with all four steps on 330. Accept the
+shop-file refusal as mechanical: two wiring lines is how every shop command
+is registered."
+
+The advisor merged master at `1dd1921` into this branch on the Mac. Master
+had gained 408, the advisor's F288 and F289, the plan-order test's moved
+pins, and K119 and K120. Three files clashed, all records:
+- `docs/FOLLOWUPS.md`: master's file. This phase's finding, filed here as
+  F288, is **F290**, because master's own F288 and F289 reached master
+  first. The refute table's row above now reads "open F290".
+- `implementation.md`: this phase is version **0.13.142**, after 408's
+  0.13.141. Both history rows are kept, 408's first. The header names this
+  phase and 408 beside it. Close-out rule A7 counts as newest the phase
+  whose history row was added to git most recently, and 408's (23:29 UTC)
+  came after this phase's. So a header naming this phase alone failed
+  408's close-out check.
+- `tests/test_phase255B_collected_test_floor.py`: `COLLECTED_TEST_FLOOR`
+  **13135**, measured by a diff of collected ids against master at
+  `1dd1921` (13100): +35 −0, all in `tests/test_phase330_onboarding.py`.
+
+The refute table's rows on that floor file (p. 609 and p. 613) quote it as
+it stood at `4702075`. After the merge, this phase's comment is at lines
+614 to 617, and the floor reads 13135.
+
+No code of this phase changed in the merge. Its regression of record stays
+the one at `b722a4a`. The advisor's independent check on the merged tree
+goes in the handoff's "After the merge".
