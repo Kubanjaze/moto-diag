@@ -620,7 +620,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: +69, 330 +35, on separate files. 13031 + 69 + 35. By a diff of collected
 #: ids against master at 1dd1921 (13100): +35 -0, all in
 #: test_phase330_onboarding.py. Measured: 13135.
-COLLECTED_TEST_FLOOR = 13135
+#:
+#: F294 (the way in keeps its key in the Mac's agent, 2026-11-22, K129), by
+#: a diff of collected ids against master at 73d2b1d (13135): +1 -0,
+#: test_phase384_remote_client.py's
+#: test_the_ssh_command_keeps_the_key_in_the_agent. Measured: 13136.
+COLLECTED_TEST_FLOOR = 13136
 
 
 def _collected_count() -> int:

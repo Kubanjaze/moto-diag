@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F293** (this file). The
+At the time of writing the highest assigned is **F294** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -6842,3 +6842,46 @@ What would close it: the wizard uses only a shop it is given. Without
 `--shop`, it registers a new shop, or asks whether to use one it lists.
 A `--shop` naming no registered shop offers to register it. A test run
 with one shop already in the database would hold this.
+
+### F294 — CLOSED by AddKeysToAgent in the way in's ssh options, 2026-11-22 (K129)
+
+**The Mac's way in to the home desktop failed while the Mac was locked: its key has a passphrase that ssh reads from the Mac's keychain, which cannot be read while the Mac is locked, and the agent held no key**
+
+Found by the advisor on 2026-11-22, when the live check of
+`verify_phase.sh 334B` and `remote.py live-check` failed with "Permission
+denied (publickey)" at about 16:38 and 16:40 EST. Measured on the Mac:
+- **The command.** The way in (`ssh_argv`, `.claude/skills/deploy/remote.py`)
+  offers one key, `~/.ssh/motodiag_ops`, with `BatchMode=yes`,
+  `IdentitiesOnly=yes` and `UseKeychain=yes`.
+- **The key.** The key file has a passphrase (`ssh-keygen -y -P ''` refuses
+  it), and `ssh-add -l` said the agent had no identities. So every
+  connection read the passphrase from the keychain: `ssh -vvv` printed
+  "using passphrase from keychain", access group `com.apple.ssh.passphrases`.
+- **The timing.** The Mac's display was off from 15:39:38 to 16:47:31
+  (`pmset -g log`), and both failures fall inside that window. With the
+  passphrase unreadable, ssh offered no key. The desktop's sshd logged
+  "closed by authenticating user [preauth]" (read by the operator on the
+  PC).
+- **The control.** At 16:53, with the Mac unlocked, the same command offered
+  the key (SHA256:szamQPJVmUH7UPyQ6mZYjXT95Ly+gdiLYG1l2Fkj4ok). The desktop
+  accepted it on line 2 of its `authorized_keys`, and `verify_phase.sh
+  334B` passed 14 of 14.
+
+Nothing on the desktop was wrong, and nothing there changed.
+
+What it affected: every step the Mac runs on the desktop through the way
+in (the server update, the live checks, the fleet's code move), whenever
+the Mac was locked.
+
+What closed it, by the operator's decision (K129) to keep the passphrase:
+- **The agent.** The operator loaded the key into the Mac's agent
+  (`ssh-add --apple-use-keychain ~/.ssh/motodiag_ops`, "Identity added").
+  It is used from there while the Mac is locked, until the agent restarts.
+- **The option.** `AddKeysToAgent=yes` joined the way in's ssh options.
+  After a restart, the first connection made while the Mac is unlocked puts
+  the key back in the agent.
+  `tests/test_phase384_remote_client.py::test_the_ssh_command_keeps_the_key_in_the_agent`
+  holds it, seen red before the change.
+
+The limit that stays: after a restart, a connection made while the Mac is
+locked, before any unlocked one, fails the same way.
