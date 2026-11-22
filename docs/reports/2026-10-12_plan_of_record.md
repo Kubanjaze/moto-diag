@@ -6,7 +6,7 @@ Written 2026-10-12 by the advisor session that verified Phases 373–381. This c
 
 The fleet reads this table exactly (`.claude/skills/fleet/plan_order.py`): the first row whose ROADMAP row is not ✅ is the next mission. A row built by a builder session is waited for. A row that needs the operator is asked first, in plain English. Otherwise the fleet opens the mission's issue and a one-row pull request that marks its row 🚧, and the operator merges it by hand (K49). The list changes only by a dated entry under "Changes to the order" with a K-id, written on the operator's word (K48).
 
-As of 2026-11-22, K121.
+As of 2026-11-22, K128.
 
 | # | phase | kind | built by | needs the operator | entry |
 |---|---|---|---|---|---|
@@ -30,11 +30,11 @@ As of 2026-11-22, K121.
 | 18 | 405 | shop | fleet | nothing | 2026-11-19 · K91 |
 | 19 | 330 | shop | fleet | a rule change: F210's general rule comes first ("F210's general rule is still needed before onboarding (330)", 2026-10-21); it changes the set-aside list's definition, which is the operator's call | Wave 1, item 5 · K48, K52 |
 | 20 | 293 | shop | fleet | a rule change: the operator decided on 2026-11-21 what each plan may store in manuals (Individual 2 GB, Shop 20 GB, Company 50 GB shared by its shops, at most 300 MB a file) and that every upload is checked by the server, then approved by a person at Mekno before anyone can open it, with the terms saying so; and on 2026-11-22 the other three: manual files go in the nightly backup, the upload terms ship before a lawyer's read, and a limit counts only the files a shop uploads | 2026-11-20 · K94, K119, K121, K122, K123 |
-| 21 | 344 | shop | fleet | nothing | Wave 1, item 5 · K48 |
-| 22 | 303B | shop | builder | nothing | 2026-11-20, evening, later · K99 |
-| 23 | 334B | shop | builder | nothing | 2026-11-20, evening · K98 |
-| 24 | 372B | shop | builder | nothing | 2026-11-20, evening · K98 |
-| 25 | 210 | shop | fleet | nothing | Wave 1, item 6 · K48 |
+| 21 | 303B | shop | builder | nothing | 2026-11-20, evening, later · K99 |
+| 22 | 334B | shop | builder | nothing | 2026-11-20, evening · K98 |
+| 23 | 372B | shop | builder | nothing | 2026-11-20, evening · K98 |
+| 24 | 210 | shop | fleet | nothing | Wave 1, item 6 · K48 |
+| 25 | 344 | shop | fleet | nothing | Wave 1, item 5 · K48, K128 |
 
 The ROADMAP stays the ledger: this file records the order of the open rows, and why. A Step 0 that measures something new can change the order. Any change is recorded here, dated.
 
@@ -205,6 +205,16 @@ The operator's words:
     - no app screen for onboarding (K125);
     - a bike two shops share is linked to the second shop's customer too (K126, F291);
     - the coverage pin goes to 88.0 (K127).
+- **2026-11-22, later: the advisor's recommendations from the day's status are taken (K128), and 344 moves after 210.**
+  - **The operator's words:** "im taking all your recommendations, log it all, prompt me when its time to continue and you give me the next prompt for main", after the advisor's read-only status of what is left before launch (the first paying shop using the app day to day).
+  - **293 is an extension, built by the fleet.** A new version of the terms is accepted by everyone through the sign-in gate as it is (`src/motodiag/auth/deps.py`), not on the manuals screens only. This answers the fleet's question on issue 86, and 293's Step 0 report carries it beside its Classification line.
+  - **344, the in-app support channel, waits until after launch.** It moves from #21 to #25, after 210: the support email covers the first shops (K101). 303B, 334B, 372B and 210 move up one place.
+  - **334B, the app's terms screen, comes next for the app.** The advisor reads its prompt again against master and the app's `main`, writes its Step 0 and plan here, and the operator's own session (the home desktop's main chat) builds it, beside 293.
+  - **372B gets a fresh prompt from the advisor,** after 334B: `docs/prompts/372_the_apps_payment_screens.txt` was written for 372's old branch.
+  - **The terms switch goes on after 334B and after 293's new terms version,** so every user accepts once.
+  - **The test shop is marked inactive before the onboarding day,** with a block the advisor writes when the operator asks (K124's hold stands).
+  - **210, launch readiness, gets a written scope** before the fleet reaches it.
+  - **The advisor's estimate, a guess:** 7 to 10 working days to launch at the current pace. The likeliest to slip is 372B with the Stripe side, which waits on Stripe support for the terms links.
 
 ## Where the ledger stands
 
