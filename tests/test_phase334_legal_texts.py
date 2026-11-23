@@ -121,11 +121,11 @@ def test_the_readme_names_the_template_its_address_and_licence():
     assert "TERMS_VERSION" in t
 
 
-def test_row_334B_is_open_and_names_its_prompt():
+def test_row_334B_is_closed_and_names_its_prompt():
     rows = [line for line in _text(ROOT / "docs" / "ROADMAP.md").splitlines()
             if line.startswith("| 334B |")]
     assert len(rows) == 1
     cells = [c.strip() for c in rows[0].split("|")]
-    assert cells[3] == "🔲"
+    assert cells[3] == "✅"  # started and closed 2026-11-22 (K128)
     assert "docs/prompts/334B_the_apps_terms_screen.txt" in rows[0]
     assert (ROOT / "docs" / "prompts" / "334B_the_apps_terms_screen.txt").exists()

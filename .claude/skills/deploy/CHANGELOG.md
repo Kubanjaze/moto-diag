@@ -22,6 +22,26 @@ raised `no such column: rowid` on them.
   fixture `fixtures/without_rowid.sql`, which the old read fails on with
   `no such column: rowid`.
 
+## 2026-11-22 — the way in keeps its key in the Mac's agent (F294, K129)
+
+The operator, 2026-11-22 (K129): "Decision: keep the passphrase, do not
+make a passphrase-less key (your option 3 is out). Do fix 2 now: add
+AddKeysToAgent=yes to remote.py's ssh options with its test".
+
+`ssh_argv` in `remote.py` gains `-o AddKeysToAgent=yes`:
+- **Why.** The way in's key has a passphrase, which ssh reads from the
+  Mac's keychain. The keychain cannot be read while the Mac is locked, so
+  with the agent empty the way in failed while the display was off (F294).
+- **Now.** The first connection made while the Mac is unlocked leaves the
+  key in the agent, and later ones work while it is locked, until the
+  agent restarts. The operator loaded the key once by hand
+  (`ssh-add --apple-use-keychain`).
+- **Held by**
+  `tests/test_phase384_remote_client.py::test_the_ssh_command_keeps_the_key_in_the_agent`,
+  seen red before the change.
+- **Known limit:** after a restart, until one connection is made with the
+  Mac unlocked, a locked Mac fails as before.
+
 ## 2026-11-20 — the check asks what the change did (Phase 405, K91, F210, F259)
 
 The operator, 2026-11-19 (K91): "C as recommended". Option C: "before the

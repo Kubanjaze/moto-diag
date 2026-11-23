@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F293** (this file). The
+At the time of writing the highest assigned is **F297** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -6842,3 +6842,167 @@ What would close it: the wizard uses only a shop it is given. Without
 `--shop`, it registers a new shop, or asks whether to use one it lists.
 A `--shop` naming no registered shop offers to register it. A test run
 with one shop already in the database would hold this.
+
+### F294 — CLOSED by AddKeysToAgent in the way in's ssh options, 2026-11-22 (K129)
+
+**The Mac's way in to the home desktop failed while the Mac was locked: its key has a passphrase that ssh reads from the Mac's keychain, which cannot be read while the Mac is locked, and the agent held no key**
+
+Found by the advisor on 2026-11-22, when the live check of
+`verify_phase.sh 334B` and `remote.py live-check` failed with "Permission
+denied (publickey)" at about 16:38 and 16:40 EST. Measured on the Mac:
+- **The command.** The way in (`ssh_argv`, `.claude/skills/deploy/remote.py`)
+  offers one key, `~/.ssh/motodiag_ops`, with `BatchMode=yes`,
+  `IdentitiesOnly=yes` and `UseKeychain=yes`.
+- **The key.** The key file has a passphrase (`ssh-keygen -y -P ''` refuses
+  it), and `ssh-add -l` said the agent had no identities. So every
+  connection read the passphrase from the keychain: `ssh -vvv` printed
+  "using passphrase from keychain", access group `com.apple.ssh.passphrases`.
+- **The timing.** The Mac's display was off from 15:39:38 to 16:47:31
+  (`pmset -g log`), and both failures fall inside that window. With the
+  passphrase unreadable, ssh offered no key. The desktop's sshd logged
+  "closed by authenticating user [preauth]" (read by the operator on the
+  PC).
+- **The control.** At 16:53, with the Mac unlocked, the same command offered
+  the key (SHA256:szamQPJVmUH7UPyQ6mZYjXT95Ly+gdiLYG1l2Fkj4ok). The desktop
+  accepted it on line 2 of its `authorized_keys`, and `verify_phase.sh
+  334B` passed 14 of 14.
+
+Nothing on the desktop was wrong, and nothing there changed.
+
+What it affected: every step the Mac runs on the desktop through the way
+in (the server update, the live checks, the fleet's code move), whenever
+the Mac was locked.
+
+What closed it, by the operator's decision (K129) to keep the passphrase:
+- **The agent.** The operator loaded the key into the Mac's agent
+  (`ssh-add --apple-use-keychain ~/.ssh/motodiag_ops`, "Identity added").
+  It is used from there while the Mac is locked, until the agent restarts.
+- **The option.** `AddKeysToAgent=yes` joined the way in's ssh options.
+  After a restart, the first connection made while the Mac is unlocked puts
+  the key back in the agent.
+  `tests/test_phase384_remote_client.py::test_the_ssh_command_keeps_the_key_in_the_agent`
+  holds it, seen red before the change.
+
+The limit that stays: after a restart, a connection made while the Mac is
+locked, before any unlocked one, fails the same way.
+
+### F295
+
+**A fleet test's stand-in mirror failed to clone once in the Mac's fast run, and the dispatcher cuts git's error at 200 characters, so the cause cannot be read**
+
+Found by the advisor on 2026-11-22 at about 21:37 EST, in `wholetree.sh`
+(fast mode) on Phase 372B's staged close-out, on the Mac, on battery. One
+test failed:
+`tests/test_phase403_granted_round.py::test_a_grant_in_any_other_form_grants_nothing[another form]`.
+At `tests/test_phase390_resume.py:199` the test world's `cycle()` reached
+`update_mirror` (`.claude/skills/fleet/dispatcher.py`), which raised
+`rank_call.Stop: the mirror could not be updated: fatal: failed to copy
+file to '<pytest's temporary folder>/state/mirror.git/objects/be/e44279932d0`.
+The rest of git's message, which would name the reason, is cut by
+`r.stderr.strip()[:200]` in `update_mirror`.
+
+Measured:
+- **Before it, the same evening,** the test passed in three runs: fast
+  mode on the staged merge, committed as `0bd368b` (2966 passed); `--full`
+  on `0bd368b` (5461 passed); and the regression of record there (13087
+  passed).
+- **After it,** the test file passed alone 5 times of 5 (13 tests each),
+  and 3 times of 3 under `-n 4` with `tests/test_phase390_resume.py`
+  (51 tests each).
+- **The close-out's documents cannot reach it.** The test's origin is a
+  fixture tree copied into pytest's temporary folder (`make_origin`,
+  `tests/test_phase389_fleet_git.py`), with the real
+  `ROADMAP_AUTHORITY.md`, which the close-out did not change.
+- **Free space** at the time: 531 GiB on the Mac's data volume.
+
+What it affects: a whole-tree or regression run that meets it fails for a
+reason outside what the run checks, and is run again. One failure in four
+runs that evening; the rate is not known.
+
+What would close it: `update_mirror` keeping git's whole error, or at least
+its last line, so the next failure names its cause; then a fix for that
+cause.
+
+### F296
+
+**The fleet's status check, asked while a stage is running, says a restart would stop that stage, though a real restart runs it to its end first**
+
+Found by the advisor on 2026-11-23 at 04:35 UTC (23:35 EST on 2026-11-22),
+reading the home desktop's status from the Mac with `remote.py fleet-status`
+while phase 293's Chief Engineer was building (issue 86, run
+`20261122_221208_engineer_293`). Two of its lines:
+
+- `would resume engineer from 20261122_221208_engineer_293 (issue 86), after started, clone, release-held, label-build, answer-heading, answer-commit, session …`
+- `would stop the engineer on issue 86: started 2026-11-23T03:12:09+00:00, nothing to resume from`
+
+The second is wrong. `fleet-status` (`ops/desktop/motodiag_remote.py:510`)
+prints `dispatcher.py recover --dry-run`. In `Fleet.recover`
+(`.claude/skills/fleet/dispatcher.py:3175`), the first loop (line 3197)
+resumes each unfinished journal through `run_stage`, which runs the stage
+to its end and ends its journal; the second loop's check on `started`
+markers then skips an issue whose run's journal has ended or is paused
+(line 3229). A dry run resumes nothing, so the journal it has just said it
+would resume is still unfinished at line 3229, and line 3238 reports a stop
+that a real start never makes.
+
+What it affects: the printed dry run only, in `recover --dry-run` and in
+`remote.py fleet-status`. No comment is written and no stage is stopped. It
+reads as an alarm in the hours a stage runs, which is when the status is
+most often asked for. `fleet-move` is not affected: it refuses while a stage
+runs, before it reads the dry run.
+
+What would close it: the dry run treating a journal it would resume as
+ended in that check, as a real start does once `run_stage` returns; and a
+test that runs `recover(dry_run=True)` with one unfinished journal whose
+`started` marker is its issue's last rank comment, and finds one "would
+resume" line and no "would stop" line, seen red before the fix. Low
+priority (the operator, 2026-11-23).
+
+### F297
+
+**When the fleet's checks refuse an Engineer's finished work, the stop keeps none of the run's commits and names no kind of stop, so the work is left only on the home desktop and taking the label off starts nothing**
+
+Found by the advisor on 2026-11-23, reading issue 86 (phase 293) after its
+stop at 08:29 UTC (03:29 EST), run `20261123_001333_engineer_293`. The
+Chief Engineer wrote `deploy`, the model-free run on `8212f3eab6fa` passed,
+and `engineer.verify_deploy` failed on one item: "it changes
+.claude/skills/deploy/CHANGELOG.md: the database step runs only master's
+tools". Phase 293's item 1a changes the deploy tool, which reaches master
+before the database step (K131).
+
+In `Fleet.engineer_deploy` (`.claude/skills/fleet/dispatcher.py:1907`), a
+failed check holds the run only when the model-free run failed and
+`verify_deploy` passes on the Engineer's own line (line 1930, F220's case).
+Any other failure goes to `escalate` (line 1935) with no `stop=` kind, and
+`keep_stop` (line 1667) is not called. `keep_stop` is what pushes a stop's
+commits through the gate to the side branch `phase-<N>-stopped-<run>` and
+holds the run for the next round (K84, F266); its one caller is the
+Engineer's own stop (line 1661). `engineer_finish`'s failed checks, for a
+`pr-ready`, take the same path (lines 2025 and 2031). So:
+
+- The eight commits the run made after `ebe52ed` (`15889f7` to `8212f3e`:
+  the migration, the library, the terms, the tests and the regression of
+  record) were on no GitHub branch. They were only in the run's clone on
+  the home desktop, not held, which `prune_runs` (line 1331) removes once
+  `KEEP_RUNS` (20, line 147) newer runs exist. The operator copied them by
+  hand to `phase-293-stopped-20261123_001333_engineer_293` the same morning.
+- The marker, `<!-- fleet-dispatcher: needs-admiral rank=engineer
+  run=20261123_001333_engineer_293 -->`, has no `stop=`, so `engineer_stop`
+  (line 1778, `_ENG_STOP` at line 217) returns None, and with no held run
+  `next_stage` (line 2946) asks for nothing on `mission` and `build:open`.
+  Taking `needs-admiral` off starts nothing, while the comment's last line,
+  "The fleet leaves this issue alone until the operator takes
+  `needs-admiral` off.", reads as if it would.
+
+What it affects: every Engineer `deploy` or `pr-ready` that a check other
+than the model-free run refuses: the deploy tools changed, no scope file,
+no migration, the database step's files already there, a dirty clone, or
+any of `engineer.verify`'s items. Seen once, on phase 293, where the work
+was copied to GitHub by hand and the build has to be started again by
+setting the branch and the labels by hand.
+
+What would close it: both failure paths calling `keep_stop` and escalating
+with a stop kind, so the commits reach the side branch, the run is held,
+and the operator's answer starts the next round from them; and a test in
+which `verify_deploy` fails while the model-free run passes, finding the
+side push, the hold and the `stop=` kind, seen red first on today's code.
