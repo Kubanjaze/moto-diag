@@ -220,3 +220,28 @@ the page route takes `size=full|thumb`; the search answers at most 100 hits
 (20 by default), a request bound and not a plan limit; the upload's
 temporary file is `.manual_upload_*.pdf` at the data folder's top, outside
 the four backed-up folders.
+
+## 2026-11-23 — the full whole-tree, before the regression of record
+
+`wholetree.sh --full`: 1 failed, 5470 passed, 36 skipped (17:31). The one
+failure is Bug fix #1.
+
+### Bug fix #1 — 2026-11-23 — a second pin of the islands table still held `engine.repair`
+
+- **Issue:** `tests/test_phase244Z_shelved_content.py::TestStillShelved::test_the_module_is_still_on_the_islands_table[repair]`
+  failed: `motodiag.engine.repair` is no longer in `MODULE_ISLANDS`.
+- **Root cause:** the library's commit (`4b58135`) took `engine.repair` off
+  the islands table (the now-live `reference/models.py` shares the name
+  `SkillLevel`, and the gate matches by name) and moved its generator to
+  `ORPHANS`, updating `test_phase244W` and `integration_gaps_counts.py`, but
+  not 244Z's own list of modules it expects on the table. The table is
+  pinned in more than one file, and the fast whole-tree does not run 244Z.
+- **Fix:** 244Z's test keeps its six ids and its intent (nothing in a
+  shelved module reaches a user): for `repair` it asserts the module is off
+  the islands table and that `RepairProcedureGenerator` is on `ORPHANS` as
+  `unwired-feature`; the other four still assert the islands table. The
+  collected count is unchanged, so the floor is unchanged.
+- **Files:** `tests/test_phase244Z_shelved_content.py`.
+- **Verified:** 244Z, 244W and 244U, 86 passed; the same test on the
+  previous commit's file, 1 failed, 11 passed.
+- **Commit:** the commit that carries this entry ("Phase 293: Bug fix #1").

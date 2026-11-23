@@ -25,6 +25,11 @@ SHELVED = ["repair", "parts", "workflows", "intermittent", "correlation", "confi
 # templates' checklists to its DiagnosticWorkflow. None of this file's four
 # content pins is about it; its predefined scripts stay unreached (ORPHANS).
 STILL_ISLANDS = [name for name in SHELVED if name != "workflows"]
+# Phase 293 took `repair` off MODULE_ISLANDS: the now-live reference/models.py
+# names its own SkillLevel, which repair.py also defines, and the gate matches
+# by name. Its generator, the module's only feature, is still unreached and is
+# held on ORPHANS as unwired-feature instead.
+STILL_UNREACHED_ELSEWHERE = {"repair": "engine/repair.py::RepairProcedureGenerator"}
 
 
 # ---------------------------------------------------------------------------
@@ -190,6 +195,12 @@ class TestStillShelved:
     def test_the_module_is_still_on_the_islands_table(self, name):
         """Nothing here made anything reachable. The wire-or-delete decision
         is the operator's, and it is cleaner now."""
+        if name in STILL_UNREACHED_ELSEWHERE:
+            from support.integration_gaps_allowlist import ORPHANS
+
+            assert f"motodiag.engine.{name}" not in MODULE_ISLANDS
+            assert ORPHANS[STILL_UNREACHED_ELSEWHERE[name]][0] == "unwired-feature"
+            return
         assert f"motodiag.engine.{name}" in MODULE_ISLANDS
 
     def test_the_table_did_not_move(self):
