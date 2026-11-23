@@ -156,6 +156,28 @@ TAG_CATALOG: list[dict[str, Any]] = [
         ),
     },
     {
+        "name": "manuals",
+        "description": (
+            "A shop's own PDF manuals and parts books, private to the "
+            "shop. The owner or service writer uploads (multipart PDF "
+            "+ JSON tag; at most 300 MB a file, within the shop plan's "
+            "storage; checked and virus-scanned on the spot); a person "
+            "at Mekno reviews it; then every member lists it by bike, "
+            "opens its pages as JPEGs (full or thumb), searches its "
+            "text, or flags a page for review again. Phase 293."
+        ),
+    },
+    {
+        "name": "manual-review",
+        "description": (
+            "The reviewer's queue of uploaded manuals across every "
+            "shop, their pages, and the decision: approve (with tag "
+            "fixes), reject or take down with a reason the shop sees. "
+            "Reviewers only, granted from the server's command line. "
+            "Phase 293."
+        ),
+    },
+    {
         "name": "parts",
         "description": (
             "Phase 201 — parts ordering from mobile. Catalog browse "

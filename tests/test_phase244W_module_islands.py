@@ -140,7 +140,9 @@ class TestEveryEntryExplainsItself:
         engine = {k: v for k, v in MODULE_ISLANDS.items()
                   if k.startswith("motodiag.engine.") and k != "motodiag.engine.history"}
         # 244Y deleted cost, evaluation, retrieval; Phase 356 wired workflows.
-        assert len(engine) == 5
+        # Phase 293: engine.repair left the table when reference/models.py,
+        # now live, named its own SkillLevel; its generator is in ORPHANS.
+        assert len(engine) == 4
         scored = [v[1] for v in engine.values() if "onsensus" in v[1]]
         assert len(scored) == len(engine), "every remaining engine entry carries its audit score"
 

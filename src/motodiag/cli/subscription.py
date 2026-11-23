@@ -68,6 +68,11 @@ class TierFeatures(BaseModel):
     ai_model_access: list[str] = Field(default_factory=lambda: ["haiku"], description="Available AI models")
     ai_monthly_cost_cap_usd: float = Field(default=5.0, description="Monthly AI API cost cap in USD")
 
+    # Phase 293 (K119, K123): what the shop's uploaded manuals may take, in
+    # bytes (GB = 1024**3), counting the files and never their page images.
+    manual_storage_bytes: int = Field(
+        ..., description="Manual storage for the shop's uploaded files, in bytes")
+
 
 # --- Tier definitions (pricing is placeholder — user confirmed it can change) ---
 
@@ -91,6 +96,7 @@ TIER_LIMITS: dict[SubscriptionTier, TierFeatures] = {
         priority_support=False,
         ai_model_access=["haiku"],
         ai_monthly_cost_cap_usd=5.0,
+        manual_storage_bytes=2 * 1024**3,
     ),
     SubscriptionTier.SHOP: TierFeatures(
         tier=SubscriptionTier.SHOP,
@@ -111,6 +117,7 @@ TIER_LIMITS: dict[SubscriptionTier, TierFeatures] = {
         priority_support=False,
         ai_model_access=["haiku", "sonnet"],
         ai_monthly_cost_cap_usd=50.0,
+        manual_storage_bytes=20 * 1024**3,
     ),
     SubscriptionTier.COMPANY: TierFeatures(
         tier=SubscriptionTier.COMPANY,
@@ -131,6 +138,7 @@ TIER_LIMITS: dict[SubscriptionTier, TierFeatures] = {
         priority_support=True,
         ai_model_access=["haiku", "sonnet"],
         ai_monthly_cost_cap_usd=150.0,
+        manual_storage_bytes=50 * 1024**3,  # one shop's until its shops are linked (F271)
     ),
 }
 

@@ -18,6 +18,7 @@ from motodiag.cli.costs import register_costs
 from motodiag.cli.diagnose import register_diagnose, register_quick
 from motodiag.cli.hardware import register_hardware
 from motodiag.cli.kb import register_kb
+from motodiag.cli.manuals import register_manuals
 from motodiag.cli.memory import register_memory
 from motodiag.cli.payments import register_payments_check
 from motodiag.cli.reference import register_reference
@@ -944,6 +945,9 @@ register_capture(cli)
 # clearances, service intervals and wiring circuit references. Phases 92
 # and 93 built all four tables and shipped no way to read them.
 register_reference(cli)
+
+# Phase 293: `manuals` — the shop manual library's reviewers and page images.
+register_manuals(cli)
 
 # Phase 259: register the `workflow` subgroup — template browsing for the
 # Phase 114 substrate (`motodiag workflow list`, `motodiag workflow show

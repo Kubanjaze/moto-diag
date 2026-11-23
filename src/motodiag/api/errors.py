@@ -94,6 +94,17 @@ def _exc_class_chain():
         VideoOwnershipError,
         VideoQuotaExceededError,
     )
+
+    # Phase 293 — the shop manual library
+    from motodiag.manuals import (
+        ManualConflictError,
+        ManualDuplicateError,
+        ManualNotFoundError,
+        ManualReasonRequiredError,
+        ManualRefusedError,
+        ManualScannerUnavailableError,
+        ManualStorageExceededError,
+    )
     from motodiag.media.audio_pipeline import (
         AudioDecodeError,
         UnsupportedAudioFormatError,
@@ -318,6 +329,19 @@ def _exc_class_chain():
         # Phase 207 — per-request upload ceiling, any media route
         (UploadTooLargeError, 413, "upload-too-large",
          "Uploaded file too large"),
+        # Phase 293 — the shop manual library (K119, K123)
+        (ManualNotFoundError, 404, "manual-not-found", "Manual not found"),
+        (ManualConflictError, 409, "manual-conflict",
+         "The manual is not in a state that allows this"),
+        (ManualDuplicateError, 409, "manual-duplicate",
+         "The shop already has this file"),
+        (ManualReasonRequiredError, 422, "manual-reason-required",
+         "A reason is required"),
+        (ManualRefusedError, 422, "manual-refused", "Manual refused"),
+        (ManualStorageExceededError, 402, "manual-storage-exceeded",
+         "Manual storage for this shop's plan exceeded"),
+        (ManualScannerUnavailableError, 503, "manual-scanner-unavailable",
+         "The server's virus scanner is not available"),
         # Phase 194 — work-order photo domain
         (WorkOrderPhotoOwnershipError, 404, "wo-photo-not-found",
          "Work-order photo not found"),

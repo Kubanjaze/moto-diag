@@ -24,8 +24,9 @@ from __future__ import annotations
 #: 259 (motodiag.workflows wired: three modules) → 32 at Phase 274 (`shop
 #: labor-rate` reaches motodiag.pricing and pricing.labor_rates) → 29 at Phase
 #: 275 (`shop appointment` and `shop calendar` reach motodiag.scheduling and
-#: its appointment_repo and models).
-UNREACHABLE_COUNT = 29
+#: its appointment_repo and models) → 23 at Phase 293 (the manual library's
+#: routes and `manuals` command reach motodiag.reference and its five modules).
+UNREACHABLE_COUNT = 23
 
 #: `len(MODULE_ISLANDS)`. Asserted in test_phase244W_module_islands.py.
 #: 19 modules / 4,270 lines invisible to the gate on 2026-09-17 (Phase 244W's
@@ -35,8 +36,11 @@ UNREACHABLE_COUNT = 29
 #: Phase 244Z, on purpose: content fixed, reachability untouched. → 13 at
 #: Phase 356 (`workflow run` reaches motodiag.engine.workflows). → 9 at Phase
 #: 274 (`shop inventory` and `shop warranty` reach inventory's models,
-#: item_repo, vendor_repo and warranty_repo).
-MODULE_ISLAND_COUNT = 9
+#: item_repo, vendor_repo and warranty_repo). → 10 at Phase 293 (motodiag.
+#: reference reachable: diagram_repo and photo_repo are islands, substrate for
+#: 294 and 295; engine.repair left, through reference/models.py's SkillLevel,
+#: a name its own SkillLevel shares).
+MODULE_ISLAND_COUNT = 10
 
 #: `len(ORPHANS)`. Asserted in test_phase244U_gate_blind_spot.py.
 #: The running count of live orphans: 46 (pre-244U) → 66 (244U opened the
@@ -64,5 +68,8 @@ MODULE_ISLAND_COUNT = 9
 #: (Phase 303: `motodiag user` calls create_user, deactivate_user and
 #: list_users) → 124 (Phase 393: ruff's safe fixes removed cli/shop.py's
 #: unused imports, the only reference nine shop functions had; listed as
-#: unwired-feature, not re-imported).
-ORPHAN_COUNT = 124
+#: unwired-feature, not re-imported) → 127 (Phase 293: motodiag.reference
+#: reachable left reference/video_repo's add_video and update_video as
+#: substrate for 296, and engine/repair's RepairProcedureGenerator, its module
+#: out of MODULE_ISLANDS, as unwired-feature).
+ORPHAN_COUNT = 127
