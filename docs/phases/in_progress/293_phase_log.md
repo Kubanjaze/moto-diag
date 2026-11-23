@@ -85,3 +85,11 @@ against `pypdfium2`, which is a change to what the plan's tests prove.
 So the phase stops (rule 1, a test it cannot make green), with item 1a
 committed. Nothing else of the plan is built: no migration, no route, no
 change to the terms.
+
+## 2026-11-22 22:12 EST — the operator's answer to the stop of 2026-11-22 20:20 EST
+
+Quoted by the fleet's dispatcher, verbatim, from issue #86: the comments the operator's own account (`Kubanjaze`) posted after the Chief Engineer's stop (test-cannot-be-green). No other account's words are quoted.
+
+**2026-11-23T03:12:00Z:**
+
+> Option 1, done: pypdfium2 5.15.2 installed in the fleet's build setup, no other package changed.
