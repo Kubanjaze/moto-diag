@@ -97,8 +97,13 @@ through `apply-live`, never through a restart.
      2026-10-07: 5 now; 5 plus the first backup of each week once the
      first shop's real data is in);
    - migrates a copy in `data/deploy_scratch/` (gitignored, deleted after
-     use) and diffs every table by rowid;
-   - checks the scope and runs the F158 census on the copy;
+     use) and diffs every table by rowid; a table whose definition in
+     `sqlite_master` says `WITHOUT ROWID` (FTS5's `_idx` and `_config`) has
+     no rowid, so it is read and diffed by its primary key's columns, in
+     key order, and its rows read in the scope check and the plain-words
+     list as a rowid table's do (Phase 293, K131);
+   - checks the scope and runs the F158 census on the copy (which reads a
+     table without a rowid by its key too);
    - **seed parity** (Phase 380, the operator's 2A): every `known_issues` row
      the migration adds or changes must equal the row with the same
      `row_key` in a fresh seed build at HEAD, every column but the id and

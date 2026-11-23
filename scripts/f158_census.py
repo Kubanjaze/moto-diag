@@ -57,21 +57,34 @@ BMW_F_MODELS = frozenset({"F650", "F700", "F750", "F800", "F850", "F900"})
 #: JSON says "corpus" (5 hits in 2 rows on live, 2026-09-16).
 OPERATIONAL_TABLES = ("shops", "customer_notifications", "guidance_interactions")
 
-Hit = tuple[str, str, int, str, str]            # table, column, rowid, pattern, text
+Hit = tuple[str, str, object, str, str]         # table, column, rowid, pattern, text
+
+_WITHOUT_ROWID = re.compile(r"\bwithout\s+rowid\s*;?\s*$", re.IGNORECASE)
+
+
+def _row_key(c: sqlite3.Connection, t: str, sql: str | None) -> str:
+    """What names a row: its rowid, or for a table its definition declares
+    WITHOUT ROWID (FTS5's `_idx` and `_config`, Phase 293, K131), which has
+    none, its primary key's first column."""
+    if not (sql and _WITHOUT_ROWID.search(sql)):
+        return "rowid"
+    pk = sorted((r for r in c.execute(f'pragma table_info("{t}")') if r[5]), key=lambda r: r[5])
+    return f'"{pk[0][1]}"'
 
 
 def census(db: str | pathlib.Path) -> list[Hit]:
     c = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
     hits: list[Hit] = []
     try:
-        tables = [r[0] for r in c.execute(
-            "select name from sqlite_master where type='table' and name not like 'sqlite_%'")]
-        for t in tables:
+        tables = c.execute("select name, sql from sqlite_master where type='table' "
+                           "and name not like 'sqlite_%'").fetchall()
+        for t, sql in tables:
+            key = _row_key(c, t, sql)
             cols = [r[1] for r in c.execute(f'pragma table_info("{t}")')
                     if ((r[2] or "").upper() in ("TEXT", "") or "CHAR" in (r[2] or "").upper())
                     and r[1] not in SKIP_COLUMNS]
             for col in cols:
-                for rowid, v in c.execute(f'select rowid, "{col}" from "{t}" where "{col}" is not null'):
+                for rowid, v in c.execute(f'select {key}, "{col}" from "{t}" where "{col}" is not null'):
                     if isinstance(v, str):
                         for name, p in PATTERNS.items():
                             hits += [(t, col, rowid, name, m.group()) for m in p.finditer(v)]

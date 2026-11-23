@@ -125,12 +125,35 @@ def backup(src: pathlib.Path, dst: pathlib.Path) -> None:
     d.close()
 
 
+_WITHOUT_ROWID = re.compile(r"\bwithout\s+rowid\s*;?\s*$", re.IGNORECASE)
+
+
+def _rows(c: sqlite3.Connection, t: str, sql: str | None) -> dict:
+    """{key: (key, *values)} for every row of ``t``. A rowid table is keyed
+    by its rowid. A table its definition in `sqlite_master` declares WITHOUT
+    ROWID (FTS5's `_idx` and `_config`, Phase 293, K131) has none to select,
+    so it is keyed by its primary key's columns, in key order: the one value
+    for a one-column key, a tuple of them for more."""
+    info = c.execute(f"pragma table_info('{t}')").fetchall()
+    if not (sql and _WITHOUT_ROWID.search(sql)):
+        return {r[0]: r for r in c.execute(f"select rowid, * from '{t}'")}
+    names = [r[1] for r in info]
+    pk = [r[1] for r in sorted((r for r in info if r[5]), key=lambda r: r[5])]
+    at = [names.index(p) for p in pk]
+    order = ", ".join(f'"{p}"' for p in pk)
+    out = {}
+    for r in c.execute(f"select * from '{t}' order by {order}"):
+        key = r[at[0]] if len(at) == 1 else tuple(r[i] for i in at)
+        out[key] = (key, *r)
+    return out
+
+
 def dump(path: pathlib.Path) -> dict[str, tuple[list[str], dict]]:
     c, out = _ro(path), {}
-    for (t,) in c.execute("select name from sqlite_master where type='table' "
-                          "and name not like 'sqlite_%'").fetchall():
+    for t, sql in c.execute("select name, sql from sqlite_master where type='table' "
+                            "and name not like 'sqlite_%'").fetchall():
         cols = [r[1] for r in c.execute(f"pragma table_info('{t}')")]
-        out[t] = (cols, {r[0]: r for r in c.execute(f"select rowid, * from '{t}'")})
+        out[t] = (cols, _rows(c, t, sql))
     c.close()
     return out
 
