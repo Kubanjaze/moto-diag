@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F294** (this file). The
+At the time of writing the highest assigned is **F295** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -6885,3 +6885,40 @@ What closed it, by the operator's decision (K129) to keep the passphrase:
 
 The limit that stays: after a restart, a connection made while the Mac is
 locked, before any unlocked one, fails the same way.
+
+### F295
+
+**A fleet test's stand-in mirror failed to clone once in the Mac's fast run, and the dispatcher cuts git's error at 200 characters, so the cause cannot be read**
+
+Found by the advisor on 2026-11-22 at about 21:37 EST, in `wholetree.sh`
+(fast mode) on Phase 372B's staged close-out, on the Mac, on battery. One
+test failed:
+`tests/test_phase403_granted_round.py::test_a_grant_in_any_other_form_grants_nothing[another form]`.
+At `tests/test_phase390_resume.py:199` the test world's `cycle()` reached
+`update_mirror` (`.claude/skills/fleet/dispatcher.py`), which raised
+`rank_call.Stop: the mirror could not be updated: fatal: failed to copy
+file to '<pytest's temporary folder>/state/mirror.git/objects/be/e44279932d0`.
+The rest of git's message, which would name the reason, is cut by
+`r.stderr.strip()[:200]` in `update_mirror`.
+
+Measured:
+- **Before it, the same evening,** the test passed in three runs: fast
+  mode on the staged merge, committed as `0bd368b` (2966 passed); `--full`
+  on `0bd368b` (5461 passed); and the regression of record there (13087
+  passed).
+- **After it,** the test file passed alone 5 times of 5 (13 tests each),
+  and 3 times of 3 under `-n 4` with `tests/test_phase390_resume.py`
+  (51 tests each).
+- **The close-out's documents cannot reach it.** The test's origin is a
+  fixture tree copied into pytest's temporary folder (`make_origin`,
+  `tests/test_phase389_fleet_git.py`), with the real
+  `ROADMAP_AUTHORITY.md`, which the close-out did not change.
+- **Free space** at the time: 531 GiB on the Mac's data volume.
+
+What it affects: a whole-tree or regression run that meets it fails for a
+reason outside what the run checks, and is run again. One failure in four
+runs that evening; the rate is not known.
+
+What would close it: `update_mirror` keeping git's whole error, or at least
+its last line, so the next failure names its cause; then a fix for that
+cause.
