@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F296** (this file). The
+At the time of writing the highest assigned is **F297** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -6957,3 +6957,52 @@ test that runs `recover(dry_run=True)` with one unfinished journal whose
 `started` marker is its issue's last rank comment, and finds one "would
 resume" line and no "would stop" line, seen red before the fix. Low
 priority (the operator, 2026-11-23).
+
+### F297
+
+**When the fleet's checks refuse an Engineer's finished work, the stop keeps none of the run's commits and names no kind of stop, so the work is left only on the home desktop and taking the label off starts nothing**
+
+Found by the advisor on 2026-11-23, reading issue 86 (phase 293) after its
+stop at 08:29 UTC (03:29 EST), run `20261123_001333_engineer_293`. The
+Chief Engineer wrote `deploy`, the model-free run on `8212f3eab6fa` passed,
+and `engineer.verify_deploy` failed on one item: "it changes
+.claude/skills/deploy/CHANGELOG.md: the database step runs only master's
+tools". Phase 293's item 1a changes the deploy tool, which reaches master
+before the database step (K131).
+
+In `Fleet.engineer_deploy` (`.claude/skills/fleet/dispatcher.py:1907`), a
+failed check holds the run only when the model-free run failed and
+`verify_deploy` passes on the Engineer's own line (line 1930, F220's case).
+Any other failure goes to `escalate` (line 1935) with no `stop=` kind, and
+`keep_stop` (line 1667) is not called. `keep_stop` is what pushes a stop's
+commits through the gate to the side branch `phase-<N>-stopped-<run>` and
+holds the run for the next round (K84, F266); its one caller is the
+Engineer's own stop (line 1661). `engineer_finish`'s failed checks, for a
+`pr-ready`, take the same path (lines 2025 and 2031). So:
+
+- The eight commits the run made after `ebe52ed` (`15889f7` to `8212f3e`:
+  the migration, the library, the terms, the tests and the regression of
+  record) were on no GitHub branch. They were only in the run's clone on
+  the home desktop, not held, which `prune_runs` (line 1331) removes once
+  `KEEP_RUNS` (20, line 147) newer runs exist. The operator copied them by
+  hand to `phase-293-stopped-20261123_001333_engineer_293` the same morning.
+- The marker, `<!-- fleet-dispatcher: needs-admiral rank=engineer
+  run=20261123_001333_engineer_293 -->`, has no `stop=`, so `engineer_stop`
+  (line 1778, `_ENG_STOP` at line 217) returns None, and with no held run
+  `next_stage` (line 2946) asks for nothing on `mission` and `build:open`.
+  Taking `needs-admiral` off starts nothing, while the comment's last line,
+  "The fleet leaves this issue alone until the operator takes
+  `needs-admiral` off.", reads as if it would.
+
+What it affects: every Engineer `deploy` or `pr-ready` that a check other
+than the model-free run refuses: the deploy tools changed, no scope file,
+no migration, the database step's files already there, a dirty clone, or
+any of `engineer.verify`'s items. Seen once, on phase 293, where the work
+was copied to GitHub by hand and the build has to be started again by
+setting the branch and the labels by hand.
+
+What would close it: both failure paths calling `keep_stop` and escalating
+with a stop kind, so the commits reach the side branch, the run is held,
+and the operator's answer starts the next round from them; and a test in
+which `verify_deploy` fails while the model-free run passes, finding the
+side push, the hold and the `stop=` kind, seen red first on today's code.
