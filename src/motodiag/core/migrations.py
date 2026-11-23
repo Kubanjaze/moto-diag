@@ -7904,6 +7904,111 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS terms_acceptances;
         """,
     ),
+    Migration(
+        version=92,
+        name="shop_manual_library",
+        description=(
+            "Phase 293 (K94, K119, K123), the shop manual library. Adds "
+            "columns to manual_references (the owning shop, the stored "
+            "file, its hash and size, who uploaded it, its kind, the review "
+            "status and who decided it, and how far its pages are rendered), "
+            "two indexes on it, a table of rendered pages (manual_pages) "
+            "with a unique index, an external-content FTS5 index over the "
+            "pages' text (manual_pages_fts) kept in step by three triggers, "
+            "and a table of the accounts that review uploads "
+            "(manual_reviewers). Adds columns, tables, indexes and "
+            "triggers; changes and removes no existing row."
+        ),
+        upgrade_sql="""
+            ALTER TABLE manual_references ADD COLUMN shop_id INTEGER REFERENCES shops(id);
+            ALTER TABLE manual_references ADD COLUMN file_path TEXT;
+            ALTER TABLE manual_references ADD COLUMN file_sha256 TEXT;
+            ALTER TABLE manual_references ADD COLUMN file_size_bytes INTEGER;
+            ALTER TABLE manual_references ADD COLUMN uploaded_by_user_id INTEGER
+                REFERENCES users(id);
+            ALTER TABLE manual_references ADD COLUMN kind TEXT
+                CHECK (kind IS NULL
+                       OR kind IN ('service_manual', 'parts_catalog', 'wiring', 'other'));
+            ALTER TABLE manual_references ADD COLUMN status TEXT NOT NULL
+                DEFAULT 'pending_review'
+                CHECK (status IN ('pending_review', 'approved', 'rejected', 'taken_down'));
+            ALTER TABLE manual_references ADD COLUMN reviewed_by_user_id INTEGER
+                REFERENCES users(id);
+            ALTER TABLE manual_references ADD COLUMN reviewed_at TEXT;
+            ALTER TABLE manual_references ADD COLUMN review_reason TEXT;
+            ALTER TABLE manual_references ADD COLUMN rendered_pages INTEGER NOT NULL DEFAULT 0;
+            ALTER TABLE manual_references ADD COLUMN render_error TEXT;
+
+            CREATE INDEX IF NOT EXISTS idx_manuals_shop_status
+                ON manual_references(shop_id, status);
+            CREATE INDEX IF NOT EXISTS idx_manuals_shop_sha
+                ON manual_references(shop_id, file_sha256);
+
+            CREATE TABLE IF NOT EXISTS manual_pages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                manual_id INTEGER NOT NULL
+                    REFERENCES manual_references(id) ON DELETE CASCADE,
+                page_number INTEGER NOT NULL,
+                image_path TEXT NOT NULL,
+                thumb_path TEXT NOT NULL,
+                text TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_manual_pages_manual_page
+                ON manual_pages(manual_id, page_number);
+
+            CREATE VIRTUAL TABLE IF NOT EXISTS manual_pages_fts USING fts5(
+                text,
+                manual_id UNINDEXED,
+                page_number UNINDEXED,
+                content='manual_pages',
+                content_rowid='id'
+            );
+            CREATE TRIGGER IF NOT EXISTS manual_pages_ai AFTER INSERT ON manual_pages BEGIN
+                INSERT INTO manual_pages_fts(rowid, text, manual_id, page_number)
+                VALUES (new.id, new.text, new.manual_id, new.page_number);
+            END;
+            CREATE TRIGGER IF NOT EXISTS manual_pages_ad AFTER DELETE ON manual_pages BEGIN
+                INSERT INTO manual_pages_fts(manual_pages_fts, rowid, text, manual_id, page_number)
+                VALUES ('delete', old.id, old.text, old.manual_id, old.page_number);
+            END;
+            CREATE TRIGGER IF NOT EXISTS manual_pages_au AFTER UPDATE ON manual_pages BEGIN
+                INSERT INTO manual_pages_fts(manual_pages_fts, rowid, text, manual_id, page_number)
+                VALUES ('delete', old.id, old.text, old.manual_id, old.page_number);
+                INSERT INTO manual_pages_fts(rowid, text, manual_id, page_number)
+                VALUES (new.id, new.text, new.manual_id, new.page_number);
+            END;
+
+            CREATE TABLE IF NOT EXISTS manual_reviewers (
+                user_id INTEGER PRIMARY KEY REFERENCES users(id),
+                granted_at TEXT NOT NULL,
+                granted_by_user_id INTEGER REFERENCES users(id)
+            );
+        """,
+        rollback_sql="""
+            DROP TRIGGER IF EXISTS manual_pages_au;
+            DROP TRIGGER IF EXISTS manual_pages_ad;
+            DROP TRIGGER IF EXISTS manual_pages_ai;
+            DROP TABLE IF EXISTS manual_pages_fts;
+            DROP INDEX IF EXISTS idx_manual_pages_manual_page;
+            DROP TABLE IF EXISTS manual_pages;
+            DROP TABLE IF EXISTS manual_reviewers;
+            DROP INDEX IF EXISTS idx_manuals_shop_sha;
+            DROP INDEX IF EXISTS idx_manuals_shop_status;
+            ALTER TABLE manual_references DROP COLUMN render_error;
+            ALTER TABLE manual_references DROP COLUMN rendered_pages;
+            ALTER TABLE manual_references DROP COLUMN review_reason;
+            ALTER TABLE manual_references DROP COLUMN reviewed_at;
+            ALTER TABLE manual_references DROP COLUMN reviewed_by_user_id;
+            ALTER TABLE manual_references DROP COLUMN status;
+            ALTER TABLE manual_references DROP COLUMN kind;
+            ALTER TABLE manual_references DROP COLUMN uploaded_by_user_id;
+            ALTER TABLE manual_references DROP COLUMN file_size_bytes;
+            ALTER TABLE manual_references DROP COLUMN file_sha256;
+            ALTER TABLE manual_references DROP COLUMN file_path;
+            ALTER TABLE manual_references DROP COLUMN shop_id;
+        """,
+    ),
 ]
 
 
