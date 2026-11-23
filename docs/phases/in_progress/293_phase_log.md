@@ -245,3 +245,30 @@ failure is Bug fix #1.
 - **Verified:** 244Z, 244W and 244U, 86 passed; the same test on the
   previous commit's file, 1 failed, 11 passed.
 - **Commit:** the commit that carries this entry ("Phase 293: Bug fix #1").
+
+## 2026-11-23 — the first regression run, not of record
+
+`regression.sh` at `17b2b58` failed (not of record): 13148 passed, 2 failed,
+105 skipped (38 min 2 s wall). Both failures are Bug fix #2. The full
+whole-tree before it had passed at `17b2b58` (5471 passed, 36 skipped);
+`test_phase356_workflow_run.py` is not one of its files.
+
+### Bug fix #2 — 2026-11-23 — Phase 356's table dump read a WITHOUT ROWID table by rowid
+
+- **Issue:** `tests/test_phase356_workflow_run.py`'s
+  `test_a_run_leaves_every_table_as_it_was` and
+  `test_a_planted_write_is_seen_by_the_dump` failed with
+  `sqlite3.OperationalError: no such column: rowid`.
+- **Root cause:** the file's `_dump` reads every table in a fresh database
+  `ORDER BY rowid`. Migration 092's FTS5 index makes
+  `manual_pages_fts_idx` and `manual_pages_fts_config`, which are WITHOUT
+  ROWID: the same fact item 1a taught the deploy tool, not carried to the
+  one test that dumps every table.
+- **Fix:** `_dump` orders a WITHOUT ROWID table by its primary key
+  (`PRAGMA table_info`), every other table by rowid as before. The
+  comparison is unchanged.
+- **Files:** `tests/test_phase356_workflow_run.py`.
+- **Verified:** the file, 32 passed; the previous commit's file on this
+  code, 2 failed, 30 passed. Every other `ORDER BY rowid` in `tests/`
+  names its tables and passed in the same regression run.
+- **Commit:** the commit that carries this entry ("Phase 293: Bug fix #2").

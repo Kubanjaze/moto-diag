@@ -78,10 +78,21 @@ def _dump(db_path):
     try:
         tables = [r[0] for r in conn.execute(
             "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name")]
-        return {t: conn.execute(f'SELECT * FROM "{t}" ORDER BY rowid').fetchall()
+        return {t: conn.execute(f'SELECT * FROM "{t}" ORDER BY {_order_of(conn, t)}').fetchall()
                 for t in tables}
     finally:
         conn.close()
+
+
+def _order_of(conn, table):
+    """rowid, or the key for a WITHOUT ROWID table (Phase 293's FTS5 index
+    brings two: manual_pages_fts_idx and manual_pages_fts_config)."""
+    sql = conn.execute("SELECT sql FROM sqlite_master WHERE name = ?", (table,)).fetchone()[0]
+    if sql and "WITHOUT ROWID" in sql.upper():
+        key = [r[1] for r in sorted(conn.execute(f'PRAGMA table_info("{table}")'),
+                                    key=lambda r: r[5]) if r[5] > 0]
+        return ", ".join(f'"{c}"' for c in key)
+    return "rowid"
 
 
 # --- What a run must print, as checks over the output ---
