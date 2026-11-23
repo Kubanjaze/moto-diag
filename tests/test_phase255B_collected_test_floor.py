@@ -620,7 +620,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: +69, 330 +35, on separate files. 13031 + 69 + 35. By a diff of collected
 #: ids against master at 1dd1921 (13100): +35 -0, all in
 #: test_phase330_onboarding.py. Measured: 13135.
-COLLECTED_TEST_FLOOR = 13135
+#:
+#: Phase 293, item 1a (K131), by a diff of collected ids against fd47e6e
+#: (13135): +6 -0, all in test_phase293_deploy_without_rowid.py (the
+#: deploy tool reading a table without a rowid by its key); no other test
+#: file changed. Measured: 13141.
+COLLECTED_TEST_FLOOR = 13141
 
 
 def _collected_count() -> int:

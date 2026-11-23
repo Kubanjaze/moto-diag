@@ -1,5 +1,27 @@
 # deploy — changelog
 
+## 2026-11-22 — a table without a rowid is read by its key (Phase 293, K131)
+
+The operator, 2026-11-22 (K131): "293: option A. 293 also teaches the
+deploy tool to read tables without row numbers by their key, with tests,
+and the PDF library install moves to after the server update." Migration
+092's FTS5 index makes two shadow tables WITHOUT ROWID (`_idx`, keyed on
+`segid, term`; `_config`, keyed on `k`), and `dump()`'s `select rowid, *`
+raised `no such column: rowid` on them.
+
+- `deploy.py`: `_rows`, used by `dump()`: a table whose `sqlite_master`
+  definition ends `WITHOUT ROWID` (never judged by its name) is read by its
+  primary key's columns from `pragma table_info`, in key order, and keyed
+  by that value (one column) or tuple (more); every other table by rowid as
+  before. `diff()`, `check_scope`, `report` and `exact` read the keys
+  unchanged.
+- `scripts/f158_census.py`, which the dry run runs on its copy, read every
+  table by rowid as well; it now names a row of such a table by its key's
+  first column. Found by the end-to-end case below, not named in the plan.
+- Tests: `tests/test_phase293_deploy_without_rowid.py`; the known-bad
+  fixture `fixtures/without_rowid.sql`, which the old read fails on with
+  `no such column: rowid`.
+
 ## 2026-11-20 — the check asks what the change did (Phase 405, K91, F210, F259)
 
 The operator, 2026-11-19 (K91): "C as recommended". Option C: "before the
