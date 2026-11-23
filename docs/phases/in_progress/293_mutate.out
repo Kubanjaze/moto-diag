@@ -1,0 +1,26 @@
+M1 the list route without the membership check: red
+M2 the page route without the shop comparison: red
+M3 the search finds a pending page: red
+M4 the search across shops: red
+M5 the upload without manage_shop: red
+M6 no scanner lets a file through: red
+M7 the infected branch removed: red
+M8 the %PDF- check removed: red
+M9 the JavaScript names dropped from the walk: red
+M10 the locked check removed: red
+M11 a file at the cap refused: red
+M12 the page images counted in the limit: red
+M13 the limit read from the uploader's own tier: red
+M14 the duplicate check dropped: red
+M15 the queue open to any signed-in user: red
+M16 approval while rendering: red
+M17 the flag leaves the manual approved: red
+M18 manuals not backed up: red
+M19 the page images backed up: red
+M20 the terms left at 1.0: red
+M21 the render rewrites a page already on disk: red
+M22 the FTS query unquoted: red
+M23 the delete keeps the files: red
+M24 a rejection without a reason accepted: red
+M25 dump() reads every table by rowid again: red
+25/25 red

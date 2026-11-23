@@ -1,6 +1,6 @@
 # Phase 293 — phase log
 
-**Status:** Paused (stopped for the operator: the build machine cannot read PDFs)
+**Status:** In progress (built; the database step waits for the operator)
 
 ## 2026-11-22 — Step 0, re-measured by the Engineer
 
@@ -93,3 +93,130 @@ Quoted by the fleet's dispatcher, verbatim, from issue #86: the comments the ope
 **2026-11-23T03:12:00Z:**
 
 > Option 1, done: pypdfium2 5.15.2 installed in the fleet's build setup, no other package changed.
+
+## 2026-11-22 23:00 EST — resumed on the operator's answer
+
+Applied literally: the build's venv now imports `pypdfium2` 5.15.2
+(`importlib.metadata.version('pypdfium2')`, from
+`.venv/lib/python3.14/site-packages/pypdfium2`), and `pip freeze` lists the
+same packages as Step 0 otherwise (`pypdf` 6.14.2, `pillow` 12.2.0,
+`reportlab` 4.5.1 among them). Nothing else in the answer, and nothing else
+was asked of it. The build resumes from `15889f7` with item 1a committed.
+
+## 2026-11-22 — migration 092 (`fa6c261`)
+
+- **The shadow tables, measured:** on a fresh database at 92,
+  `manual_pages_fts_config` holds 1 row (`version`) and
+  `manual_pages_fts_data` 2; `_idx` and `_docsize` hold none. The two
+  without a rowid are `_config` and `_idx`. No `manual_pages_fts_content`.
+  `tests/test_phase293_migration.py` measures this and holds the scope
+  file to it; `deploy.check_scope` on the 91 to 92 diff reports no problem.
+- **The rollback** drops the triggers, the FTS table (its shadow tables with
+  it), `manual_pages`, `manual_reviewers`, the two indexes and the twelve
+  columns; `DROP COLUMN` was tried first on a column with `REFERENCES` and
+  one with a `CHECK` (SQLite 3.46.1) and both drop. A Phase 117 row keeps
+  every field through the migration and the rollback, and migrating again
+  works.
+- **The first `--full` run failed** on `RUFF_FINDINGS` (1111 against 1108):
+  three lines of the migration's SQL over 100 characters. Wrapped before the
+  first commit; not a bug fix, the code was never committed that way. The
+  second `--full` passed: 5437 passed, 36 skipped (1530.9 s).
+- The 715 tests that name `manual_references` or `MIGRATIONS` passed
+  before the commit.
+
+## 2026-11-22 — the library (`4b58135`)
+
+- **Built:** `src/motodiag/manuals/` (`__init__` with the library's seven
+  refusals, `storage`, `checks`, `scan`, `render`, `review`), the
+  `manual_references` repo and models extended, `api/routes/manuals.py`
+  (both routers), `errors.py`'s rows, `app.py`'s two routers, `openapi.py`'s
+  two tags, `cli/manuals.py` and `main.py`'s registration,
+  `TierFeatures.manual_storage_bytes`, `MEDIA_DIRS`.
+- **The checks on planted files:** the good file and an owner-password-only
+  file pass; the PNG, JavaScript, attachment, Launch action and locked
+  file each give exactly their own reason.
+- **The quality counts** after the code, by `scripts/code_quality.py`'s
+  `counts()`: ruff 1108, mypy 202, complex 25, big 5, helpers 19,
+  swallowed 22, every one at its pin. Two new mypy errors were fixed before
+  the commit (`add_page`'s `lastrowid`, the upload's response read through
+  `_manual_in_shop`).
+- **The wiring gate** (`test_phase209B`, `244U`, `244W`): the six
+  `motodiag.reference` entries out (`UNREACHABLE_COUNT` 29 to 23);
+  `reference/video_repo.py`'s `add_video` and `update_video` reported as
+  live orphans and listed as substrate for 296; `diagram_repo` and
+  `photo_repo` reported as module islands and listed as substrate for 294
+  and 295 (`MODULE_ISLAND_COUNT` 9 to 10). Not foreseen by the plan:
+  `motodiag.engine.repair` left the islands, because the now-live
+  `reference/models.py` names its own `SkillLevel`, a name
+  `engine/repair.py` also defines, and the gate matches by name. Its
+  `RepairProcedureGenerator` became a live orphan, listed as
+  unwired-feature with the island entry's reason (`ORPHAN_COUNT` 124 to
+  127), and `test_phase244W`'s count of engine islands went from 5 to 4 with
+  the reason in a comment. A deviation; v1.1 names it.
+- **Two test bugs while writing the API tests,** not code bugs: the
+  upload's 201 is written before the background render runs, so the test
+  reads `rendered_pages` from the row after it; and `reportlab` stamps each
+  PDF with its time, so a duplicate is made by reusing one byte string.
+- **Before the commit:** the fast whole-tree passed (3002 passed); the 40
+  test files that name the routers, tags, `cli.commands`, `MEDIA_DIRS` or
+  `TIER_LIMITS` ran, 935 passed, and the only red was Gate 11's two
+  snapshot tests (the app's copy of the description, expected).
+
+## 2026-11-22 — the terms 1.1, the guides, the floor (`57ccd3c`)
+
+- **The date is 2026-11-23,** not the 22nd: `tests/test_phase408_site.py`
+  dates an uncommitted page by today in UTC (already the 23rd at 23:35 EST)
+  and a committed one by its commit's day, so a page changed that late on
+  the 22nd could not pass before and after its commit. The headers,
+  `TERMS_DATE` and the sitemap say 2026-11-23, and the commit was made with
+  `TZ=UTC`, so its day is the 23rd too. 334's rule (the day the file is
+  committed) holds in UTC.
+- **`tests/test_phase334_terms_routes.py`:** one test,
+  `test_a_new_version_must_be_accepted_again`, its two literals `"1.0"`
+  made the version captured before the monkeypatch; the rest of the file
+  is unchanged and green.
+- **`pyproject.toml`:** `pypdfium2>=4` and `pypdf>=4` in `vision`;
+  `test_phase209_packaging.py` green.
+- **`COLLECTED_TEST_FLOOR`** 13141 to 13255, by a diff of collected ids
+  against `ebe52ed` (13142 collected there): +114 in the eight new files,
+  -4 and +3 in the wiring gate's parametrised entries.
+
+## 2026-11-22 — the mutations and the old code
+
+- **`293_mutate.py`, 25 mutations: 25/25 red** (`293_mutate.out`).
+- **The new files on the old code** (each copied into a worktree at
+  `ebe52ed`, run with that tree's `src/` first on the path): migration 3
+  failed, 6 errors, 2 passed (the FTS5 compile option and the empty
+  "before" state, controls); checks, render_search, manuals_api, review,
+  cli and backup_restore each fail at import; terms 10 failed, 1 passed
+  (the Backblaze sentence, a control).
+- **Controls run green on this branch,** in one run, 564 passed:
+  `test_phase194_commit0_photo_upload.py`, `test_phase172_rbac.py`, every
+  `test_phase303*.py` (the permission tests: `manage_shop` still the
+  owner's and the service writer's), `test_phase334_legal_texts.py`,
+  `test_phase334_terms_routes.py`, `test_phase345_snapshot_restore.py`,
+  `test_phase404_bike_limit.py`, `test_phase404_plan_names.py`,
+  `test_phase408_site.py`, `test_phase209B_integration_gaps.py`. Gate 11
+  (`test_phase205_gate11.py`) waits for the app's copy.
+
+## 2026-11-22 — the seven readings, as built
+
+1. The reviewer is a table of user ids (`manual_reviewers`), not a fifth
+   `SHOP_ROLES` value; `require_reviewer` is the API's only way in.
+2. The uploading roles are `owner` and `service_writer`, through
+   `manage_shop`; the tech is 403 (tested).
+3. The limit is the shop's plan's, by `shop_plan`; GB is 1024³; a rejected
+   or taken-down file counts until it is deleted, and the refusal says so.
+4. The page images are made again after a restore (`manuals render`), not
+   backed up.
+5. A duplicate is judged within one shop; another shop's identical file is
+   stored again (tested).
+6. The terms' clause leaves out "(for a company, its own shops)" (tested).
+7. A publisher's complaint is recorded by the reviewer as `taken_down`.
+
+Choices the plan left to the build, each shipping the same behaviour: a
+refusal's wording; `kind` defaults to `service_manual` in the upload's tag;
+the page route takes `size=full|thumb`; the search answers at most 100 hits
+(20 by default), a request bound and not a plan limit; the upload's
+temporary file is `.manual_upload_*.pdf` at the data folder's top, outside
+the four backed-up folders.
