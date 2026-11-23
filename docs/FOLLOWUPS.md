@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F295** (this file). The
+At the time of writing the highest assigned is **F296** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -6922,3 +6922,38 @@ runs that evening; the rate is not known.
 What would close it: `update_mirror` keeping git's whole error, or at least
 its last line, so the next failure names its cause; then a fix for that
 cause.
+
+### F296
+
+**The fleet's status check, asked while a stage is running, says a restart would stop that stage, though a real restart runs it to its end first**
+
+Found by the advisor on 2026-11-23 at 04:35 UTC (23:35 EST on 2026-11-22),
+reading the home desktop's status from the Mac with `remote.py fleet-status`
+while phase 293's Chief Engineer was building (issue 86, run
+`20261122_221208_engineer_293`). Two of its lines:
+
+- `would resume engineer from 20261122_221208_engineer_293 (issue 86), after started, clone, release-held, label-build, answer-heading, answer-commit, session …`
+- `would stop the engineer on issue 86: started 2026-11-23T03:12:09+00:00, nothing to resume from`
+
+The second is wrong. `fleet-status` (`ops/desktop/motodiag_remote.py:510`)
+prints `dispatcher.py recover --dry-run`. In `Fleet.recover`
+(`.claude/skills/fleet/dispatcher.py:3175`), the first loop (line 3197)
+resumes each unfinished journal through `run_stage`, which runs the stage
+to its end and ends its journal; the second loop's check on `started`
+markers then skips an issue whose run's journal has ended or is paused
+(line 3229). A dry run resumes nothing, so the journal it has just said it
+would resume is still unfinished at line 3229, and line 3238 reports a stop
+that a real start never makes.
+
+What it affects: the printed dry run only, in `recover --dry-run` and in
+`remote.py fleet-status`. No comment is written and no stage is stopped. It
+reads as an alarm in the hours a stage runs, which is when the status is
+most often asked for. `fleet-move` is not affected: it refuses while a stage
+runs, before it reads the dry run.
+
+What would close it: the dry run treating a journal it would resume as
+ended in that check, as a real start does once `run_stage` returns; and a
+test that runs `recover(dry_run=True)` with one unfinished journal whose
+`started` marker is its issue's last rank comment, and finds one "would
+resume" line and no "would stop" line, seen red before the fix. Low
+priority (the operator, 2026-11-23).
