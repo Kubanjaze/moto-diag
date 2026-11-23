@@ -75,6 +75,11 @@ vision = [
     # don't need pillow-heif (Pillow handles them natively); listing
     # under [vision] keeps it co-located with photo/Vision deps.
     "pillow-heif>=1.3.0",
+    # Phase 293: the shop manual library. pypdfium2 renders each page and
+    # reads its text (permissively licensed, unlike PyMuPDF's AGPL); pypdf
+    # walks the file's objects for scripts, attachments and launch actions.
+    "pypdfium2>=4",
+    "pypdf>=4",
 ]
 # Phase 209B: the whole server, under one name. Three hand-written copies of
 # this recipe -- the Dockerfile, the launch checklist and install.md -- all

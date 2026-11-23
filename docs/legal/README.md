@@ -9,6 +9,10 @@ lawyer's review comes later, as a new version.
 | `terms.md` | the Terms of Service | `https://getmekno.com/terms/` |
 | `privacy.md` | the privacy policy | `https://getmekno.com/privacy/` |
 
+Both are at version 1.1, of 2026-11-23 (Phase 293; K119, K122): the terms'
+"Manuals and files you upload" and the privacy policy's manuals line and
+review sentence. Version 1.0 was 2026-11-19 (Phase 334).
+
 ## The template
 
 - **Name:** Basecamp's policies (the Terms of Service and the Privacy
@@ -38,6 +42,9 @@ lawyer's review comes later, as a new version.
    `tests/test_phase334_legal_texts.py` fails until they agree.
 3. Publish the file on getmekno.com in place of the old one.
 4. Every user accepts again: an acceptance counts only for its own version.
+
+Version 1.1 (2026-11-23, Phase 293) went through these four steps, adding
+the clause on uploaded manuals; a lawyer's read becomes a later version.
 
 ## Publishing
 

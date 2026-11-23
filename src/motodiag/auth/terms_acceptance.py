@@ -17,8 +17,8 @@ from typing import Optional
 from motodiag.core.database import get_connection
 from motodiag.core.timestamps import utc_now
 
-TERMS_VERSION = "1.0"
-TERMS_DATE = "2026-11-19"
+TERMS_VERSION = "1.1"
+TERMS_DATE = "2026-11-23"
 
 TERMS_EXEMPT_PATHS = (
     "/v1/terms",

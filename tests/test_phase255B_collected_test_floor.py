@@ -625,7 +625,16 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: (13135): +6 -0, all in test_phase293_deploy_without_rowid.py (the
 #: deploy tool reading a table without a rowid by its key); no other test
 #: file changed. Measured: 13141.
-COLLECTED_TEST_FLOOR = 13141
+#:
+#: Phase 293 (the shop manual library), by a diff of collected ids against
+#: ebe52ed (13142 collected): +114 in eight new files (test_phase293_
+#: migration 11, checks 17, render_search 18, manuals_api 35, review 14,
+#: cli 5, backup_restore 3, terms 11); the wiring gate's parametrised
+#: entries -4 in test_phase209B_integration_gaps.py (six UNREACHABLE entries
+#: removed, three ORPHANS added, the rest renumbered) and +3 in
+#: test_phase244W_module_islands.py (two islands added, one removed).
+#: Measured: 13255.
+COLLECTED_TEST_FLOOR = 13255
 
 
 def _collected_count() -> int:

@@ -1,6 +1,6 @@
 # Mekno Terms of Service
 
-Version 1.0 — 2026-11-19
+Version 1.1 — 2026-11-23
 
 Thank you for using Mekno. These terms are the agreement between Mekno and
 you when you use the service: the Mekno app, the website getmekno.com and
@@ -78,6 +78,25 @@ for the shop, as the privacy policy says.
 - **Deleting it.** When a shop asks, its data is deleted from the service.
   The privacy policy says what the encrypted backups keep, and for how
   long.
+
+## Manuals and files you upload
+
+A shop can keep its own service manuals and parts books in Mekno.
+
+- **Only what you have the right to use.** Upload only a manual or a file
+  the shop owns or has the right to use, such as one it bought or one its
+  maker publishes for shops.
+- **It stays with your shop.** A file the shop uploads is seen only by the
+  shop's own staff. We do not show it to any other shop or user.
+- **We check it first.** Every file is checked by our software when it is
+  uploaded, and then by a person at Mekno, who sees the file to do so. No
+  one in the shop can open it until it has been approved.
+- **If someone says it is theirs.** If someone tells us a file is theirs
+  and the shop may not have it, we may take it down while we look into it,
+  and we tell the shop.
+- **A reference, not a promise.** A manual in Mekno is a reference. We do
+  not check that what it says is right for the bike in front of you, and
+  the mechanic decides.
 
 ## Paying, renewing and cancelling
 

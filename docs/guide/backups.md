@@ -1,14 +1,14 @@
 # Backups: an encrypted copy of the shop's data, off the machine
 
-The shop's data lives on the home desktop: one database file and three
-folders of uploads (videos, photos and voice notes). If that machine's disk
+The shop's data lives on the home desktop: one database file and four
+folders of uploads (videos, photos, voice notes and manuals). If that machine's disk
 fails, or the machine is stolen, the data on it is gone. So every night the
 desktop makes a copy of all of it and sends that copy somewhere else.
 
 ## What is copied, and when
 
-- **What:** the database, and every uploaded video, photo and audio file.
-  Nothing else (no logs, no settings, no keys).
+- **What:** the database, and every uploaded video, photo, audio file and
+  manual. Nothing else (no logs, no settings, no keys).
 - **When:** every night at 03:00, desktop time. If the desktop was switched
   off at 03:00, the copy is made the next time it starts.
 - **Where it goes:** to one private storage bucket at Backblaze, used only
@@ -86,6 +86,14 @@ When it finishes it prints the two settings a server needs to run against
 the restored folder: `MOTODIAG_DB_PATH` (the restored `motodiag.db`) and
 `MOTODIAG_DATA_DIR` (the folder). The uploads are stored by their place
 inside that folder, so they are found on any machine.
+
+**A shop's manuals come back without their page images.** The `manuals`
+folder (each uploaded PDF) is in every copy; the `manual_pages` folder (the
+page images and thumbnails made from them) is not, because the server can
+make them again from the files and they would make most of each night's
+copy. After a restore, run `motodiag manuals render` against the restored
+database and folder: it makes every missing page image again and prints how
+many it wrote.
 
 ## Taking a copy by hand
 

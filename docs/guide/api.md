@@ -194,6 +194,8 @@ you stand; `motodiag subscription show` shows the subscription behind it.
 | `parts` | 12 | Part lines on a work order, requisitions |
 | `time-tracking` | 5 | Clock in and out against a work order |
 | `work-order-photos` | 6 | Photos, normalised server-side |
+| `manuals` | 8 | A shop's own PDF manuals: upload, list by bike, storage used, search, pages, flag, delete |
+| `manual-review` | 4 | The reviewer's queue across shops, its pages, and the decision |
 | `voice-transcripts` | 6 | Voice notes and their transcriptions |
 | `reports` | 7 | Composed reports, HTML and PDF |
 | `share` | 4 | Customer share links |
@@ -210,7 +212,7 @@ Two switches, both off by default, are the operator's to turn on.
 `require_api_key`, the knowledge-base routes included and the live
 WebSocket excepted: until the signed-in user has accepted the current
 version, each answers 403 `terms-not-accepted` with "Accept the current
-Terms of Service (version 1.0) first: read GET /v1/terms, then POST
+Terms of Service (version 1.1) first: read GET /v1/terms, then POST
 /v1/terms/accept." Four routes stay reachable: `GET /v1/terms`,
 `POST /v1/terms/accept`, `GET /v1/auth/me` and `POST /v1/auth/logout`.
 `MOTODIAG_CHECKOUT_TERMS_CONSENT` makes Stripe Checkout ask a subscriber
@@ -284,6 +286,21 @@ Photos are decoded and re-encoded server-side, so the stored file is a
 real image regardless of what the `Content-Type` claimed. Stored
 filenames derive from database ids; the client's filename never reaches
 disk.
+
+A shop's manuals (`POST /v1/shop/{shop_id}/manuals`, the owner or the
+service writer) are PDF only, at most 300 MB a file, within the shop
+plan's storage: 2 GB on Individual, 20 GB on Shop, 50 GB on Company,
+counting the files and never their page images; `GET
+/v1/shop/{shop_id}/manuals/usage` gives the bytes used and the limit. The
+server checks each file on the spot (a real PDF, not locked, no scripts,
+attachments or launch actions, and a page it can render) and scans it for
+viruses, and then a person at Mekno reviews it before anyone in the shop
+can open its pages or find it in a search. Three refusals have codes of
+their own: `manual-refused` (422, the reasons listed),
+`manual-storage-exceeded` (402, with the bytes used and how to free
+space) and `manual-scanner-unavailable` (503: with no virus scanner on
+the server, no upload is accepted). A file already in the shop is 409
+`manual-duplicate`. A manual stays private to the shop that uploaded it.
 
 ## Generating a client
 
