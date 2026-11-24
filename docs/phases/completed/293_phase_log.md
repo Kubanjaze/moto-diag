@@ -445,3 +445,18 @@ the merge.
   The parts that read GitHub, Cloudflare, the desktop's services or the
   app's checkout could not be run from here (no network, no desktop), and
   the handoff says so.
+
+## 2026-11-23 — fix round 1: step 6 waits for the operator's review
+
+The first review found that the handoff's step 6 block opened the app's
+pull request and merged it in the same paste, with no point at which the
+operator could look at it, where item 10 says the merge comes "after the
+operator's review". A document fix, not a code change: the block now
+prints the pull request's link and reads an answer from the terminal
+(`/dev/tty`, since the block's own input is the paste); only `yes` runs
+`gh pr merge`, and anything else prints SOMETHING IS OFF with the pull
+request left open. A second paste returns to the same question. The step's
+introduction says so, and Deviations item 8 records that the review is
+kept. Tested in `/fleet/run/`: the block passes `bash -n`; the answer
+check with `yes` reached the merge, with `no` and with no input it printed
+SOMETHING IS OFF. No code changed, so the regression of record stands.
