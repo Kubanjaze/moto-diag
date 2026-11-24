@@ -3967,3 +3967,8 @@ Write-up: [`405_implementation.md`](docs/phases/completed/405_implementation.md)
 
 Log: [`docs/phases/completed/330_phase_log.md`](docs/phases/completed/330_phase_log.md).
 Write-up: [`330_implementation.md`](docs/phases/completed/330_implementation.md).
+
+## Phase 293 — Shop manual library — CLOSED 2026-11-23
+
+Log: [`docs/phases/completed/293_phase_log.md`](docs/phases/completed/293_phase_log.md).
+Write-up: [`293_implementation.md`](docs/phases/completed/293_implementation.md).

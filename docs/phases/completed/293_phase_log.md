@@ -1,6 +1,6 @@
 # Phase 293 — phase log
 
-**Status:** In progress (built; the database step waits for the operator)
+**Status:** Complete (closed 2026-11-23; migration 092 applied live, equal to the approved diff)
 
 ## 2026-11-22 — Step 0, re-measured by the Engineer
 
@@ -244,7 +244,8 @@ failure is Bug fix #1.
 - **Files:** `tests/test_phase244Z_shelved_content.py`.
 - **Verified:** 244Z, 244W and 244U, 86 passed; the same test on the
   previous commit's file, 1 failed, 11 passed.
-- **Commit:** the commit that carries this entry ("Phase 293: Bug fix #1").
+
+**Commit.** `17b2b58` ("Phase 293: Bug fix #1").
 
 ## 2026-11-23 — the first regression run, not of record
 
@@ -271,7 +272,8 @@ whole-tree before it had passed at `17b2b58` (5471 passed, 36 skipped);
 - **Verified:** the file, 32 passed; the previous commit's file on this
   code, 2 failed, 30 passed. Every other `ORDER BY rowid` in `tests/`
   names its tables and passed in the same regression run.
-- **Commit:** the commit that carries this entry ("Phase 293: Bug fix #2").
+
+**Commit.** `0f821e1` ("Phase 293: Bug fix #2").
 
 ## 2026-11-23 — the regression of record, at `0f821e1`
 
@@ -373,3 +375,73 @@ phase document stays in `docs/phases/in_progress/`. Migration 092 goes to
 the live database through the deploy step, from the scope file
 `293_deploy_scope.json`, after the regression above and before the
 close-out commit.
+
+## 2026-11-23 — the operator's answer, and migration 092 on live
+
+The dry run ran on a copy on the home desktop (`293_dryrun_diff.md`,
+sha256 `91c7638cd7e74979a6075242fa9149360ec5e2704169de3648293adf4d1a283b`,
+at `7c0eaaa`; backup `motodiag_pre293_20261123_220543.db`; scope problems
+none; F158 census on the copy 41). The file's sha256, read again on this
+branch with `sha256sum`, is the one the answer names. Asked at
+2026-11-23T22:05:58-05:00, the operator typed, verbatim
+(`293_deploy_answer.md`):
+
+> yes
+
+The operator then applied migration 092 to live and checked it, and the
+dispatcher checked it again with `verify-live`. `293_live_diff.md`, live
+after the apply against the backup:
+- **scope problems:** none;
+- **equals the approved exact diff:** yes;
+- **set aside as written by the running API:** 0;
+- **other differences, listed:** 1, `stripe_event_cursors` row 1's
+  `polled_at` (03:05:29.874 to 03:05:50.124 UTC), the payments feed's own
+  poll time between the backup and the check, not the migration's; it is
+  listed and not a scope problem, as 405 made the check;
+- **F158 census on live:** 41, as on the copy.
+
+What it added: the columns of `manual_references` (its definition
+changed, no row), the tables `manual_pages` and `manual_reviewers`, the
+index `manual_pages_fts` with its four working tables, three indexes,
+three triggers; SQLite's own first rows in `manual_pages_fts_config` (1)
+and `manual_pages_fts_data` (2); and `schema_version` row 92
+(2026-11-24 03:06:00 UTC). No existing row changed or was removed.
+
+## 2026-11-23 — the close-out
+
+No code changed after the regression of record: every commit after
+`0f821e1` changes documents only (`git diff --stat 0f821e1 HEAD` lists the
+three deploy files and this log). The close-out moves the phase's files,
+the three deploy files and the scope file to `docs/phases/completed/`,
+writes v1.1, the ROADMAP row, the root `phase_log.md` pointer and the root
+`implementation.md` row, and the handoff
+`docs/handoffs/2026-11-23_293_closed.md`, which carries the steps after
+the merge.
+
+- **The root version is 0.13.146,** not 0.13.143: this branch's copy of
+  `implementation.md` reads 0.13.142, and master's already reads 0.13.145
+  (372B, merged after this branch was cut). The merge brings master in.
+- **The bug-fix register** now names each fix's commit by its hash
+  (`17b2b58`, `0f821e1`), where the entries said "the commit that carries
+  this entry".
+- **What the handoff's blocks were tested on**, in `/fleet/run/`:
+  - each block's inner script passes `bash -n`;
+  - step 5 (the reviewer), with `HOME` a stand-in: a clone of this branch
+    as the server's folder, wrappers for its `python` and `motodiag`
+    (symlinks to `.venv/bin` did not find the venv's packages, a fault of
+    the stand-in), `live.json` naming a fresh database at 92 with 44
+    bulletins and one account. An empty name, an unknown name and (after
+    deleting the bulletins) an empty bulletin table each printed SOMETHING
+    IS OFF. The real name took a backup, granted, listed it and printed
+    ALL GOOD, and a second paste printed "already reviews" and ALL GOOD;
+  - step 7 against no settings file, the switch absent and
+    `export MOTODIAG_TERMS_REQUIRED=1`: red, ALL GOOD, red;
+  - step 4: `GET /v1/terms` from this code answers
+    `{"version":"1.1","date":"2026-11-23",…}` and `/healthz`
+    `{"status":"ok","schema_version":92,…}`. The 68-byte test file,
+    scanned through `scan_file` with a stub `clamdscan` on PATH, gave
+    `infected | …: Eicar-Signature FOUND`, which the block's `case`
+    matches.
+  The parts that read GitHub, Cloudflare, the desktop's services or the
+  app's checkout could not be run from here (no network, no desktop), and
+  the handoff says so.
