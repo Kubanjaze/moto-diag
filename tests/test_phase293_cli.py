@@ -3,10 +3,15 @@
 On ``motodiag.cli.main.cli`` through ``CliRunner``, on a temporary database
 (``support.phase293.manuals_db``). A grant of an unknown username exits 1 and
 writes nothing; ``render`` makes deleted images again and prints the count.
+The last two start the CLI in a fresh interpreter where the server's
+libraries cannot be imported (bug fix #3).
 """
 
 from __future__ import annotations
 
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 from click.testing import CliRunner
@@ -88,3 +93,42 @@ def test_render_writes_the_missing_images_and_prints_the_count(manuals_db):
     storage.thumb_path(data_dir, shop.id, mid, 1).unlink()
     r = _run("render", "--manual", str(mid))
     assert f"Manual {mid}: 1 page images written." in r.output
+
+
+#: Unimportable in a fresh interpreter, as on ``pip install motodiag`` with no
+#: extras: the web framework the manuals library imports, the server that runs
+#: it, and the two PDF libraries 293 added to ``vision``. A sample that runs
+#: everywhere. The census installs the wheel with nothing else
+#: (``test_phase209_packaging.py``), and needs the network the fleet's fence
+#: does not have (F299).
+NOT_INSTALLED = ("fastapi", "uvicorn", "pypdfium2", "pypdf")
+
+
+def _cli_without_extras(tmp_path: Path, *args: str) -> subprocess.CompletedProcess:
+    code = "\n".join((
+        "import sys",
+        f"for name in {NOT_INSTALLED!r}:",
+        "    sys.modules[name] = None",
+        "from motodiag.cli.main import cli",
+        f"cli({list(args)!r}, prog_name='motodiag')",
+    ))
+    env = {**os.environ, "MOTODIAG_DB_PATH": str(tmp_path / "plain.db")}
+    return subprocess.run([sys.executable, "-c", code], capture_output=True,
+                          text=True, timeout=120, env=env)
+
+
+def test_the_cli_starts_without_the_server_libraries(tmp_path):
+    """Bug fix #3: this module's commands imported the manuals library at the
+    top of ``cli/manuals.py``, and the library imports FastAPI, so
+    ``motodiag --version`` stopped with ``No module named 'fastapi'``."""
+    proc = _cli_without_extras(tmp_path, "--version")
+    assert proc.returncode == 0, proc.stderr[-1500:]
+    assert "motodiag v" in proc.stdout
+
+
+def test_a_manuals_command_without_them_names_the_install(tmp_path):
+    """The control: there, the libraries really cannot be imported."""
+    proc = _cli_without_extras(tmp_path, "manuals", "reviewer", "list")
+    assert proc.returncode == 1, proc.stdout + proc.stderr[-1500:]
+    assert "pip install 'motodiag[server]'" in proc.stderr
+    assert not (tmp_path / "plain.db").exists()

@@ -9,6 +9,7 @@ restart cut short. On live, run only after a backup.
 
 from __future__ import annotations
 
+import importlib
 from typing import Optional
 
 import click
@@ -16,8 +17,6 @@ import click
 from motodiag.auth.users_repo import get_user_by_username
 from motodiag.cli.theme import get_console
 from motodiag.core.database import init_db
-from motodiag.manuals.render import render_manual, render_missing
-from motodiag.manuals.review import grant_reviewer, list_reviewers, revoke_reviewer
 
 
 def _user_id(username: str) -> int:
@@ -25,6 +24,23 @@ def _user_id(username: str) -> int:
     if user is None:
         raise click.ClickException(f"no user named {username!r}; nothing was changed")
     return int(user["id"])
+
+
+def _require_server() -> None:
+    """Stop, saying what to install, where FastAPI cannot be imported.
+
+    The manuals library imports FastAPI (the ``api`` extra), and ``cli.main``
+    imports this module as the CLI starts. So each command imports the
+    library when it runs, as ``serve`` imports uvicorn: imported at the top
+    of this file, it stopped ``motodiag --version`` on an install without
+    extras (Phase 293, bug fix #3).
+    """
+    try:
+        importlib.import_module("fastapi")
+    except ImportError as e:
+        raise click.ClickException(
+            "the manuals commands run on the server; "
+            "run `pip install 'motodiag[server]'` first") from e
 
 
 def register_manuals(cli_group: click.Group) -> None:
@@ -42,6 +58,9 @@ def register_manuals(cli_group: click.Group) -> None:
     @click.argument("username")
     def reviewer_grant_cmd(username: str) -> None:
         """Let USERNAME review every shop's uploaded manuals."""
+        _require_server()
+        from motodiag.manuals.review import grant_reviewer
+
         init_db()
         new = grant_reviewer(_user_id(username))
         get_console().print(
@@ -52,6 +71,9 @@ def register_manuals(cli_group: click.Group) -> None:
     @click.argument("username")
     def reviewer_revoke_cmd(username: str) -> None:
         """Stop USERNAME reviewing uploaded manuals."""
+        _require_server()
+        from motodiag.manuals.review import revoke_reviewer
+
         init_db()
         gone = revoke_reviewer(_user_id(username))
         get_console().print(
@@ -61,6 +83,9 @@ def register_manuals(cli_group: click.Group) -> None:
     @reviewer_group.command("list")
     def reviewer_list_cmd() -> None:
         """Everyone who reviews uploaded manuals, and since when."""
+        _require_server()
+        from motodiag.manuals.review import list_reviewers
+
         init_db()
         rows = list_reviewers()
         console = get_console()
@@ -74,6 +99,9 @@ def register_manuals(cli_group: click.Group) -> None:
                   help="Render one manual's missing pages, by its id.")
     def render_cmd(manual_id: Optional[int]) -> None:
         """Make every missing page image again, or one manual's."""
+        _require_server()
+        from motodiag.manuals.render import render_manual, render_missing
+
         init_db()
         done = ({manual_id: render_manual(manual_id)} if manual_id is not None
                 else render_missing())

@@ -653,7 +653,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: Against 293's branch at bd53ec2 (13255): +2 -1, master's F294 test and
 #: test_phase334_legal_texts.py's 334B row test, renamed from is_open to
 #: is_closed. Measured: 13256.
-COLLECTED_TEST_FLOOR = 13256
+#:
+#: Phase 293's bug fix #3 (K133), by a diff of collected ids against the
+#: merge at 1d1f48b (13256): +2 -0, both in test_phase293_cli.py (the CLI
+#: started where the server's libraries cannot be imported, and a manuals
+#: command there naming what to install). Measured: 13258.
+COLLECTED_TEST_FLOOR = 13258
 
 
 def _collected_count() -> int:
