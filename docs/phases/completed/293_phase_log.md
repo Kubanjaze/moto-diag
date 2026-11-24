@@ -484,3 +484,36 @@ SOMETHING IS OFF. No code changed, so the regression of record stands.
 | F292 cited for the bulletin check in step 5 | kept | "A `motodiag` command run on live writes into it through `init_db`, whose bulletin seed fills an empty table" | docs/FOLLOWUPS.md p. 6764 | 2 · none · kept |
 | Step 6 merges only after the operator types yes (Deviation 8) | kept | "[ \"$ANS\" = yes ] || bad \"you did not type yes; the pull request is open and not merged" | docs/handoffs/2026-11-23_293_closed.md p. 471 | 2 · none · kept |
 | The ticked item says "the three error codes in errors.py", and "seven refusals" in __init__.py | killed | "the three error codes in `errors.py`" | docs/phases/completed/293_implementation.md p. 224 | 2 · wording · open F298 |
+
+## 2026-11-24 — master brought in by the advisor (K132)
+
+The Red Team cleared pull request 89 in round 2. The Captain's
+recommendation did not run: the dispatcher stopped it at 00:53 EST, "no
+new Fable stage: Fable's weekly usage is 72%, at or above 70%". The pull
+request no longer merged onto master, because 303B, 334B and 372B's
+records, F294 to F297 and pull request 88 reached master while this phase
+was built. The operator's K132: "i would go with your recommendation and
+push it all at once , one merge block".
+
+The advisor merged master at `721ed34` into this branch on the Mac. Three
+files clashed, all records:
+- `docs/FOLLOWUPS.md`: master's file, with this branch's F298 after
+  master's F294 to F297. F298 keeps its number: master's highest is F297
+  and the app repository's is F181 (`next_f_number.sh`).
+- `implementation.md`: this phase stays version **0.13.146**, after 372B's
+  0.13.145. Master's three history rows, 303B, 334B and 372B, come first,
+  then this phase's.
+- `tests/test_phase255B_collected_test_floor.py`: `COLLECTED_TEST_FLOOR`
+  **13256**, by a diff of collected ids against master at `721ed34`
+  (13142): +223 −109, a net +114 from this phase's tests. Against this
+  branch at `bd53ec2` (13255): +2 −1, master's F294 test and 334B's row
+  test, renamed when 334B closed.
+
+The refute table's row on that floor file (p. 637) quotes it as it stood
+at `bd53ec2`. After the merge, this phase's comment is at lines 639 to
+646, and the floor reads 13256 at line 656. The table's row on K128
+describes this branch before the merge, which brings K128 to K132 in.
+
+No code of this phase changed in the merge. Its regression of record stays
+the one at `0f821e1`. The advisor's independent check on the merged tree
+goes in the handoff after the merge.

@@ -621,10 +621,20 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: ids against master at 1dd1921 (13100): +35 -0, all in
 #: test_phase330_onboarding.py. Measured: 13135.
 #:
+#: F294 (the way in keeps its key in the Mac's agent, 2026-11-22, K129), by
+#: a diff of collected ids against master at 73d2b1d (13135): +1 -0,
+#: test_phase384_remote_client.py's
+#: test_the_ssh_command_keeps_the_key_in_the_agent. Measured: 13136.
+#:
 #: Phase 293, item 1a (K131), by a diff of collected ids against fd47e6e
 #: (13135): +6 -0, all in test_phase293_deploy_without_rowid.py (the
 #: deploy tool reading a table without a rowid by its key); no other test
 #: file changed. Measured: 13141.
+#:
+#: The two merged (293's item 1a into master, 2026-11-23, K131), both from
+#: 13135: item 1a +6, F294 +1, on separate files. 13135 + 6 + 1. By a diff
+#: of collected ids against master at d1ac804 (13136): +6 -0, all in
+#: test_phase293_deploy_without_rowid.py. Measured: 13142.
 #:
 #: Phase 293 (the shop manual library), by a diff of collected ids against
 #: ebe52ed (13142 collected): +114 in eight new files (test_phase293_
@@ -634,7 +644,16 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: removed, three ORPHANS added, the rest renumbered) and +3 in
 #: test_phase244W_module_islands.py (two islands added, one removed).
 #: Measured: 13255.
-COLLECTED_TEST_FLOOR = 13255
+#:
+#: The two merged (293 after master's 721ed34, 2026-11-24, K132), by a
+#: diff of collected ids against master at 721ed34 (13142): +223 -109.
+#: The eight new test_phase293 files +114; test_phase209B_integration_
+#: gaps.py's parametrised entries +101 -105 and test_phase244W_module_
+#: islands.py's +7 -4, both renumbered; test_phase272_gate15.py +1.
+#: Against 293's branch at bd53ec2 (13255): +2 -1, master's F294 test and
+#: test_phase334_legal_texts.py's 334B row test, renamed from is_open to
+#: is_closed. Measured: 13256.
+COLLECTED_TEST_FLOOR = 13256
 
 
 def _collected_count() -> int:

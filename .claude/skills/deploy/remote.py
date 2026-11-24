@@ -62,9 +62,13 @@ def way_in(config: pathlib.Path | None = None) -> dict[str, str]:
 
 
 def ssh_argv(way: dict[str, str], words: list[str]) -> list[str]:
+    # AddKeysToAgent (F294): the key's passphrase is read from the Mac's
+    # keychain, which cannot be read while the Mac is locked; the first
+    # connection made while it is unlocked leaves the key in the agent, so
+    # the ones after it work while it is locked, until the agent restarts.
     return ["ssh", "-T", "-o", "BatchMode=yes", "-o", "IdentitiesOnly=yes",
             "-o", f"IdentityFile={way['key']}", "-o", "IgnoreUnknown=UseKeychain",
-            "-o", "UseKeychain=yes", "-o", "ConnectTimeout=15",
+            "-o", "UseKeychain=yes", "-o", "AddKeysToAgent=yes", "-o", "ConnectTimeout=15",
             "-o", "StrictHostKeyChecking=accept-new",
             "-o", f"UserKnownHostsFile={KNOWN_HOSTS}",
             way["ssh"], shlex.join(words)]

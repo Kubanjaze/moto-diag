@@ -1,0 +1,175 @@
+Phase 372B, the app half of Phase 372: the phone app's payment screens.
+
+You are working in the mobile repository, moto-diag-mobile, on a new
+branch from main, phase-372B-the-apps-payment-screens. The backend
+repository's Phase 372 (Kubanjaze/moto-diag, closed on 2026-11-15) added
+five server routes for a shop's card payments; Phase 176 added the two
+billing routes for the plans. Your job is the app screens that call them.
+Build what the plan says and nothing more.
+
+(Written 2026-11-22 by the advisor against moto-diag's master 618bc73 and
+the app's main 58142e4, K128. It replaces 372_the_apps_payment_screens.txt,
+which was written for 372's own branch under option A; the operator chose
+B, K81.)
+
+WHAT IS ALREADY ON THE APP'S MAIN
+
+372's API snapshot (13b6e68) is on the app's main, and src/api-types.ts
+names all seven routes below. Run `npm run generate-api-types`: it should
+change nothing. If it changes src/api-types.ts, or a route is missing, stop
+and say so; do not write the snapshot yourself.
+
+What you build on (read each before you change it):
+- src/navigation/ShopStack.tsx and src/navigation/HomeStack.tsx;
+  src/screens/SettingsScreen.tsx.
+- src/hooks/shopAccessErrors.ts and src/hooks/useWorkOrderParts.ts: typed
+  errors that carry the server's detail.
+- src/hooks/useTier.ts: the tier, read again when the app comes back to
+  the front (AppState "active").
+- react-native-share, already in use; Linking.openURL, used since 334B in
+  src/screens/TermsModal.tsx.
+- Staff sign-in (303B) and the terms box (334B). While the operator's
+  terms switch is on, these routes answer 403 terms-not-accepted until the
+  user accepts; 334B's box opens by itself, so nothing here handles it.
+- The name rule: a credential from the sign-in box is "a sign-in", never
+  "a session". "Session" means a diagnostic session in the app.
+
+THE FIVE PAYMENT ROUTES (../moto-diag/src/motodiag/api/routes/payments.py;
+all need the Shop tier and the caller's shop access)
+
+- GET  /v1/shop/{shop_id}/payments/account[?refresh=true]
+  The shop's Stripe account: stripe_account_id, card_payments_status,
+  requirements_due, status_checked_at, livemode, can_take_payments. Any
+  member may read it. 404 when the shop has no Stripe account yet.
+  refresh=true asks Stripe first.
+- POST /v1/shop/{shop_id}/payments/connect
+  Body: contact_email (needed the first time), country, currency
+  (optional). Answers stripe_account_id, created, onboarding_url,
+  expires_at, card_payments_status: 201 when the account was made now, 200
+  when it existed and only a fresh link was made. Needs manage_billing
+  (the owner). The link is used once, by the owner, opened from the app,
+  and never sent by email or text.
+- POST /v1/shop/{shop_id}/invoices/{invoice_id}/payments/checkout
+  A pay-link (201): payment_id, invoice_number, amount_cents, currency,
+  channel, checkout_url, paid_when. Needs manage_shop (the owner and the
+  service writer).
+- POST /v1/shop/{shop_id}/invoices/{invoice_id}/payments/terminal
+  Sends the invoice to the shop's card reader (201): payment_id,
+  invoice_number, amount_cents, currency, channel, payment_intent_id,
+  reader_action_status, paid_when. Needs manage_shop. No route registers a
+  reader yet, so on most shops this answers 409, and the screen shows the
+  server's detail.
+- GET  /v1/shop/{shop_id}/invoices/{invoice_id}/payments
+  The invoice's payments, oldest first: id, channel, amount_cents,
+  currency, status (started, failed, succeeded), outcome, outcome_reason,
+  failure_message, refunded_cents, started_at, settled_at,
+  started_by_user_id; and total. Needs manage_shop.
+
+Refusals are problem documents whose detail sentence is meant for people:
+403 (not allowed at this shop), 404 (no such invoice at this shop), 409
+(Stripe cannot be asked yet: no account, onboarding not finished, invoice
+not sent or overdue, no reader, no email), 503 (payments not set up on the
+server, or Stripe unreachable). Show the server's detail; do not invent
+your own reason. Starting a payment never pays the invoice: it is paid only
+when Stripe's verified news reaches the server, usually within half a
+minute.
+
+THE OTHER ROUTES
+
+- GET /v1/shop/{shop_id}/invoices?status=sent (and overdue), limit= :
+  the shop's invoices (../moto-diag/src/motodiag/api/routes/shop_mgmt.py).
+- POST /v1/billing/checkout-session, body {"tier": ...}: answers
+  checkout_url. POST /v1/billing/portal-session: answers portal_url, or
+  402 with the type ending "subscription-required" when there is no
+  subscription yet (../moto-diag/src/motodiag/api/routes/billing.py).
+- The plans' names are the server's: "Individual: for your own bikes",
+  "Shop" and "Company".
+
+WHAT TO BUILD (the plan's Logic, items 1 to 4)
+
+1. src/hooks/useShopPayments.ts: the account read (with refresh), connect,
+   the two starts and the payments list, over the shared openapi-fetch
+   client (src/api/client.ts). 403, 404, 409 and 503 come out as typed
+   errors carrying the server's detail, as useWorkOrderParts and
+   shopAccessErrors do.
+2. PaymentsSetupScreen in ShopStack, titled "Card payments": the account's
+   state in words (not connected; onboarding not finished, with how many
+   things are still due; ready). "Connect with Stripe" or "Continue
+   onboarding" calls connect and opens onboarding_url with Linking.openURL.
+   When the app comes back to the front, read the account again with
+   refresh=true, as useTier does.
+3. InvoicesScreen and InvoicePaymentScreen in ShopStack: the shop's sent
+   and overdue invoices; an invoice's total; "Send to card reader" and
+   "Pay-link" call the two starts, and the pay-link goes to the share sheet
+   (react-native-share). The screen then reads the payments list every five
+   seconds until the newest payment is succeeded or failed, or the screen
+   loses focus, and shows the outcome and its reason, with the sentence
+   that the invoice is paid only when Stripe confirms it.
+4. PlanScreen in HomeStack, reached from SettingsScreen: the tier from
+   useTier and the three plans by the server's names, each with "Choose",
+   which calls POST /v1/billing/checkout-session and opens checkout_url;
+   and "Manage plan", which calls POST /v1/billing/portal-session and opens
+   portal_url. A 402 subscription-required reads "Choose a plan first."
+   useTier's existing re-read updates the Shop tab when the tier changes.
+   The app shows no price anywhere: Stripe's own pages show them.
+
+The tests are the plan's Tests section, in the app's own style (a mocked
+fetch; screens have *.smoke.test.tsx files), each seen red before its
+code; say in the pull request how. 303B's and 334B's tests must pass
+unchanged.
+
+NOT IN THIS PHASE
+
+Registering a card reader (no route does yet). Refunds. Payouts or a
+balance. Prices in the app. Any server change. Stripe Checkout's terms
+consent (a server switch, parked on Stripe support). The store listings. A
+build for the phones.
+
+A CHECK ON A PHONE, AFTER THE MERGE
+
+It uses Stripe's test mode on a server with test keys, at the operator's
+choice after the merge. No real card and no real money in any check
+without the operator. Do not change any server's settings.
+
+THE RECORD
+
+Row 372B and its documents belong to the backend repository
+(ROADMAP_AUTHORITY.md: 205 and up; every phase's own files live in the
+backend's docs/phases/). The advisor has written 372B's Step 0 and plan
+and marked the row in progress. They stay on the backend's branch of this
+one's name until the close-out, so read them from GitHub, not from
+../moto-diag, whose checkout may be on any branch:
+
+  gh api -H 'Accept: application/vnd.github.raw' 'repos/Kubanjaze/moto-diag/contents/docs/phases/in_progress/372B_implementation.md?ref=phase-372B-the-apps-payment-screens'
+
+and the same for 372B_step0.md. Build what the plan says. If it is not
+there, stop and say so. Do not write anything in ../moto-diag; the advisor
+keeps the log and closes the row from your pull request. The app's
+phase_log.md covers Phases 185 to 204 only; leave it alone.
+
+HOW TO WORK HERE
+
+The app's repository has no CLAUDE.md of its own, so these come with the
+prompt:
+- Read a file before you change it, change only what the plan names, and
+  say in the pull request anything you did that it does not.
+- Small commits, each with its tests. Before each, run `npx tsc --noEmit`,
+  `npx eslint .` and `npx jest`, and commit only when all three are clean.
+  The pre-commit hook lints what you stage; never skip it.
+- Write commit messages through a file or a quoted heredoc, never with a
+  backtick inside `-m "..."`.
+- Never force-push, never rebase a pushed branch, never merge.
+- Never put a real password, token, card number or key in a test, a log
+  line or a commit: the tests use made-up values.
+- When something blocks you, stop and say what, in plain English; do not
+  work around it.
+
+FINISHING
+
+- `npx tsc --noEmit` and `npx eslint .` with no errors; `npx jest` green.
+- Open the pull request in Kubanjaze/moto-diag-mobile from this branch to
+  main, with the Jest count before and after and the tsc and eslint
+  results in its description. Do not merge it: the operator merges it by
+  hand, after the advisor's review.
+- Tell the operator, in plain English, the branch's last commit hash, so
+  the backend's close-out can name it.

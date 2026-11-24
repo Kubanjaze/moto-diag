@@ -74,6 +74,18 @@ def test_the_ssh_command_never_prompts_and_offers_one_key(config, sent):
     assert argv[-2:] == ["lilcu@motodiag-ops", "status"]
 
 
+def test_the_ssh_command_keeps_the_key_in_the_agent(config, sent):
+    """F294 (2026-11-22): the key has a passphrase, read from the Mac's
+    keychain, which cannot be read while the Mac is locked. With
+    AddKeysToAgent the first connection made while it is unlocked leaves
+    the key in the agent, so later ones work while it is locked."""
+    assert C.main(["status"], config=config) == 0
+    argv = sent[0]
+    opts = [argv[i + 1] for i, a in enumerate(argv) if a == "-o"]
+    assert "AddKeysToAgent=yes" in opts
+    assert "UseKeychain=yes" in opts and "IdentitiesOnly=yes" in opts
+
+
 @pytest.mark.parametrize("entry", [
     {"live": None, "host": "desktop-76s9bqv"},
     {"live": None, "remote": {"ssh": "lilcu@motodiag-ops"}},
