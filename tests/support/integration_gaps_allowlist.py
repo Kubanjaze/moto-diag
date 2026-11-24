@@ -84,15 +84,6 @@ UNREACHABLE_MODULES: dict[str, tuple[str, str]] = {
     "motodiag.pricing.estimate": ("unwired-feature", _PRICING),
     "motodiag.pricing.repair_plan": ("unwired-feature", _PRICING),
 
-    "motodiag.reference": ("substrate",
-        "Phase 117 reference-data substrate, awaiting Track P, the Reference "
-        "Data Library (Phases 293-302, Gate 17)."),
-    "motodiag.reference.diagram_repo": ("substrate", "Part of the Phase 117 reference substrate; see motodiag.reference."),
-    "motodiag.reference.manual_repo": ("substrate", "Part of the Phase 117 reference substrate; see motodiag.reference."),
-    "motodiag.reference.models": ("substrate", "Part of the Phase 117 reference substrate; see motodiag.reference."),
-    "motodiag.reference.photo_repo": ("substrate", "Part of the Phase 117 reference substrate; see motodiag.reference."),
-    "motodiag.reference.video_repo": ("substrate", "Part of the Phase 117 reference substrate; see motodiag.reference."),
-
 }
 
 _TEST_RESET = "Resets module-level state between tests; production has no reason to call it."
@@ -507,6 +498,22 @@ ORPHANS: dict[str, tuple[str, str]] = {
     "workflows/template_repo.py::count_templates": ("substrate",
         "Phase 114 substrate query with no caller yet; list/show (259) "
         "does not count. Awaits Phase 316."),
+    # --- Phase 293: the shop manual library made motodiag.reference live ---
+    # video_repo's reads share names with core/video_repo's live functions,
+    # so the gate sees the module used; its two writes are not.
+    "reference/video_repo.py::add_video": ("substrate",
+        "Phase 117 video-tutorial CRUD, awaiting Phase 296 (the video "
+        "tutorial index)."),
+    "reference/video_repo.py::update_video": ("substrate",
+        "Phase 117 video-tutorial CRUD, awaiting Phase 296 (the video "
+        "tutorial index)."),
+    # reference/models.py's own SkillLevel shares its name with engine/repair's,
+    # so the gate now sees engine/repair used and its generator an orphan. The
+    # module is still reached by nothing; the reason is its island entry's.
+    "engine/repair.py::RepairProcedureGenerator": ("unwired-feature",
+        "Phase 84 AI repair-procedure generator. REPAIR_PROMPT:106 instructs "
+        "the model to invent torque specs and nothing labels them on screen; "
+        "the audit's single highest risk. Consensus 4.3/10."),
 }
 
 # Dotted module name -> (classification, reason). Phase 244W.
@@ -537,6 +544,14 @@ MODULE_ISLANDS: dict[str, tuple[str, str]] = {
         "subscription path (billing/subscription_repo, billing/providers), "
         "which is the platform charging the shop, not the shop charging a "
         "customer."),
+    "motodiag.reference.diagram_repo": ("substrate",
+        "Phase 117 parts-diagram CRUD, awaiting Phase 294 (licensed diagrams "
+        "and torque tables). Phase 293 made motodiag.reference reachable; "
+        "nothing calls this module."),
+    "motodiag.reference.photo_repo": ("substrate",
+        "Phase 117 failure-photo CRUD, awaiting Phase 295 (the failure photo "
+        "library). Phase 293 made motodiag.reference reachable; nothing "
+        "calls this module."),
     "motodiag.feedback.learning_hook": ("substrate",
         "Phase 116 read-only FeedbackReader over diagnostic_feedback and "
         "session_overrides, awaiting Track R Phases 318-327 (human-in-loop "
@@ -561,8 +576,4 @@ MODULE_ISLANDS: dict[str, tuple[str, str]] = {
         "Phase 83 AI parts recommender. Every call spends money through ask() "
         "with no cost ledger row, no stop_reason check, and no labelling of "
         "model-invented part numbers and prices. Consensus 3.3/10."),
-    "motodiag.engine.repair": ("unwired-feature",
-        "Phase 84 AI repair-procedure generator. REPAIR_PROMPT:106 instructs "
-        "the model to invent torque specs and nothing labels them on screen; "
-        "the audit's single highest risk. Consensus 4.3/10."),
 }

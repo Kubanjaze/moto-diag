@@ -154,18 +154,19 @@ class TestTheSwitch:
     def test_a_new_version_must_be_accepted_again(self, env, cred):
         _switch(env, True)
         h = getattr(env, cred)
-        env.c.post("/v1/terms/accept", json={"version": terms.TERMS_VERSION}, headers=h)
+        before = terms.TERMS_VERSION
+        env.c.post("/v1/terms/accept", json={"version": before}, headers=h)
         env.mp.setattr(terms, "TERMS_VERSION", "9.9")
         for path in HELD:
             assert env.c.get(path, headers=h).status_code == 403, path
         assert env.c.get("/v1/terms", headers=h).json()["accepted"] is False
-        assert env.c.post("/v1/terms/accept", json={"version": "1.0"},
+        assert env.c.post("/v1/terms/accept", json={"version": before},
                           headers=h).status_code == 422
         assert env.c.post("/v1/terms/accept", json={"version": "9.9"},
                           headers=h).status_code == 200
         for path in HELD:
             assert env.c.get(path, headers=h).status_code == 200, path
-        assert sorted(v for _, v, _ in _rows(env)) == ["1.0", "9.9"]
+        assert sorted(v for _, v, _ in _rows(env)) == sorted([before, "9.9"])
 
     def test_the_switch_ships_off(self, monkeypatch):
         from motodiag.core.config import Settings

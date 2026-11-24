@@ -30,7 +30,10 @@ from motodiag.backup.settings import BackupSettings
 from motodiag.backup.store import ObjectStore
 from motodiag.core.timestamps import utc_now
 
-MEDIA_DIRS = ("videos", "photos", "audio")
+# Phase 293 (K121): a shop's uploaded manuals join the upload folders. Their
+# page images (`manual_pages/`) do not: they are made again from the files
+# after a restore, by `motodiag manuals render`.
+MEDIA_DIRS = ("videos", "photos", "audio", "manuals")
 SNAPSHOTS = "snapshots/"
 MEDIA = "media/"
 DB_OBJECT = "motodiag.db.enc"
@@ -132,7 +135,7 @@ def schema_version_of(path: Path) -> int | None:
 
 
 def media_files(data_dir: Path) -> list[tuple[str, Path]]:
-    """Every file under the three upload folders, by its path relative to the
+    """Every file under the four upload folders, by its path relative to the
     data folder in POSIX form (F205's form)."""
     found: list[tuple[str, Path]] = []
     for name in MEDIA_DIRS:

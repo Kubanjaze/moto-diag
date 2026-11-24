@@ -1,0 +1,28 @@
+{
+ "_comment": "Phase 293, migration 092 (K94, K119, K123, K131): columns added to manual_references (no live rows since Phase 117), which rewrites its SQL; two indexes on it; a new table manual_pages with a unique index; an external-content FTS5 index manual_pages_fts over it, with its four shadow tables and three triggers; a new table manual_reviewers; one schema_version row. The only rows added besides schema_version are the ones SQLite writes into two FTS5 shadow tables when the index is created (manual_pages_fts_config, which has no rowid and is read by its key, and manual_pages_fts_data), with the counts tests/test_phase293_migration.py measures on a fresh database. No existing row changes or is removed; every table not named here must not change at all.",
+ "tables": {
+  "schema_version": {"added": 1},
+  "manual_pages_fts_config": {"added": 1},
+  "manual_pages_fts_data": {"added": 2}
+ },
+ "schema": {
+  "added": [
+   "index idx_manual_pages_manual_page",
+   "index idx_manuals_shop_sha",
+   "index idx_manuals_shop_status",
+   "table manual_pages",
+   "table manual_pages_fts",
+   "table manual_pages_fts_config",
+   "table manual_pages_fts_data",
+   "table manual_pages_fts_docsize",
+   "table manual_pages_fts_idx",
+   "table manual_reviewers",
+   "trigger manual_pages_ad",
+   "trigger manual_pages_ai",
+   "trigger manual_pages_au"
+  ],
+  "changed": [
+   "table manual_references"
+  ]
+ }
+}

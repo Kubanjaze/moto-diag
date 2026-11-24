@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F297** (this file). The
+At the time of writing the highest assigned is **F300** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -7006,3 +7006,105 @@ with a stop kind, so the commits reach the side branch, the run is held,
 and the operator's answer starts the next round from them; and a test in
 which `verify_deploy` fails while the model-free run passes, finding the
 side push, the hold and the `stop=` kind, seen red first on today's code.
+
+### F298
+
+**Wording the Red Team left open on phase 293, round 2**
+
+Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 392, F228). K9: "after round 3, remaining wording defects go to one finding". The rows, from the refute table in the Red Team's round 2 on phase 293:
+
+- The ticked item says "the three error codes in errors.py", and "seven refusals" in __init__.py: "the three error codes in `errors.py`" (docs/phases/completed/293_implementation.md p. 224)
+
+What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).
+
+### F299
+
+**The fleet's model-free run skips the tests that install the package with no extras, so a phase that breaks `pip install motodiag` passes it**
+
+Found by the advisor on 2026-11-24, in the check on the Mac before pull
+request 89 (phase 293) merged (K132). `wholetree.sh --full` on the merge
+with master failed 5 tests in `tests/test_phase209_packaging.py` (5 failed,
+5496 passed, 6 skipped, 622 s): the CLI installed from the wheel with no
+extras could not start, `motodiag --version` included, with
+`ModuleNotFoundError: No module named 'fastapi'`. Master at `721ed34`, with
+a virtualenv of its own, passed all 33 tests in that file, and the merge
+changed no code against 293's branch. The chain: `cli/main.py:21` imports
+`motodiag.cli.manuals`; its top-level imports of `motodiag.manuals.render`
+and `.review` run `motodiag/manuals/__init__.py`, which imports
+`motodiag.auth.deps` (line 15); that imports FastAPI (line 26), the `api`
+extra, and so does `manuals/review.py` (line 20). Phase 209 fixed the same
+failure through `motodiag.auth`, whose module `__getattr__` defers
+`auth.deps` (`src/motodiag/auth/__init__.py:63`); 293's import goes to
+`auth.deps` directly. K133: 293 fixes its own import, as its bug fix #3.
+This finding is why the fleet did not see it.
+
+- 21 of the file's 33 tests need the wheel (the `wheel`, `installed`,
+  `api_env` and `server_env` fixtures). Building it needs the network and
+  the fence has none, so all 21 skip there, with "inside the fleet's fence:
+  no network to build a wheel" (`tests/test_phase209_packaging.py:60`).
+- That skip is pinned in `FENCE_EXPECTED_SKIPS`
+  (`.claude/skills/closeout/closeout_check.py:373`; Phase 389, the
+  operator's "Sandbox counts (Recommended)"). So the fleet's regression of
+  record at `0f821e1` passed with the 21 among its 105 skips
+  (`docs/phases/completed/293_phase_log.md`, lines 290 to 310), and so did
+  the Engineer's model-free run.
+- The file's network-free guard,
+  `test_the_cli_module_chain_has_no_top_level_fastapi_import` (line 387),
+  reads four named files (`cli/main.py`, `cli/apikey.py`,
+  `auth/__init__.py`, `auth/api_key_repo.py`), not the chain the CLI
+  imports. An import added in any other file passes it.
+- 293's log, on the commit that added `pypdfium2` and `pypdf` to `vision`:
+  "`test_phase209_packaging.py` green." (line 179). 21 of its tests had
+  skipped.
+
+What it affects: every fleet phase that adds an import the CLI makes as it
+starts, or a file the wheel must carry (the four defects Phase 209 was
+written for). Nothing the fleet runs sees either before a run outside the
+fence. Seen once, on 293.
+
+What would close it: the fleet's model-free run builds and installs the
+wheel with no network (from a wheelhouse the fence reads), or runs this
+file outside the fence on the home desktop; and a skip of these tests
+stops the run instead of passing it. 293's bug fix #3 (`803bd2c`) adds a
+test the fence does run: the CLI started where FastAPI cannot be imported
+(`tests/test_phase293_cli.py`). It covers what the CLI imports as it
+starts, not what the wheel carries.
+
+### F300
+
+**Phase 399's nested run of 244H shares a database with the run that spawned it, so it fails whenever 244H ran first in the same process**
+
+Found by the advisor on 2026-11-24, in phase 293's regression at
+`803bd2c` on the Mac (plain clone, `regression.sh`, 39 min 34 s): 13208
+passed, 1 failed, 49 skipped. The failure was
+`tests/test_phase399_cost_ledger.py::test_the_fixture_leaves_the_database_tripwire_as_it_was`
+on worker gw3. It runs `tests/test_phase244H_test_db_isolation.py` and one
+Honda file in a nested pytest (line 80), and inside it
+`TestTheOperatorsDatabaseIsUntouched::test_the_probe_landed_somewhere_else`
+failed: `assert 1058 == (1058 + 1)`. The probe row, "244H probe 2", did
+not add a row, because the database the nested run used already held it.
+The run before at the same commit passed this test, and so did the fleet's
+at `0f821e1`.
+
+- In one process (`-p no:xdist`), `test_phase244H_test_db_isolation.py`
+  followed by this test fails every time: 1 failed, 14 passed, 1 skipped,
+  on 293's branch at `803bd2c` and on master at `721ed34`. The test alone
+  passes. The nested pytest inherits the parent's environment
+  (`subprocess.run` with no `env`), so it inherits `MOTODIAG_DB_PATH`.
+  `tests/conftest.py` (lines 44 to 56) makes a fresh default database only
+  for an xdist worker that inherited the marked default, or when nothing is
+  set. Here it keeps the parent's, where 244H's own run had already added
+  the probe.
+- Under `-n auto` it fails only when the distribution puts 244H before it
+  on the same worker. How the worker's nested run came to share a
+  database there, where the worker rule should apply, is not measured.
+
+What it affects: the regression of record on any machine and any branch,
+by chance: a run is not of record until run again. 293's regression was
+run again. Nothing outside the tests.
+
+What would close it: the nested run starts with an environment of its
+own, with no inherited `MOTODIAG_DB_PATH`, `MOTODIAG_TEST_DEFAULT_DB` or
+`PYTEST_XDIST_WORKER`, so its conftest makes a fresh database; and a test
+that runs 244H and then this test in one process, seen red first on
+today's code.

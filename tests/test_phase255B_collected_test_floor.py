@@ -635,7 +635,30 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: 13135: item 1a +6, F294 +1, on separate files. 13135 + 6 + 1. By a diff
 #: of collected ids against master at d1ac804 (13136): +6 -0, all in
 #: test_phase293_deploy_without_rowid.py. Measured: 13142.
-COLLECTED_TEST_FLOOR = 13142
+#:
+#: Phase 293 (the shop manual library), by a diff of collected ids against
+#: ebe52ed (13142 collected): +114 in eight new files (test_phase293_
+#: migration 11, checks 17, render_search 18, manuals_api 35, review 14,
+#: cli 5, backup_restore 3, terms 11); the wiring gate's parametrised
+#: entries -4 in test_phase209B_integration_gaps.py (six UNREACHABLE entries
+#: removed, three ORPHANS added, the rest renumbered) and +3 in
+#: test_phase244W_module_islands.py (two islands added, one removed).
+#: Measured: 13255.
+#:
+#: The two merged (293 after master's 721ed34, 2026-11-24, K132), by a
+#: diff of collected ids against master at 721ed34 (13142): +223 -109.
+#: The eight new test_phase293 files +114; test_phase209B_integration_
+#: gaps.py's parametrised entries +101 -105 and test_phase244W_module_
+#: islands.py's +7 -4, both renumbered; test_phase272_gate15.py +1.
+#: Against 293's branch at bd53ec2 (13255): +2 -1, master's F294 test and
+#: test_phase334_legal_texts.py's 334B row test, renamed from is_open to
+#: is_closed. Measured: 13256.
+#:
+#: Phase 293's bug fix #3 (K133), by a diff of collected ids against the
+#: merge at 1d1f48b (13256): +2 -0, both in test_phase293_cli.py (the CLI
+#: started where the server's libraries cannot be imported, and a manuals
+#: command there naming what to install). Measured: 13258.
+COLLECTED_TEST_FLOOR = 13258
 
 
 def _collected_count() -> int:

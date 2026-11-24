@@ -1,6 +1,6 @@
 # Mekno Privacy Policy
 
-Version 1.0 — 2026-11-19
+Version 1.1 — 2026-11-23
 
 This policy says what Mekno keeps, why, which services it goes to, how long
 it is kept, and how a shop takes it out or has it deleted. It is part of
@@ -24,6 +24,9 @@ an account belongs to.
   and the answers Mekno gave.
 - **Photos, videos and voice notes** the shop uploads, and the text made
   from them.
+- **Manuals and parts books** the shop uploads, the page images and the
+  text made from them, and who uploaded, reviewed, flagged or removed each
+  one.
 - **Subscriptions:** which plan, its status and its renewal date. Card
   details stay with Stripe; we never see a full card number.
 - **An activity log:** who made each change in the shop, when, and to what.
@@ -35,6 +38,10 @@ records, to answer its diagnostic questions, to work out its invoices, to
 take its subscription's payment, to send the notifications it asked for, to
 keep a copy safe against a failed disk, and to find and fix what breaks. We
 do not sell anyone's data, and we do not use it for advertising.
+
+A person at Mekno looks at each manual a shop uploads before the shop can
+open it, and again when someone in the shop flags a page or a publisher
+complains.
 
 ## The services it goes to
 

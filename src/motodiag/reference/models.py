@@ -5,11 +5,16 @@ support optional year range via year_start/year_end (NULL = universal).
 """
 
 from enum import Enum
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
 # --- Enums ---
+
+#: Phase 293: a shop's uploaded manual, through its review (K119).
+ManualStatus = Literal["pending_review", "approved", "rejected", "taken_down"]
+ManualKind = Literal["service_manual", "parts_catalog", "wiring", "other"]
+ReviewDecision = Literal["approved", "rejected", "taken_down"]
 
 
 class ManualSource(str, Enum):
@@ -66,6 +71,19 @@ class ManualReference(BaseModel):
     section_titles: list[str] = Field(default_factory=list)
     url: Optional[str] = None
     notes: Optional[str] = None
+    # Phase 293: a shop's own uploaded file, and its review.
+    shop_id: Optional[int] = None
+    file_path: Optional[str] = None
+    file_sha256: Optional[str] = None
+    file_size_bytes: Optional[int] = None
+    uploaded_by_user_id: Optional[int] = None
+    kind: Optional[ManualKind] = None
+    status: ManualStatus = "pending_review"
+    reviewed_by_user_id: Optional[int] = None
+    reviewed_at: Optional[str] = None
+    review_reason: Optional[str] = None
+    rendered_pages: int = 0
+    render_error: Optional[str] = None
 
 
 class PartsDiagram(BaseModel):
