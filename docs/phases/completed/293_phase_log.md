@@ -517,3 +517,140 @@ describes this branch before the merge, which brings K128 to K132 in.
 No code of this phase changed in the merge. Its regression of record stays
 the one at `0f821e1`. The advisor's independent check on the merged tree
 goes in the handoff after the merge.
+
+## 2026-11-24 — an install without extras could not start the CLI (K133)
+
+The advisor's check on the Mac, on the merge above (`1d1f48b`), stopped
+before the regression: `wholetree.sh --full` failed 5 tests in
+`tests/test_phase209_packaging.py` (5 failed, 5496 passed, 6 skipped, 622 s
+wall). They start the CLI installed from the wheel with no extras, and
+inside the fleet's fence they skip for want of a network (F299). Master at
+`721ed34`, in a virtualenv of its own, passed all 33 tests in that file,
+and the merge changed no code against `bd53ec2`. It was a test the phase
+could not make green without a code change, and its third bug in one
+build, so the advisor stopped and asked. The operator's K133, verbatim:
+
+> Go with A, fix it on the Mac, file F299
+
+F299 and K133 are `edbb49b`.
+
+### Bug fix #3 — 2026-11-24 — an install without extras could not start the CLI
+
+- **Issue:** from the wheel installed with no extras, `motodiag --version`
+  and every other command stopped with `ModuleNotFoundError: No module
+  named 'fastapi'`: `TestTheInstalledCliStarts` (2 tests) and
+  `TestTheInstalledCliWorks` (3) in `tests/test_phase209_packaging.py`.
+- **Root cause:** `src/motodiag/cli/manuals.py`, which `cli/main.py`
+  imports as the CLI starts, imported `motodiag.manuals.render` and
+  `.review` at its top. The package's `__init__.py` imports
+  `motodiag.auth.deps` (for `SubscriptionRequiredError`), and `review.py`
+  imports FastAPI itself: both are the `api` extra. Phase 209 closed the
+  same door in `motodiag.auth`, whose module `__getattr__` defers
+  `auth.deps`; this phase's import went to `auth.deps` directly.
+- **Fix:** each of the four commands imports the library when it runs,
+  after `_require_server()`. Where FastAPI cannot be imported, that stops
+  with "the manuals commands run on the server; run `pip install
+  'motodiag[server]'` first", as `serve` does for uvicorn. The library is
+  unchanged: these are the server's commands.
+- **Files:** `src/motodiag/cli/manuals.py`, `tests/test_phase293_cli.py`,
+  `tests/test_phase255B_collected_test_floor.py`.
+- **Verified:** two new tests start the CLI in a fresh interpreter where
+  `fastapi`, `uvicorn`, `pypdfium2` and `pypdf` cannot be imported:
+  `--version` exits 0, and `manuals reviewer list` exits 1, naming the
+  install, and makes no database. On `edbb49b` both failed (2 failed, 5
+  deselected), on this phase's `from fastapi import Depends, Header,
+  Request`; with the fix, `test_phase293_cli.py` passed, 7 tests. On the
+  Mac, with the network, `tests/test_phase209_packaging.py` passed all 33
+  (5 failed before). The ratchet, the wiring gates and 244G's shapes: 263
+  passed. `COLLECTED_TEST_FLOOR` 13256 to 13258, by a diff of collected ids
+  against `1d1f48b` (+2 −0).
+
+**Commit.** `803bd2c` ("Phase 293: Bug fix #3 (the CLI starts without the server's libraries)").
+
+**The shared cause of the three.** Each is this phase's code meeting an
+older contract that its own tests did not reach: a second copy of the
+islands table (#1, 244Z), Phase 356's dump of every table (#2), Phase
+209's plain install (#3). The fence's whole suite found the first two. The
+third shows only where the wheel can be built, which the fence cannot do
+(F299). The test added with the fix runs inside the fence.
+
+## 2026-11-24 — the first regression run on the Mac, not of record
+
+`wholetree.sh --full` at `803bd2c` passed in the advisor's scratch worktree
+(5490 passed, 17 skipped, 794 s wall). `regression.sh` there failed, not of
+record: 13208 passed, 1 failed, 49 skipped, 1 error (36 min 19 s wall).
+Both are `tests/test_phase257_sandbox_boundary.py`, which plants a file at
+`.git/PLANTED_257_TEST`. In a worktree `.git` is a file, so the plant's
+`unlink` raised `NotADirectoryError` in the test (`[repo-.git]`) and in its
+fixture's teardown. A fault of the worktree, not of the code: the run was
+made again in a plain clone of the same commit.
+
+## 2026-11-24 — the second regression run on the Mac, not of record
+
+In a plain clone of the repository (`git clone --shared`, with its own
+virtualenv and the app's branch at `6755e3a` beside it), `wholetree.sh
+--full` at `803bd2c` passed: 5490 passed, 17 skipped (774 s wall).
+`regression.sh` there failed, not of record: 13208 passed, 1 failed, 49
+skipped, 0 errors (39 min 34 s wall). The one failure is F300:
+`tests/test_phase399_cost_ledger.py`'s nested run of 244H shared a database
+with the run that spawned it, so 244H's probe was already there. In one
+process the same two files fail in that order on master at `721ed34` too,
+so the code here is not its cause. The run was made again, unchanged.
+
+## 2026-11-24 — the regression of record, at `803bd2c`, on the Mac
+
+`wholetree.sh --full` at `803bd2c` passed first, in the plain clone above:
+5490 passed, 17 skipped (774 s wall). Then `regression.sh` on the clean
+tree, its record exactly as it printed it:
+
+Regression of record: 13209 passed, 0 failed, 49 skipped, 0 errors at `803bd2c` (35 min 34 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0)
+Skipped in the regression of record: [1] tests/test_phase244H_test_db_isolation.py:79: no production database on this machine
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:210: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:216: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [7] tests/test_phase388_fence_boundary.py:221: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:235: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:244: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:280: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:287: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:291: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:295: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:303: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:316: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:325: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:330: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:338: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:344: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:350: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:354: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:360: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:61: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [4] tests/test_phase388_fence_boundary.py:96: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [3] tests/test_phase388_fence_boundary.py:105: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:113: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:120: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:125: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:131: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:139: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:148: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:159: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:164: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:170: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:177: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:186: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:198: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase390_space.py:327: bubblewrap is the desktop's
+
+Line coverage of record: 88.63% at `803bd2c` (the pin is 88.00%): 0.63 points above it; raise COVERAGE_PERCENT to lock it in
+
+It supersedes the fleet's at `0f821e1`, which the K132 entry above said
+would stay: code changed after it. The Mac's run includes the 21 wheel
+tests the fence skips. No code changed after `803bd2c`.
+
+The refute table above quotes the files as they stood at `bd53ec2`. Three
+of the lines it cites have moved since:
+- `src/motodiag/cli/manuals.py`'s "no user named …" is line 25, not 26;
+- `COLLECTED_TEST_FLOOR` reads 13258, at line 661 (13255 at p. 637);
+- the handoff's step 6 answer check is line 489, not 471.
+
+ROADMAP row 293 (p. 542) also names K132 and K133 now, and its regression
+is the Mac's. Every other line the table cites is where it was.

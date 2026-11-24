@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F299** (this file). The
+At the time of writing the highest assigned is **F300** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -7065,4 +7065,46 @@ fence. Seen once, on 293.
 What would close it: the fleet's model-free run builds and installs the
 wheel with no network (from a wheelhouse the fence reads), or runs this
 file outside the fence on the home desktop; and a skip of these tests
-stops the run instead of passing it.
+stops the run instead of passing it. 293's bug fix #3 (`803bd2c`) adds a
+test the fence does run: the CLI started where FastAPI cannot be imported
+(`tests/test_phase293_cli.py`). It covers what the CLI imports as it
+starts, not what the wheel carries.
+
+### F300
+
+**Phase 399's nested run of 244H shares a database with the run that spawned it, so it fails whenever 244H ran first in the same process**
+
+Found by the advisor on 2026-11-24, in phase 293's regression at
+`803bd2c` on the Mac (plain clone, `regression.sh`, 39 min 34 s): 13208
+passed, 1 failed, 49 skipped. The failure was
+`tests/test_phase399_cost_ledger.py::test_the_fixture_leaves_the_database_tripwire_as_it_was`
+on worker gw3. It runs `tests/test_phase244H_test_db_isolation.py` and one
+Honda file in a nested pytest (line 80), and inside it
+`TestTheOperatorsDatabaseIsUntouched::test_the_probe_landed_somewhere_else`
+failed: `assert 1058 == (1058 + 1)`. The probe row, "244H probe 2", did
+not add a row, because the database the nested run used already held it.
+The run before at the same commit passed this test, and so did the fleet's
+at `0f821e1`.
+
+- In one process (`-p no:xdist`), `test_phase244H_test_db_isolation.py`
+  followed by this test fails every time: 1 failed, 14 passed, 1 skipped,
+  on 293's branch at `803bd2c` and on master at `721ed34`. The test alone
+  passes. The nested pytest inherits the parent's environment
+  (`subprocess.run` with no `env`), so it inherits `MOTODIAG_DB_PATH`.
+  `tests/conftest.py` (lines 44 to 56) makes a fresh default database only
+  for an xdist worker that inherited the marked default, or when nothing is
+  set. Here it keeps the parent's, where 244H's own run had already added
+  the probe.
+- Under `-n auto` it fails only when the distribution puts 244H before it
+  on the same worker. How the worker's nested run came to share a
+  database there, where the worker rule should apply, is not measured.
+
+What it affects: the regression of record on any machine and any branch,
+by chance: a run is not of record until run again. 293's regression was
+run again. Nothing outside the tests.
+
+What would close it: the nested run starts with an environment of its
+own, with no inherited `MOTODIAG_DB_PATH`, `MOTODIAG_TEST_DEFAULT_DB` or
+`PYTEST_XDIST_WORKER`, so its conftest makes a fresh database; and a test
+that runs 244H and then this test in one process, seen red first on
+today's code.
