@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F293** (this file). The
+At the time of writing the highest assigned is **F298** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -6842,3 +6842,13 @@ What would close it: the wizard uses only a shop it is given. Without
 `--shop`, it registers a new shop, or asks whether to use one it lists.
 A `--shop` naming no registered shop offers to register it. A test run
 with one shop already in the database would hold this.
+
+### F298
+
+**Wording the Red Team left open on phase 293, round 2**
+
+Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 392, F228). K9: "after round 3, remaining wording defects go to one finding". The rows, from the refute table in the Red Team's round 2 on phase 293:
+
+- The ticked item says "the three error codes in errors.py", and "seven refusals" in __init__.py: "the three error codes in `errors.py`" (docs/phases/completed/293_implementation.md p. 224)
+
+What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).

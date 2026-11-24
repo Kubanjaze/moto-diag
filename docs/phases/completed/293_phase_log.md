@@ -460,3 +460,27 @@ introduction says so, and Deviations item 8 records that the review is
 kept. Tested in `/fleet/run/`: the block passes `bash -n`; the answer
 check with `yes` reached the merge, with `no` and with no input it printed
 SOMETHING IS OFF. No code changed, so the regression of record stands.
+
+## Refuter pass
+
+| claim | verdict | quote | source | round · kind · outcome |
+|---|---|---|---|---|
+| Regression of record: 13150 passed, 0 failed, 105 skipped at 0f821e1, coverage 88.61% | kept | "Regression of record: 13150 passed, 0 failed, 105 skipped, 0 errors at `0f821e1` (38 min 15 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0)" | docs/phases/completed/293_phase_log.md p. 284 | 2 · none · kept |
+| COLLECTED_TEST_FLOOR 13135 to 13141 to 13255 | kept | "COLLECTED_TEST_FLOOR = 13255" | tests/test_phase255B_collected_test_floor.py p. 637 | 2 · none · kept |
+| Item 1a: six tests, 4 red on the old code | kept | "Seen red on the old code (both files stashed): 4 failed, 2 passed" | docs/phases/completed/293_phase_log.md p. 63 | 2 · none · kept |
+| UNREACHABLE_COUNT 29 to 23, MODULE_ISLAND_COUNT 9 to 10, ORPHAN_COUNT 124 to 127 | kept | "ORPHAN_COUNT = 127" | tests/support/integration_gaps_counts.py p. 75 | 2 · none · kept |
+| test_phase244W's engine islands 5 to 4 | kept | "assert len(engine) == 4" | tests/test_phase244W_module_islands.py p. 145 | 2 · none · kept |
+| The search answers 20 hits by default and at most 100; kind defaults to service_manual | kept | "limit: int = Query(20, ge=1, le=100)," | src/motodiag/api/routes/manuals.py p. 338 | 2 · none · kept |
+| The upload's temporary file is .manual_upload_*.pdf at the data folder's top | kept | "fd, name = tempfile.mkstemp(dir=settings.data_dir, prefix=\".manual_upload_\", suffix=\".pdf\")" | src/motodiag/api/routes/manuals.py p. 273 | 2 · none · kept |
+| Storage limits 2, 20 and 50 GB in TIER_LIMITS (K119) | kept | "manual_storage_bytes=20 * 1024**3," | src/motodiag/cli/subscription.py p. 120 | 2 · none · kept |
+| MEDIA_DIRS gains manuals and only manuals | kept | "MEDIA_DIRS = (\"videos\", \"photos\", \"audio\", \"manuals\")" | src/motodiag/backup/snapshot.py p. 36 | 2 · none · kept |
+| TERMS_VERSION 1.1 dated 2026-11-23 | kept | "TERMS_DATE = \"2026-11-23\"" | src/motodiag/auth/terms_acceptance.py p. 21 | 2 · none · kept |
+| An unknown username exits 1 with "no user named …; nothing was changed" | kept | "raise click.ClickException(f\"no user named {username!r}; nothing was changed\")" | src/motodiag/cli/manuals.py p. 26 | 2 · none · kept |
+| decide refuses approval while rendering and needs a reason for rejected/taken_down | kept | "if decision in (\"rejected\", \"taken_down\") and reason is None:" | src/motodiag/manuals/review.py p. 85 | 2 · none · kept |
+| Live: no scope problems, equal to the approved diff, F158 census 41 | kept | "**F158 census on live:** 41, as on the copy." | docs/phases/completed/293_phase_log.md p. 401 | 2 · none · kept |
+| Root implementation.md at 0.13.146 (Deviation 10) | kept | "**Version:** 0.13.146 | **Date:** 2026-11-23" | implementation.md p. 3 | 2 · none · kept |
+| K128's row is not on this branch's decisions.md | kept | "K127" | docs/decisions.md p. 133 | 2 · none · kept |
+| ROADMAP row 293 closed with date and regression line | kept | "**CLOSED 2026-11-23.** Built by the fleet" | docs/ROADMAP.md p. 542 | 2 · none · kept |
+| F292 cited for the bulletin check in step 5 | kept | "A `motodiag` command run on live writes into it through `init_db`, whose bulletin seed fills an empty table" | docs/FOLLOWUPS.md p. 6764 | 2 · none · kept |
+| Step 6 merges only after the operator types yes (Deviation 8) | kept | "[ \"$ANS\" = yes ] || bad \"you did not type yes; the pull request is open and not merged" | docs/handoffs/2026-11-23_293_closed.md p. 471 | 2 · none · kept |
+| The ticked item says "the three error codes in errors.py", and "seven refusals" in __init__.py | killed | "the three error codes in `errors.py`" | docs/phases/completed/293_implementation.md p. 224 | 2 · wording · open F298 |
