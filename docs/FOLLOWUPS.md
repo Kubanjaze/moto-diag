@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F298** (this file). The
+At the time of writing the highest assigned is **F299** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -7016,3 +7016,53 @@ Filed by the fleet's dispatcher, not by the Red Team, which is read-only (Phase 
 - The ticked item says "the three error codes in errors.py", and "seven refusals" in __init__.py: "the three error codes in `errors.py`" (docs/phases/completed/293_implementation.md p. 224)
 
 What would close it: a later phase that touches these documents fixes the wording, deleting a sentence rather than rewriting it where it can (K9).
+
+### F299
+
+**The fleet's model-free run skips the tests that install the package with no extras, so a phase that breaks `pip install motodiag` passes it**
+
+Found by the advisor on 2026-11-24, in the check on the Mac before pull
+request 89 (phase 293) merged (K132). `wholetree.sh --full` on the merge
+with master failed 5 tests in `tests/test_phase209_packaging.py` (5 failed,
+5496 passed, 6 skipped, 622 s): the CLI installed from the wheel with no
+extras could not start, `motodiag --version` included, with
+`ModuleNotFoundError: No module named 'fastapi'`. Master at `721ed34`, with
+a virtualenv of its own, passed all 33 tests in that file, and the merge
+changed no code against 293's branch. The chain: `cli/main.py:21` imports
+`motodiag.cli.manuals`; its top-level imports of `motodiag.manuals.render`
+and `.review` run `motodiag/manuals/__init__.py`, which imports
+`motodiag.auth.deps` (line 15); that imports FastAPI (line 26), the `api`
+extra, and so does `manuals/review.py` (line 20). Phase 209 fixed the same
+failure through `motodiag.auth`, whose module `__getattr__` defers
+`auth.deps` (`src/motodiag/auth/__init__.py:63`); 293's import goes to
+`auth.deps` directly. K133: 293 fixes its own import, as its bug fix #3.
+This finding is why the fleet did not see it.
+
+- 21 of the file's 33 tests need the wheel (the `wheel`, `installed`,
+  `api_env` and `server_env` fixtures). Building it needs the network and
+  the fence has none, so all 21 skip there, with "inside the fleet's fence:
+  no network to build a wheel" (`tests/test_phase209_packaging.py:60`).
+- That skip is pinned in `FENCE_EXPECTED_SKIPS`
+  (`.claude/skills/closeout/closeout_check.py:373`; Phase 389, the
+  operator's "Sandbox counts (Recommended)"). So the fleet's regression of
+  record at `0f821e1` passed with the 21 among its 105 skips
+  (`docs/phases/completed/293_phase_log.md`, lines 290 to 310), and so did
+  the Engineer's model-free run.
+- The file's network-free guard,
+  `test_the_cli_module_chain_has_no_top_level_fastapi_import` (line 387),
+  reads four named files (`cli/main.py`, `cli/apikey.py`,
+  `auth/__init__.py`, `auth/api_key_repo.py`), not the chain the CLI
+  imports. An import added in any other file passes it.
+- 293's log, on the commit that added `pypdfium2` and `pypdf` to `vision`:
+  "`test_phase209_packaging.py` green." (line 179). 21 of its tests had
+  skipped.
+
+What it affects: every fleet phase that adds an import the CLI makes as it
+starts, or a file the wheel must carry (the four defects Phase 209 was
+written for). Nothing the fleet runs sees either before a run outside the
+fence. Seen once, on 293.
+
+What would close it: the fleet's model-free run builds and installs the
+wheel with no network (from a wheelhouse the fence reads), or runs this
+file outside the fence on the home desktop; and a skip of these tests
+stops the run instead of passing it.
