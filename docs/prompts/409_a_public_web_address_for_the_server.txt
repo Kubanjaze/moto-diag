@@ -1,0 +1,34 @@
+Do this: start Phase 409, a public web address for the server (row 409, on master as 🔲: the fleet's row pull request makes it 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out.
+
+My words:
+- K137 (2026-11-24): "Also record as a K-decision: the phase after 210 is self-serve onboarding (sign-up, email verify, password reset, create shop, Stripe checkout that creates the shop and owner login), a public HTTPS API address, and TestFlight then App Store. 210 is the hand-run launch for shop one, not the final shape. No building."
+- K140 (2026-11-25): "Three, in this order: 1 public web address for the server, 2 self-serve sign-up (row 329), 3 TestFlight then App Store. 344 after all three. Write the list change and the three one-page scopes, documents only, no building, and give me one block to merge them."
+- K136 (2026-11-24), answers 2 and 3: "TestFlight for the first shop; App Store once a public API exists; Mac install ends with 210." "No private network as the product; for shop one only, the phones join Tailscale as a stopgap."
+
+**A public web address** means the live server answers at one https name on the internet, so a phone on any network reaches it without Tailscale, and nothing else on the home desktop becomes reachable. Today the server listens on 127.0.0.1:8000 only, and the tailnet reaches it through `tailscale serve` (`ops/desktop/motodiag-api.service`: "never the LAN, never Funnel"). K74 keeps it tailnet-only and customer share links off "until a public front door exists". This phase is that front door; 329 (self-serve sign-up) and 410 (the App Store) come after it and need it.
+
+**In order:**
+1. **What the internet would reach, measured** (Step 0, the fleet):
+   - every route an anonymous caller can reach, and its answer;
+   - what each tier and role can reach once signed in;
+   - the interactive API pages `/docs`, `/redoc` and `/openapi.json`, on in every environment today (`src/motodiag/api/app.py`);
+   - the CORS origins (`api_cors_origins_list`), still the development defaults by the app's `docs/testflight.md`, "Release blockers";
+   - the rate limiter's limits on sign-in and on anonymous calls (`RateLimitMiddleware`), and request size limits;
+   - the public base URL and share-link settings (F257, K74; F64 in the app's `docs/FOLLOWUPS.md`).
+2. **The server made ready for the internet** (the fleet), only what that census shows is needed, each with a test inside the fence. For example: the API pages as the operator decides; CORS set to named origins; sign-in limited against guessing; the server answering only to its public name and its tailnet name. And 210's launch check gains a condition: the public name answers over https with a valid certificate, and nothing it should not reach answers.
+3. **The address on live** (the operator's, in the handoff, each a paste block tested before it is handed over):
+   - the chosen way in set up, and the name's DNS;
+   - the server's public base URL in its settings file;
+   - a check from a phone off the tailnet, on mobile data: `/healthz` answers over https, and nothing else on the desktop does.
+
+**For Step 0, the operator's** (rule 1: each answer ships something different):
+1. how the internet reaches the server. Options include a tunnel from the home desktop to a provider's edge (getmekno.com is already on Cloudflare), or a small rented server in front that forwards to the desktop over the tailnet. The record's rule is never the LAN and never Funnel (`docs/handoffs/2026-10-19_382_closed.md`), so Tailscale Funnel is offered only if the operator asks for it;
+2. the name: `api.getmekno.com`, or another;
+3. whether the interactive API pages stay open, go behind a key, or go off in prod;
+4. whether customer share links come back on once the address works. K74 turned them off until a public front door exists, and the app's F64 asks for a public host.
+
+**Stops:** each live step in 3; an outside account (the way in's provider and the DNS are the operator's); anything the census finds open that the operator has not decided; any change to a live row.
+
+**Not in this phase:** self-serve sign-up (329) and the App Store (410); moving the server off the home desktop; Stripe's webhooks to the new address (the payments feed keeps asking Stripe, K65, and 401 stays paused); share links back on, unless answer 4 says so.
+
+**Closes** no finding by itself. F64 (the app's) is closed by a session on the app's repository once answer 4 turns share links back on at this address; until then the handoff names it as open.

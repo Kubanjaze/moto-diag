@@ -1,0 +1,44 @@
+Do this: start Phase 329, self-serve sign-up (row 329, on master as 🔲: the fleet's row pull request makes it 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out.
+
+My words:
+- K137 (2026-11-24): "Also record as a K-decision: the phase after 210 is self-serve onboarding (sign-up, email verify, password reset, create shop, Stripe checkout that creates the shop and owner login), a public HTTPS API address, and TestFlight then App Store. 210 is the hand-run launch for shop one, not the final shape. No building."
+- K140 (2026-11-25): "Three, in this order: 1 public web address for the server, 2 self-serve sign-up (row 329), 3 TestFlight then App Store. 344 after all three. Write the list change and the three one-page scopes, documents only, no building, and give me one block to merge them."
+- K101 (2026-11-20): "Signups: the support email link stays for the first 10 shops. When a form is worth having: Cloudflare holds the signups and emails them to me, a privacy line goes into the texts first, and the form-action header changes on purpose. Never the Mekno server (K74), never the live database."
+- K125 (2026-11-22): "No app screen for onboarding; keep the computer wizard with me at the keyboard."
+
+**Self-serve sign-up** means a shop owner, with no help from Mekno, makes their own account, proves their email address, accepts the terms, describes their shop and pays for its plan on Stripe's checkout. Only then do the shop, the owner's login and the owner's membership exist. A user who forgets their password sets a new one from an email.
+
+None of it exists today:
+- an account comes from 330's wizard, with the operator at the keyboard (K125);
+- a forgotten password is set by the shop's owner (`POST /v1/auth/shops/{shop_id}/members/{user_id}/password`) or by the operator;
+- the server sends no email: there is no sender in `src/`;
+- `create_checkout_session` (`src/motodiag/api/routes/billing.py`) needs a signed-in user.
+
+It comes after 409 because every step happens off the tailnet, at 409's public address.
+
+**In order:**
+1. **The sign-up's steps on the server** (the fleet), each with a test inside the fence, with the email service and Stripe as stand-ins:
+   - an account waiting for its email check, and the check by a link with a one-time code that expires;
+   - the terms accepted at the current version, into the table 334 and the wizard use;
+   - the shop's details, and Stripe's checkout for the chosen plan;
+   - the shop, the owner's login and the membership made only when Stripe's subscription event arrives and the server has read the subscription back from Stripe (273's webhook, F187), so an unpaid sign-up leaves no shop;
+   - a password reset by email, under the same one-time code rules;
+   - a rate limit on every new route that takes anonymous callers, by 409's census.
+2. **Where the sign-up form lives,** as the operator answers question 1, with its pages or screens.
+3. **The live steps** (the operator's, in the handoff, each a paste block tested before it is handed over):
+   - the email service's account and its sending address;
+   - the server's settings for it, typed into the settings file by the operator, never in chat;
+   - Stripe's checkout and return addresses for sign-up;
+   - one real sign-up from a phone off the tailnet, through to a shop whose owner can sign in.
+
+**For Step 0, the operator's** (rule 1: each answer ships something different):
+1. where a new shop signs up. In the app, which is new against K125's no app screen for the hand-run onboarding. On getmekno.com, whose pages allow no scripts and no forms today, so the site's header changes on purpose, as K101 foresaw. Or on pages the server serves at 409's address;
+2. K101 against K137. K101 keeps the support email for the first 10 shops and keeps a sign-up form off the Mekno server and the live database, but self-serve sign-up has to make the account there. Does sign-up open now, in place of K101's rule, or after the first 10 shops?
+3. which email service sends the address check and the reset, and from which address (support@getmekno.com is the support address today);
+4. whether a new shop pays when it signs up or begins with a trial (row 329's old note said "Trial signup").
+
+**Stops:** each live step in 3; the email service's account and its key (the operator's, typed by hand); any change to the plans' prices or limits (404); any change to the terms' text.
+
+**Not in this phase:** the public address (409, before it); the App Store (410, after it); customer card payments at sign-up (K136's answer 4: "customer card payments later"); a second shop under one owner (Wave 3); a shop's old data imported at sign-up (330's import stays the operator's tool).
+
+**Closes** no finding. If Step 0 finds that 330's wizard and the sign-up would make a shop differently, a finding names it.
