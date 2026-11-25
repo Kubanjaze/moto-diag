@@ -269,4 +269,8 @@ wall). The one failure is Bug fix #1, below; not F300.
 - **Verified:** red before the fix, alone (1 failed); after it,
   `tests/test_phase293_checks.py` 17 passed. With `_command`'s fallback to
   `clamscan` removed the test is red (it returns None).
-- **Commit:** in the log entry's own commit, named in the next entry.
+- **Commit:** `c80082a`.
+
+`c80082a` was committed before `wholetree.sh` ran on it, against rule 3;
+it ran straight after, on that commit, clean: exit 0, 3049 passed, 10
+skipped, record written. Nothing changed between.
