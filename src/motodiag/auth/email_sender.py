@@ -72,3 +72,13 @@ def password_reset_email(to: str, link: str) -> Email:
         f"Set a new one here (the link works once, for 1 hour):\n{link}\n\n"
         "If this was not you, ignore this email: your password stays as it is.\n"
     ))
+
+
+def welcome_email(to: str, username: str, shop_name: str) -> Email:
+    """After the plan is paid: the shop and the login exist. A draft for 329."""
+    return Email(to, "Your Mekno shop is ready", (
+        f"{shop_name} is set up and its plan is paid.\n\n"
+        f"Sign in to the Mekno app with the username {username} and the "
+        "password you chose. From the app you can add your mechanics.\n\n"
+        "Questions: reply to this email.\n"
+    ))

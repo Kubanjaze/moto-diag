@@ -8009,6 +8009,62 @@ MIGRATIONS: list[Migration] = [
             ALTER TABLE manual_references DROP COLUMN shop_id;
         """,
     ),
+    Migration(
+        version=93,
+        name="self_serve_signup",
+        description=(
+            "Phase 329 prebuild (K137, K140; the operator's answers of "
+            "2026-11-25), self-serve sign-up. Adds signups (a sign-up "
+            "waiting for its email check and its payment; the shop, the "
+            "owner's login and the membership are made only when Stripe's "
+            "subscription is paid) and one_time_codes (the hash of each "
+            "emailed code, its purpose, subject, expiry and use), with "
+            "their indexes. Adds empty tables; changes and removes no "
+            "existing row."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS signups (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT NOT NULL,
+                owner_name TEXT NOT NULL,
+                username TEXT NOT NULL,
+                password_hash TEXT NOT NULL,
+                shop_name TEXT NOT NULL,
+                tier TEXT NOT NULL CHECK (tier IN ('shop', 'company')),
+                terms_version TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'pending_email'
+                    CHECK (status IN ('pending_email', 'email_verified', 'completed')),
+                created_at TEXT NOT NULL,
+                verified_at TEXT,
+                completed_at TEXT,
+                stripe_subscription_id TEXT,
+                user_id INTEGER REFERENCES users(id),
+                shop_id INTEGER REFERENCES shops(id)
+            );
+            CREATE INDEX IF NOT EXISTS idx_signups_username ON signups(username);
+            CREATE TABLE IF NOT EXISTS one_time_codes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                purpose TEXT NOT NULL
+                    CHECK (purpose IN ('verify_email', 'reset_password')),
+                subject TEXT NOT NULL,
+                code_hash TEXT NOT NULL,
+                issued_at REAL NOT NULL,
+                expires_at REAL NOT NULL,
+                used_at REAL
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_one_time_codes_hash
+                ON one_time_codes(code_hash);
+            CREATE INDEX IF NOT EXISTS idx_one_time_codes_subject
+                ON one_time_codes(purpose, subject);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_one_time_codes_subject;
+            DROP INDEX IF EXISTS idx_one_time_codes_hash;
+            DROP TABLE IF EXISTS one_time_codes;
+            DROP INDEX IF EXISTS idx_signups_username;
+            DROP TABLE IF EXISTS signups;
+        """,
+    ),
 ]
 
 
