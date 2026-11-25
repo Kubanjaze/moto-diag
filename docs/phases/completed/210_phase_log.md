@@ -442,3 +442,20 @@ backup call in the tax block.
   words in `check.py`'s docstring are bug fix #2 (below).
 - The launch checklist said the free disk must be "above 50 GB"; the check
   passes at or above the floor, and the checklist now says so.
+
+### Bug fix #2 — 2026-11-25 — `check.py`'s docstring said the check writes nothing
+
+- **Issue:** the Red Team's round 2: `src/motodiag/launch/check.py`'s
+  module docstring said the check "writes nothing", but condition 4 calls
+  `work_dir()`, which creates the backup's working folder (mode 700) when
+  it is missing (Deviation 5).
+- **Root cause:** the docstring stated the database's guarantee as the
+  whole check's.
+- **Fix:** it now says the check writes nothing to the database. No
+  behaviour changed.
+- **Files:** `src/motodiag/launch/check.py`.
+- **Verified:** `tests/test_phase210_launch_check.py` passes; the
+  regression of record is run again (below).
+
+**Commit.** The commit "Phase 210, bug fix #2: check.py's docstring says
+what it does not write".

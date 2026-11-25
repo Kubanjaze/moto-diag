@@ -2,7 +2,7 @@
 
 Eight conditions, in the order of 210's written scope, each a function that
 returns a :class:`Condition`. The check reads the server's settings and the
-database and writes nothing: the database is opened read-only
+database and writes nothing to the database: it is opened read-only
 (``mode=ro``) and never through ``init_db``, which loads the bulletins into
 an empty table (F292). The feed's condition calls the rules of
 ``payments feed status`` as that command calls them, through the feed's own
