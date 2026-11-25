@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forgot your password? · Mekno</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/forms.css">
+</head>
+<body>
+  <header class="site">
+    <div class="wrap">
+      <a class="brand" href="/" aria-label="Mekno home">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#e8590c"/><path d="M14 46V20l9 0 9 13 9-13 9 0v26h-8V31l-10 14-10-14v15z" fill="#fff"/></svg>
+        mekno
+      </a>
+    </div>
+  </header>
+  <main class="page">
+    <div class="wrap prose">
+      <h1>Forgot your password?</h1>
+      <p>Give the email address on your account. If one matches, we send a link that works once, for 1 hour.</p>
+      <form class="form" method="post" action="https://api.getmekno.com/v1/auth/password-reset">
+        <p><label>Your email<br><input type="email" name="email" required maxlength="254" autocomplete="email"></label></p>
+        <p><button class="button" type="submit">Send the link</button></p>
+      </form>
+      <p>A mechanic without an email on their account: ask the shop's owner to set a new password for you in the app.</p>
+    </div>
+  </main>
+  <footer class="site">
+    <div class="wrap">
+      <span>© 2026 Mekno</span>
+      <span><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="/support/">Support</a></span>
+    </div>
+  </footer>
+</body>
+</html>
