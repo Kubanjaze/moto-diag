@@ -237,3 +237,36 @@ On this branch at `4baeec5` (v1.0 as revised for K139, master merged in).
   no clock, and the census is unchanged. Not a bug in the shipped code: the
   test was never committed in the first form. M3 re-run on the new form:
   red. `wholetree.sh` (fast): exit 0, 3049 passed, 10 skipped.
+
+## 2026-11-25 — the full whole-tree, before the regression of record
+
+`wholetree.sh --full` at `5642729`: 5518 passed, 36 skipped (1032.6 s
+wall), exit 0, record written.
+
+## 2026-11-25 — the first regression run, not of record
+
+`regression.sh` at `5642729`, inside the fence: `Regression run FAILED (not
+of record): 13215 passed, 1 failed, 105 skipped, 0 errors` (38 min 44 s
+wall). The one failure is Bug fix #1, below; not F300.
+
+### Bug fix #1 — 2026-11-25 — 293's scanner test met a real ClamAV on the build machine
+
+- **Issue:** `tests/test_phase293_checks.py::test_clamscan_is_used_when_the_daemon_is_absent`
+  failed: `scan._command` returned `/usr/bin/clamdscan`, not the stub's
+  `clamscan`. It fails alone, every time, on this branch and on master's
+  code; nothing of this phase is in its path.
+- **Root cause:** the test puts its stub folder on PATH through
+  `use_path`, which adds `/usr/bin` and `/bin` for the stub's own tools.
+  When 293 was built, this machine had no virus scanner; 293's live step 4
+  has since installed ClamAV on the home desktop, where the fence runs, so
+  `/usr/bin/clamdscan` exists and `_command` rightly prefers the daemon.
+  The test assumed the machine had no scanner, and never said so.
+- **Fix:** that test's PATH is the stub folder and a folder holding only a
+  link to `grep`, the one tool the stub runs (its shebang is `/bin/sh` by
+  path); it asserts `_command` names the stub's own `clamscan`. `use_path`
+  and every other test are unchanged.
+- **Files:** `tests/test_phase293_checks.py`.
+- **Verified:** red before the fix, alone (1 failed); after it,
+  `tests/test_phase293_checks.py` 17 passed. With `_command`'s fallback to
+  `clamscan` removed the test is red (it returns None).
+- **Commit:** in the log entry's own commit, named in the next entry.
