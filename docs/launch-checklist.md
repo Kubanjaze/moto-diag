@@ -16,8 +16,8 @@ reason: the schema at the code's version; the server in prod with Stripe
 live, the real prices and share links off; the payments feed and Sentry's
 alarm checking in; last night's backup; the terms switch on at version 1.1,
 as the running server answers on loopback; a manual reviewer set; the test
-shop inactive; the home desktop's free disk above 50 GB. It ends with
-ALL GOOD (exit 0) or SOMETHING IS OFF (exit 1), and writes nothing.
+shop inactive; the home desktop's free disk at or above 50 GB. It ends with
+ALL GOOD (exit 0) or SOMETHING IS OFF (exit 1), and writes nothing to the database.
 Beside it, `tests/test_phase210_first_shops_day.py` walks the first shop's
 whole day through the API on a fresh database, with every regression: the
 wizard, the Shop plan, signing in, the terms, a work order with a part and

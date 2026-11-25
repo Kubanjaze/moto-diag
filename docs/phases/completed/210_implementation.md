@@ -30,7 +30,7 @@ After this phase:
 
 ## Logic
 
-**As built (Logic):** the re-measure is the phase log's first entry; two numbers had moved (`COLLECTED_TEST_FLOOR` was 13266 at line 672). Readings 2 and 4 completed by their first paths: the signed webhook round ran offline, the mechanic's own adjust was admitted and the fill gave 1.0. Live receives the subscription events through the payments feed's platform ask (`FEED_TYPES` holds `customer.subscription.*`), not the webhook. Items 1 to 5 as below.
+**As built (Logic):** the re-measure is the phase log's first entry. Readings 2 and 4 completed by their first paths: the signed webhook round ran offline, the mechanic's own adjust was admitted and the fill gave 1.0. Live receives the subscription events through the payments feed's platform ask (`FEED_TYPES` holds `customer.subscription.*`), not the webhook. Items 1 to 5 as below.
 
 Causes and measurements: `210_step0.md`. The Engineer re-measures each line below before calling or changing anything (CLAUDE.md, Step 0), and records the census in the phase log. What this plan's own reading found on this branch at `71a0587`:
 

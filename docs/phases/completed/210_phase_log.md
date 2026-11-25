@@ -430,3 +430,15 @@ backup call in the tax block.
   `git diff 847c1c2 7210f02 -- src/` is empty. Deviation 18 says so, and
   v1.1's history row now counts eighteen. No code changed, so the
   regression of record stands.
+
+## 2026-11-25 — the Red Team's round 2, three document fixes
+
+- The Logic section's "As built" line said two numbers had moved and named
+  only the floor; Step 0's re-measure (above) also found `SPACE_FLOOR_GB`
+  at `dispatcher.py` line 172, not 168. The clause is deleted.
+- The launch checklist and the handoff said the launch check "writes
+  nothing"; `work_dir()` can create the backup's working folder
+  (Deviation 5). Both now say it writes nothing to the database. The same
+  words in `check.py`'s docstring are bug fix #2 (below).
+- The launch checklist said the free disk must be "above 50 GB"; the check
+  passes at or above the floor, and the checklist now says so.
