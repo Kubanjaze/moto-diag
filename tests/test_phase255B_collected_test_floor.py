@@ -658,7 +658,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: merge at 1d1f48b (13256): +2 -0, both in test_phase293_cli.py (the CLI
 #: started where the server's libraries cannot be imported, and a manuals
 #: command there naming what to install). Measured: 13258.
-COLLECTED_TEST_FLOOR = 13258
+#:
+#: K135, the operator's exception to the usage ceilings, by a diff of
+#: collected ids against master at b7a89f7: +6 -0, all in
+#: test_phase389_dispatcher.py (the exception lets 210's Fable stages run;
+#: it ends at its moment; another phase and another model, two cases; never
+#: for usage that cannot be read; the exceptions in force are pinned).
+COLLECTED_TEST_FLOOR = 13264
 
 
 def _collected_count() -> int:
