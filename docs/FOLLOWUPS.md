@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F300** (this file). The
+At the time of writing the highest assigned is **F301** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -7108,3 +7108,29 @@ own, with no inherited `MOTODIAG_DB_PATH`, `MOTODIAG_TEST_DEFAULT_DB` or
 `PYTEST_XDIST_WORKER`, so its conftest makes a fresh database; and a test
 that runs 244H and then this test in one process, seen red first on
 today's code.
+
+### F301
+
+**210's written scope names eight launch conditions and misses two that launch depends on: the server answering on loopback, and share links off**
+
+Found by Phase 210's plan, filed by its Engineer on 2026-11-25, before any
+document cites it. The scope (`docs/prompts/210_launch_readiness_full_integration.txt`)
+lists what `motodiag launch check` must hold on live, and says: "If Step 0
+finds a launch condition this page does not name, a finding names it, and
+the check gains it." Two are missing:
+
+- **The server answering on loopback.** The terms version that counts is
+  the one the running server answers (293's handoff, step 7), and a
+  version can be read only from a server that is up. Without the read, a
+  check on the settings file alone says ready while the API is down.
+- **Share links off (K74).** Live payments were switched on with
+  `MOTODIAG_SHARE_LINKS_ENABLED=false` (402), and the server stays
+  tailnet-only. A share link on a tailnet-only server is a link no
+  customer can open.
+
+What it affects: a launch check that says ALL GOOD with the API down or
+share links on. Nothing on live yet: the check is new in 210.
+
+What would close it: Phase 210's launch check carries both, folded into
+its conditions 5 (the loopback read of `/healthz` and `/v1/terms`) and 2
+(`share_links_enabled` false), each with a case that turns it NOT READY.
