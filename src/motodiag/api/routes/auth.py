@@ -26,6 +26,7 @@ from pydantic import BaseModel, Field
 
 from motodiag.api.deps import get_db_path
 from motodiag.auth.deps import AuthedUser, Caller, get_current_user, require_tier
+from motodiag.auth.login_throttle import get_login_throttle
 from motodiag.auth.passwords import hash_password, verify_password
 from motodiag.auth.sessions_repo import (
     LOGIN_FAILED,
@@ -107,9 +108,16 @@ def login(
     req: LoginRequest, request: Request, db_path: str = Depends(get_db_path),
 ) -> dict:
     """A session token, shown once, with the user's shops and roles."""
+    # Phase 409 prebuild: failed logins are counted per name, and a held
+    # name is refused (429) before its password is checked.
+    throttle = get_login_throttle()
+    address = request.client.host if request.client else "unknown"
+    throttle.check(req.username, address)
     user = authenticate(req.username, req.password, db_path=db_path)
     if user is None:
+        throttle.record_failure(req.username, address)
         raise LoginFailedError(LOGIN_FAILED)
+    throttle.record_success(req.username, address)
     row, token = create_session(int(user["id"]), req.client, db_path=db_path)
     # Phase 348: the audit log records the login under the person and the
     # session it made.

@@ -291,6 +291,32 @@ class Settings(BaseSettings):
     rate_limit_shop_per_day: int = 10000
     rate_limit_company_per_day: int = 50000
 
+    # Phase 409 prebuild: the server on the public internet. Each default
+    # keeps today's behaviour except the login guard and the headers, which
+    # change nothing a client reads.
+    #: False takes /docs, /redoc and /openapi.json off (the operator's call).
+    api_docs_enabled: bool = True
+    #: Comma-separated host names the server answers to; any other Host
+    #: header is 400. Empty (default) answers to any host, as today.
+    api_allowed_hosts: str = ""
+    #: nosniff, no framing, no referrer, and HSTS on https requests.
+    security_headers_enabled: bool = True
+    #: Failed logins allowed for one name from one address inside the
+    #: window before that pair is refused with 429; one name from every
+    #: address together gets five times as many.
+    login_failure_limit: int = 10
+    login_failure_window_s: int = 900
+    #: A request body larger than this is 413 before any route reads it,
+    #: except a file upload (multipart), which each upload route bounds
+    #: itself (Phase 207's read_bounded). 0 switches the check off.
+    api_max_body_bytes: int = 1_048_576
+
+    @property
+    def api_allowed_hosts_list(self) -> list[str]:
+        """Parse comma-separated host names into a clean list."""
+        raw = (self.api_allowed_hosts or "").strip()
+        return [h.strip() for h in raw.split(",") if h.strip()]
+
     # Phase 303: a login's session lives this many days from its creation.
     # The expiry is computed, never stored, so a change moves every open
     # session's expiry at once.

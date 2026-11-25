@@ -7,9 +7,9 @@ Five test classes across ~30 tests:
 - :class:`TestMetaEndpoints` (5) — /healthz happy + degraded,
   /v1/version echoes package + schema + api_version,
   /openapi.json + /docs reachable.
-- :class:`TestSmokeShopRoute` (4) — GET /v1/shops/{id} 200 happy,
-  404 not-found with ProblemDetail, invalid-id coercion, request-id
-  echoed.
+- :class:`TestSmokeShopRoute` (5) — GET /v1/shops/{id} 200 for a
+  member, 401 anonymous, 403 not a member with ProblemDetail,
+  invalid-id coercion, request-id echoed (Phase 409 prebuild).
 - :class:`TestErrorHandling` (7) — ValueError catchall,
   InvalidWorkOrderTransition 409, WorkOrderNotFoundError 404,
   PermissionDenied 403, unhandled → 500 with no stack leak,
@@ -156,36 +156,55 @@ class TestMetaEndpoints:
 
 
 class TestSmokeShopRoute:
+    """Phase 409 prebuild: the route needs a signed-in active member."""
+
+    @staticmethod
+    def _member(api_db, name="TestShop", **kw):
+        from motodiag.auth.api_key_repo import create_api_key
+        from motodiag.auth.models import User
+        from motodiag.auth.users_repo import create_user
+        from motodiag.shop import seed_first_owner
+        uid = int(create_user(User(
+            username=f"owner_{name.lower()}", email=f"{name.lower()}@ex.com",
+        ), db_path=api_db))
+        shop_id = create_shop(name, owner_user_id=uid, db_path=api_db, **kw)
+        seed_first_owner(shop_id, uid, db_path=api_db)
+        key = create_api_key(uid, db_path=api_db)[1]
+        return shop_id, {"X-API-Key": key}
 
     def test_get_shop_happy(self, api_db, client):
-        shop_id = create_shop(
-            "TestShop", phone="555-0100", db_path=api_db,
-        )
-        r = client.get(f"/v1/shops/{shop_id}")
+        shop_id, hdr = self._member(api_db, phone="555-0100")
+        r = client.get(f"/v1/shops/{shop_id}", headers=hdr)
         assert r.status_code == 200
         body = r.json()
         assert body["id"] == shop_id
         assert body["name"] == "TestShop"
 
-    def test_get_shop_not_found_returns_problem_detail(self, client):
-        r = client.get("/v1/shops/99999")
-        assert r.status_code == 404
+    def test_get_shop_anonymous_is_401(self, api_db, client):
+        shop_id, _ = self._member(api_db)
+        r = client.get(f"/v1/shops/{shop_id}")
+        assert r.status_code == 401
+        assert "TestShop" not in r.text
+
+    def test_get_shop_not_member_is_problem_detail_403(self, api_db, client):
+        _, hdr = self._member(api_db)
+        r = client.get("/v1/shops/99999", headers=hdr)
+        assert r.status_code == 403
         body = r.json()
-        assert body["status"] == 404
-        assert body["title"] == "Shop not found"
-        assert body["type"].endswith("shop-not-found")
+        assert body["status"] == 403
         assert "request_id" in body
         # Instance points to the original path
         assert body["instance"] == "/v1/shops/99999"
 
-    def test_invalid_shop_id_coerced_to_422(self, client):
+    def test_invalid_shop_id_coerced_to_422(self, api_db, client):
+        _, hdr = self._member(api_db)
         # FastAPI's Pydantic coercion rejects non-int
-        r = client.get("/v1/shops/not-a-number")
+        r = client.get("/v1/shops/not-a-number", headers=hdr)
         assert r.status_code == 422
 
     def test_request_id_echoed_on_shop_route(self, api_db, client):
-        shop_id = create_shop("EchoShop", db_path=api_db)
-        r = client.get(f"/v1/shops/{shop_id}")
+        shop_id, hdr = self._member(api_db, name="EchoShop")
+        r = client.get(f"/v1/shops/{shop_id}", headers=hdr)
         assert REQUEST_ID_HEADER in r.headers
         assert len(r.headers[REQUEST_ID_HEADER]) >= 16
 

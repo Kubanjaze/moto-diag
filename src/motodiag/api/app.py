@@ -18,8 +18,10 @@ from motodiag.api.errors import register_exception_handlers
 from motodiag.api.middleware import (
     AccessLogMiddleware,
     AuditMiddleware,
+    BodySizeLimitMiddleware,
     RateLimitMiddleware,
     RequestIdMiddleware,
+    SecurityHeadersMiddleware,
 )
 from motodiag.api.openapi import install_openapi
 from motodiag.api.telemetry import install_telemetry
@@ -81,9 +83,11 @@ def create_app(
             "diagnostic substrate over HTTP."
         ),
         version=app_settings.version,
-        openapi_url="/openapi.json",
-        docs_url="/docs",
-        redoc_url="/redoc",
+        # Phase 409 prebuild: the operator decides whether these stay open
+        # on the public address (MOTODIAG_API_DOCS_ENABLED).
+        openapi_url="/openapi.json" if app_settings.api_docs_enabled else None,
+        docs_url="/docs" if app_settings.api_docs_enabled else None,
+        redoc_url="/redoc" if app_settings.api_docs_enabled else None,
     )
 
     # --- CORS ---
@@ -101,11 +105,27 @@ def create_app(
     app.add_middleware(AuditMiddleware)  # Phase 348 — inside the rate limit
     app.add_middleware(AccessLogMiddleware)
     app.add_middleware(RateLimitMiddleware)
+    if app_settings.api_max_body_bytes > 0:  # Phase 409 prebuild
+        app.add_middleware(
+            BodySizeLimitMiddleware, limit=app_settings.api_max_body_bytes,
+        )
     app.add_middleware(RequestIdMiddleware)
+    # Phase 409 prebuild, outermost: the headers go on every answer the app
+    # gives, a 429 included; the host check, when set, runs before all else.
+    if app_settings.security_headers_enabled:
+        app.add_middleware(SecurityHeadersMiddleware)
+    if app_settings.api_allowed_hosts_list:
+        from starlette.middleware.trustedhost import TrustedHostMiddleware
+        app.add_middleware(
+            TrustedHostMiddleware,
+            allowed_hosts=app_settings.api_allowed_hosts_list,
+        )
 
     # Reset rate limiter so each app-instance has fresh state (tests).
     from motodiag.auth.rate_limiter import reset_rate_limiter
     reset_rate_limiter(settings=app_settings)
+    from motodiag.auth.login_throttle import reset_login_throttle
+    reset_login_throttle(settings=app_settings)
 
     # --- Exception → HTTP mapping ---
     register_exception_handlers(app)
