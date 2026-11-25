@@ -420,11 +420,35 @@ def test_an_exception_never_covers_usage_that_cannot_be_read(world, monkeypatch)
     assert "could not be read" in host.comments(31)[-1]
 
 
+USAGE_ALL_FULL = (FIX / "dispatcher" / "usage_at_ceiling.txt").read_text()
+
+
+def test_an_opus_exception_lets_the_engineer_start_over_the_all_models_ceiling(world, monkeypatch):
+    """K138: the same exception for the phase's Opus stages; the Engineer
+    starts with the weekly all-models figure at 70%."""
+    fleet, host, clock, origin, engineer, *_ = world
+    go_to_approved(world)
+    host.usage_text = USAGE_ALL_FULL
+    monkeypatch.setitem(D.CEILING_EXCEPTIONS, (PHASE, rank_call.OPUS),
+                        ("K138", clock.t + dt.timedelta(days=1)))
+    step(clock, fleet, host)
+    assert engineer.runs == 1 and labels(host) == ["mission", "review:open"]
+
+
+def test_without_its_exception_the_engineer_does_not_start_over_the_ceiling(world):
+    """The control for the test above: the same usage, no exception, no start."""
+    fleet, host, clock, origin, engineer, *_ = world
+    go_to_approved(world)
+    host.usage_text = USAGE_ALL_FULL
+    step(clock, fleet, host)
+    assert engineer.runs == 0 and "no new Opus stage" in host.comments(31)[-1]
+
+
 def test_the_exceptions_in_force_are_pinned_and_each_is_a_recorded_decision():
     """An exception goes in only with the operator's K-id in docs/decisions.md."""
-    assert D.CEILING_EXCEPTIONS == {
-        ("210", rank_call.FABLE): ("K135", dt.datetime(2026, 11, 25, 17, 0,
-                                                       tzinfo=dt.timezone.utc))}
+    end = dt.datetime(2026, 11, 25, 17, 0, tzinfo=dt.timezone.utc)
+    assert D.CEILING_EXCEPTIONS == {("210", rank_call.FABLE): ("K135", end),
+                                    ("210", rank_call.OPUS): ("K138", end)}
     rows = (ROOT / "docs" / "decisions.md").read_text(encoding="utf-8").splitlines()
     for kid, _ in D.CEILING_EXCEPTIONS.values():
         assert any(r.startswith(f"| {kid} | ") for r in rows), kid
