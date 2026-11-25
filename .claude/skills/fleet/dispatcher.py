@@ -138,6 +138,14 @@ INTERVAL_S = 300
 #: The operator's numbers (the fleet proposal; the 388 and 389 prompts).
 OPUS_CEILING = 70
 FABLE_CEILING = 70
+#: The operator's exceptions to those two ceilings, each by its K-id: a new
+#: stage of the phase, on the model, may start over the model's ceiling until
+#: the moment given. Usage that cannot be read is never excepted.
+CEILING_EXCEPTIONS: dict[tuple[str, str], tuple[str, dt.datetime]] = {
+    # K135, 2026-11-24: "make an exception and continue on". Phase 210's Fable
+    # stages, until Fable's week resets on 2026-11-25 (10:59 EST).
+    ("210", FABLE): ("K135", dt.datetime(2026, 11, 25, 16, 0, tzinfo=dt.timezone.utc)),
+}
 SWEEP_HOURS = 24.0
 DIGEST_HOUR = 7
 #: Phase 393 (K54): the weekly page, "Code health, weekly", from Monday 08:00 local.
@@ -325,6 +333,17 @@ def fable_refusal(usage: dict | None) -> str | None:
     return None
 
 
+def ceiling_exception(phase: str | None, model: str | None, usage: dict | None,
+                      now: dt.datetime) -> str | None:
+    """The K-id that lets a new stage of `phase` on `model` start over its
+    ceiling at `now`, or None: only while the usage line was read."""
+    line = WEEK_ALL if model == OPUS else WEEK_FABLE
+    hit = CEILING_EXCEPTIONS.get((phase or "", model or ""))
+    if hit is None or not usage or line not in usage or now >= hit[1]:
+        return None
+    return hit[0]
+
+
 def reset_after_limit(usage: dict | None) -> dt.datetime | None:
     """The latest reset of a line at 100%; else the session line's reset."""
     if not usage:
@@ -458,13 +477,21 @@ class FencedRunner:
                            f"was not recorded: {e}")
 
     def gate_model(self, model: str | None) -> None:
-        """No new Opus or Fable stage over its ceiling; a resumed one is not new."""
+        """No new Opus or Fable stage over its ceiling, unless the operator
+        made an exception for its phase (CEILING_EXCEPTIONS); a resumed one is
+        not new."""
         if self.resumed or model not in (OPUS, FABLE):
             return
         usage = self.fleet.usage()
         why = opus_refusal(usage) if model == OPUS else fable_refusal(usage)
-        if why:
-            raise Stop(f"no new {'Opus' if model == OPUS else 'Fable'} stage: {why}")
+        if not why:
+            return
+        kid = ceiling_exception(self.ledger_context()["phase"], model, usage, self.fleet.now())
+        if kid:
+            self.fleet.log(f"{why}: the stage starts under {kid}, the operator's exception "
+                           f"for its phase")
+            return
+        raise Stop(f"no new {'Opus' if model == OPUS else 'Fable'} stage: {why}")
 
     def transcripts(self) -> list[pathlib.Path]:
         return transcripts(self.run_dir)

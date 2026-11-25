@@ -358,6 +358,78 @@ def test_a_new_fable_stage_over_fables_ceiling_never_starts(world):
     assert len(host.model_calls()) == calls
 
 
+USAGE_UNREAD = (FIX / "dispatcher" / "usage_unparseable.txt").read_text()
+
+
+def at_step0(world):
+    """Issue 31 with its Step 0 written: the Captain is due next."""
+    fleet, host, clock, *_ = world
+    host.issue(31, TITLE, TRIAL, {"mission": T0})
+    step(clock, fleet, host, claude_json(TERMS, model=rank_call.HAIKU),
+         claude_json(ASSESS, model=rank_call.HAIKU))
+
+
+def test_an_exception_lets_its_phases_fable_stages_start_over_the_ceiling(world, monkeypatch):
+    """K135: the operator's exception, by phase and model, until its moment:
+    the Captain and the Executive Officer both run with Fable over 70%."""
+    fleet, host, clock, *_, lines = world
+    monkeypatch.setitem(D.CEILING_EXCEPTIONS, (PHASE, rank_call.FABLE),
+                        ("K135", T0 + dt.timedelta(days=1)))
+    at_step0(world)
+    host.usage_text = USAGE_FABLE_FULL
+    step(clock, fleet, host, claude_json({"implementation_md": PLAN}))
+    assert labels(host) == ["mission", "plan:needs-review"]
+    step(clock, fleet, host, claude_json({"verdict": "approve", "items": [], "reason": "ok"}))
+    assert labels(host) == ["mission", "plan:approved"]
+    assert any("starts under K135" in ln for ln in lines)
+
+
+def test_an_exception_ends_at_its_moment(world, monkeypatch):
+    fleet, host, clock, *_ = world
+    at_step0(world)
+    monkeypatch.setitem(D.CEILING_EXCEPTIONS, (PHASE, rank_call.FABLE), ("K135", clock.t))
+    host.usage_text = USAGE_FABLE_FULL
+    calls = len(host.model_calls())
+    step(clock, fleet, host)
+    assert len(host.model_calls()) == calls
+    assert "no new Fable stage" in host.comments(31)[-1]
+
+
+@pytest.mark.parametrize("key", [("903", rank_call.FABLE), (PHASE, rank_call.OPUS)],
+                         ids=["another-phase", "another-model"])
+def test_an_exception_is_for_its_own_phase_and_model(world, monkeypatch, key):
+    fleet, host, clock, *_ = world
+    monkeypatch.setitem(D.CEILING_EXCEPTIONS, key, ("K135", T0 + dt.timedelta(days=1)))
+    at_step0(world)
+    host.usage_text = USAGE_FABLE_FULL
+    calls = len(host.model_calls())
+    step(clock, fleet, host)
+    assert len(host.model_calls()) == calls
+    assert "no new Fable stage" in host.comments(31)[-1]
+
+
+def test_an_exception_never_covers_usage_that_cannot_be_read(world, monkeypatch):
+    fleet, host, clock, *_ = world
+    monkeypatch.setitem(D.CEILING_EXCEPTIONS, (PHASE, rank_call.FABLE),
+                        ("K135", T0 + dt.timedelta(days=1)))
+    at_step0(world)
+    host.usage_text = USAGE_UNREAD
+    calls = len(host.model_calls())
+    step(clock, fleet, host)
+    assert len(host.model_calls()) == calls
+    assert "could not be read" in host.comments(31)[-1]
+
+
+def test_the_exceptions_in_force_are_pinned_and_each_is_a_recorded_decision():
+    """An exception goes in only with the operator's K-id in docs/decisions.md."""
+    assert D.CEILING_EXCEPTIONS == {
+        ("210", rank_call.FABLE): ("K135", dt.datetime(2026, 11, 25, 16, 0,
+                                                       tzinfo=dt.timezone.utc))}
+    rows = (ROOT / "docs" / "decisions.md").read_text(encoding="utf-8").splitlines()
+    for kid, _ in D.CEILING_EXCEPTIONS.values():
+        assert any(r.startswith(f"| {kid} | ") for r in rows), kid
+
+
 def test_an_issue_the_operator_holds_gets_no_stage(world):
     """needs-admiral beside a label a rank would act on: the XO is due on
     plan:needs-review, and does not run while the operator holds it."""

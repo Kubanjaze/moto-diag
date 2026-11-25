@@ -224,7 +224,10 @@ stage clone of the phase branch the issue's body names; after 07:00,
   run directory. No reset readable: one hour.
 - **No new Opus stage** at or above 70% of the weekly all-models figure,
   **and no new Fable stage** at or above 70% of Fable's own week (389), or
-  with the usage unreadable. A resumed stage is not new.
+  with the usage unreadable. A resumed stage is not new. An exception the
+  operator makes is a row of `CEILING_EXCEPTIONS` (phase and model, its
+  K-id, its end), pinned by its test; unreadable usage is never excepted
+  (K135: phase 210's Fable stages, until 2026-11-25 16:00 UTC).
 - **Exit 4, before any cycle**: another dispatcher; no
   `~/.config/motodiag/anthropic.env`; a token that is not `sk-ant-oat…`;
   `ANTHROPIC_API_KEY` in its environment.
