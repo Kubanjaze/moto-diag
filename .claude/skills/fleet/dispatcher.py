@@ -143,8 +143,10 @@ FABLE_CEILING = 70
 #: the moment given. Usage that cannot be read is never excepted.
 CEILING_EXCEPTIONS: dict[tuple[str, str], tuple[str, dt.datetime]] = {
     # K135, 2026-11-24: "make an exception and continue on". Phase 210's Fable
-    # stages, until Fable's week resets on 2026-11-25 (10:59 EST).
-    ("210", FABLE): ("K135", dt.datetime(2026, 11, 25, 16, 0, tzinfo=dt.timezone.utc)),
+    # stages, until an hour after Fable's week resets on 2026-11-25 (11:00
+    # EST, read twice as 15:59:59.8 and 16:00:00.3 UTC), so no stage meets a
+    # gap between the end and the reset.
+    ("210", FABLE): ("K135", dt.datetime(2026, 11, 25, 17, 0, tzinfo=dt.timezone.utc)),
 }
 SWEEP_HOURS = 24.0
 DIGEST_HOUR = 7

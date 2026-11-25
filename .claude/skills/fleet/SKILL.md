@@ -227,7 +227,8 @@ stage clone of the phase branch the issue's body names; after 07:00,
   with the usage unreadable. A resumed stage is not new. An exception the
   operator makes is a row of `CEILING_EXCEPTIONS` (phase and model, its
   K-id, its end), pinned by its test; unreadable usage is never excepted
-  (K135: phase 210's Fable stages, until 2026-11-25 16:00 UTC).
+  (K135: phase 210's Fable stages, until 2026-11-25 17:00 UTC, an hour
+  after Fable's week resets).
 - **Exit 4, before any cycle**: another dispatcher; no
   `~/.config/motodiag/anthropic.env`; a token that is not `sk-ant-oat…`;
   `ANTHROPIC_API_KEY` in its environment.

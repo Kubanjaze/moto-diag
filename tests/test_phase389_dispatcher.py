@@ -423,7 +423,7 @@ def test_an_exception_never_covers_usage_that_cannot_be_read(world, monkeypatch)
 def test_the_exceptions_in_force_are_pinned_and_each_is_a_recorded_decision():
     """An exception goes in only with the operator's K-id in docs/decisions.md."""
     assert D.CEILING_EXCEPTIONS == {
-        ("210", rank_call.FABLE): ("K135", dt.datetime(2026, 11, 25, 16, 0,
+        ("210", rank_call.FABLE): ("K135", dt.datetime(2026, 11, 25, 17, 0,
                                                        tzinfo=dt.timezone.utc))}
     rows = (ROOT / "docs" / "decisions.md").read_text(encoding="utf-8").splitlines()
     for kid, _ in D.CEILING_EXCEPTIONS.values():

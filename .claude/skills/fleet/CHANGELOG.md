@@ -7,8 +7,9 @@ plan writer had stopped on 210 at 21:12 EST, because Fable's weekly usage was
 77%, at or above `FABLE_CEILING` (70, Phase 389).
 
 - **`CEILING_EXCEPTIONS`:** (phase, model) to (K-id, end). Its one row is
-  phase 210's Fable stages, until 2026-11-25 16:00 UTC, just after Fable's
-  week resets (10:59 EST).
+  phase 210's Fable stages, until 2026-11-25 17:00 UTC. That is an hour after
+  Fable's week resets (11:00 EST): `/usage` gave the reset as 15:59:59.8 and
+  then as 16:00:00.3 UTC, and an end at the reset would leave a stage a gap.
 - **`ceiling_exception`** names the K-id that lets a new stage start over its
   model's ceiling. It never does once the end has passed, or when the usage
   line could not be read.
