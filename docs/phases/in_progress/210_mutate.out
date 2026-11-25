@@ -1,0 +1,19 @@
+M1 the terms gate without its version comparison: red
+M2 creating a customer without the membership check: red
+M3 no 409 for a shop with no tax jurisdiction: red
+M4 the feed's succeeded event leaves the invoice unpaid: red
+M5 the audit row without the actor's username: red
+M6 the manuals folder out of the backup: red
+M7 adding a member without manage_shop: red
+M8 the Shop plan's bike cap at 50: red
+M9 the schema condition one version behind: red
+M10 the test shop active read as ready: red
+M11 the key's value in condition 2's detail: red
+M12 SOMETHING IS OFF exits 0: red
+M13 the check opens the database through init_db: red
+M14 the disk floor at 5 GB: red
+M15 the backup with no age bound: red
+M16 the loopback read to any host: red
+M17 condition 3 without its own DSN test: red
+M18 the complete transition without the ledger's fill: red
+18/18 red

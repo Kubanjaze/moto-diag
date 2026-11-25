@@ -675,7 +675,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: (the passing stand-in, each of twenty breaks alone, never init_db, no
 #: write, no planted secret printed, loopback only, exit 2, the two pins)
 #: and 7 in test_phase210_wiring.py. Measured: 13305.
-COLLECTED_TEST_FLOOR = 13305
+#:
+#: Phase 210, the first shop's day, by a diff of collected ids against
+#: f1ab603 (13305): +35 -19. The 16 new ids are test_phase210_first_shops_day.py
+#: (one per step of the day, every step and no network, and the rebuild);
+#: the other 19 are test_phase210_launch_check.py's breaks given ids without
+#: spaces, so the mutations can name them (the same 20 cases). Measured: 13321.
+COLLECTED_TEST_FLOOR = 13321
 
 
 def _collected_count() -> int:

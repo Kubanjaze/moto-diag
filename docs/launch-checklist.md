@@ -18,6 +18,11 @@ alarm checking in; last night's backup; the terms switch on at version 1.1,
 as the running server answers on loopback; a manual reviewer set; the test
 shop inactive; the home desktop's free disk above 50 GB. It ends with
 ALL GOOD (exit 0) or SOMETHING IS OFF (exit 1), and writes nothing.
+Beside it, `tests/test_phase210_first_shops_day.py` walks the first shop's
+whole day through the API on a fresh database, with every regression: the
+wizard, the Shop plan, signing in, the terms, a work order with a part and
+an hour of labour, an invoice at the shop's own tax rate, a card payment
+through the payments feed, a manual, the audit log and the night's backup.
 
 **This checklist was first written on 2026-09-09, the day before the 244
 series added vision questions, a cost ledger, per-machine memory and passive

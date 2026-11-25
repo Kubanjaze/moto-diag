@@ -28,6 +28,9 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
+from support.phase345 import FAKE_VALUES, MemoryStore, cheap_crypto, write_env
+from support.phase371 import DSN_TEXT, PLANTED_DSN_KEY
+from support.stripe_fixtures import LIVE_KEY_PLANTED, TEST_KEY, TEST_SECRET
 
 from motodiag.backup.settings import BackupSettings
 from motodiag.backup.snapshot import take_snapshot
@@ -41,9 +44,6 @@ from motodiag.manuals.review import grant_reviewer
 from motodiag.payments import event_feed
 from motodiag.shop import create_shop
 from motodiag.shop.shop_repo import deactivate_shop
-from support.phase345 import FAKE_VALUES, MemoryStore, cheap_crypto, write_env
-from support.phase371 import DSN_TEXT, PLANTED_DSN_KEY
-from support.stripe_fixtures import LIVE_KEY_PLANTED, TEST_KEY, TEST_SECRET
 
 REPO = Path(__file__).resolve().parent.parent
 DISPATCHER = REPO / ".claude" / "skills" / "fleet" / "dispatcher.py"
@@ -295,8 +295,8 @@ def _low_disk(w):
 
 
 BREAKS = {
-    "schema one behind": (_schema_behind, 0,
-                          f"the database is at {SCHEMA_VERSION - 1} and the code at {SCHEMA_VERSION}"),
+    "schema one behind": (_schema_behind, 0, f"the database is at {SCHEMA_VERSION - 1} "
+                                             f"and the code at {SCHEMA_VERSION}"),
     "env dev": (_env(MOTODIAG_ENV="dev"), 1, "wrong: env=dev"),
     "provider fake": (_env(MOTODIAG_BILLING_PROVIDER="fake"), 1, "wrong: provider=not stripe"),
     "a test key": (_env(MOTODIAG_STRIPE_API_KEY=TEST_KEY), 1, "wrong: key=test"),
@@ -323,7 +323,7 @@ BREAKS = {
 }
 
 
-@pytest.mark.parametrize("case", list(BREAKS))
+@pytest.mark.parametrize("case", list(BREAKS), ids=[k.replace(" ", "_") for k in BREAKS])
 def test_each_condition_broken_alone_is_the_one_not_ready(world, case):
     breaks, index, reason = BREAKS[case]
     breaks(world)

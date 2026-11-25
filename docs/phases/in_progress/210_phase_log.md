@@ -122,3 +122,118 @@ On this branch at `4baeec5` (v1.0 as revised for K139, master merged in).
 - **`COLLECTED_TEST_FLOOR`** 13266 to 13305, by a diff of collected ids
   against `4baeec5`: +39 -0, all in the two new files.
 - `wholetree.sh` (fast): exit 0, 3049 passed, 10 skipped.
+
+## 2026-11-25 — the first shop's day (Logic item 1)
+
+`tests/test_phase210_first_shops_day.py`, 16 tests, nothing under `src/`.
+
+- **The shape.** The module-scoped `day` fixture runs the fourteen steps in
+  order inside one `MonkeyPatch` context, undone before any test reads the
+  results, so no setting of the day reaches another file's test on the same
+  worker. Each step's assertions run in the step; a failing step is
+  recorded with the note "the shop's day stopped at: <step>", and the
+  steps after it are not run. Each test names one step: it passes, re-raises
+  that step's own failure, or fails saying where the day stopped. The
+  fifteenth test holds that every step ran and that the network guard
+  refused nothing (its `_refuse` is wrapped to record each host); the
+  sixteenth builds the day again in a second folder and holds the ids equal.
+  Measured: alone 22.8 s; in one process after 303's, 334's and 372's files
+  and under `-n 4` with the launch check and 303's file, all green.
+- **The settings:** `STRIPE_ENV` (provider `stripe`, `TEST_KEY`, the test
+  webhook secret and prices), `MOTODIAG_TERMS_REQUIRED=true`,
+  `MOTODIAG_ENV=dev`, `MOTODIAG_DATA_DIR` under the day's folder, the stub
+  scanner on PATH; the database from `phase303.new_db` at schema 92.
+- **Reading 2, as built: the signed webhook round completes offline.** The
+  owner's `POST /v1/billing/checkout-session` (Stripe answers the recorded
+  `checkout_session_subscription`, and the request carries
+  `subscription_data[metadata][user_id]` = the owner and the shop price),
+  then a `customer.subscription.created` signed with `signed` under
+  `freeze_webhook_clock`, posted to `/v1/billing/webhooks/stripe`; the
+  handler re-read `GET /v1/subscriptions/sub_test_fixture273` from the
+  stand-in (the recorded `subscription_active` body, its `metadata.user_id`
+  the owner's), and `GET /v1/billing/subscription` says `shop`, `active`.
+  `make_sub` was not needed for the owner. The add-member call is 402
+  before and 201 after; the shop then has four members.
+- **Which refusal a mechanic without the terms meets first:** 403
+  `terms-not-accepted` on the work orders list, as the plan reads; never a
+  402, since the owner's plan covers the mechanic.
+- **Reading 4, as built: the mechanic's own adjust is admitted, and the
+  fill gives 1.0.** Clock-in 201, clock-out 200 with `duration_seconds` 0,
+  the mechanic's `PATCH /v1/shop/{id}/time-entries/{entry}` 200 with 3600,
+  and `complete` with no `actual_hours` returns `actual_hours` 1.0. Neither
+  fallback was used.
+- **The invoice's refusals as the app sees them:** 422 with "no labor rate
+  available" before `shop labor-rate set`; 409 `tax-not-on-record` naming
+  "shop 1 has no tax jurisdiction"; with the `labor` rule alone, 409 naming
+  `--line-type parts` and not `labor` (the installed part reached the
+  invoice); 201 after both rules. Labour 9500 cents an hour, the part 4500,
+  8.25 %: subtotal 14000, tax 1155, total 15155 cents, `sent`.
+- **The payment:** the account connected (`CREATE`, `LINK`: `restricted`),
+  refreshed (`READ_ACTIVE`: `active`); the mechanic's checkout 403 with no
+  request to Stripe; the owner's 201 for 15155 cents; then
+  `event_feed.poll_once` at `FROZEN_AT + 10`, the platform asked with no
+  `Stripe-Account` header and the shop's page with it, the shop's page
+  answering `succeeded` at 15155 cents. The invoice is `paid` and the list
+  says `succeeded`, `paid_invoice`.
+- **Found while building, recorded here, no change to `src/`:**
+  - the symptom and fault-code routes answer 200, not 201;
+  - the invoice's body is in cents (`subtotal_cents`, `tax_cents`,
+    `total_cents`, `unit_price_cents`);
+  - search hits carry `page_number` and `snippet`;
+  - the Shop plan's 20 GB of manuals is `20 * 1024**3` bytes
+    (21474836480);
+  - the fresh database's first shop is id 1, as live's test shop is.
+- **The 51st bike:** the owner's garage is filled to 50 through
+  `POST /v1/vehicles`, and the 51st is 201; the list says total 51, tier
+  `shop`, no quota limit.
+- **The audit step:** 28 writes to the shop's routes by the owner and the
+  mechanic, every one in `GET /v1/shop/{id}/audit` with the same method,
+  path, username and status, the mechanic's refused member-add with 403
+  among them.
+- **The backup step:** `take_snapshot` into a `MemoryStore`, label
+  `nightly`; the manifest lists the manual's PDF under `manuals/`;
+  `restore` into an empty folder gives the same row count in every table
+  `sqlite_master` names (`restore._rows`, over all of them), each of the
+  plan's 28 tables non-empty, and the PDF byte for byte; `runs.log` has one
+  line, `ok`.
+- **Not in the plan, decided here:** a second shop's member, on a Shop plan
+  of their own, is refused (403) a customer at the day's shop, the control
+  mutation 2 needs; the mechanic signs in a second session and signs it out
+  (204), so all four exempt paths are walked.
+
+## 2026-11-25 — the mutations and the old code
+
+- `docs/phases/in_progress/210_mutate.py`, eighteen mutations in 388's
+  harness: **18/18 red** (`210_mutate.out`). Each names the test that went
+  red: the day's step for M1 to M8 and M18, the launch check's cases for M9
+  to M17. The launch check's twenty breaks were given ids without spaces so
+  `-k` can name them.
+- **Old code** (the three files run with `PYTHONPATH` at a worktree of
+  `master`, whose `motodiag` was the one imported):
+  `test_phase210_launch_check.py` 1 error at import;
+  `test_phase210_wiring.py` 3 failed, 4 passed (the four read this branch's
+  files); `test_phase210_first_shops_day.py` 16 passed, by design.
+- **Controls, unchanged and green** (one run, `-n auto`): 676 passed, 1
+  skipped, over `test_phase303_auth_api.py`, `test_phase330_onboarding.py`,
+  `test_phase334_terms_routes.py`, `test_phase293_terms.py`,
+  `test_phase293_manuals_api.py`, `test_phase293_review.py`,
+  `test_phase345_snapshot_restore.py`, `test_phase348_audit_middleware.py`,
+  `test_phase348_audit_api.py`, `test_phase371_event_feed.py`,
+  `test_phase372_payment_routes.py`, `test_phase273_subscriptions.py`,
+  `test_phase201_parts_api.py`, `test_phase202_time_tracking.py`,
+  `test_phase169_invoicing.py`, `test_phase281_tax.py`,
+  `test_phase404_bike_limit.py`, `test_phase404_feed_checkin_status.py`,
+  `test_phase402_share_links_off.py`, `test_phase209B_integration_gaps.py`
+  and `test_phase244H_test_db_isolation.py`.
+- **`COLLECTED_TEST_FLOOR`** 13305 to 13321, by a diff of collected ids
+  against `f1ab603`: +35 -19 (16 new in the day's file; 19 of the launch
+  check's breaks renamed).
+- **The clock census (K19) caught the day's first form.** The tax records
+  were dated from `date.today()`, which `test_phase378_test_clock_census.py`
+  counts as a test reading the clock (three new lines; the census failed in
+  `wholetree.sh`). The records now carry fixed dates that span every day the
+  test can run on (effective 2026-01-01, valid until 2099-12-31, checked
+  2026-11-25), since the invoice is dated by `tax.today()`; the test reads
+  no clock, and the census is unchanged. Not a bug in the shipped code: the
+  test was never committed in the first form. M3 re-run on the new form:
+  red. `wholetree.sh` (fast): exit 0, 3049 passed, 10 skipped.
