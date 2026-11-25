@@ -6,7 +6,7 @@ Written 2026-10-12 by the advisor session that verified Phases 373–381. This c
 
 The fleet reads this table exactly (`.claude/skills/fleet/plan_order.py`): the first row whose ROADMAP row is not ✅ is the next mission. A row built by a builder session is waited for. A row that needs the operator is asked first, in plain English. Otherwise the fleet opens the mission's issue and a one-row pull request that marks its row 🚧, and the operator merges it by hand (K49). The list changes only by a dated entry under "Changes to the order" with a K-id, written on the operator's word (K48).
 
-As of 2026-11-22, K128.
+As of 2026-11-25, K140.
 
 | # | phase | kind | built by | needs the operator | entry |
 |---|---|---|---|---|---|
@@ -34,7 +34,10 @@ As of 2026-11-22, K128.
 | 22 | 334B | shop | builder | nothing | 2026-11-20, evening · K98 |
 | 23 | 372B | shop | builder | nothing | 2026-11-20, evening · K98 |
 | 24 | 210 | shop | fleet | nothing | Wave 1, item 6 · K48 |
-| 25 | 344 | shop | fleet | nothing | Wave 1, item 5 · K48, K128 |
+| 25 | 409 | shop | fleet | a fork: how the internet reaches the server (a tunnel, a rented server in front, or another way; the record's rule is never the LAN and never Funnel, unless the operator asks) and its name; and an outside account for the way in and for the name's DNS | 2026-11-25 · K140, K137 |
+| 26 | 329 | shop | fleet | a fork: K101 keeps the support email for the first 10 shops and sign-ups off the Mekno server, where self-serve sign-up has to make the account; and where the sign-up form lives; and an outside account: the email service that sends the address check and the password reset | 2026-11-25 · K140, K137, K101 |
+| 27 | 410 | shop | builder | an outside account: Apple's developer account and App Store Connect, the operator's own (K136); and a fork: the review account, and how Mekno answers Apple's rules on deleting an account in the app and on plans bought outside it | 2026-11-25 · K140, K137, K136 |
+| 28 | 344 | shop | fleet | nothing | Wave 1, item 5 · K48, K128 |
 
 The ROADMAP stays the ledger: this file records the order of the open rows, and why. A Step 0 that measures something new can change the order. Any change is recorded here, dated.
 
@@ -215,6 +218,14 @@ The operator's words:
   - **The test shop is marked inactive before the onboarding day,** with a block the advisor writes when the operator asks (K124's hold stands).
   - **210, launch readiness, gets a written scope** before the fleet reaches it.
   - **The advisor's estimate, a guess:** 7 to 10 working days to launch at the current pace. The likeliest to slip is 372B with the Stripe side, which waits on Stripe support for the terms links.
+- **2026-11-25: three phases come between 210 and 344, in the operator's order (K140).** They are K137's phase after 210, split in three.
+  - **The operator's words:** "Three, in this order: 1 public web address for the server, 2 self-serve sign-up (row 329), 3 TestFlight then App Store. 344 after all three. Write the list change and the three one-page scopes, documents only, no building, and give me one block to merge them." They answer the advisor's question, once 210's plan was approved and its build had started, whether K137's phase is one phase or three.
+  - **409, a public web address for the server, is #25,** a new row. Sign-up and the App Store both need the server reachable off the tailnet: K136's answer 2 says "App Store once a public API exists".
+  - **329, self-serve sign-up, is #26:** the existing row, retitled from "Self-service signup flow (web)", since where the form lives is a question for its Step 0.
+  - **410, TestFlight then the App Store, is #27,** a new row. A builder session on the app's repository builds it, as 303B, 334B and 372B were built.
+  - **344 moves down three places, to 28.** It still waits until after launch (K128).
+  - **Each of the three asks the operator before it starts,** and its row says what: how the internet reaches the server, for 409; K101's rule for the first 10 shops, where the form lives and the email service, for 329; Apple's account and its review rules, for 410.
+  - **The prompts,** one page each, are `docs/prompts/409_a_public_web_address_for_the_server.txt`, `docs/prompts/329_self_serve_sign_up.txt` and `docs/prompts/410_testflight_then_the_app_store.txt`. They are written before the fleet reaches them, as 210's was (K128). Rows 409, 329 and 410 are on master, 🔲.
 
 ## Where the ledger stands
 

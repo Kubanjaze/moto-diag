@@ -1,0 +1,34 @@
+Do this: start Phase 410, TestFlight then the App Store (row 410, on master as 🔲: the builder session makes it 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out. It is a builder session's on the app's repository (moto-diag-mobile), as 303B, 334B and 372B were. This page is in moto-diag because the ledger is.
+
+My words:
+- K136 (2026-11-24), answer 2: "TestFlight for the first shop; App Store once a public API exists; Mac install ends with 210."
+- K137 (2026-11-24): "Also record as a K-decision: the phase after 210 is self-serve onboarding (sign-up, email verify, password reset, create shop, Stripe checkout that creates the shop and owner login), a public HTTPS API address, and TestFlight then App Store. 210 is the hand-run launch for shop one, not the final shape. No building."
+- K140 (2026-11-25): "Three, in this order: 1 public web address for the server, 2 self-serve sign-up (row 329), 3 TestFlight then App Store. 344 after all three. Write the list change and the three one-page scopes, documents only, no building, and give me one block to merge them."
+
+**The App Store release** means any shop can install the app from the App Store and sign in to the server at 409's public address, and, with 329, sign up. Shop one's phones move to the App Store build from the TestFlight build 210 gives them (210's live step b, from the Mac, on the operator's own Apple account). This phase readies the app for Apple's review and takes it through. It comes after 409 and 329: the App Store waits for a public API (K136), and Apple reviews the sign-up the app offers.
+
+**In order:**
+1. **The app pointed at the public address** (the builder): its default server address becomes 409's https name. The tailnet name stays usable until shop one's phones move.
+2. **The release blockers, re-read and cleared** (the builder). The app's `docs/testflight.md` ("Release blockers") and `docs/app-store-listing.md` ("Blockers before submission") date from 2026-09-07 (`0f2058a`). Read each against today:
+   - the privacy page has existed on getmekno.com since 408;
+   - the demo server for review is 409's address, with a review account;
+   - screenshots;
+   - the privacy questionnaire, checked against the build that ships.
+   Apple's current review rules are read at Step 0 from Apple's own pages. Among them: account deletion inside an app where people can sign up (329), and how an app may refer to plans bought outside it (Mekno's plans are bought on Stripe). Each rule that applies becomes a step, or a stop.
+3. **TestFlight, then the App Store** (the operator's, from the builder's paste blocks, each tested before it is handed over):
+   - the build number raised for every upload;
+   - a TestFlight build to the internal testers;
+   - the listing's text from `docs/app-store-listing.md`, and the review account's sign-in in the review notes;
+   - the submission;
+   - shop one's phones moved from TestFlight to the App Store build.
+
+**For Step 0, the operator's** (rule 1: each answer ships something different):
+1. whether the App Store release waits for 329's sign-up to be in the app (if 329's answer puts it there), or ships first for shops made by hand;
+2. the review account: a demo shop on live, kept apart from real shops, or a server of its own for review;
+3. if Apple's rules ask for account deletion in the app or for buying a plan inside the app, how Mekno answers. That is a product decision, so it is a stop.
+
+**Stops:** every step on Apple's side, which is the operator's own account (App Store Connect, its agreements, the uploads, the submission); a demo shop on live (a live row); anything bought inside the app.
+
+**Not in this phase:** Android and Google Play (a later phase); new screens beyond what review asks for; 293B, the app's manual screens (its own phase, though it may ship in the same release).
+
+**Closes** no finding. F64 (the app's) is 409's.
