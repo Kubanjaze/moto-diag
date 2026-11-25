@@ -419,3 +419,14 @@ backup call in the tax block.
   the root `phase_log.md`'s pointer.
 - F301 marked closed by this phase's launch check.
 - The handoff: `docs/handoffs/2026-11-25_210_closed.md`.
+
+## 2026-11-25 — the Red Team's round 1, two document fixes
+
+- The Logic section's "As built" line counted Deviations 1 to 16 when there
+  are more; the range is deleted.
+- The handoff's step 6 checks the regression commit (`847c1c2`), not the
+  phase's last commit as the plan's step e says. The handoff is written in
+  the close-out commit, which cannot name its own hash, and
+  `git diff 847c1c2 7210f02 -- src/` is empty. Deviation 18 says so, and
+  v1.1's history row now counts eighteen. No code changed, so the
+  regression of record stands.
