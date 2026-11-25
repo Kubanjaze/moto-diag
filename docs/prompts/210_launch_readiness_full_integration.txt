@@ -1,0 +1,39 @@
+Do this: start Phase 210, launch readiness (row 210, on master as 🔲: the fleet's row pull request makes it 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out.
+
+My words:
+- K128 (2026-11-22), after the advisor's status of what is left before launch: "im taking all your recommendations, log it all, prompt me when its time to continue and you give me the next prompt for main". Among the recommendations: "210, launch readiness, gets a written scope before the fleet reaches it."
+- K134 (2026-11-24): "Draft 210's scope now as a plan request on master: what "launch ready" means for a first paying shop, in order, with the app's manual screens (293B) and the terms switch inside it or explicitly after it. Keep it to one page."
+
+**Launch ready** means one paying shop runs its working day in the app, on live, and a check says so. Every row a first shop needs is ✅: 303, 330, 334, 343, 345, 348, 371, 372, 402, 404 and 405 here, and 303B, 334B and 372B in the app. 210 builds nothing new for shops: it proves the rows work together, and it says on live whether launch can happen.
+
+**In order:**
+1. **The first shop's day, end to end** (the fleet; the "full integration" of the row's title). One test file walks it through the API on a fresh database at the live schema, with the terms switch on as it will be at launch:
+   - a shop made with 330's wizard; its owner and a mechanic signing in (303), each limited to their role;
+   - the terms refused until version 1.1 is accepted, then accepted (334, 293);
+   - a customer and a bike; a diagnosis; a work order with parts and labour;
+   - an invoice at the shop's own tax rate, paid by card in Stripe's test mode through the payments feed's path (371, 372);
+   - the plan's subscription and its limits (404); a manual uploaded, reviewed and opened (293);
+   - the audit log naming who did each step (348), and the night's backup holding the shop's data and files (345).
+   Each step asserts what the shop would see. It needs no network, so it runs inside the fleet's fence too.
+2. **One read-only launch check** (the fleet). A command on the server reads live and prints each condition below as ready or not, and exits 0 only when all are ready. It prints no key or secret and writes nothing: it opens live without `init_db` (F292). The conditions: the schema at the code's version; the server in prod, with Stripe live and the real tier prices; the payments feed and Sentry's alarm checking in; last night's backup; the terms switch on, at version 1.1; a reviewer set (293); the test shop inactive (K124); the home desktop's free disk above the floor 390 set.
+3. **The live steps** (the operator's, in the handoff, in this order, each a paste block tested before it is handed over):
+   a. **Stripe live,** as 402's handoff sets out: the live account, Connect on for live, the real tier prices, and the live key typed by hand into the server's settings file, never in chat; then prod, and the alarm's test the moment live Stripe is on (K72). The server stays tailnet-only (K74).
+   b. **The app on the shop's phones,** with 303B, 334B, 372B and 293's types, and those phones on the tailnet (K74).
+   c. **The terms switch on,** on live, then 334B's check on a phone. This is inside 210: K128's two conditions are met, since 334B is on the app's main and 293's version 1.1 is on live and on getmekno.com. It goes on after (b), so no phone meets the terms gate without the screen to accept them.
+   d. **The test shop marked inactive** (K124; the advisor writes its block when the operator asks).
+   e. **The launch check on live prints ALL GOOD.** Then comes the onboarding day: the first shop's account, made with 330's wizard.
+
+**Explicitly after 210:**
+- **293B, the app's manual screens** (a builder session on the app). The server side is live and nothing in a shop's day needs the screens, so they reach the shop's phones as an app update after launch. It is the first app phase after it.
+- 344, the in-app support channel (K128; the support email covers the first shops, K101); the card reader (372B's non-goal); F299 and F300; Wave 2.
+
+**For Step 0, the operator's** (rule 1: each answer ships something different):
+1. how the app reaches a shop's phones: TestFlight, or installed from the Mac as today;
+2. how a shop's phones join the tailnet (K74), and which of the shop's staff get the app;
+3. whether launch starts with live card payments for the shop's customers, Mekno's own subscription, or both.
+
+**Stops:** the three questions above; any change to a live row beyond the steps above; an outside account (Apple's, Stripe's and Tailscale's are the operator's).
+
+**Not in this phase:** new screens or features; a lawyer's read of the terms (K122); a public front door (K74); a second shop (Wave 3).
+
+**Closes** no finding. If Step 0 finds a launch condition this page does not name, a finding names it, and the check gains it.
