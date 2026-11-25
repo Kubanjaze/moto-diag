@@ -664,7 +664,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: test_phase389_dispatcher.py (the exception lets 210's Fable stages run;
 #: it ends at its moment; another phase and another model, two cases; never
 #: for usage that cannot be read; the exceptions in force are pinned).
-COLLECTED_TEST_FLOOR = 13264
+#:
+#: K138, the same exception for 210's Opus stages, by a diff of collected
+#: ids against master at c98cfef: +2 -0, both in test_phase389_dispatcher.py
+#: (the Engineer starts over the all-models ceiling under it, and its
+#: control: no start without it).
+COLLECTED_TEST_FLOOR = 13266
 
 
 def _collected_count() -> int:
