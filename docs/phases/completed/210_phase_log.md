@@ -1,6 +1,6 @@
 # Phase 210 — phase log
 
-**Status:** In progress
+**Status:** Complete (closed 2026-11-25; no database step, nothing changed on live)
 
 ## 2026-11-25 — Step 0, re-measured by the Engineer
 
@@ -269,8 +269,153 @@ wall). The one failure is Bug fix #1, below; not F300.
 - **Verified:** red before the fix, alone (1 failed); after it,
   `tests/test_phase293_checks.py` 17 passed. With `_command`'s fallback to
   `clamscan` removed the test is red (it returns None).
-- **Commit:** `c80082a`.
+
+**Commit.** `c80082a` ("Phase 210, bug fix #1: 293's scanner test met a real ClamAV").
 
 `c80082a` was committed before `wholetree.sh` ran on it, against rule 3;
 it ran straight after, on that commit, clean: exit 0, 3049 passed, 10
 skipped, record written. Nothing changed between.
+
+## 2026-11-25 — the regression of record, at `847c1c2`
+
+`wholetree.sh --full` at `847c1c2` passed first: 5518 passed, 36 skipped
+(1079.0 s wall). Then `regression.sh` on the clean tree, its record exactly
+as it printed it:
+
+Regression of record: 13216 passed, 0 failed, 105 skipped, 0 errors at `847c1c2` (36 min 49 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0) (run inside the fleet's fence)
+Skipped in the regression of record: [1] tests/test_phase191b_ffmpeg.py:249: real ffmpeg binary or fixture mp4 not available
+Skipped in the regression of record: [1] tests/test_phase191b_ffmpeg.py:264: real ffmpeg binary or fixture mp4 not available
+Skipped in the regression of record: [1] tests/test_phase191b_ffmpeg.py:269: real ffmpeg binary or fixture mp4 not available
+Skipped in the regression of record: [1] tests/test_phase191b_ffmpeg.py:277: real ffmpeg binary or fixture mp4 not available
+Skipped in the regression of record: [1] tests/test_phase191b_ffmpeg.py:283: real ffmpeg binary or fixture mp4 not available
+Skipped in the regression of record: [1] tests/test_phase204_gate10.py:47: inside the fleet's fence: no ffmpeg on the home desktop
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:104: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:121: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:137: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:145: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:153: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:162: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:175: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:185: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:218: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:223: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:248: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:259: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:272: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:292: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:306: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:321: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:333: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:340: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:438: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:445: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase209_packaging.py:464: inside the fleet's fence: no network to build a wheel
+Skipped in the regression of record: [1] tests/test_phase244H_test_db_isolation.py:79: no production database on this machine
+Skipped in the regression of record: [1] tests/test_phase257_orchestrator_guards.py:85: inside the fleet's fence: no Subconscious login there (K42)
+Skipped in the regression of record: [2] tests/test_phase257_orchestrator_guards.py:149: inside the fleet's fence: osacompile is macOS-only
+Skipped in the regression of record: [4] tests/test_phase257_sandbox_boundary.py:72: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:80: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:87: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:93: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:106: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:112: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:119: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:125: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [1] tests/test_phase257_sandbox_boundary.py:131: sandbox-exec is macOS-only; the orchestrator runs only there
+Skipped in the regression of record: [7] tests/test_phase257_source_checks.py:211: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase257_source_checks.py:476: acquired/Yamaha/library_om_contents_pdf_10_5YR-F8199-15_02.pdf is not in this machine's library
+Skipped in the regression of record: [1] tests/test_phase257_source_checks.py:476: acquired/KTM/24_3214961_en_OM.pdf is not in this machine's library
+Skipped in the regression of record: [1] tests/test_phase257_source_checks.py:527: the KTM manual is not in this machine's library
+Skipped in the regression of record: [1] tests/test_phase257_manual_route_excerpts.py:147: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase257_manual_route_excerpts.py:352: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase257_manual_route_excerpts.py:358: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase257_manual_route_excerpts.py:364: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase257_manual_route_excerpts.py:367: needs the on-disk library
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:61: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [4] tests/test_phase388_fence_boundary.py:96: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [3] tests/test_phase388_fence_boundary.py:105: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [7] tests/test_phase388_fence_boundary.py:221: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:235: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:244: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:280: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:287: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:291: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:295: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:303: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:316: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:325: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:330: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:338: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:344: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:350: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:354: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:360: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:113: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:120: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:125: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:131: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:139: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:148: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:159: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:164: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:170: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:177: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:186: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:198: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:210: inside the fleet's fence: its boundary is proven from the host, not from inside
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:216: inside the fleet's fence: its boundary is proven from the host, not from inside
+Line coverage of record: 88.60% at `847c1c2` (the pin is 88.00%): 0.60 points above it; raise COVERAGE_PERCENT to lock it in
+
+The 105 skips are the fence's, the same files and reasons as 293's run in
+the fence. F300 did not bite. Coverage 88.60%, the pin 88.00%; the pin is
+left as it is, as no rule asks this phase to raise it.
+
+## 2026-11-25 — the handoff's blocks, tested against a stand-in desktop
+
+Each paste block was written to a file under `/fleet/run/s210/blocks/`
+and run from there, in a clean environment (`env -i`, as a new terminal
+has), with `HOME` at a stand-in desktop built by a script under
+`/fleet/run`: a local clone of this branch as the server's checkout with
+the clone's venv, a settings file with planted values (mode 600), a live
+database at 92 with shop 1 inactive, a reviewer, the feed asked and the
+alarm checked in, a backup log, and the real API server
+(`motodiag serve --host 127.0.0.1 --port 8000`) on the stand-in database.
+`sudo` and `systemctl` were stand-ins that do nothing, and so was the
+backup call in the tax block.
+
+- Every block passes `bash -n`, before and after the regression commit was
+  filled in.
+- **Live payments check:** ALL GOOD on a fresh stand-in; SOMETHING IS OFF
+  with a settings line missing, and with the feed not asked for a minute.
+- **The terms switch:** added once with its dated comment and ALL GOOD; a
+  second paste added nothing and ALL GOOD; a conflicting line and two lines
+  each refused, nothing changed.
+- **The launch check on the stand-in live:** before the switch, seven
+  `ready:` lines and NOT READY on the terms switch only, SOMETHING IS OFF,
+  exit 1; after it, eight `ready:` lines and ALL GOOD, against the real
+  server on loopback.
+- **The plan check:** an empty name and a shop with no plan each refused
+  with the plan's words; ALL GOOD once the owner held an active Shop plan.
+- **The labour-rate and tax block:** an empty line and a bad state each
+  refused, nothing changed; filled in, it recorded the rate, the
+  jurisdiction, the link, the shop's rate and both rules, printed `shop tax
+  status` and ALL GOOD; a second paste recorded the same again and ALL
+  GOOD (the newest labour rate is the one used).
+- **Found by it:** the fence's shell has an HTTP proxy, and `curl` to
+  `127.0.0.1` went through it (403) until the environment was cleaned; the
+  launch check's own read opens with no proxy (Deviation 6). The stand-in's
+  first form linked only `python` into a folder, which is not a venv; it
+  linked the whole venv after.
+- Not run: anything that reads GitHub, the Mac's app folder, the desktop's
+  real services, or a real backup of live.
+
+## 2026-11-25 — the close-out
+
+- `210_implementation.md` v1.1: an "As built" line in every section,
+  Deviations (seventeen), Results, no open boxes, its history row.
+- The phase's files moved to `docs/phases/completed/` with `git mv`.
+- The ROADMAP row ✅, **CLOSED 2026-11-25**, with the regression line.
+- The root `implementation.md` 0.13.146 to 0.13.147 and its history row;
+  the root `phase_log.md`'s pointer.
+- F301 marked closed by this phase's launch check.
+- The handoff: `docs/handoffs/2026-11-25_210_closed.md`.

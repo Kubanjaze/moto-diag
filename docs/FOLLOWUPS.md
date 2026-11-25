@@ -7109,7 +7109,7 @@ own, with no inherited `MOTODIAG_DB_PATH`, `MOTODIAG_TEST_DEFAULT_DB` or
 that runs 244H and then this test in one process, seen red first on
 today's code.
 
-### F301
+### F301 — CLOSED by Phase 210's launch check (conditions 2 and 5)
 
 **210's written scope names eight launch conditions and misses two that launch depends on: the server answering on loopback, and share links off**
 
