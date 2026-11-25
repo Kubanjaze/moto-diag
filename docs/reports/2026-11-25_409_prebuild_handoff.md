@@ -4,7 +4,9 @@
 
 The checks come first and change nothing. The steps that change something each say what they change and how it is undone.
 
-What you decide before Step 1 (the plan page, `docs/reports/2026-11-25_409_prebuild_plan.md`, has the reasons): the way in is a Cloudflare Tunnel; the name is `api.getmekno.com`; the API's help pages go off; share links stay off; manual uploads over 100 MB do not go through the public name. If you want any of those different, say so before Step 1, because Step 5's settings carry them.
+What you decided on 2026-11-25 (the plan page, `docs/reports/2026-11-25_409_prebuild_plan.md`, has the reasons): the way in is a Cloudflare Tunnel; the name is `api.getmekno.com`; the API's help pages go off; share links stay off; manuals over 100 MB keep uploading over Tailscale for now. Step 5's settings carry these.
+
+**Before Step 4 (the tunnel), two things must be true:** the privacy page on getmekno.com names Cloudflare for the app's traffic (Step 1 checks it), and the app's copy of the API has been refreshed.
 
 ---
 
@@ -12,7 +14,7 @@ What you decide before Step 1 (the plan page, `docs/reports/2026-11-25_409_prebu
 
 **Which computer:** the home desktop. **Which window:** the Ubuntu terminal.
 
-It checks that the app server and the payments feed are running, that the server answers on its own machine and only there, whether the server runs the code with the new protections yet, that getmekno.com's names are kept by Cloudflare, and whether a tunnel is installed yet.
+It checks that the app server and the payments feed are running, that the server answers on its own machine and only there, whether the server runs the code with the new protections yet, that getmekno.com's names are kept by Cloudflare, whether the privacy page names Cloudflare for the app, and whether a tunnel is installed yet.
 
 ```bash
 bash <<'EOF409A'
@@ -36,6 +38,12 @@ fi
 NS=$(curl -fsS -m 15 -H 'accept: application/dns-json' 'https://cloudflare-dns.com/dns-query?name=getmekno.com&type=NS') || bad "could not look up getmekno.com's name servers"
 echo "$NS" | grep -qi 'ns.cloudflare.com' || bad "getmekno.com's names are not kept by Cloudflare"
 echo "getmekno.com's names are kept by Cloudflare."
+PRIV=$(curl -fsS -m 15 https://getmekno.com/privacy/ 2>/dev/null) || bad "could not read getmekno.com/privacy/"
+if echo "$PRIV" | grep -qi 'cloudflare, for the connection'; then
+  echo "The privacy page names Cloudflare for the app's traffic."
+else
+  echo "Note: the privacy page does not name Cloudflare for the app yet. Do not do Step 4 until it does."
+fi
 if command -v cloudflared >/dev/null 2>&1; then
   echo "Note: cloudflared is already installed ($(cloudflared --version 2>&1 | head -1)); Step 4 will reuse it."
 else
@@ -87,12 +95,13 @@ Then paste Step 1 again on the desktop: it must now say "The server's code alrea
 
 **Which computer:** the home desktop. **Which window:** the Ubuntu terminal. Have the token from Step 3 copied.
 
-It downloads Cloudflare's tunnel program from Cloudflare's own release page, installs it, and asks you to paste the token (it is not shown on screen and not kept in the history). It sets the tunnel up as a service that starts with the desktop, and checks it connected. It asks for your Ubuntu password. To undo: the last block on this page.
+It first checks the privacy page names Cloudflare for the app. Then it downloads Cloudflare's tunnel program from Cloudflare's own release page, installs it, and asks you to paste the token (it is not shown on screen and not kept in the history). It sets the tunnel up as a service that starts with the desktop, and checks it connected. It asks for your Ubuntu password. To undo: the last block on this page.
 
 ```bash
 bash <<'EOF409C'
 set -u
 bad() { echo; echo "SOMETHING IS OFF: $1"; exit 1; }
+curl -fsS -m 15 https://getmekno.com/privacy/ | grep -qi 'cloudflare, for the connection' || bad "the privacy page does not name Cloudflare for the app yet; nothing was changed"
 [ -f ~/motodiag/server/src/motodiag/auth/login_throttle.py ] || bad "the server's code does not have the new protections yet: do Step 2 first; nothing was changed"
 if ! command -v cloudflared >/dev/null 2>&1; then
   TMP=$(mktemp -d)
