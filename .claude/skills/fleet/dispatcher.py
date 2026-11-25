@@ -147,6 +147,10 @@ CEILING_EXCEPTIONS: dict[tuple[str, str], tuple[str, dt.datetime]] = {
     # EST, read twice as 15:59:59.8 and 16:00:00.3 UTC), so no stage meets a
     # gap between the end and the reset.
     ("210", FABLE): ("K135", dt.datetime(2026, 11, 25, 17, 0, tzinfo=dt.timezone.utc)),
+    # K138, 2026-11-24: "i want the exception to run until we max for right
+    # now". Phase 210's Opus stages too, over the all-models ceiling, to the
+    # same end; a usage limit at 100% still pauses a stage until its reset.
+    ("210", OPUS): ("K138", dt.datetime(2026, 11, 25, 17, 0, tzinfo=dt.timezone.utc)),
 }
 SWEEP_HOURS = 24.0
 DIGEST_HOUR = 7

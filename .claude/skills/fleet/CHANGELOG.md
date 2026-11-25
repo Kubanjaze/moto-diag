@@ -1,5 +1,19 @@
 # fleet — changelog
 
+## 2026-11-24, later — the exception covers 210's Opus stages too (K138)
+
+The operator: "i want the exception to run until we max for right now"
+(K138). It answers the advisor's note that K135 left the all-models ceiling
+in force for the Chief Engineer and the Red Team, which was at 67% then.
+
+- **`CEILING_EXCEPTIONS`** gains `("210", OPUS)`, to K135's end (2026-11-25
+  17:00 UTC). A stage that meets a usage limit at 100% pauses until its
+  reset, as before (Phase 388). "Until we max" needs nothing more.
+- **Held by** `tests/test_phase389_dispatcher.py`: the Engineer starts with
+  the all-models figure at 70% under the exception (it went red on the
+  `never` mutant), and its control does not start without it. The pin names
+  both rows.
+
 ## 2026-11-24 — an exception to the usage ceilings, by its K-id (K135)
 
 The operator, 2026-11-24: "make an exception and continue on" (K135). The
