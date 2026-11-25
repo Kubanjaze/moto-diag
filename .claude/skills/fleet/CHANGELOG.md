@@ -1,5 +1,33 @@
 # fleet — changelog
 
+## 2026-11-24 — an exception to the usage ceilings, by its K-id (K135)
+
+The operator, 2026-11-24: "make an exception and continue on" (K135). The
+plan writer had stopped on 210 at 21:12 EST, because Fable's weekly usage was
+77%, at or above `FABLE_CEILING` (70, Phase 389).
+
+- **`CEILING_EXCEPTIONS`:** (phase, model) to (K-id, end). Its one row is
+  phase 210's Fable stages, until 2026-11-25 17:00 UTC. That is an hour after
+  Fable's week resets (11:00 EST): `/usage` gave the reset as 15:59:59.8 and
+  then as 16:00:00.3 UTC, and an end at the reset would leave a stage a gap.
+- **`ceiling_exception`** names the K-id that lets a new stage start over its
+  model's ceiling. It never does once the end has passed, or when the usage
+  line could not be read.
+- **`gate_model`** logs a start under the K-id, and stops as before
+  otherwise. The Opus ceiling has no exception.
+- **Held by** `tests/test_phase389_dispatcher.py`:
+  - an exception lets the Captain and the Executive Officer run over the
+    ceiling;
+  - it ends at its moment, and is for its own phase and model;
+  - it never covers usage that cannot be read;
+  - the exceptions in force are pinned, each with its row in
+    `docs/decisions.md`.
+  Each of these tests went red on its own mutant of `ceiling_exception`,
+  and the pin went red before K135's row existed.
+- **Known limit:** an end is a fixed moment, written by hand from
+  `/usage`'s reset. A spent row stays until a later change removes it, and
+  the pin makes that change deliberate.
+
 ## 2026-11-20 — a reshape is asked first, with its label (Phase 407, K96, F285)
 
 The operator: "do that and let me know where issues stand" (K96), answering

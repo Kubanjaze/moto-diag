@@ -32,7 +32,12 @@ My words:
 2. how a shop's phones join the tailnet (K74), and which of the shop's staff get the app;
 3. whether launch starts with live card payments for the shop's customers, Mekno's own subscription, or both.
 
-**Stops:** the three questions above; any change to a live row beyond the steps above; an outside account (Apple's, Stripe's and Tailscale's are the operator's).
+**The operator's answers, 2026-11-24 (K136), word for word.** Answer 1 confirms the stops; answers 2 to 4 answer questions 1 to 3 above. Where this page says otherwise, the answers win.
+"1: Yes, the fleet stops before Stripe live, phone install, terms switch and marking the test shop inactive. 2: TestFlight for the first shop; App Store once a public API exists; Mac install ends with 210. 3: No private network as the product; for shop one only, the phones join Tailscale as a stopgap. Roles: 1 owner, 2 to 5 mechanics. 4: Shop pays Mekno first; customer card payments later."
+
+**After 210 (K137), the operator's words:** "the phase after 210 is self-serve onboarding (sign-up, email verify, password reset, create shop, Stripe checkout that creates the shop and owner login), a public HTTPS API address, and TestFlight then App Store. 210 is the hand-run launch for shop one, not the final shape."
+
+**Stops:** before each live step in 3, as answer 1 says; any change to a live row beyond those steps; an outside account (Apple's, Stripe's and Tailscale's are the operator's).
 
 **Not in this phase:** new screens or features; a lawyer's read of the terms (K122); a public front door (K74); a second shop (Wave 3).
 
