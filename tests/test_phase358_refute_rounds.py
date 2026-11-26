@@ -23,6 +23,7 @@ SKILL = ROOT / ".claude" / "skills" / "refute"
 sys.path.insert(0, str(SKILL))
 sys.path.insert(0, str(ROOT / ".claude" / "skills" / "closeout"))
 
+import closeout_check as C  # noqa: E402
 import refute_check as R  # noqa: E402
 
 FIX = SKILL / "fixtures"
@@ -85,7 +86,10 @@ class TestTheOldFormat:
                       if R.find_block(p.read_text(encoding="utf-8"))}
         # Phase 359 bug fix #4: this compared every log with a checklist to
         # OLD_FORMAT, so the first close written in the new format failed it.
-        failing_new_format = {phase for phase, text in with_block.items() if R.check(text)}
+        # F302: each log with its phase's grants (K88), as closeout_check
+        # passes them, or a granted round reads as one round too many.
+        failing_new_format = {phase for phase, text in with_block.items()
+                              if R.check(text, grants=C.review_grants(ROOT, phase))}
         assert failing_new_format == R.OLD_FORMAT
         for phase in R.OLD_FORMAT:
             assert R.check(with_block[phase], require_rounds=False) == [], phase
