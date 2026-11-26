@@ -571,3 +571,32 @@ says the check changes nothing on live, as at its line 64.
   grant, so the fleet held the phase for the operator. The operator had
   the advisor make this fix by hand and granted one more review round.
   No code changed, so the regression of record at `e115e6c` stands.
+
+## Refuter pass
+
+| claim | verdict | quote | source | round · kind · outcome |
+|---|---|---|---|---|
+| Regression of record: 13216 passed, 0 failed, 105 skipped at e115e6c, 41 min 13 s | kept | "Regression of record: 13216 passed, 0 failed, 105 skipped, 0 errors at `e115e6cf` (41 min 13 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0)" | docs/phases/completed/210_phase_log.md p. 469 | 4 K143 · none · kept |
+| Coverage of record 88.60% against the 88.00% pin | kept | "Line coverage of record: 88.60% at `e115e6cf` (the pin is 88.00%)" | docs/phases/completed/210_phase_log.md p. 551 | 4 K143 · none · kept |
+| wholetree.sh --full at the same commit: 5518 passed, 36 skipped | kept | "`wholetree.sh --full` at `e115e6c` passed first: 5518 passed, 36 skipped" | docs/phases/completed/210_phase_log.md p. 465 | 4 K143 · none · kept |
+| Mutations 18/18 red | kept | "18/18 red" | docs/phases/completed/210_mutate.out p. 19 | 4 K143 · none · kept |
+| COLLECTED_TEST_FLOOR 13266 to 13305, then 13321, by diffs of collected ids (13216 + 105 = 13321) | kept | "COLLECTED_TEST_FLOOR = 13321" | tests/test_phase255B_collected_test_floor.py p. 684 | 4 K143 · none · kept |
+| 55 new tests: 16 in the day's file, 32 in the launch check's (twenty breaks), 7 in the wiring file | kept | "+39 -0, 32 in test_phase210_launch_check.py (the passing stand-in, each of twenty breaks alone, never init_db, no write, no planted secret printed, loopback only, exit 2, the two pins) and 7 in test_phase210_wiring.py" | tests/test_phase255B_collected_test_floor.py p. 674 | 4 K143 · none · kept |
+| The 21 controls: 676 passed, 1 skipped | kept | "**Controls, unchanged and green** (one run, `-n auto`): 676 passed, 1" | docs/phases/completed/210_phase_log.md p. 216 | 4 K143 · none · kept |
+| Old code: launch check file errors at import, wiring file 3 red, day's file green by design | kept | "`test_phase210_launch_check.py` 1 error at import;" | docs/phases/completed/210_phase_log.md p. 213 | 4 K143 · none · kept |
+| F301 filed for the two folded-in conditions and closed by this phase (Deviation 16) | kept | "### F301 — CLOSED by Phase 210's launch check (conditions 2 and 5)" | docs/FOLLOWUPS.md p. 7112 | 4 K143 · none · kept |
+| Live receives subscription events through the feed's platform ask (FEED_TYPES holds customer.subscription.*) | kept | "\"customer.subscription.created\": _handle_subscription," | src/motodiag/billing/webhook_handlers.py p. 284 | 4 K143 · none · kept |
+| Handoff: the feed asks Stripe about every 20 seconds and hands each event to the webhook's handler | kept | "the server asks Stripe for new events about every 20 seconds," | src/motodiag/payments/event_feed.py p. 5 | 4 K143 · none · kept |
+| Deviation 4: condition 3 reads through the feed's readers, which open with get_connection and only select | kept | "with get_connection(db_path) as conn:" | src/motodiag/payments/event_feed.py p. 170 | 4 K143 · none · kept |
+| Deviation 5: work_dir() creates the backup's working folder, mode 700 | kept | "folder.mkdir(parents=True, exist_ok=True, mode=0o700)" | src/motodiag/backup/settings.py p. 127 | 4 K143 · none · kept |
+| Condition 4 parses runs.log as take_snapshot writes it (time, outcome) | kept | "entry: dict = {\"time\": taken.isoformat(), \"label\": label, \"snapshot\": folder}" | src/motodiag/backup/snapshot.py p. 186 | 4 K143 · none · kept |
+| Deviation 6: the loopback read refuses any other host and opens with no proxy | kept | "opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))" | src/motodiag/launch/check.py p. 175 | 4 K143 · none · kept |
+| Deviation 7: LAUNCH_TERMS_VERSION and SERVER_URL are named constants | kept | "SERVER_URL = \"http://127.0.0.1:8000\"" | src/motodiag/launch/check.py p. 47 | 4 K143 · none · kept |
+| The plan's pins: DISK_FLOOR_GB = 50, backup bound 25 hours | kept | "BACKUP_MAX_AGE_H = 25" | src/motodiag/launch/check.py p. 43 | 4 K143 · none · kept |
+| Deviation 2: the provider's word is stripe or not stripe | kept | "(\"provider\", \"stripe\" if ks.provider == \"stripe\" else \"not stripe\"," | src/motodiag/launch/check.py p. 111 | 4 K143 · none · kept |
+| Deviation 10: no labour rate is 422 invoice-generation-failed | kept | "r = d.call(OWNER, \"POST\", generate, json=wo, expect=422)" | tests/test_phase210_first_shops_day.py p. 364 | 4 K143 · none · kept |
+| Deviation 18: step 6 requires the server's code to hold e115e6c | kept | "CODE=e115e6cfefe069bf61b26e7a38de4f584ee3ab47" | docs/handoffs/2026-11-25_210_closed.md p. 424 | 4 K143 · none · kept |
+| The checklist's status paragraph names motodiag launch check | kept | "`motodiag launch check` says, read-only, whether one paying shop can start" | docs/launch-checklist.md p. 13 | 4 K143 · none · kept |
+| The handoff's What is open names 293B, 344, the card reader, F299, F300, K137's phase and the Mac install ending | kept | "- **The Mac install ends with this phase** (K136's answer 2): the first" | docs/handoffs/2026-11-25_210_closed.md p. 160 | 4 K143 · none · kept |
+| Bug fix #1 changed 293's scanner test after a real ClamAV met it (Deviation 17) | kept | "### Bug fix #1 — 2026-11-25 — 293's scanner test met a real ClamAV on the build machine" | docs/phases/completed/210_phase_log.md p. 252 | 4 K143 · none · kept |
+| The row is closed on 2026-11-25 | kept | "CLOSED 2026-11-25.** Was 198. K134's scope, K136's answers." | docs/ROADMAP.md p. 325 | 4 K143 · none · kept |

@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F301** (this file). The
+At the time of writing the highest assigned is **F302** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -7134,3 +7134,35 @@ share links on. Nothing on live yet: the check is new in 210.
 What would close it: Phase 210's launch check carries both, folded into
 its conditions 5 (the loopback read of `/healthz` and `/v1/terms`) and 2
 (`share_links_enabled` false), each with a case that turns it NOT READY.
+
+### F302 — CLOSED by the two tests reading each phase's grants (after Phase 210's merge)
+
+**Two whole-tree tests check every closed log's refuter checklist without the phase's review-round grants**
+
+Found on 2026-11-25, when the fleet's push of Phase 210's round-4 table
+was refused. Filed by the advisor before any document cites it.
+
+Phase 403 (K88) lets a review round past the third run on the operator's
+grant, and that round's rows name the grant. `closeout_check.check` passes
+each phase's grants to the checklist rule (`review_grants`). Two tests that
+recompute a pinned list over every closed log did not:
+
+- `tests/test_phase358_refute_rounds.py`, the old-format exemption, called
+  `refute_check.check(text)`;
+- `tests/test_phase358_closeout_k6_k7.py`, A8's exemption, called
+  `closeout_check.refute_record(t, p)`.
+
+Neither passed grants, so a granted round read as one round too many, and
+the first closed log to hold one failed both. 210's round 4 (K143) was that
+log. The fleet's run with no model on the record commit (`7f802e2`, 210's
+branch with the cleared table) had 2 failed, the push gate refused the
+push (G6), and issue 90 was held with `needs-hands`. Reproduced on the Mac
+with the same table on 210's branch: these two tests failed, and the other
+188 tests in the eight files that run the close-out rule passed.
+
+What it affected: every granted round, at the moment its table is
+recorded. Nothing on live.
+
+What closed it: both tests pass each phase's grants,
+`closeout_check.review_grants(ROOT, phase)`, as `closeout_check.check`
+does, in the commit that records 210's round-4 table on master.

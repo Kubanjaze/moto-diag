@@ -92,7 +92,11 @@ class TestK7ARefuteNeedsItsChecklist:
         assert C.refute_record(_logs()["259"])
 
     def test_the_exemption_is_exactly_the_logs_that_fail(self):
-        measured = {p for p, t in _logs().items() if C.refute_record(t, p)}
+        # F302: each log with its phase's grants (K88), as check() passes them.
+        # A grant only lets a round past the third pass (C5), so a log that
+        # passes without grants passes with them; only the rest are read again.
+        measured = {p for p, t in _logs().items()
+                    if C.refute_record(t, p) and C.refute_record(t, p, C.review_grants(ROOT, p))}
         assert measured == C.A8_REFUTE_EXEMPT
         assert len(C.A8_REFUTE_EXEMPT) == 40
         assert {"255B", "258", "259"} <= C.A8_REFUTE_EXEMPT
