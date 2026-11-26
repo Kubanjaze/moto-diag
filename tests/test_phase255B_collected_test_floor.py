@@ -669,7 +669,19 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: ids against master at c98cfef: +2 -0, both in test_phase389_dispatcher.py
 #: (the Engineer starts over the all-models ceiling under it, and its
 #: control: no start without it).
-COLLECTED_TEST_FLOOR = 13266
+#:
+#: Phase 210, the launch check, by a diff of collected ids against the
+#: branch at 4baeec5 (13266): +39 -0, 32 in test_phase210_launch_check.py
+#: (the passing stand-in, each of twenty breaks alone, never init_db, no
+#: write, no planted secret printed, loopback only, exit 2, the two pins)
+#: and 7 in test_phase210_wiring.py. Measured: 13305.
+#:
+#: Phase 210, the first shop's day, by a diff of collected ids against
+#: f1ab603 (13305): +35 -19. The 16 new ids are test_phase210_first_shops_day.py
+#: (one per step of the day, every step and no network, and the rebuild);
+#: the other 19 are test_phase210_launch_check.py's breaks given ids without
+#: spaces, so the mutations can name them (the same 20 cases). Measured: 13321.
+COLLECTED_TEST_FLOOR = 13321
 
 
 def _collected_count() -> int:

@@ -9,10 +9,20 @@ Ordered by dependency: each step unblocks the ones under it. Every item
 says how you know it worked, because "I set the env var" and "it works"
 are different claims.
 
-**Status as of 2026-09-17** (refreshed by Phase 209B): backend 6,500+ tests
-green, mobile 1,062 tests and `tsc` clean, 265 CLI commands, 81 API routes,
-26 iOS screens, schema v60. Phase 210 (launch readiness) is still
-deliberately unstarted — it depends on steps 1–6 below.
+**Status as of 2026-11-25** (Phase 210, launch readiness): on the server,
+`motodiag launch check` says, read-only, whether one paying shop can start
+on live. It prints eight conditions, each `ready:` or `NOT READY:` with the
+reason: the schema at the code's version; the server in prod with Stripe
+live, the real prices and share links off; the payments feed and Sentry's
+alarm checking in; last night's backup; the terms switch on at version 1.1,
+as the running server answers on loopback; a manual reviewer set; the test
+shop inactive; the home desktop's free disk at or above 50 GB. It ends with
+ALL GOOD (exit 0) or SOMETHING IS OFF (exit 1), and writes nothing to the database.
+Beside it, `tests/test_phase210_first_shops_day.py` walks the first shop's
+whole day through the API on a fresh database, with every regression: the
+wizard, the Shop plan, signing in, the terms, a work order with a part and
+an hour of labour, an invoice at the shop's own tax rate, a card payment
+through the payments feed, a manual, the audit log and the night's backup.
 
 **This checklist was first written on 2026-09-09, the day before the 244
 series added vision questions, a cost ledger, per-machine memory and passive

@@ -10,6 +10,8 @@ only against editing (an owner password, opening with none) passes; with
 from __future__ import annotations
 
 import builtins
+import os
+import shutil
 
 import pytest
 from support.phase293 import (
@@ -105,8 +107,14 @@ def test_no_scanner_on_path_is_unavailable(tmp_path, monkeypatch):
 def test_clamscan_is_used_when_the_daemon_is_absent(tmp_path, monkeypatch):
     folder = stub_scanner(tmp_path / "bin")
     (folder / "clamdscan").rename(folder / "clamscan")
-    use_path(monkeypatch, folder)
-    assert scan._command(tmp_path / "x.pdf")[0].endswith("clamscan")
+    # Phase 210, bug fix #1: only the stub and the one tool it runs, never
+    # /usr/bin, where a machine with ClamAV installed has a real clamdscan
+    # that `_command` rightly prefers.
+    tools = tmp_path / "tools"
+    tools.mkdir()
+    (tools / "grep").symlink_to(shutil.which("grep"))
+    monkeypatch.setenv("PATH", os.pathsep.join([str(folder), str(tools)]))
+    assert scan._command(tmp_path / "x.pdf")[0] == str(folder / "clamscan")
     assert scan.scan_file(_write(tmp_path, "good.pdf", pdf_bytes())).status == "clean"
 
 
