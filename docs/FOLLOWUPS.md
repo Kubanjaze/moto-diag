@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F302** (this file). The
+At the time of writing the highest assigned is **F307** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -7166,3 +7166,46 @@ recorded. Nothing on live.
 What closed it: both tests pass each phase's grants,
 `closeout_check.review_grants(ROOT, phase)`, as `closeout_check.check`
 does, in the commit that records 210's round-4 table on master.
+
+### F307
+
+**Card payments says how many things Stripe still needs, never which: the server keeps only a count of Stripe's requirements, so the app cannot name them**
+
+Found in 372B's check on a phone on 2026-11-26, in Stripe's test mode
+(`docs/reports/2026-11-26_372B_phone_check_report.md`, finding 3). Filed
+by the advisor session before any document cites it. Card payments read
+"Onboarding not finished: 2 things still due at Stripe" and did not say
+what they were. "Continue onboarding" went straight to Stripe's review
+page and its thank-you page, so the owner could not tell what Stripe
+wanted. The two cleared once the test person's date of birth and address
+were changed to Stripe's test values (the report's finding 8).
+
+Measured in the code:
+- `_read_status` in `src/motodiag/payments/connect.py` reads Stripe's
+  `requirements.entries` and counts the entries whose
+  `minimum_deadline.status` is `currently_due` or `past_due`. It reads
+  nothing else from an entry: the file has no `description`. The report
+  says the server already reads each entry's description; it does not.
+- The count is all that is kept: `requirements_due`, a whole number, in
+  `shop_payment_accounts` and in the API's `PaymentAccount`
+  (`src/motodiag/api/routes/payments.py`). The app shows that number
+  (`moto-diag-mobile` `src/screens/PaymentsSetupScreen.tsx`,
+  `accountState`).
+- Each of Stripe's entries carries a `description`
+  (`tests/fixtures/phase273/v2_account_created.json`, built from Stripe's
+  documentation and stripe 16.0.0's types). There they are field names
+  (`business_type`, `external_account`, `tos_acceptance`), not sentences an
+  owner can act on.
+
+What it affects: an owner whose Stripe setup stops short sees a count and
+cannot tell what is missing. Not on shop one's launch path: shop one needs
+no Stripe Connect setup of its own at launch (210's handoff, "What is
+open", K136's answer 4).
+
+Spans both repositories. Filed here because the server changes first: the
+app cannot show what the API does not carry. What would close it: the
+server keeps or passes each due entry's description with the count, the
+API answers them (the app's copy of the API's description refreshed in the
+same change), and Card payments lists them in plain words, with a test in
+which two named entries reach the screen. Referenced from
+`moto-diag-mobile/docs/FOLLOWUPS.md`.
