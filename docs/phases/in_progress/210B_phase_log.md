@@ -67,3 +67,70 @@ Checked before the commit:
   - Nobody the desktop is shared with can reach anything yet.
   - Step 6 adds one grant, for people it is shared with: `tcp:443` on the
     desktop only.
+
+## 2026-11-26 — after the merge: the app's PR, the phone, App Store Connect and the server
+
+**A record run of `wholetree.sh` on this branch failed once.** On
+`d6d7ccf`: 1 failed, 3057 passed. The failure was
+`tests/test_phase369_worker_loss.py`, `TestTheAlarmCheck`: its nested
+pytest timed out at 180 s, with the Mac's load average about 21. The same
+content had passed just before the commit (3058 passed, 719 s), and the
+re-run passed (3058 passed, 469 s).
+
+**The app's PR, moto-diag-mobile #15**, from the operator's own session;
+its last commit was `7f2d832`.
+- Re-run by the advisor on the Mac, in a scratch clone at `7f2d832`, whose
+  tree `c19ac3df` is the merge's: `tsc` exit 0; `eslint` 0 errors and 150
+  warnings, exit 0; `jest` 118 suites and 1345 tests passed, exit 0. The
+  PR's own figures match.
+- Its three extras beyond the plan were judged fine:
+  - Settings' `keyboardShouldPersistTaps="handled"`, as the four other
+    keyboard screens have;
+  - "Manage plan" hidden while the plan is still "Checking…";
+  - the 404 case also pinning "Is that a Mekno server?".
+- `docs/app-store-listing.md` still says MotoDiag in its Name row and its
+  description. The plan did not cover it, so it goes to the close-out, for
+  Phase 410's listing work.
+- Merged by the operator as `3fa252b`, 2026-11-26 19:16 UTC.
+
+**Step 1, the cable install of `3fa252b`.**
+- The operator's first run stopped at the app's tests: 1 failed, 1344
+  passed. `__tests__/screens/TermsModal.smoke.test.tsx`, "shows the
+  version and date", timed out at jest's 5 s limit (the file took 6.2 s),
+  right after `npm ci`.
+  - In the scratch clone, that file passed 5 times out of 5 on its own, and
+    the whole suite passed twice, then once at `--maxWorkers=50%`.
+  - The second run left out `npm ci` and ran jest at half the workers.
+  - A finding is filed if the timeout comes back.
+- The second run ended ALL GOOD: 1345 tests passed; the build was
+  `com.getmekno.app`, called Mekno, with its icon; it installed on the
+  operator's iPhone and opened. The operator: "it worked!"
+- On the phone, the operator answered "yes, yes, yes, yes, done":
+  - Mekno with the M icon;
+  - the sign-in sheet above the keyboard;
+  - the Server box in Settings above the keyboard;
+  - the plan screen as planned;
+  - the old MotoDiag app deleted.
+
+**Step 2, App Store Connect.** Read by the advisor in the operator's
+Chrome, clicking nothing. Mekno's App Information page already showed the
+bundle ID `com.getmekno.app` ("XC com getmekno app"), on a fresh load in a
+new tab. Its list offers both IDs.
+
+**Step 2, the server's notifications.** The block is
+`210B_blocks/2_notifications_check.txt`, and it only reads.
+- Tested first on the Mac against stand-ins: 17 cases, and four breaks
+  planted on purpose each turned it red.
+- The operator ran it on the home desktop, in the Ubuntu window, and
+  reported: "The notifications check ran on the home desktop and ended ALL
+  GOOD. Both the running server and its settings file have no
+  MOTODIAG_APNS_ settings, notifications to phones are off, and no app ID
+  is named, so the new ID needs nothing on the server today. Nothing was
+  changed."
+- So the server needs nothing for the new ID until notifications are
+  turned on. Then `MOTODIAG_APNS_TOPIC` names `com.getmekno.app`, and
+  `MOTODIAG_APNS_SANDBOX` is `0`, because phones with the TestFlight app
+  use Apple's main gateway.
+
+**Next:** step 3, the build and its upload to TestFlight: version 1.0,
+build 1.
