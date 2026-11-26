@@ -559,3 +559,15 @@ v1.1's Results, Deviation 18 and history row, the ROADMAP row, the root
 `implementation.md` row and the handoff (its Regression section and step
 6's two commit names) now name `e115e6c`'s run. The handoff's step 5 also
 says the check changes nothing on live, as at its line 64.
+
+## 2026-11-25 — the Red Team's round 3, one document fix, made by hand
+
+- v1.1's Results counted one bug fix, the test's (`c80082a`). There are
+  two: bug fix #2 (`e115e6c`, `check.py`'s docstring) came in round 2,
+  and v1.1's header line and history row already counted it. The Results
+  line now counts both, and `210_implementation.md` is v1.2, with its
+  history row.
+- Round 3 was the last of the three review rounds a phase has without a
+  grant, so the fleet held the phase for the operator. The operator had
+  the advisor make this fix by hand and granted one more review round.
+  No code changed, so the regression of record at `e115e6c` stands.
