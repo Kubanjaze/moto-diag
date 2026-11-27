@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Response
@@ -12,6 +13,7 @@ from motodiag.core.config import Settings
 from motodiag.core.database import get_schema_version
 
 router = APIRouter(tags=["meta"])
+logger = logging.getLogger(__name__)
 
 
 class HealthStatus(BaseModel):
@@ -45,10 +47,11 @@ def healthz(
     try:
         schema = get_schema_version(db_path)
     except Exception as e:
+        # Phase 409 prebuild: the reason goes to the log, never to an
+        # anonymous caller (it can name the database's path).
+        logger.warning("healthz: db unreachable: %s", e)
         response.status_code = 503
-        return HealthStatus(
-            status="degraded", detail=f"db unreachable: {e}",
-        )
+        return HealthStatus(status="degraded", detail="db unreachable")
     if schema is None:
         response.status_code = 503
         return HealthStatus(

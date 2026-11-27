@@ -62,6 +62,68 @@ class AccessLogMiddleware(BaseHTTPMiddleware):
 
 
 # ---------------------------------------------------------------------------
+# Phase 409 prebuild — security headers
+# ---------------------------------------------------------------------------
+
+
+SECURITY_HEADERS = {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "no-referrer",
+}
+HSTS_VALUE = "max-age=31536000"
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """The headers a server on the public internet sends on every answer.
+
+    HSTS only on a request that arrived over https: directly, or through a
+    proxy that uvicorn trusts (its ``X-Forwarded-Proto``, on loopback by
+    default). A route that set one of these itself keeps its own value.
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        response: Response = await call_next(request)
+        for name, value in SECURITY_HEADERS.items():
+            response.headers.setdefault(name, value)
+        if request.url.scheme == "https":
+            response.headers.setdefault("Strict-Transport-Security", HSTS_VALUE)
+        return response
+
+
+class BodySizeLimitMiddleware(BaseHTTPMiddleware):
+    """413 for a declared body over ``limit`` bytes that is not a file upload.
+
+    Reads only the ``Content-Length`` header, so nothing is buffered. A
+    multipart request is left to its route's own bound. A body sent with no
+    length (chunked) is left to the proxy in front, which caps every body.
+    """
+
+    def __init__(self, app, limit: int):
+        super().__init__(app)
+        self._limit = limit
+
+    async def dispatch(self, request: Request, call_next):
+        declared = request.headers.get("content-length", "")
+        ctype = request.headers.get("content-type", "")
+        if (declared.isdigit() and int(declared) > self._limit
+                and not ctype.lower().startswith("multipart/form-data")):
+            from fastapi.responses import JSONResponse
+            body = {
+                "type": "https://motodiag.dev/problems/payload-too-large",
+                "title": "Request body too large",
+                "status": 413,
+                "detail": f"the body is over {self._limit} bytes",
+                "instance": str(request.url.path),
+            }
+            rid = getattr(request.state, "request_id", None)
+            if rid:
+                body["request_id"] = rid
+            return JSONResponse(status_code=413, content=body)
+        return await call_next(request)
+
+
+# ---------------------------------------------------------------------------
 # Phase 176 — rate limit middleware
 # ---------------------------------------------------------------------------
 

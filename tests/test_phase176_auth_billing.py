@@ -798,12 +798,12 @@ class TestRateLimitMiddleware:
         # bug fix #1). Fixed clock, as the unit tests above use.
         reset_rate_limiter(clock=lambda: 1_700_000_000.0)
         client = TestClient(app, raise_server_exceptions=False)
-        # Hit a non-exempt route
+        # Hit a non-exempt anonymous route (Phase 409 prebuild: was
+        # /v1/shops/999, which now needs a member)
         for _ in range(2):
-            r = client.get("/v1/shops/999")
-            # 404 because shop doesn't exist — but request counted
-            assert r.status_code == 404
-        r = client.get("/v1/shops/999")
+            r = client.get("/v1/terms")
+            assert r.status_code == 200
+        r = client.get("/v1/terms")
         assert r.status_code == 429
         body = r.json()
         assert body["type"].endswith("rate-limit-exceeded")
@@ -813,7 +813,7 @@ class TestRateLimitMiddleware:
         app = create_app(db_path_override=api_db)
         client = TestClient(app, raise_server_exceptions=False)
         r = client.get("/v1/shops/999")
-        # Response is 404 but rate-limit headers should still be set
+        # Response is 401 but rate-limit headers should still be set
         assert "X-RateLimit-Limit" in r.headers
         assert "X-RateLimit-Remaining" in r.headers
         assert "X-RateLimit-Tier" in r.headers
