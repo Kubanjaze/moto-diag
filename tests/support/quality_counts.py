@@ -24,8 +24,10 @@ from __future__ import annotations
 RUFF_FINDINGS = 1108
 
 #: `mypy` with `[tool.mypy]` (no site-packages). 204 at Step 0 → 202 (393 bug
-#: fix #1: the PDF renderer's `_escape`, rebound by `html.escape`, gave two).
-MYPY_ERRORS = 202
+#: fix #1: the PDF renderer's `_escape`, rebound by `html.escape`, gave two)
+#: → 201 (329 bug fix #7: `_handle_subscription_invoice` no longer indexes a
+#: subscription row that can be None).
+MYPY_ERRORS = 201
 
 #: Functions over McCabe 20 (`ruff check src --select C901`). 25 at Step 0.
 COMPLEX_FUNCTIONS = 25

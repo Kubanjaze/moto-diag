@@ -642,3 +642,42 @@ class TestPrivacyKept:
         with caplog.at_level(logging.ERROR):
             feed.purge_signups(db, time.time())
         assert "the sign-up purge failed" in caplog.text
+
+
+# ---------------------------------------------------------------- bug fix #7: an unfinished sign-up's invoice
+
+
+class TestAnUnfinishedSignupsInvoice:
+    def _invoice(self, etype, paid):
+        from support.stripe_fixtures import event
+        return event(etype, {
+            "id": "in_signup_1", "object": "invoice", "currency": "usd",
+            "amount_due": 1900, "amount_paid": 1900 if paid else 0, "livemode": False,
+            "parent": {"type": "subscription_details",
+                       "subscription_details": {"subscription": "sub_signup_1"}},
+            "lines": {"data": [{"period": {"start": 1791288000, "end": 1793966400}}]},
+        }, event_id=f"evt_{etype}")
+
+    @pytest.mark.parametrize("status", ["incomplete", "past_due"])
+    def test_a_failed_first_payment_is_recorded_as_handled_not_a_crash(self, db, outbox, status):
+        c = _client(db)
+        _sign_up(c, **INDIVIDUAL, password="correct horse", accept_terms="yes")
+        c.post("/v1/signup/confirm", data={"code": _code_from(outbox[0])})
+        provider = FakeBillingProvider({"sub_signup_1": _paid_sub(1, status=status)})
+        res = dispatch_event(self._invoice("invoice.payment_failed", False), db_path=db,
+                             provider=provider, settings=stripe_settings())
+        assert res.processed and res.error is None, res.error
+        assert _sql(db, "SELECT COUNT(*) FROM subscription_payments") == [(0,)]
+        assert _sql(db, "SELECT status FROM signups") == [("email_verified",)]
+
+    def test_an_invoice_paid_before_its_subscription_event_completes_the_signup(self, db, outbox):
+        c = _client(db)
+        _sign_up(c, **INDIVIDUAL, password="correct horse", accept_terms="yes")
+        c.post("/v1/signup/confirm", data={"code": _code_from(outbox[0])})
+        provider = FakeBillingProvider({"sub_signup_1": _paid_sub(1)})
+        res = dispatch_event(self._invoice("invoice.paid", True), db_path=db,
+                             provider=provider, settings=stripe_settings())
+        assert res.error is None, res.error
+        assert _sql(db, "SELECT status FROM signups") == [("completed",)]
+        assert _sql(db, "SELECT status, amount_paid_cents FROM subscription_payments") == [
+            ("paid", 1900)]

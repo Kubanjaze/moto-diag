@@ -267,3 +267,33 @@ is run again on the fixed head, alone.
   `tests/test_phase329_resend_and_limits.py` (the failed-send test now
   checks the row and code are gone and the retry gets its link).
 - **Verified:** `TestAnEmailThatFails`, 4 passed.
+
+**A guard note on bug fix #6's commit.** Its whole-tree run read FAILED
+(1 failed: the ratchet's `MYPY_ERRORS`, 201 below its pin 202) and the
+commit went in on the same line, not after reading the exit code on its
+own, against rule 6. The one failure came from bug fix #7's change,
+already in the working copy and not in #6's commit: #7 removes a mypy
+error. #6's commit itself holds the pin. Every commit after this one reads
+the exit code first.
+
+## 2026-11-27 21:00 UTC — Bug fix #7: an unfinished sign-up's invoice crashed its handler
+
+- **Issue:** `_handle_subscription_invoice` re-read a subscription it did
+  not know, then indexed the row it expected (`existing["user_id"]`). An
+  unfinished sign-up's subscription makes no row (the sign-up returns
+  early until Stripe calls it paid), so an `invoice.payment_failed` on its
+  first try raised `TypeError`, and the event was recorded failed and never
+  retried.
+- **Root cause:** the common one above; no test sent a sign-up's
+  subscription every event Stripe can send for it.
+- **Fix:** with still no row after the re-read, the handler logs and
+  returns: there is no login to record the invoice against, and Stripe
+  keeps its own record. An `invoice.paid` that arrives before the
+  subscription's event still completes the sign-up through the re-read and
+  is recorded. mypy's count drops by this one: `MYPY_ERRORS` 202 → 201.
+- **Files:** `src/motodiag/billing/webhook_handlers.py`,
+  `tests/support/quality_counts.py`,
+  `tests/test_phase329_resend_and_limits.py`
+  (`TestAnUnfinishedSignupsInvoice`, 3).
+- **Verified:** the three; 273's subscription tests and the ratchet, 49
+  passed.

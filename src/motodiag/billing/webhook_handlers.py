@@ -299,6 +299,15 @@ def _handle_subscription_invoice(
         # event is retried.
         _store_from_stripe(sub_id, db_path, provider, settings)
         existing = get_subscription_by_stripe_id(sub_id, db_path=db_path)
+    if existing is None:
+        # Phase 329 bug fix #7: a sign-up's subscription that Stripe does
+        # not call paid yet (an invoice.payment_failed on its first try),
+        # or one stuck for the operator, has no login and so no row; there
+        # is nothing to record the invoice against. Stripe's own record of
+        # it stays, and the operator's notice covers the stuck one.
+        logger.info("invoice %s: its subscription %s has no login yet; not recorded",
+                    inv.get("id"), sub_id)
+        return
     paid = event.get("type") == "invoice.paid"
     lines = ((inv.get("lines") or {}).get("data")) or [{}]
     period = lines[0].get("period") or {}
