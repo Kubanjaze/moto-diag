@@ -1,0 +1,21 @@
+bash <<'EOF329A'
+set -u
+bad() { echo; echo "SOMETHING IS OFF: $1"; exit 1; }
+command -v dig > /dev/null || bad "this Mac has no dig command (it comes with macOS: run this on the Mac, in Terminal)"
+D=getmekno.com
+dkim=$(dig +short TXT "resend._domainkey.$D" < /dev/null)
+[ -n "$dkim" ] || bad "Resend's signing record (resend._domainkey) is not in getmekno.com's DNS yet: add it in Cloudflare, wait a minute, paste this again"
+echo "$dkim" | grep -q 'p=' || bad "the resend._domainkey record is there but is not a signing key: check it in Cloudflare against Resend's page"
+echo "Resend's signing record is in place."
+mx=$(dig +short MX "send.$D" < /dev/null)
+echo "$mx" | grep -qi 'amazonses.com' || bad "the send.getmekno.com mail record Resend asks for is not there yet: add it in Cloudflare (DNS only, the grey cloud)"
+spf=$(dig +short TXT "send.$D" < /dev/null)
+echo "$spf" | grep -q 'v=spf1' || bad "the send.getmekno.com SPF record Resend asks for is not there yet"
+echo "Resend's two send.getmekno.com records are in place."
+root=$(dig +short MX "$D" < /dev/null)
+echo "$root" | grep -qi 'mx.cloudflare.net' || bad "getmekno.com's own mail records changed: support@getmekno.com may no longer reach Gmail. Put Cloudflare's Email Routing records back before anything else"
+echo "support@getmekno.com still arrives through Cloudflare's Email Routing."
+echo
+echo "Next: in Resend, press Verify on the domain until it says Verified."
+echo "ALL GOOD"
+EOF329A

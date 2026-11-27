@@ -1,0 +1,30 @@
+bash <<'EOF329C'
+set -u
+bad() { echo; echo "SOMETHING IS OFF: $1"; exit 1; }
+BRANCH=phase-329-self-serve-signup
+REPO=~/Projects/moto-diag
+PY="$REPO/.venv/bin/python"
+RM="$REPO/.claude/skills/deploy/remote.py"
+{ [ -x "$PY" ] && [ -f "$RM" ]; } || bad "this is not the Mac with the project (run it on the Mac, in Terminal); nothing was changed"
+cd "$REPO" || bad "no project folder"
+[ -z "$(git status --porcelain)" ] || bad "the project folder on this Mac has changes that are not committed; nothing was changed"
+git fetch -q origin "$BRANCH" < /dev/null || bad "could not reach GitHub; nothing was changed"
+git checkout -q "$BRANCH" < /dev/null && git merge -q --ff-only "origin/$BRANCH" < /dev/null || bad "could not put this Mac on the sign-up branch; nothing was changed"
+git ls-files --error-unmatch docs/phases/in_progress/329_dryrun_diff.md > /dev/null 2>&1 || bad "the dry run's list is not committed on the branch yet; nothing was changed"
+echo "1 of 5: the app server stopped for the change"
+"$PY" "$RM" api-stop < /dev/null || bad "the server would not stop; live was not changed"
+echo "2 of 5: the change, applied to live"
+if ! "$PY" "$RM" apply-live 329 < /dev/null; then
+  "$PY" "$RM" api-start < /dev/null
+  bad "the apply refused or failed (the lines above say why); the server was started again"
+fi
+echo "3 of 5: the app server started again"
+"$PY" "$RM" api-start < /dev/null || bad "the change is in, but the server would not start: paste this output in the project thread now"
+echo "4 of 5: live checked against the approved list"
+"$PY" "$RM" verify-live 329 < /dev/null || bad "live does not hold the approved change (the lines above say why)"
+echo "5 of 5: the live list, fetched to this Mac"
+"$PY" "$RM" fetch 329 live < /dev/null || bad "the live list could not be fetched"
+echo
+echo "Live has the two new empty tables. Sign-up stays off until the settings step."
+echo "ALL GOOD"
+EOF329C

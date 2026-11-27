@@ -1,0 +1,20 @@
+Phase 329's guards, each broken in turn and run against
+tests/test_phase329_resend_and_limits.py, tests/test_phase329_signup_flow.py and tests/test_phase408_site.py
+(329_mutate.py, on the branch at 9fca7985, 2026-11-27).
+
+cap dropped RED
+reset cap dropped RED
+purge not run on the form RED
+purge deletes a paid sign-up RED
+company back on the form RED
+checkout not a form target RED
+site not a redirect target RED
+cancel to the shops' form RED
+prod starts with resend and no key RED
+key in the error RED
+form fails open on a send error RED
+welcome failure fails the event RED
+stuck sign-up not kept RED
+no user agent RED
+
+14/14 red

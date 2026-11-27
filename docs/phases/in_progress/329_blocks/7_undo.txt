@@ -1,0 +1,24 @@
+bash <<'EOF329K'
+set -u
+bad() { echo; echo "SOMETHING IS OFF: $1"; exit 1; }
+ENVF=~/.config/motodiag/server.env
+BK=$ENVF.pre329
+API=http://127.0.0.1:8000
+[ -f "$BK" ] || bad "there are no kept settings from before sign-up ($BK); nothing was changed"
+install -m 600 "$BK" "$ENVF" || bad "could not put the old settings back"
+echo "The settings from before sign-up are back (the Resend key is gone from the settings file)."
+sudo /usr/bin/systemctl restart motodiag-api.service motodiag-payments.service < /dev/null || bad "the services would not restart"
+ok=""
+for _ in $(seq 1 20); do
+  sleep 2
+  curl -fsS -m 10 "$API/healthz" < /dev/null 2>/dev/null | grep -q '"status":"ok"' && { ok=1; break; }
+done
+[ -n "$ok" ] || bad "the server did not come back healthy"
+c=$(curl -s -o /dev/null -m 10 -w '%{http_code}' -X POST -d tier=individual "$API/v1/signup" < /dev/null)
+[ "$c" = 404 ] || bad "the sign-up still answers ($c)"
+c=$(curl -s -o /dev/null -m 10 -w '%{http_code}' "$API/v1/auth/password-reset/confirm?code=x" < /dev/null)
+[ "$c" = 404 ] || bad "the password reset by email still answers ($c)"
+echo "Sign-up and the reset by email are off; the server is healthy."
+echo "Put the website back too: Cloudflare, Workers & Pages, getmekno, Deployments, the one before, Rollback."
+echo "ALL GOOD"
+EOF329K

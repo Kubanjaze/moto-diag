@@ -1,0 +1,20 @@
+bash <<'EOF329D'
+set -u
+bad() { echo; echo "SOMETHING IS OFF: $1"; exit 1; }
+R=Kubanjaze/moto-diag
+BRANCH=phase-329-self-serve-signup
+REPO=~/Projects/moto-diag
+PY="$REPO/.venv/bin/python"
+RM="$REPO/.claude/skills/deploy/remote.py"
+export GH_PAGER=cat GH_PROMPT_DISABLED=1
+{ [ -x "$PY" ] && [ -f "$RM" ]; } || bad "this is not the Mac with the project (run it on the Mac, in Terminal); nothing was changed"
+MERGE=$(gh pr list -R "$R" --state merged --head "$BRANCH" --base master --json mergeCommit --jq '.[0].mergeCommit.oid // empty' < /dev/null) || bad "GitHub could not be asked; nothing was changed, so paste this again in a minute"
+[ -n "$MERGE" ] || bad "the sign-up's pull request is not merged yet: merge it first; nothing was changed"
+echo "1 of 2: a copy of the live database, before the server moves"
+"$PY" "$RM" backup pre329 < /dev/null || bad "the backup did not finish (the lines above say why); nothing else was changed"
+echo "2 of 2: the server and the payments feed onto the merge, $MERGE"
+"$PY" "$RM" server-update "$MERGE" < /dev/null || bad "the server did not move onto the merged code (the lines above say why)"
+echo
+echo "The live database is copied and the server runs the new code. Sign-up stays off until the settings step."
+echo "ALL GOOD"
+EOF329D

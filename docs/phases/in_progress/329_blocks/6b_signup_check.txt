@@ -1,0 +1,41 @@
+bash <<'EOF329L'
+set -u
+bad() { echo; echo "SOMETHING IS OFF: $1"; exit 1; }
+DB=~/motodiag/live/motodiag.db
+[ -f "$DB" ] || bad "this is not the home desktop (run it on the PC, in Ubuntu)"
+python3 - "$DB" <<'PY' || bad "the sign-up did not finish (the lines above say where it stopped)"
+import sqlite3, sys
+c = sqlite3.connect("file:" + sys.argv[1] + "?mode=ro", uri=True)
+c.row_factory = sqlite3.Row
+row = c.execute("SELECT * FROM signups ORDER BY id DESC LIMIT 1").fetchone()
+if row is None:
+    print("There is no sign-up yet: the form's email step did not reach the server.")
+    sys.exit(1)
+print(f"The newest sign-up is number {row['id']}, for the {row['tier']} plan, username {row['username']}.")
+steps = [("its email was confirmed", row["status"] in ("email_verified", "completed")),
+         ("Stripe's payment came back paid", row["status"] == "completed"),
+         ("its login was made", row["user_id"] is not None)]
+ok = True
+for what, done in steps:
+    print(("  yes: " if done else "  NOT YET: ") + what)
+    ok = ok and done
+if not ok:
+    sys.exit(1)
+user = c.execute("SELECT username, tier, is_active FROM users WHERE id = ?", (row["user_id"],)).fetchone()
+terms = c.execute("SELECT version FROM terms_acceptances WHERE user_id = ? ORDER BY id DESC LIMIT 1",
+                  (row["user_id"],)).fetchone()
+sub = c.execute("SELECT tier, status FROM subscriptions WHERE user_id = ? ORDER BY id DESC LIMIT 1",
+                (row["user_id"],)).fetchone()
+print(f"  the login: {user['username']}, active={bool(user['is_active'])}")
+print(f"  the terms accepted: version {terms['version'] if terms else 'none'}")
+print(f"  the plan: {sub['tier'] + ', ' + sub['status'] if sub else 'none'}")
+if not (user["is_active"] and terms and sub and sub["status"] == "active"):
+    sys.exit(1)
+if row["tier"] == "individual" and row["shop_id"] is not None:
+    print("  an Individual sign-up made a shop, which it must not")
+    sys.exit(1)
+PY
+echo
+echo "The sign-up went all the way through: paid, login made, terms accepted, plan active."
+echo "ALL GOOD"
+EOF329L

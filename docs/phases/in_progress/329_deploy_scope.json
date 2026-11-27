@@ -1,0 +1,15 @@
+{
+ "_comment": "Phase 329, migration 093 (K152, K150): adds two empty tables (signups, one_time_codes), their three indexes and one schema_version row. No existing row changes or is removed; every table not named here must not change at all.",
+ "tables": {
+  "schema_version": {"added": 1}
+ },
+ "schema": {
+  "added": [
+   "index idx_one_time_codes_hash",
+   "index idx_one_time_codes_subject",
+   "index idx_signups_username",
+   "table one_time_codes",
+   "table signups"
+  ]
+ }
+}

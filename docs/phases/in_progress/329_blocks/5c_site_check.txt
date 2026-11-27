@@ -1,0 +1,27 @@
+bash <<'EOF329J'
+set -u
+bad() { echo; echo "SOMETHING IS OFF: $1"; exit 1; }
+cd ~/Projects/moto-diag || bad "there is no moto-diag folder in Projects on this Mac"
+git fetch -q origin master < /dev/null || bad "could not reach GitHub"
+EMPTY=$(printf '' | shasum -a 256 | cut -c1-64)
+for p in privacy terms signup/individual reset; do
+  url="https://getmekno.com/$p/"
+  want=$(git show "origin/master:site/$p/index.html" | shasum -a 256 | cut -c1-64)
+  got=$(curl -fsL --max-time 20 "$url" < /dev/null | shasum -a 256 | cut -c1-64)
+  [ "$got" != "$EMPTY" ] || bad "could not open $url"
+  [ "$got" = "$want" ] || bad "$url is not master's page yet (wait a minute and paste this again; if it stays, the upload did not take)"
+  echo "$url is master's page."
+done
+h=$(curl -sI --max-time 20 https://getmekno.com/signup/individual/ < /dev/null | tr -d '\r' | grep -i '^content-security-policy:')
+echo "$h" | grep -q "form-action https://api.getmekno.com https://getmekno.com" || bad "the sign-up page's header does not let its form post to the server"
+[ "$(echo "$h" | grep -c 'form-action')" = 1 ] || bad "the sign-up page sends two security headers; the form would be blocked"
+h=$(curl -sI --max-time 20 https://getmekno.com/ < /dev/null | tr -d '\r' | grep -i '^content-security-policy:')
+echo "$h" | grep -q "form-action 'none'" || bad "the home page's header changed: only the sign-up and reset pages may post"
+echo "Only the sign-up and reset pages may post, and only to the server."
+c=$(curl -s -o /dev/null --max-time 20 -w '%{http_code}' https://getmekno.com/signup/ < /dev/null)
+[ "$c" = 404 ] || echo "Note: https://getmekno.com/signup/ answered $c (the shops' form is not uploaded; Cloudflare may show its own page)."
+loc=$(curl -s -o /dev/null -D - --max-time 20 -X POST -d tier=nope https://api.getmekno.com/v1/signup < /dev/null | tr -d '\r' | awk 'tolower($1)=="location:"{print $2}')
+[ "$loc" = "https://getmekno.com/signup/problem/#plan" ] || bad "the public server's sign-up did not answer as it should (it sent: ${loc:-nothing})"
+echo "From outside, the server's sign-up answers and sends the browser back to the site."
+echo "ALL GOOD"
+EOF329J

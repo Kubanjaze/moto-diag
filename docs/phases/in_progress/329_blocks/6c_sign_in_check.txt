@@ -1,0 +1,25 @@
+bash <<'EOF329M'
+set -u
+bad() { echo; echo "SOMETHING IS OFF: $1"; exit 1; }
+API=https://api.getmekno.com
+command -v python3 > /dev/null || bad "this Mac has no python3"
+printf "The new account's username, then Enter: "
+read -r U < /dev/tty
+printf "Its password, then Enter (not shown): "
+read -r -s P < /dev/tty
+echo
+BODY=$(U="$U" P="$P" python3 -c 'import json,os; print(json.dumps({"username": os.environ["U"], "password": os.environ["P"], "client": "sign-up check"}))')
+P=""
+OUT=$(curl -s -m 20 -H 'Content-Type: application/json' --data-binary @- "$API/v1/auth/login" <<< "$BODY")
+BODY=""
+TOKEN=$(printf '%s' "$OUT" | python3 -c 'import json,sys
+try: print(json.load(sys.stdin).get("token") or "")
+except Exception: print("")')
+[ -n "$TOKEN" ] || bad "signing in at the public address did not work (the server said: $(printf '%s' "$OUT" | head -c 200))"
+echo "Signed in at the public address, off the tailnet."
+c=$(curl -s -o /dev/null -m 20 -w '%{http_code}' -X POST -H "Authorization: Bearer $TOKEN" "$API/v1/auth/logout" < /dev/null)
+TOKEN=""
+[ "$c" = 204 ] || echo "Note: signing out answered $c; the check's session ends by itself."
+echo "Signed out again."
+echo "ALL GOOD"
+EOF329M
