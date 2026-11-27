@@ -22,9 +22,9 @@ echo "Tunnel program: $(cloudflared --version 2>&1 < /dev/null | head -1)"
 if [ "$(systemctl is-active cloudflared 2>/dev/null)" = active ]; then
   echo "The tunnel service is already installed and running."
 else
-  printf "Paste the tunnel token from Cloudflare (it will not show), then press Enter: "
+  printf "Paste the line you copied from Cloudflare (it will not show), then press Enter: "
   IFS= read -rs TOKEN < /dev/tty; echo
-  TOKEN=$(printf '%s' "$TOKEN" | tr -d '[:space:]')
+  TOKEN=$(printf '%s' "$TOKEN" | awk '{print $NF}' | tr -d '[:space:]')
   [ "${#TOKEN}" -gt 100 ] || bad "that does not look like the token (it is very long); nothing was installed"
   sudo cloudflared service install "$TOKEN" < /dev/null > /dev/null 2>&1 || { unset TOKEN; bad "Cloudflare did not take the token; copy it again from the tunnel's page"; }
   unset TOKEN

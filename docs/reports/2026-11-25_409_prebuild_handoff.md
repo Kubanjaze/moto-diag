@@ -1,6 +1,6 @@
 # Phase 409 prebuild — putting the server on api.getmekno.com
 
-**For Kerwyn.** Nothing here runs until Phase 210 has merged and this branch's pull request has merged after it. Each step says which computer and which window, gives one block to paste, and the block ends with ALL GOOD or SOMETHING IS OFF. If you see SOMETHING IS OFF, stop and paste the last lines into the project chat.
+**For the operator.** Nothing here runs until Phase 210 has merged and this branch's pull request has merged after it. Each step says which computer and which window, gives one block to paste, and the block ends with ALL GOOD or SOMETHING IS OFF. If you see SOMETHING IS OFF, stop and paste the last lines into the project chat.
 
 The checks come first and change nothing. The steps that change something each say what they change and how it is undone.
 
