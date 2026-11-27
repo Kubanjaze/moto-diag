@@ -58,6 +58,7 @@ from motodiag.auth.signup_repo import (
     SHOP_TIERS,
     SignupTier,
     create_signup,
+    discard_signup,
     emails_sent_to,
     find_code,
     get_signup,
@@ -213,6 +214,9 @@ def signup_form(
             address_check_email(email, link))
     except SEND_FAILED as e:
         logger.error("sign-up %d: the address check was not sent: %s", signup_id, e)
+        # Bug fix #6: nothing was sent, so nothing is kept: the retry may
+        # use the same username at once.
+        discard_signup(signup_id, db_path=db_path)
         return _problem(settings, "later")
     logger.info("sign-up %d: address check sent", signup_id)
     return _go(settings, "/signup/check-email/")

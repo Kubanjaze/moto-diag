@@ -190,6 +190,15 @@ def _set(signup_id: int, column: str, value, db_path: Optional[str]) -> None:
                      (value, signup_id))
 
 
+def discard_signup(signup_id: int, db_path: Optional[str] = None) -> None:
+    """A sign-up whose address check could not be sent (bug fix #6): the
+    row and its code go, so the username is free for the retry."""
+    with get_connection(db_path) as conn:
+        conn.execute("DELETE FROM one_time_codes WHERE subject = ?", (f"signup:{signup_id}",))
+        conn.execute("DELETE FROM signups WHERE id = ? AND status = 'pending_email'",
+                     (signup_id,))
+
+
 def set_checkout_session(signup_id: int, session_id: str,
                          db_path: Optional[str] = None) -> None:
     """The newest Stripe checkout opened for this sign-up (bug fix #4)."""

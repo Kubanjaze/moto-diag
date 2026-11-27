@@ -212,11 +212,21 @@ def db(tmp_path, monkeypatch):
 
 
 class TestAnEmailThatFails:
-    def test_the_form_says_later_and_keeps_the_signup(self, db, failing):
-        r = _sign_up(_client(db))
+    def test_the_form_says_later_and_frees_the_username(self, db, failing, monkeypatch):
+        """Bug fix #6: the row went in before the send, so a failed send
+        held the username for 30 days and the retry got username-taken."""
+        c = _client(db)
+        r = _sign_up(c)
         assert r.headers["location"] == f"{SITE}/signup/problem/#later"
         assert failing.tried == 1
-        assert _sql(db, "SELECT status FROM signups") == [("pending_email",)]
+        assert _sql(db, "SELECT COUNT(*) FROM signups") == [(0,)]
+        assert _sql(db, "SELECT COUNT(*) FROM one_time_codes") == [(0,)]
+        sent = FakeEmailSender()
+        monkeypatch.setattr("motodiag.api.routes.signup.get_email_sender",
+                            lambda provider, settings=None: sent)
+        r = _sign_up(c)
+        assert r.headers["location"] == f"{SITE}/signup/check-email/"
+        assert len(sent.outbox) == 1
 
     def test_the_reset_answers_as_ever(self, db, failing):
         with get_connection(db) as conn:

@@ -251,3 +251,19 @@ is run again on the fixed head, alone.
   `tests/test_phase329_resend_and_limits.py` (`TestPrivacyKept`, 3).
 - **Verified:** the three; 371's feed and limits tests and the sign-up
   flow, 103 passed.
+
+## 2026-11-27 20:55 UTC — Bug fix #6: a failed email stranded the username
+
+- **Issue:** the sign-up row was saved before Resend was called, so when
+  the send failed the person saw "later" and their retry got
+  "username-taken" for 30 days.
+- **Root cause:** the common one above; no test retried after a failed
+  send.
+- **Fix:** a send that fails deletes the row and its code
+  (`discard_signup`, only while `pending_email`), so nothing is kept that
+  was never sent and the retry may use the same username at once.
+- **Files:** `src/motodiag/auth/signup_repo.py`,
+  `src/motodiag/api/routes/signup.py`,
+  `tests/test_phase329_resend_and_limits.py` (the failed-send test now
+  checks the row and code are gone and the retry gets its link).
+- **Verified:** `TestAnEmailThatFails`, 4 passed.
