@@ -318,3 +318,25 @@ the exit code first.
   `tests/test_phase329_resend_and_limits.py` (`TestOneMailboxOneCap`, 12).
 - **Verified:** `TestOneMailboxOneCap`, 12 passed; with the rest of
   329's flow and limits tests, 132 passed.
+
+## 2026-11-27 21:15 UTC — The stand-in runs on macOS; a read-only check of live's usernames
+
+- **The stand-in on macOS** (the advisor's review, D): `standin/cases.py`
+  used the `setsid` program and util-linux's `script -qec`, neither of
+  which macOS has in that form, so the advisor could not run it on the
+  Mac. The stand-in's server now starts in a new session through Python's
+  `os.setsid` and `os.execvp`, and each block runs under `script -qec` on
+  Linux and `script -q /dev/null bash FILE` on macOS (`sys.platform`).
+  Rerun here on Linux: 15 of 15. Not run on macOS from the cloud.
+- **Live's usernames and capitals** (the advisor's follow-up, 4): chosen as
+  a block, `2c_username_case_check.txt`, on the home desktop, not a query
+  the advisor runs from the Mac: live is on the desktop, and the Mac's way
+  in (`remote.py`) takes only its named commands. The block opens live
+  with SQLite's read-only mode (no write, so no bulletins seeded, F292),
+  prints three counts (logins, logins with a capital, names that differ
+  only in capitals) and no names, and ends ALL GOOD only when the last is
+  0. Tested on three scratch homes (clean, a `cuban`/`Cuban` pair, no
+  database): ALL GOOD, SOMETHING IS OFF, SOMETHING IS OFF. The first
+  version passed `< /dev/null` to `python3 -` beside its heredoc, which
+  replaced the heredoc and read no script; caught by that test, before
+  commit. It runs before 2b.

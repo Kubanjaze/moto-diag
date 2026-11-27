@@ -10,6 +10,7 @@ block are below the table.
 | 1 | a browser, Resend and Cloudflare | below | a Resend account, the domain getmekno.com, its three records in Cloudflare's DNS, an API key (kept for step 4 only) |
 | 1b | the Mac, Terminal | `1_dns_check.txt` | nothing: Resend's records are in DNS and support@ mail still reaches Gmail |
 | 2a | the Mac, Terminal (the advisor) | `2a_migration_dry_run.txt` | nothing on live: the dry run of migration 093 on a copy, its list fetched, for the advisor to commit on the branch and show the operator |
+| 2c | the home desktop, Ubuntu | `2c_username_case_check.txt` | nothing: live's logins read read-only; no two differ only in capitals, so the sign-up's case rule matches live. Before 2b |
 | 2b | the Mac, Terminal (the advisor) | `2b_migration_apply.txt` | live: two new empty tables. Only after the operator's yes on the list and after the regression of record, before the close-out commit (K18) |
 | — | the operator merges the pull request | — | master |
 | 3 | the Mac, Terminal | `3_backup_and_server_update.txt` | a copy of live (`pre329`), then the server and the payments feed onto the merge |
@@ -96,11 +97,19 @@ The account stays, with its plan cancelled.
   not at 93, code without the sign-up, the payments feed not coming back).
   15 of 15. Run with
   `.venv/bin/python docs/phases/in_progress/329_blocks/standin/cases.py`
-  from the repository root.
+  from the repository root, on Linux or macOS: the stand-in starts its
+  server in a new session with Python's `os.setsid` (macOS has no
+  `setsid` program), and runs each block under `script -qec` on Linux or
+  `script -q /dev/null bash FILE` on macOS. Run here on Linux only.
+- `2c_username_case_check.txt` against three scratch homes: a database
+  whose logins differ by more than capitals (ALL GOOD), one with `cuban`
+  and `Cuban` (SOMETHING IS OFF), and a home with no live database
+  (SOMETHING IS OFF). It opens live with SQLite's read-only mode, which
+  writes nothing.
 - The migration's scope (`../329_deploy_scope.json`) was checked by
   `deploy.py dryrun 329` against a scratch database built at master's
   schema 92: scope problems none, census 0, two tables and three indexes
   added. The scratch diff was deleted; the record is the advisor's dry run
   on live (2a).
-- Not run anywhere real: 1b, 2a, 2b, 3, 5a, 5c and 6c read DNS, the
+- Not run anywhere real: 1b, 2a, 2b, 2c, 3, 5a, 5c and 6c read DNS, the
   desktop, GitHub or Cloudflare, which the cloud cannot reach.

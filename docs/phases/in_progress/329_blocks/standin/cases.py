@@ -26,10 +26,12 @@ if [ "$1" = is-active ]; then [ -f "$HOME/payments_down" ] && exit 3; exit 0; fi
 if [ "$1" = restart ]; then
   [ -f "$HOME/uvicorn.pid" ] && kill "$(cat "$HOME/uvicorn.pid")" 2>/dev/null
   sleep 0.5
-  # setsid: the block runs under `script`, whose end would hang up a child
-  # left in its session; systemd owns the real server, so nothing does.
+  # A new session: the block runs under `script`, whose end would hang up a
+  # child left in its session; systemd owns the real server, so nothing
+  # does. Python's os.setsid, not the setsid program, which macOS lacks.
   ( set -a; . "$HOME/.config/motodiag/server.env"; set +a
-    exec setsid "$STANDIN_PY" -m uvicorn motodiag.api.app:create_app --factory --host 127.0.0.1 --port 8000 --log-level warning
+    exec "$STANDIN_PY" -c 'import os,sys; os.setsid(); os.execvp(sys.argv[1], sys.argv[1:])' \
+      "$STANDIN_PY" -m uvicorn motodiag.api.app:create_app --factory --host 127.0.0.1 --port 8000 --log-level warning
   ) > "$HOME/uvicorn.log" 2>&1 < /dev/null &
   echo $! > "$HOME/uvicorn.pid"
   exit 0
@@ -87,7 +89,13 @@ def run_block(h, name, typed=""):
     body = (BLOCKS / name).read_text().splitlines()[1:-1]
     script = h / "block.sh"
     script.write_text("\n".join(body) + "\n")
-    r = subprocess.run(["script", "-qec", f"bash {script}", "/dev/null"], input=typed,
+    # util-linux's script takes the command with -c; macOS's (BSD) takes it
+    # after the file.
+    if sys.platform == "darwin":
+        argv = ["script", "-q", "/dev/null", "bash", str(script)]
+    else:
+        argv = ["script", "-qec", f"bash {script}", "/dev/null"]
+    r = subprocess.run(argv, input=typed,
                        capture_output=True, text=True, env=env(h), timeout=180)
     return r.stdout.replace(typed.strip(), "<typed>") if typed.strip() else r.stdout
 
