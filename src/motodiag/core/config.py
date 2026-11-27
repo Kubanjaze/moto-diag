@@ -281,6 +281,25 @@ class Settings(BaseSettings):
     terms_required: bool = False
     checkout_terms_consent: bool = False
 
+    # Phase 329 prebuild (the operator, 2026-11-25): self-serve sign-up from
+    # the website's form, pay first; Resend sends the emails once its key is
+    # in the settings file (typed by the operator, never in chat). Both
+    # switches ship off: the first 10 shops are set up by hand (K101).
+    #: Shops' self-serve sign-up (K141: only after shop 10). Off, a shop
+    #: plan's sign-up is 404.
+    self_serve_signup_enabled: bool = False
+    #: Individuals' self-serve sign-up (K150: when 329 ships). Off, an
+    #: individual's sign-up is 404. Both off, every /v1/signup route is 404.
+    individual_signup_enabled: bool = False
+    #: Off, every /v1/auth/password-reset route is 404.
+    password_reset_email_enabled: bool = False
+    #: "fake" (the stand-in, sends nothing) until 329 adds Resend.
+    email_provider: str = "fake"
+    email_from: str = "Mekno <support@getmekno.com>"
+    #: The website the sign-up and reset pages live on; the routes send the
+    #: browser back to its pages.
+    signup_site_url: str = "https://getmekno.com"
+
     # Rate limiting (Phase 176+)
     rate_limit_anonymous_per_minute: int = 30
     rate_limit_individual_per_minute: int = 60
