@@ -1,0 +1,86 @@
+bash <<'EOF_BUILD2'
+set -u
+bad() { echo; echo "SOMETHING IS OFF: $1"; exit 1; }
+APP_DIR=~/Projects/moto-diag-mobile
+WANT=1fbd967d7d108f7dee0c7c395e1e3664d124fbe8
+LIVE=https://desktop-76s9bqv.taila45995.ts.net
+ID=com.getmekno.app
+STAMP=$(date +%Y-%m-%d_%H%M)
+ARCHIVE="$HOME/Library/Developer/Xcode/Archives/$(date +%Y-%m-%d)/Mekno-1.0-2-$STAMP.xcarchive"
+WORK=/tmp/210C_testflight_$STAMP
+P=/usr/libexec/PlistBuddy
+XC="ios/Pods/Target Support Files/VisionCamera/VisionCamera.release.xcconfig"
+cd "$APP_DIR" || bad "the app's folder is not at $APP_DIR; nothing was changed"
+[ "$(git branch --show-current)" = main ] || bad "the app's folder is not on main; nothing was changed, so bring this to the advisor"
+[ -z "$(git status --porcelain)" ] || bad "the app's folder has changes that are not committed; nothing was changed, so bring this to the advisor"
+git fetch -q origin </dev/null || bad "could not fetch the app from GitHub; nothing was changed, so paste this again in a minute"
+{ [ "$(git rev-parse HEAD)" = "$WANT" ] && [ "$(git rev-parse origin/main)" = "$WANT" ]; } || bad "the app's folder is not at the version you merged this evening; nothing was changed, so bring this to the advisor"
+[ "$(cat .env 2>/dev/null)" = "API_BASE_URL=$LIVE" ] || bad "the app's settings file does not name the live server; nothing was changed, so bring this to the advisor"
+[ ! -e /tmp/envfile ] || bad "a leftover file, /tmp/envfile, would change which server the app is built for; nothing was changed, so bring this to the advisor"
+FREE_KB=$(df -k "$HOME" | awk 'NR==2 {print $4}')
+[ "${FREE_KB:-0}" -gt 10485760 ] 2>/dev/null || bad "the Mac has less than 10 GB free; nothing was changed"
+command -v pod >/dev/null || bad "CocoaPods is not on this Mac; nothing was changed, so bring this to the advisor"
+mkdir -p "$WORK" "$(dirname "$ARCHIVE")" || bad "cannot make the build's folders; nothing was changed"
+echo "on $(git log -1 --format='%h %s')"
+echo "Step 1 of 3: updating the app's iPhone libraries, with the camera's location code switched off (about 1 minute)..."
+( cd ios && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install ) > "$WORK/pods.txt" 2>&1 </dev/null \
+  || { tail -15 "$WORK/pods.txt"; bad "updating the iPhone libraries failed (full log $WORK/pods.txt); nothing was built or uploaded, so bring this to the advisor"; }
+grep -qF '[VisionCamera] $VCEnableLocation is set to false!' "$WORK/pods.txt" || bad "the camera library did not say its location code is off (log $WORK/pods.txt); nothing was built or uploaded, so bring this to the advisor"
+git diff --quiet -- ios/Podfile.lock || bad "updating the libraries changed ios/Podfile.lock; nothing was built or uploaded, so bring this to the advisor"
+git checkout -q -- ios/MotoDiag.xcodeproj/project.pbxproj || bad "could not put the project file back after updating the libraries; nothing was built or uploaded, so bring this to the advisor"
+[ -z "$(git status --porcelain)" ] || { git status --short | head -10; bad "updating the libraries changed other files in the app's folder; nothing was built or uploaded, so bring this to the advisor"; }
+[ -f "$XC" ] || bad "the camera library's settings file is missing after the update; nothing was built or uploaded, so bring this to the advisor"
+if grep -q VISION_CAMERA_ENABLE_LOCATION "$XC"; then bad "the camera library's settings still switch its location code on; nothing was built or uploaded, so bring this to the advisor"; fi
+echo "Libraries updated: the camera's location code is off, and the app's lock file is unchanged."
+echo "Step 2 of 3: building Mekno 1.0, build 2, for the App Store (about 5 to 15 minutes)..."
+caffeinate -i xcodebuild -workspace ios/MotoDiag.xcworkspace -scheme MotoDiag -configuration Release \
+  -destination 'generic/platform=iOS' -archivePath "$ARCHIVE" -derivedDataPath ios/build/210C \
+  DEVELOPMENT_TEAM=B6QK49DPRZ -allowProvisioningUpdates IPHONEOS_DEPLOYMENT_TARGET=15.1 archive > "$WORK/archive.txt" 2>&1 \
+  || { grep -E "error:|ARCHIVE FAILED" "$WORK/archive.txt" | head -20; bad "the build failed (full log $WORK/archive.txt); nothing was uploaded"; }
+grep -qF "check-release-env: API_BASE_URL ok: $LIVE (from $APP_DIR/.env)" "$WORK/archive.txt" || bad "the build's log does not show the live server built in; nothing was uploaded, so bring this to the advisor"
+APP="$ARCHIVE/Products/Applications/MotoDiag.app"
+[ "$($P -c 'Print :ApplicationProperties:CFBundleIdentifier' "$ARCHIVE/Info.plist" 2>/dev/null)" = "$ID" ] || bad "the build is not an app archive for $ID; nothing was uploaded, so bring this to the advisor"
+[ "$($P -c 'Print :CFBundleIdentifier' "$APP/Info.plist" 2>/dev/null)" = "$ID" ] || bad "the built app's ID is not $ID; nothing was uploaded, so bring this to the advisor"
+[ "$($P -c 'Print :CFBundleDisplayName' "$APP/Info.plist" 2>/dev/null)" = Mekno ] || bad "the built app is not called Mekno; nothing was uploaded, so bring this to the advisor"
+[ "$($P -c 'Print :CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconName' "$APP/Info.plist" 2>/dev/null)" = AppIcon ] || bad "the built app has no icon; nothing was uploaded, so bring this to the advisor"
+VER=$($P -c 'Print :CFBundleShortVersionString' "$APP/Info.plist" 2>/dev/null)
+BUILD=$($P -c 'Print :CFBundleVersion' "$APP/Info.plist" 2>/dev/null)
+{ [ "$VER" = 1.0 ] && [ "$BUILD" = 2 ]; } || bad "the app says version $VER, build $BUILD, not 1.0 build 2; nothing was uploaded, so bring this to the advisor"
+[ -s "$APP/MotoDiag" ] || bad "the built app has no program file; nothing was uploaded, so bring this to the advisor"
+HITS=$(grep -rlaF requestWhenInUseAuthorization "$APP")
+[ -z "$HITS" ] || { printf '%s\n' "$HITS"; bad "the built app still holds the location request Apple flagged; nothing was uploaded, so bring this to the advisor"; }
+echo "Built: Mekno $VER, build $BUILD ($ID), with its icon, pointed at the live server, and without the location request Apple flagged."
+cat > "$WORK/ExportOptions.plist" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>method</key><string>app-store-connect</string>
+  <key>destination</key><string>upload</string>
+  <key>teamID</key><string>B6QK49DPRZ</string>
+  <key>signingStyle</key><string>automatic</string>
+  <key>manageAppVersionAndBuildNumber</key><false/>
+  <key>uploadSymbols</key><true/>
+</dict>
+</plist>
+PLIST
+plutil -lint -s "$WORK/ExportOptions.plist" || bad "the upload settings file is not valid; nothing was uploaded, so bring this to the advisor"
+echo "Step 3 of 3: signing it for the App Store and uploading it to App Store Connect (about 2 to 10 minutes)..."
+if ! caffeinate -i xcodebuild -exportArchive -archivePath "$ARCHIVE" -exportOptionsPlist "$WORK/ExportOptions.plist" \
+     -exportPath "$WORK/export" -allowProvisioningUpdates > "$WORK/upload.txt" 2>&1; then
+  grep -iE "error|failed" "$WORK/upload.txt" | head -15
+  if grep -qiE "Redundant Binary|ITMS-90189|must be higher than the previously uploaded" "$WORK/upload.txt"; then
+    bad "Apple already has a build 2 of Mekno; do not paste this again, bring this to the advisor"
+  fi
+  if grep -qiE "No Accounts|No account for team|Add a new account in Accounts|valid credentials|session has expired" "$WORK/upload.txt"; then
+    bad "Xcode is not signed in to your Apple account (Xcode, Settings, Accounts); nothing was uploaded, so bring this to the advisor"
+  fi
+  bad "the upload failed (full log $WORK/upload.txt); the build is kept, so bring this to the advisor"
+fi
+grep -qiE "EXPORT SUCCEEDED|Upload succeeded" "$WORK/upload.txt" || bad "the upload did not say it succeeded (log $WORK/upload.txt); do not paste this again, bring this to the advisor"
+grep -iE "upload succeeded|uploaded|EXPORT SUCCEEDED" "$WORK/upload.txt" | tail -3
+[ -z "$(git status --porcelain)" ] || bad "it was uploaded, but the build changed files in the app's folder; paste git status to the advisor"
+echo
+echo "Uploaded: Mekno $VER, build $BUILD, to App Store Connect. Apple now processes it, usually for 5 to 30 minutes."
+echo "ALL GOOD"
+EOF_BUILD2
