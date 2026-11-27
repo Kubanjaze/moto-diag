@@ -340,3 +340,34 @@ the exit code first.
   version passed `< /dev/null` to `python3 -` beside its heredoc, which
   replaced the heredoc and read no script; caught by that test, before
   commit. It runs before 2b.
+
+## 2026-11-27 21:23 UTC — One sign-up end to end, and the floor
+
+- **The test the root cause asked for** (the advisor's review, E):
+  `TestOneSignUpEndToEnd` follows one Individual sign-up from the form to
+  a paid sign-in against a scratch database, the fake billing provider and
+  a sender that refuses the first email. In order: a username in capitals
+  is refused (#3); the first email fails, "later", no row or code kept
+  (#6); the retry at once with the same name gets its link; the link's
+  access line is masked (#2); pressed twice before paying, one checkout
+  (#4); paid, the sign-up completes and the welcome goes; pressed after
+  paying, the paid page and still one checkout (#4); the row keeps only
+  its username and plan (#5) and, 31 days on, the purge keeps it and
+  drops its spent code (#5); the name signed up with signs in (#3); and no
+  record of the server's own loggers holds the code (#2).
+- **Measured against the fixes:** each of four put back by hand fails it:
+  `discard_signup` doing nothing (#6), `forget_form` doing nothing (#5),
+  `set_checkout_session` doing nothing (#4), and the log filter matching
+  `mds_` only (#2). #3 is held by its first step. Each put back from a
+  copy; `git diff src/` empty after.
+- **Found writing it:** the test client's own logger (`httpx`) prints the
+  full URL it requested, code included. That is the test's client, not
+  the server; the server's access record (`motodiag.api.access`) logs the
+  path without the query. The assertion reads only `motodiag.*` records.
+- **The floor:** a diff of collected ids against 9566783, +34 −2, 13538 →
+  13570 (`tests/test_phase255B_collected_test_floor.py` names each file).
+- **The site and its sitemap:** `site/` changed after the PR opened in bug
+  fix #1 (the sitemap) and #3 (the username line on the Individual form
+  and its problem page). The sign-up and reset pages are not in the
+  sitemap (it lists four pages), and `scripts/site_build.py sitemap`
+  rebuilt it unchanged; `site_build.py check` exits 0.

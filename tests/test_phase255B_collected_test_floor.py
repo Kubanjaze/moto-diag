@@ -712,7 +712,16 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: new: the shops' form unpublished, every sign-up link resolving) and
 #: test_phase272_gate15.py 1 (migration 093 gives 092 a successor to peel).
 #: Floor: 13538.
-COLLECTED_TEST_FLOOR = 13538
+#:
+#: Phase 329, the advisor's review (bug fixes #1-#8 and the end-to-end
+#: test): +34 -2, a diff of collected ids against 9566783 (13538 -> 13570):
+#: test_phase329_resend_and_limits.py +31 -1 (codes kept out of the log,
+#: the username's case, one payment, privacy kept, an unfinished sign-up's
+#: invoice, one mailbox one cap, one sign-up end to end; the failed-send
+#: test renamed for what it now checks) and test_phase329_signup_flow.py
+#: +3 -1 (two capitals cases in the bad-field list; the third new id and
+#: the one gone are its password case, renumbered). Floor: 13570.
+COLLECTED_TEST_FLOOR = 13570
 
 
 def _collected_count() -> int:

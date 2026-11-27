@@ -730,3 +730,106 @@ class TestAnUnfinishedSignupsInvoice:
         assert _sql(db, "SELECT status FROM signups") == [("completed",)]
         assert _sql(db, "SELECT status, amount_paid_cents FROM subscription_payments") == [
             ("paid", 1900)]
+
+
+# ---------------------------------------------------------------- one sign-up, end to end
+
+
+class FailsOnce(FakeEmailSender):
+    """Resend refuses the first email and takes the rest."""
+
+    def __init__(self):
+        super().__init__()
+        self.tried = 0
+
+    def send(self, email):
+        self.tried += 1
+        if self.tried == 1:
+            raise EmailSendError("Resend answered 500")
+        return super().send(email)
+
+
+class TestOneSignUpEndToEnd:
+    """The review's root cause: no test followed one sign-up's data from the
+    form to a paid sign-in. This one does, through every place bug fixes
+    #2, #3, #4, #5 and #6 found it going wrong: a username in capitals, a
+    first email that fails, the link's code in the access log, the link
+    reopened before and after paying, the row once paid and 31 days on,
+    and the sign-in with the name that was made."""
+
+    def test_from_the_form_to_a_paid_sign_in(self, db, monkeypatch, caplog):
+        from motodiag.cli.serve import RedactSessionTokens
+
+        sender = FailsOnce()
+        monkeypatch.setattr("motodiag.api.routes.signup.get_email_sender",
+                            lambda provider, settings=None: sender)
+        monkeypatch.setattr(email_mod, "get_email_sender",
+                            lambda provider, settings=None: sender)
+        provider = FakeBillingProvider()
+        c = _client(db, provider=provider)
+        form = dict(INDIVIDUAL, password="correct horse", accept_terms="yes")
+        caplog.set_level(logging.INFO)
+
+        # A name in capitals is refused, not lowered (#3).
+        r = _sign_up(c, **dict(form, username="Rita"))
+        assert r.headers["location"] == f"{SITE}/signup/problem/#username"
+
+        # The first email fails: "later", and nothing is kept (#6).
+        r = _sign_up(c, **form)
+        assert r.headers["location"] == f"{SITE}/signup/problem/#later"
+        assert _sql(db, "SELECT COUNT(*) FROM signups") == [(0,)]
+        assert _sql(db, "SELECT COUNT(*) FROM one_time_codes") == [(0,)]
+
+        # The retry, at once, with the same name, gets its link.
+        r = _sign_up(c, **form)
+        assert r.headers["location"] == f"{SITE}/signup/check-email/"
+        assert len(sender.outbox) == 1
+        code = _code_from(sender.outbox[0])
+
+        # The link opened: its access line is masked (#2).
+        target = f"/v1/signup/confirm?code={code}"
+        assert c.get(target).status_code == 200
+        line = logging.LogRecord("uvicorn.access", logging.INFO, "h11_impl.py", 1,
+                                 '%s - "%s %s HTTP/%s" %d',
+                                 ("1.2.3.4:5", "GET", target, "1.1", 200), None)
+        RedactSessionTokens().filter(line)
+        assert code not in line.getMessage()
+
+        # Pressed twice before paying: one checkout, the same page (#4).
+        first = c.post("/v1/signup/confirm", data={"code": code})
+        again = c.post("/v1/signup/confirm", data={"code": code})
+        assert first.headers["location"] == again.headers["location"]
+        assert len(provider.checkout_sessions) == 1
+        (session_id,) = provider.checkout_sessions
+
+        # Paid: Stripe's checkout completes and its subscription arrives.
+        provider.checkout_sessions[session_id]["status"] = "complete"
+        sid = _sql(db, "SELECT id FROM signups")[0][0]
+        provider.subscriptions["sub_signup_1"] = _paid_sub(sid)
+        dispatch_event(_sub_event(), db_path=db, provider=provider,
+                       settings=stripe_settings())
+        assert _sql(db, "SELECT status FROM signups") == [("completed",)]
+        assert [m.subject for m in sender.outbox][-1] == "Your Mekno account is ready"
+
+        # Pressed after paying: the paid page, no second checkout (#4).
+        late = c.post("/v1/signup/confirm", data={"code": code})
+        assert late.headers["location"] == f"{SITE}/signup/paid/"
+        assert len(provider.checkout_sessions) == 1
+
+        # Paid: the row keeps only its name, plan and ids (#5) ...
+        assert _sql(db, "SELECT email, owner_name, password_hash, username, tier "
+                        "FROM signups") == [("", "", "", "rita", "individual")]
+        # ... and 31 days on the purge keeps it and drops its spent code (#5).
+        purge_stale(time.time() + UNPAID_KEEP_S + 86400, db_path=db)
+        assert _sql(db, "SELECT COUNT(*) FROM signups") == [(1,)]
+        assert _sql(db, "SELECT COUNT(*) FROM one_time_codes") == [(0,)]
+
+        # The name signed up with is the name signed in with (#3).
+        r = c.post("/v1/auth/login", json={"username": "rita", "password": "correct horse"})
+        assert r.status_code == 200 and r.json()["token"].startswith("mds_")
+
+        # And no code reached the server's own log along the way (#2). The
+        # test client's own logger (httpx) prints the URL it asked for, so
+        # only the server's records are read.
+        server = [r.getMessage() for r in caplog.records if r.name.startswith("motodiag")]
+        assert server and not any(code in m for m in server)
