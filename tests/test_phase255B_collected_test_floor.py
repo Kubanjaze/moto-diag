@@ -691,7 +691,11 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: (the Cloudflare line). Gone: 210's "eight" passing test (renamed) and
 #: 175's anonymous not-found case (the route now needs a member). Measured:
 #: 13377.
-COLLECTED_TEST_FLOOR = 13377
+#:
+#: Phase 409 bug fix #2 (the reader's User-Agent): +1 -0, one new test in
+#: test_phase409_public_condition.py (29 -> 30), that the reader sends its
+#: own name on the wire and never Python-urllib. Measured: 13378.
+COLLECTED_TEST_FLOOR = 13378
 
 
 def _collected_count() -> int:

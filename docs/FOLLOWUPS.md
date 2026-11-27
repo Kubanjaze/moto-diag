@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F312** (this file). The
+At the time of writing the highest assigned is **F313** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -7235,3 +7235,9 @@ Found by the 409 prebuild (2026-11-25). `docs/legal/privacy.md` 1.1 says "Cloudf
 Filed by Phase 409 before it found F287 (Phase 408, 2026-11-21), which is the same defect: the unbounded `fastapi>=0.110`. Kept, never reused, as the sequence requires; F287 carries it. What this entry adds to F287 is the measurement below: two more tests that fail on 0.165, both of them 409's anonymous-surface pins.
 
 Found in Phase 409's Step 0 (2026-11-27), in a fresh cloud install. `pip install -e ".[all]"` took FastAPI 0.165.0; three tests failed with `AttributeError: '_IncludedRouter' object has no attribute 'path'`: `tests/test_phase175_api_foundation.py::TestAppFactory::test_expected_routes_registered` and two of `tests/test_phase409_public_hardening.py::TestAnonymousSurface`. On FastAPI 0.136.3 (live's line, ROADMAP row 175) all pass. The route walks read `app.routes` and expect every entry to carry `.path`. Not measured: whether the server itself runs on 0.165. What it affects: a new install of the server or of a test machine takes the newest FastAPI, and the anonymous-surface pin, the guard that says what the internet reaches, stops running green. What closes it: an upper bound on FastAPI in `pyproject.toml` until the walks handle included routers, or the walks made to, with a test on both.
+
+### F313
+
+**The sign-in throttle keeps two entries for every name ever tried, and never drops them**
+
+Found by the advisor's read-only review of Phase 409 (2026-11-27) and confirmed in the code. `LoginThrottle._prune` (`src/motodiag/auth/login_throttle.py`) calls `self._fails.setdefault(key, deque())`, and `check()` prunes both the pair key and the name key before any failure is recorded, so every new name tried at the sign-in adds two dictionary entries, even with the right password. `record_success` removes only the pair entry; nothing removes the name entry, and an emptied deque is never deleted. What it affects: memory in the server process grows by two small entries per distinct name tried, without bound, until the server restarts. Once the public address is on (409), anyone on the internet can choose the names. Not measured: how many names it would take to matter. The deques stay empty, so the throttle's answers are unaffected. Low. What closes it: `_prune` reads with `get` and creates nothing, `record_failure` creates; empty deques are dropped (on prune, or by a size-capped sweep); a test that a thousand distinct names tried leave the dictionary empty.

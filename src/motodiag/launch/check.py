@@ -256,6 +256,7 @@ def disk_condition(db_path: str) -> Condition:
 #: details refused without a credential (answer 6, F309).
 PUBLIC_PROBES = (("/healthz", 200), ("/docs", 404), ("/v1/shops/1", 401))
 PUBLIC_TIMEOUT_S = 15.0
+PUBLIC_USER_AGENT = "motodiag-launch-check/409"
 
 
 def _public_origin(settings: Settings) -> Optional[str]:
@@ -283,6 +284,9 @@ def public_status(settings: Settings, path: str,
     opener = urllib.request.build_opener(
         urllib.request.ProxyHandler({}),
         urllib.request.HTTPSHandler(context=ssl.create_default_context()))
+    # Cloudflare refuses urllib's default "Python-urllib/3.x" with 403
+    # (error 1010), so the reader names itself (409 bug fix #2).
+    opener.addheaders = [("User-Agent", PUBLIC_USER_AGENT)]
     try:
         with opener.open(origin + path, timeout=timeout) as resp:
             return resp.status, resp.read(65536)

@@ -218,3 +218,60 @@ def test_a_certificate_the_trust_store_does_not_know_is_not_valid(self_signed_ht
     monkeypatch.setattr(check, "_host_is_unreachable_publicly", lambda host: None)
     c = check.public_condition(_settings(f"https://127.0.0.1:{self_signed_https}"))
     assert (c.ready, c.detail) == (False, "the certificate is not valid")
+
+
+# ---------------------------------------------------------------- what the reader sends (bug fix #2)
+@pytest.fixture
+def recording_https(tmp_path):
+    """A real TLS server on loopback that records each request's headers."""
+    key, cert = tmp_path / "key.pem", tmp_path / "cert.pem"
+    made = subprocess.run(
+        ["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "1",
+         "-subj", "/CN=127.0.0.1", "-keyout", str(key), "-out", str(cert)],
+        capture_output=True)
+    if made.returncode != 0:
+        pytest.skip("openssl could not make a certificate here")
+    seen: list[dict[str, str]] = []
+
+    class Recording(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):  # noqa: N802
+            seen.append({k.lower(): v for k, v in self.headers.items()})
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b'{"status":"ok"}')
+
+        def log_message(self, *a):
+            pass
+
+    httpd = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Recording)
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    ctx.load_cert_chain(str(cert), str(key))
+    httpd.socket = ctx.wrap_socket(httpd.socket, server_side=True)
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    yield httpd.server_address[1], str(cert), seen
+    httpd.shutdown()
+    httpd.server_close()
+
+
+def test_the_reader_names_itself_not_python_urllib(recording_https, monkeypatch):
+    """Cloudflare answers urllib's default "Python-urllib/3.x" with 403
+    (error 1010), measured from the Mac against getmekno.com on 2026-11-27.
+    The real reader, on the wire, sends its own name and never urllib's.
+    Only the trust store (this certificate) and the host check (loopback)
+    are moved aside."""
+    port, cert, seen = recording_https
+    real = ssl.create_default_context
+
+    def trusting():
+        ctx = real(cafile=cert)
+        ctx.check_hostname = False
+        return ctx
+
+    monkeypatch.setattr(check.ssl, "create_default_context", trusting)
+    monkeypatch.setattr(check, "_host_is_unreachable_publicly", lambda host: None)
+    code, _ = check.public_status(_settings(f"https://127.0.0.1:{port}"), "/healthz")
+    assert code == 200
+    assert len(seen) == 1
+    agent = seen[0].get("user-agent", "")
+    assert agent == check.PUBLIC_USER_AGENT == "motodiag-launch-check/409"
+    assert "python-urllib" not in " ".join(seen[0].values()).lower()
