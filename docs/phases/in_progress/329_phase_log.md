@@ -130,3 +130,53 @@ picked which of the six to fix now and which to file.
 - **Fix:** `python scripts/site_build.py sitemap`.
 - **Files:** `site/sitemap.xml`.
 - **Verified:** `tests/test_phase408_site.py` 111 passed.
+
+## 2026-11-27 20:25 UTC — more than two bugs: the common root cause, before fixing
+
+The review found more than two bugs in one build, so the rule is to stop
+and name the common cause first. Of the advisor's items, five are one
+kind: a one-time code in the server's log (B1), a second payment for one
+sign-up (B3), the privacy words the code does not keep (B4), a username
+stranded by a failed email (B5), and a crash on an unfinished sign-up's
+invoice event (C, webhook line 321). B2 (capitals in a username) is the
+same kind at the seam between the sign-up and the existing sign-in.
+
+**The cause:** PR 99 and this build were tested one route at a time
+against stand-ins (the fake billing provider, the stand-in sender, a
+scratch database), and each test asked whether a route did its own step.
+No test followed one sign-up's data through its whole life: the link's
+code from the email into the server's log, the same link opened again
+around the payment, the row after the payment and after 30 quiet days, a
+send that fails halfway, the login made at the end used to sign in, and
+every Stripe event a sign-up's subscription can send. Each bug sits where
+one step hands to the next.
+
+**What changes because of it:** each fix below has its own test, and one
+end-to-end test (`TestOneSignUpEndToEnd`) follows a single sign-up from
+the form to a paid login and a sign-in, through a failed first email, a
+reopened link around the payment, the access log, and the purge, so the
+hand-offs are held together, not only each step.
+
+## 2026-11-27 20:25 UTC — Bug fix #2: one-time codes kept out of the server's log
+
+- **Issue:** the sign-up's and the reset's links carry `?code=` in a GET;
+  uvicorn's access line logs the query string, and `RedactSessionTokens`
+  masked only `mds_` tokens, so a reset code in the journal worked for an
+  hour and a sign-up code for 24 hours (opening a link does not spend it).
+- **Root cause:** above; the codes were never followed into the log.
+- **Fix:** every code starts `mdc_` (`CODE_PREFIX`), and the one pattern
+  the log filter and the crash reports' scrubber share
+  (`SESSION_TOKEN_RE`) masks `mds_` and `mdc_`. The link keeps its code,
+  because an email link must carry one. Cloudflare's own request logs see
+  the URL as they see every request (privacy 1.2 and 1.3 say Cloudflare
+  keeps request logs); a code there expires in a day at most and works
+  once.
+- **Files:** `src/motodiag/auth/one_time_codes.py`, `src/motodiag/cli/serve.py`,
+  `tests/test_phase329_resend_and_limits.py` (`TestCodesStayOutOfTheLog`, 3).
+- **Verified:** the three new tests, and 303's redaction and 343's events
+  tests: 149 passed.
+
+**The cloud's full run of 9566783 (not of record)** was cut off at 99% by
+its own 50-minute limit while whole-tree runs shared the machine; it showed
+failures and errors at 53% and 79% before it stopped, with no summary. It
+is run again on the fixed head, alone.

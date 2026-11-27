@@ -471,3 +471,33 @@ def test_form_keeps_its_fields():
     """The sibling's form helpers still name every field the route reads."""
     assert set(FORM) == {"email", "owner_name", "username", "password", "shop_name",
                          "tier", "accept_terms"}
+
+
+# ---------------------------------------------------------------- bug fix #2: codes and the log
+
+
+class TestCodesStayOutOfTheLog:
+    """A link's code in the access line (uvicorn logs the query string) is
+    masked as a session token is, in the log and in crash reports."""
+
+    def test_every_code_carries_the_prefix_the_filter_masks(self, db, outbox):
+        from motodiag.auth.one_time_codes import CODE_PREFIX, issue_code
+        assert CODE_PREFIX == "mdc_"
+        assert issue_code("reset_password", "user:1", now=0).code.startswith("mdc_")
+        _sign_up(_client(db))
+        assert _code_from(outbox[0]).startswith("mdc_")
+
+    def test_the_access_line_masks_the_code(self, db, outbox):
+        from motodiag.cli.serve import RedactSessionTokens
+        _sign_up(_client(db))
+        code = _code_from(outbox[0])
+        rec = logging.LogRecord("uvicorn.access", logging.INFO, "h11_impl.py", 1,
+                                '%s - "%s %s HTTP/%s" %d', ("1.2.3.4:5", "GET",
+                                f"/v1/signup/confirm?code={code}", "1.1", 200), None)
+        RedactSessionTokens().filter(rec)
+        assert code not in rec.getMessage() and "redacted]" in rec.getMessage()
+
+    def test_crash_reports_mask_the_code(self):
+        from motodiag.telemetry.events import redact
+        out = redact("GET /v1/auth/password-reset/confirm?code=mdc_AbC-_123xyz failed")
+        assert "mdc_AbC" not in out and "redacted]" in out

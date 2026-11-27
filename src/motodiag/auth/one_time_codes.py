@@ -65,6 +65,12 @@ class IssuedCode:
     record: CodeRecord
 
 
+#: Phase 329 bug fix #2: every code starts with this, so the server's log
+#: filter and the crash reports' scrubber mask it wherever a link is logged
+#: (``motodiag.cli.serve.SESSION_TOKEN_RE``).
+CODE_PREFIX = "mdc_"
+
+
 def hash_code(code: str) -> str:
     return hashlib.sha256(code.encode("utf-8")).hexdigest()
 
@@ -75,7 +81,7 @@ def issue_code(purpose: Purpose, subject: str, *, now: float) -> IssuedCode:
         raise ValueError(f"purpose must be one of {PURPOSES}, got {purpose!r}")
     if not subject:
         raise ValueError("a code needs a subject")
-    code = secrets.token_urlsafe(CODE_NBYTES)
+    code = CODE_PREFIX + secrets.token_urlsafe(CODE_NBYTES)
     return IssuedCode(code, CodeRecord(
         purpose=purpose, subject=subject, code_hash=hash_code(code),
         issued_at=now, expires_at=now + LIFETIME_S[purpose],
