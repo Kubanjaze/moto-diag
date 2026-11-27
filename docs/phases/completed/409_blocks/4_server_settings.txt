@@ -1,0 +1,63 @@
+bash <<'EOF409F'
+set -u
+bad() { echo; echo "SOMETHING IS OFF: $1"; exit 1; }
+ENVF=~/.config/motodiag/server.env
+TS=desktop-76s9bqv.taila45995.ts.net
+healthy() { curl -fsS -m 10 "$@" < /dev/null 2>/dev/null | grep -q '"status":"ok"'; }
+[ -f "$ENVF" ] || bad "the server's settings file is missing; nothing was changed"
+[ -f ~/motodiag/server/src/motodiag/auth/login_throttle.py ] || bad "the server's code does not have the new protections yet: do the server step first; nothing was changed"
+healthy http://127.0.0.1:8000/healthz || bad "the server does not answer healthy on this machine; nothing was changed"
+TS_BEFORE=no
+healthy "https://$TS/healthz" && TS_BEFORE=yes
+echo "Before: healthy on this machine; on the tailnet name: $TS_BEFORE"
+BK="$ENVF.pre409"
+if [ -f "$BK" ]; then
+  echo "The settings from before the first run are already kept at $BK (kept as they are)."
+else
+  cp -p "$ENVF" "$BK" || bad "could not copy the settings; nothing was changed"
+  echo "Old settings kept at $BK"
+fi
+RUNBK=$(mktemp)
+cp -p "$ENVF" "$RUNBK" || bad "could not copy the settings; nothing was changed"
+NEW=$(mktemp)
+grep -vE '^(MOTODIAG_PUBLIC_BASE_URL|MOTODIAG_API_ALLOWED_HOSTS|MOTODIAG_API_CORS_ORIGINS|MOTODIAG_API_DOCS_ENABLED|MOTODIAG_API_SERVERS)=' "$ENVF" > "$NEW"
+cat >> "$NEW" <<SETTINGS
+MOTODIAG_PUBLIC_BASE_URL=https://api.getmekno.com
+MOTODIAG_API_ALLOWED_HOSTS=api.getmekno.com,$TS,127.0.0.1,localhost
+MOTODIAG_API_CORS_ORIGINS=https://getmekno.com
+MOTODIAG_API_DOCS_ENABLED=false
+MOTODIAG_API_SERVERS=https://api.getmekno.com|Live
+SETTINGS
+put_back() {
+  install -m 600 "$RUNBK" "$ENVF"
+  sudo /usr/bin/systemctl restart motodiag-api.service < /dev/null
+  rm -f "$RUNBK"
+  bad "$1; the old settings are back and the server was restarted on them"
+}
+install -m 600 "$NEW" "$ENVF"; rm -f "$NEW"
+echo "Restarting the app server on the new settings (it may ask for your Ubuntu password):"
+sudo /usr/bin/systemctl restart motodiag-api.service < /dev/null || put_back "the server would not restart"
+ok=""
+for _ in $(seq 1 20); do
+  sleep 2
+  healthy http://127.0.0.1:8000/healthz && { ok=1; break; }
+done
+[ -n "$ok" ] || put_back "the server did not come back healthy on the new settings"
+echo "The server answers healthy on this machine, on the new settings."
+if [ "$TS_BEFORE" = yes ]; then
+  healthy "https://$TS/healthz" || put_back "the tailnet name stopped answering on the new settings"
+  echo "The tailnet name still answers healthy, for the phones on it."
+else
+  echo "Note: this window could not reach the tailnet name before or after; check it from the phone."
+fi
+c=$(curl -s -o /dev/null -m 10 -w '%{http_code}' http://127.0.0.1:8000/docs < /dev/null)
+[ "$c" = 404 ] || put_back "the help pages still answer ($c)"
+echo "The help pages are off."
+c=$(curl -s -o /dev/null -m 10 -w '%{http_code}' -H 'Host: not-ours.example' http://127.0.0.1:8000/healthz < /dev/null)
+[ "$c" = 400 ] || put_back "the server still answers to a name that is not its own ($c)"
+echo "The server answers only to its own names."
+rm -f "$RUNBK"
+echo
+echo "The public settings are in. Nothing is public yet: the tunnel is the next step."
+echo "ALL GOOD"
+EOF409F

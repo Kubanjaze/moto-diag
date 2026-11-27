@@ -1,0 +1,17 @@
+bash <<'EOF409D'
+set -u
+bad() { echo; echo "SOMETHING IS OFF: $1"; exit 1; }
+cd ~/Projects/moto-diag || bad "there is no moto-diag folder in Projects on this Mac"
+git fetch -q origin master < /dev/null || bad "could not reach GitHub"
+for p in terms privacy; do
+  url="https://getmekno.com/$p/"
+  want=$(git show "origin/master:site/$p/index.html" | shasum -a 256 | cut -c1-64)
+  got=$(curl -fsL --max-time 20 "$url" < /dev/null | shasum -a 256 | cut -c1-64)
+  [ "$got" != "$(printf '' | shasum -a 256 | cut -c1-64)" ] || bad "could not open $url"
+  [ "$got" = "$want" ] || bad "$url is not master's page yet (wait a minute and paste this again; if it stays, the upload did not take)"
+  echo "$url is master's page."
+done
+curl -sL --max-time 20 https://getmekno.com/privacy/ < /dev/null | grep -q 'Cloudflare</strong>, for the connection' || bad "the live privacy page does not name Cloudflare for the app"
+echo "The live privacy policy is version 1.2 and names Cloudflare for the app."
+echo "ALL GOOD"
+EOF409D

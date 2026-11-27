@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F307** (this file). The
+At the time of writing the highest assigned is **F313** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -7209,3 +7209,35 @@ API answers them (the app's copy of the API's description refreshed in the
 same change), and Card payments lists them in plain words, with a test in
 which two named entries reach the screen. Referenced from
 `moto-diag-mobile/docs/FOLLOWUPS.md`.
+
+### F309
+
+**`GET /v1/shops/{id}` answered any caller, with no credential, with any shop's whole row, tax id included**
+
+Found by the 409 prebuild's audit (2026-11-25, `docs/reports/2026-11-25_409_prebuild_plan.md`) and re-read in Phase 409's Step 0. Phase 175's smoke route took no credential and returned the row from `shops`: name, address, phone, email and tax id, for any id, so ids could be walked. The app does not call it (its own route is `/v1/shop/profile/{id}`). Reachable only on the tailnet until now: the server has never been on the public internet. What closes it: the route needs a signed-in active member of that shop, a missing shop answers 403 as a stranger's does, and a test pins the anonymous surface exactly. Phase 409 does this (the operator's answer 6 of 2026-11-25: closed before the tunnel goes on).
+
+### F310
+
+**Uploads over 100 MB cannot pass Cloudflare's free tunnel: manuals are allowed 300 MB (K119) and videos 512 MB**
+
+Found in Phase 409 (2026-11-25 for manuals, 2026-11-27 for videos). Cloudflare Free refuses any request body over 100 MB at its edge with its own 413 page, before the server sees it. The server allows a manual up to 300 MB (`MANUAL_FILE_BYTES_CAP`, `src/motodiag/manuals/storage.py`) and a video up to 512 MB (`PER_FILE_BYTES_CAP`, `src/motodiag/api/routes/videos.py`); photos are 25 MB. In the app it is videos: about a minute of 1080p is over 100 MB; the app uploads no manuals. Over the tailnet nothing changes. The operator's answer 5 (2026-11-25): the 300 MB stays, and chunked uploads are dated, not open: they land before 410 (the App Store) and before 329's first self-serve shop, and each of those phases' Step 0 checks it. Meanwhile the app explains the limit in its own words (409's app half). What closes it: uploads sent in parts each under 100 MB, joined and checked on the server, for manuals and videos, with a test of a body over 100 MB in parts.
+
+### F311
+
+**The privacy policy names Cloudflare only for the website, but behind the tunnel every app request passes through Cloudflare decrypted**
+
+Found by the 409 prebuild (2026-11-25). `docs/legal/privacy.md` 1.1 says "Cloudflare, which serves it, keeps standard request logs" of the website only. A Cloudflare Tunnel ends TLS at Cloudflare's edge, so it reads each request it carries. Agreed with the operator on 2026-11-25: the policy names it before the tunnel goes on. What closes it: version 1.2 with Cloudflare in "The services it goes to", live on getmekno.com before the tunnel; Phase 409 writes it and its tunnel block refuses to run until the live page carries the line.
+
+### F312 — CLOSED as a duplicate of F287 (2026-11-27)
+
+**`fastapi>=0.110` is unpinned, and FastAPI 0.165 breaks the tests that walk the app's routes**
+
+Filed by Phase 409 before it found F287 (Phase 408, 2026-11-21), which is the same defect: the unbounded `fastapi>=0.110`. Kept, never reused, as the sequence requires; F287 carries it. What this entry adds to F287 is the measurement below: two more tests that fail on 0.165, both of them 409's anonymous-surface pins.
+
+Found in Phase 409's Step 0 (2026-11-27), in a fresh cloud install. `pip install -e ".[all]"` took FastAPI 0.165.0; three tests failed with `AttributeError: '_IncludedRouter' object has no attribute 'path'`: `tests/test_phase175_api_foundation.py::TestAppFactory::test_expected_routes_registered` and two of `tests/test_phase409_public_hardening.py::TestAnonymousSurface`. On FastAPI 0.136.3 (live's line, ROADMAP row 175) all pass. The route walks read `app.routes` and expect every entry to carry `.path`. Not measured: whether the server itself runs on 0.165. What it affects: a new install of the server or of a test machine takes the newest FastAPI, and the anonymous-surface pin, the guard that says what the internet reaches, stops running green. What closes it: an upper bound on FastAPI in `pyproject.toml` until the walks handle included routers, or the walks made to, with a test on both.
+
+### F313
+
+**The sign-in throttle keeps two entries for every name ever tried, and never drops them**
+
+Found by the advisor's read-only review of Phase 409 (2026-11-27) and confirmed in the code. `LoginThrottle._prune` (`src/motodiag/auth/login_throttle.py`) calls `self._fails.setdefault(key, deque())`, and `check()` prunes both the pair key and the name key before any failure is recorded, so every new name tried at the sign-in adds two dictionary entries, even with the right password. `record_success` removes only the pair entry; nothing removes the name entry, and an emptied deque is never deleted. What it affects: memory in the server process grows by two small entries per distinct name tried, without bound, until the server restarts. Once the public address is on (409), anyone on the internet can choose the names. Not measured: how many names it would take to matter. The deques stay empty, so the throttle's answers are unaffected. Low. What closes it: `_prune` reads with `get` and creates nothing, `record_failure` creates; empty deques are dropped (on prune, or by a size-capped sweep); a test that a thousand distinct names tried leave the dictionary empty.

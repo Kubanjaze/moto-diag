@@ -6,8 +6,11 @@ written by ``take_snapshot`` itself, and a server on a loopback port that
 answers ``/healthz`` and ``/v1/terms``. No test reads the live database
 (244H), and the check is a command that is run, never a test of live.
 
-The passing stand-in prints eight ``ready:`` lines and ALL GOOD; each case
-breaks one condition and holds the other seven ready.
+The passing stand-in prints nine ``ready:`` lines and ALL GOOD; each case
+breaks one condition and holds the other eight ready. The ninth, Phase
+409's public address, reads a stand-in for the public name
+(``check.public_status`` replaced); its own cases are in
+``tests/test_phase409_public_condition.py``.
 """
 
 from __future__ import annotations
@@ -58,7 +61,12 @@ NAMES = (
     "a manual reviewer is set",
     "the test shop is inactive",
     "the free disk is above the 50 GB floor",
+    "the public address answers over https",
 )
+
+#: What the stand-in public name answers (Phase 409's three probes).
+PUBLIC_ANSWERS = {"/healthz": (200, b'{"status":"ok"}'), "/docs": (404, b"{}"),
+                  "/v1/shops/1": (401, b"{}")}
 
 Usage = namedtuple("Usage", "total used free")
 
@@ -167,7 +175,10 @@ class World:
             "MOTODIAG_SENTRY_DSN": DSN_TEXT,
             "MOTODIAG_BACKUP_WORK_DIR": str(self.work),
             "MOTODIAG_BACKUP_ENV": str(self.backup_env),
+            "MOTODIAG_PUBLIC_BASE_URL": "https://api.getmekno.com",
         }
+        monkeypatch.setattr(check, "public_status",
+                            lambda settings, path, timeout=None: PUBLIC_ANSWERS[path])
         self.free_gb = {"db": 120.0, "c": 80.0}
         monkeypatch.setattr(check, "SERVER_URL", server_url)
         monkeypatch.setattr(check.shutil, "disk_usage", self._usage)
@@ -216,12 +227,12 @@ def _lines(out) -> list[str]:
 
 
 # ---------------------------------------------------------------- the passing stand-in
-def test_the_ready_stand_in_prints_eight_ready_lines_and_all_good(world):
+def test_the_ready_stand_in_prints_nine_ready_lines_and_all_good(world):
     out = world.run()
     assert out.exit_code == 0, out.output
     lines = _lines(out)
-    assert [line.split(" (")[0] for line in lines[:8]] == [f"ready: {n}" for n in NAMES]
-    assert lines[8:] == ["ALL GOOD"]
+    assert [line.split(" (")[0] for line in lines[:9]] == [f"ready: {n}" for n in NAMES]
+    assert lines[9:] == ["ALL GOOD"]
     assert ("ready: the server is in prod, with Stripe live and the real prices "
             "(env=prod, provider=stripe, key=live, prices=3, placeholders=no, "
             "share links=off)") in lines
@@ -320,6 +331,8 @@ BREAKS = {
     "no shop 1": (_no_shop_1, 6, "there is no shop 1: this is not live's database"),
     "under 50 GB": (_low_disk, 7, "under the floor: the database's disk 120.0 GB free, "
                                   "C: 49.9 GB free"),
+    "no public address": (_env(MOTODIAG_PUBLIC_BASE_URL=""), 8,
+                          "no public address is set (MOTODIAG_PUBLIC_BASE_URL is empty)"),
 }
 
 
@@ -333,7 +346,7 @@ def test_each_condition_broken_alone_is_the_one_not_ready(world, case):
     assert lines[-1] == "SOMETHING IS OFF"
     assert lines[index].startswith(f"NOT READY: {NAMES[index]}: "), lines[index]
     assert reason in lines[index], lines[index]
-    others = [line for i, line in enumerate(lines[:8]) if i != index]
+    others = [line for i, line in enumerate(lines[:9]) if i != index]
     assert all(line.startswith("ready: ") for line in others), out.output
 
 

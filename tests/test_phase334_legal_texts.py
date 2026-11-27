@@ -37,7 +37,10 @@ CLAUSES = {
 }
 #: The Step 0 census (334_phase_log.md): every service data leaves for.
 SERVICES = ("Stripe", "Anthropic", "OpenAI", "Whisper", "Sentry", "Backblaze",
-            "Apple", "NHTSA")
+            "Apple", "NHTSA",
+            # Phase 409 (F311): Cloudflare carries the app's requests once the
+            # tunnel is on, and the policy names it in the services list.
+            "**Cloudflare**, for the connection between the app and Mekno's server")
 FORBIDDEN = {
     "a phone number": re.compile(r"\+?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}\b|\+\d[\d\s-]{8,}"),
     "a price id": re.compile(r"\bprice_\w+"),

@@ -1,6 +1,6 @@
 # Mekno Privacy Policy
 
-Version 1.1 — 2026-11-23
+Version 1.2 — 2026-11-27
 
 This policy says what Mekno keeps, why, which services it goes to, how long
 it is kept, and how a shop takes it out or has it deleted. It is part of
@@ -68,6 +68,9 @@ Mekno sends data to these services, and only for the reason given:
   and the notification's text.
 - **NHTSA**, the US road-safety agency, for recall and VIN lookups: a bike's
   VIN, or its make, model and year.
+- **Cloudflare**, for the connection between the app and Mekno's server:
+  every request the app sends passes through Cloudflare, which opens it to
+  deliver it and keeps standard request logs.
 
 ## The website
 

@@ -1,6 +1,7 @@
 """``motodiag launch check``: whether one paying shop can start on live (Phase 210).
 
-Eight conditions, in the order of 210's written scope, each a function that
+Nine conditions: the eight of 210's written scope, in its order, and
+Phase 409's public address after them. Each is a function that
 returns a :class:`Condition`. The check reads the server's settings and the
 database and writes nothing to the database: it is opened read-only
 (``mode=ro``) and never through ``init_db``, which loads the bulletins into
@@ -9,8 +10,10 @@ an empty table (F292). The feed's condition calls the rules of
 readers, which do not call ``init_db`` either.
 
 No detail carries a value from the settings: only words (``set``, ``live``,
-``on``), counts, times and versions. The one connection the check makes is
-to the server on this machine's loopback address.
+``on``), counts, times, versions and status codes. The check makes two
+kinds of connection: to the server on this machine's loopback address
+(``loopback_json``), and, for the ninth condition, to the one https name
+``public_base_url`` holds (``public_status``), which refuses anything else.
 """
 
 from __future__ import annotations
@@ -19,7 +22,9 @@ import json
 import os
 import shutil
 import sqlite3
+import ssl
 import time
+import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from datetime import datetime
@@ -33,6 +38,7 @@ from motodiag.backup.snapshot import RUNS_LOG
 from motodiag.cli.payments import _status_problems
 from motodiag.core.config import Environment, Settings
 from motodiag.core.database import SCHEMA_VERSION
+from motodiag.core.public_url import _host_is_unreachable_publicly
 from motodiag.payments import event_feed, stripe_api
 
 #: Phase 390's free-space floor in GB, the same on both of the home desktop's
@@ -57,6 +63,11 @@ _REVIEWERS_SQL = ("SELECT r.user_id, u.username, r.granted_at, r.granted_by_user
 
 class NotLoopback(Exception):
     """The check was asked to read a server that is not on this machine."""
+
+
+class NotPublicName(Exception):
+    """The public reader was asked for something other than its three paths
+    on the https name the settings hold."""
 
 
 @dataclass(frozen=True)
@@ -239,10 +250,96 @@ def disk_condition(db_path: str) -> Condition:
     return Condition(name, True, words)
 
 
+# ---------------------------------------------------------------- 9. the public name
+#: What an anonymous caller must get from the public name (Phase 409): the
+#: server healthy; the API pages off (the operator's answer 3); a shop's
+#: details refused without a credential (answer 6, F309).
+PUBLIC_PROBES = (("/healthz", 200), ("/docs", 404), ("/v1/shops/1", 401))
+PUBLIC_TIMEOUT_S = 15.0
+PUBLIC_USER_AGENT = "motodiag-launch-check/409"
+
+
+def _public_origin(settings: Settings) -> Optional[str]:
+    """``https://host[:port]`` from ``public_base_url``, or None when it is
+    not an https address a stranger could reach."""
+    parts = urlsplit((settings.public_base_url or "").strip())
+    if parts.scheme != "https" or not parts.hostname:
+        return None
+    if _host_is_unreachable_publicly(parts.hostname):
+        return None
+    return f"https://{parts.netloc}"
+
+
+def public_status(settings: Settings, path: str,
+                  timeout: float = PUBLIC_TIMEOUT_S) -> tuple[int, bytes]:
+    """GET one of :data:`PUBLIC_PROBES`' paths on the public name, never
+    through a proxy, with Python's default certificate checks. Returns the
+    status and at most 64 KB of the body; an error status is an answer, not
+    an exception. Raises :class:`NotPublicName` for any other path or name,
+    and ``OSError`` (``urllib.error.URLError``) when nothing answers."""
+    origin = _public_origin(settings)
+    if origin is None or path not in {p for p, _ in PUBLIC_PROBES}:
+        raise NotPublicName("the public reader reads only its three paths on the "
+                            "https name the settings hold")
+    opener = urllib.request.build_opener(
+        urllib.request.ProxyHandler({}),
+        urllib.request.HTTPSHandler(context=ssl.create_default_context()))
+    # Cloudflare refuses urllib's default "Python-urllib/3.x" with 403
+    # (error 1010), so the reader names itself (409 bug fix #2).
+    opener.addheaders = [("User-Agent", PUBLIC_USER_AGENT)]
+    try:
+        with opener.open(origin + path, timeout=timeout) as resp:
+            return resp.status, resp.read(65536)
+    except urllib.error.HTTPError as e:
+        return e.code, e.read(65536)
+
+
+def public_condition(settings: Settings) -> Condition:
+    name = "the public address answers over https"
+    raw = (settings.public_base_url or "").strip()
+    if not raw:
+        return Condition(name, False, "no public address is set "
+                                      "(MOTODIAG_PUBLIC_BASE_URL is empty)")
+    if urlsplit(raw).scheme != "https":
+        return Condition(name, False, "the public address is not https")
+    if _public_origin(settings) is None:
+        return Condition(name, False, "the public address is a loopback, private "
+                                      "or local name, which no stranger can reach")
+    answers = {}
+    for path, _ in PUBLIC_PROBES:
+        try:
+            answers[path] = public_status(settings, path)
+        except urllib.error.URLError as e:
+            if isinstance(e.reason, ssl.SSLError):
+                return Condition(name, False, "the certificate is not valid")
+            return Condition(name, False, "the public address did not answer")
+        except ssl.SSLError:
+            return Condition(name, False, "the certificate is not valid")
+        except OSError:
+            return Condition(name, False, "the public address did not answer")
+    code, body = answers["/healthz"]
+    try:
+        healthy = code == 200 and json.loads(body.decode("utf-8")).get("status") == "ok"
+    except (ValueError, AttributeError):
+        healthy = False
+    if not healthy:
+        return Condition(name, False, f"/healthz answered {code}, not healthy")
+    code, _ = answers["/docs"]
+    if code != 404:
+        return Condition(name, False, f"the API pages are open (/docs answered {code}, "
+                                      "not 404)")
+    code, _ = answers["/v1/shops/1"]
+    if code != 401:
+        return Condition(name, False, f"a shop's details answer without signing in "
+                                      f"(/v1/shops/1 answered {code}, not 401)")
+    return Condition(name, True, "certificate valid, healthy, API pages off, "
+                                 "a shop's details need signing in")
+
+
 # ---------------------------------------------------------------- the check
 def run_conditions(settings: Settings, db_path: str, conn: sqlite3.Connection, *,
                    now: Optional[float] = None) -> list[Condition]:
-    """The eight conditions, in the scope's order."""
+    """The nine conditions: 210's eight in its scope's order, then 409's."""
     at = time.time() if now is None else now
     return [
         schema_condition(conn),
@@ -253,4 +350,5 @@ def run_conditions(settings: Settings, db_path: str, conn: sqlite3.Connection, *
         reviewer_condition(conn),
         smoke_shop_condition(conn),
         disk_condition(db_path),
+        public_condition(settings),
     ]

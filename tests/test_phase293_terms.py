@@ -53,7 +53,9 @@ def test_the_version_is_1_1_and_both_headers_say_so():
     assert terms.TERMS_VERSION == "1.1"
     line = f"Version {terms.TERMS_VERSION} — {terms.TERMS_DATE}"
     assert TERMS.splitlines()[2] == line
-    assert PRIVACY.splitlines()[2].startswith("Version 1.1 — ")
+    # Phase 409: the privacy policy keeps its own number and is at 1.2 (it
+    # names Cloudflare for the app); the terms stay at 1.1.
+    assert PRIVACY.splitlines()[2] == "Version 1.2 — 2026-11-27"
 
 
 @pytest.mark.parametrize("phrase", UPLOAD_BULLETS)
@@ -92,7 +94,8 @@ def test_the_site_pages_are_the_builds_output():
     for page in sb.LEGAL_PAGES:
         html = (ROOT / "site" / page).read_text(encoding="utf-8")
         assert html == sb.render_legal(page), f"run scripts/site_build.py legal ({page})"
-        assert "Version 1.1" in html
+        # Phase 409: the privacy policy is at 1.2, the terms at 1.1.
+        assert ("Version 1.2" if page.startswith("privacy") else "Version 1.1") in html
 
 
 @pytest.fixture

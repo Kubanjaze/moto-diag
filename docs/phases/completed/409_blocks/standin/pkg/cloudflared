@@ -1,0 +1,6 @@
+#!/bin/bash
+case "$1" in
+  --version) echo "cloudflared version 2026.11.0";;
+  service) if [ "$2" = install ]; then [ "${#3}" -gt 100 ] || exit 1; touch "$ST/cf_active"; else rm -f "$ST/cf_active"; fi;;
+esac
+exit 0

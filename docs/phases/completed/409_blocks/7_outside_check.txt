@@ -1,0 +1,35 @@
+bash <<'EOF409G'
+set -u
+bad() { echo; echo "SOMETHING IS OFF: $1"; exit 1; }
+B=https://api.getmekno.com
+code() { curl -s -o /dev/null -m 20 -w '%{http_code}' "$@" < /dev/null; }
+curl -fsS -m 20 "$B/healthz" < /dev/null | grep -q '"status":"ok"' || bad "$B/healthz does not answer healthy over https with a valid certificate"
+echo "healthz: healthy, valid certificate."
+H=$(curl -sS -m 20 -D - -o /dev/null "$B/healthz" < /dev/null)
+printf '%s\n' "$H" | grep -qi '^strict-transport-security:' || bad "the answer has no HSTS header"
+printf '%s\n' "$H" | grep -qi '^x-content-type-options: *nosniff' || bad "the answer has no nosniff header"
+printf '%s\n' "$H" | grep -qi '^x-frame-options: *deny' || bad "the answer has no framing header"
+echo "Protective headers: present."
+for p in /docs /redoc /openapi.json; do
+  c=$(code "$B$p"); [ "$c" = 404 ] || bad "$p is open on the public name ($c)"
+done
+echo "Help pages: off."
+c=$(code "$B/v1/shops/1"); [ "$c" = 401 ] || bad "a shop's details answer without a login ($c)"
+echo "A shop's details: refused without a login."
+c=$(code -X POST -H 'Content-Type: application/json' -d '{"username":"nobody-409-check","password":"x"}' "$B/v1/auth/login")
+[ "$c" = 401 ] || bad "sign-in did not refuse a wrong name ($c)"
+echo "Sign-in: a wrong name is refused."
+c=$(code "$B/v1/version"); [ "$c" = 200 ] || bad "the app's start-up call /v1/version does not answer ($c)"
+echo "The app's start-up call answers."
+A=$(curl -s -m 20 -D - -o /dev/null -H 'Origin: https://evil.example' "$B/v1/version" < /dev/null | grep -i '^access-control-allow-origin:' || true)
+[ -z "$A" ] || bad "a web page on another site is allowed to call the server ($A)"
+echo "Other websites: not allowed to call it."
+# -G 5 limits how long the Mac's nc waits to connect; -w 5 alone does not.
+for port in 22 8000; do
+  if nc -z -G 5 -w 5 api.getmekno.com "$port" < /dev/null 2>/dev/null; then bad "port $port answers on the public name"; fi
+done
+echo "Ports 22 and 8000 on the public name: nothing answers."
+echo "(Port 8080 is not checked: Cloudflare's own servers answer it for every name they carry.)"
+echo
+echo "ALL GOOD"
+EOF409G

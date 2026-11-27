@@ -28,6 +28,8 @@ Severity = Literal["error", "warning"]
 
 #: Hostnames that are never reachable by a customer, whatever the DNS.
 _LOCAL_HOSTNAMES = {"localhost", "localhost.localdomain", "127.0.0.1", "::1"}
+#: RFC 6598's shared address space, where Tailscale's addresses live.
+_CGNAT = ipaddress.ip_network("100.64.0.0/10")
 
 
 @dataclass(frozen=True)
@@ -61,10 +63,14 @@ def _host_is_unreachable_publicly(host: str) -> Optional[str]:
     if ip.is_link_local:
         return f"{host} is link-local"
     if ip.is_private:
-        # Python folds 100.64.0.0/10 (CGNAT, where Tailscale lives) into
-        # is_private, which is what we want: a tailnet address is not
-        # reachable by a customer either.
         return f"{host} is a private address, reachable only from that network"
+    if ip.version == 4 and ip in _CGNAT:
+        # Phase 409, bug fix #1: Python does NOT fold 100.64.0.0/10 into
+        # is_private (3.11 to 3.13 alike), so a tailnet address passed as
+        # public. Checked by name here: a tailnet address is not reachable
+        # by a customer either.
+        return f"{host} is a carrier-grade NAT address (where Tailscale lives), " \
+               "reachable only from that network"
     return None
 
 

@@ -32,6 +32,10 @@ class TestProductionRefusesUnreachableHosts:
         "http://127.0.0.1:8000",
         "https://macbook.local",           # mDNS, LAN-only
         "http://100.80.109.103:8000",      # CGNAT, where Tailscale lives
+        # Phase 409 bug fix #1: over https, so the scheme rule cannot hide
+        # the host rule; Python's is_private is False for CGNAT.
+        "https://100.80.109.103",
+        "https://100.127.255.254",
     ])
     def test_blocks_in_prod(self, url):
         assert blocks(url, Environment.PROD), (

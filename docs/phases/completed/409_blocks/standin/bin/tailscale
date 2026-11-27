@@ -1,0 +1,3 @@
+#!/bin/bash
+[ "$1" = funnel ] && { cat "$ST/funnel" 2>/dev/null || echo "No serve config"; exit 0; }
+echo "https://desktop-76s9bqv.taila45995.ts.net (tailnet only)"; echo "|-- / proxy http://127.0.0.1:8000"

@@ -1,0 +1,16 @@
+Phase 409, the launch check's ninth condition: mutations of
+src/motodiag/launch/check.py, each run against
+tests/test_phase409_public_condition.py and tests/test_phase210_launch_check.py
+(409_mutate.py, in a scratch copy of src/ and tests/, 2026-11-27).
+
+docs check dropped RED
+shops check dropped RED
+health check dropped RED
+scheme check dropped RED
+host refusal dropped RED
+reader path refusal dropped RED
+proxy bypass dropped RED
+cert error not named RED
+not in run_conditions RED
+
+9/9 red

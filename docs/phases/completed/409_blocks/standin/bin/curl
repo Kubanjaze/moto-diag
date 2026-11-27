@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+import sys, os, json, urllib.parse
+ST=os.environ['ST']; HOME=os.environ['HOME']
+a=sys.argv[1:]; out=None; w=None; hdrs={}; dumph=False; fail=False; url=None
+i=0
+while i<len(a):
+    x=a[i]
+    if x in('-o',): out=a[i+1]; i+=2; continue
+    if x=='-w': w=a[i+1]; i+=2; continue
+    if x=='-H':
+        k,v=a[i+1].split(':',1); hdrs[k.strip().lower()]=v.strip(); i+=2; continue
+    if x=='-D': dumph=True; i+=2; continue
+    if x in('-X','-d','-m','--max-time'): i+=2; continue
+    if x.startswith('-') and not x.startswith('--'):
+        if 'f' in x: fail=True
+        if 'o' in x[1:] and x!='-o': pass
+        i+=1; continue
+    if x.startswith('--'): i+=1; continue
+    url=x; i+=1
+def read(n):
+    try: return open(os.path.join(ST,n)).read()
+    except FileNotFoundError: return None
+def env():
+    d={}
+    t=read('running.env') or ''
+    for l in t.splitlines():
+        if '=' in l: k,v=l.split('=',1); d[k]=v
+    return d
+u=urllib.parse.urlsplit(url); host=hdrs.get('host',u.hostname); path=u.path
+code=200; body=''; extra=[]
+TS='desktop-76s9bqv.taila45995.ts.net'
+if u.hostname=='getmekno.com':
+    body=read(path.strip('/').replace('/','_')+'.html') or ''
+elif u.hostname=='cloudflare-dns.com':
+    body='{"Answer":[{"data":"ada.ns.cloudflare.com."}]}'
+elif u.hostname=='github.com':
+    if out: open(out,'w').write('deb')
+    sys.exit(0)
+elif u.hostname in ('127.0.0.1',TS,'api.getmekno.com'):
+    if u.hostname==TS and not os.path.exists(os.path.join(ST,'ts_ok')): sys.exit(7)
+    if u.hostname=='api.getmekno.com' and not os.path.exists(os.path.join(ST,'cf_active')):
+        code=530; body='error 1033'
+    elif 'BROKEN' in (read('running.env') or ''): sys.exit(7)
+    elif u.hostname==TS and os.path.exists(os.path.join(ST,'ts_break_new')) and 'ALLOWED_HOSTS' in (read('running.env') or ''): sys.exit(7)
+    else:
+        e=env(); allowed=[h for h in e.get('MOTODIAG_API_ALLOWED_HOSTS','').split(',') if h]
+        if allowed and host.split(':')[0] not in allowed: code=400; body='Invalid host header'
+        elif path=='/healthz': body='{"status":"ok","schema_version":92}'
+        elif path in('/docs','/redoc','/openapi.json'):
+            code=404 if e.get('MOTODIAG_API_DOCS_ENABLED')=='false' else 200
+        elif path=='/v1/shops/1': code=401 if os.path.exists(os.path.join(ST,'newcode')) else 200
+        elif path=='/v1/auth/login': code=401
+        else: body='{}'
+        if u.scheme=='https': extra=['strict-transport-security: max-age=31536000','x-content-type-options: nosniff','x-frame-options: DENY']
+else:
+    sys.exit(6)
+if fail and code>=400: sys.exit(22)
+if dumph:
+    sys.stdout.write(f'HTTP/1.1 {code}\r\n'+''.join(h+'\r\n' for h in extra)+'\r\n')
+if out and out!='/dev/null': open(out,'w').write(body)
+elif not out and not dumph: sys.stdout.write(body)
+if w: sys.stdout.write(w.replace('%{http_code}',str(code)))

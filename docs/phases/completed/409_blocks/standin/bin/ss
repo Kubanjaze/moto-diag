@@ -1,0 +1,2 @@
+#!/bin/bash
+if [[ "$*" == *"sport = :8000"* ]]; then cat "$ST/ss8000"; else cat "$ST/ssall"; fi

@@ -1,0 +1,19 @@
+bash <<'EOF409C'
+set -u
+bad() { echo; echo "SOMETHING IS OFF: $1"; exit 1; }
+cd ~/Projects/moto-diag || bad "there is no moto-diag folder in Projects on this Mac"
+git fetch -q origin master < /dev/null || bad "could not reach GitHub"
+git show origin/master:site/privacy/index.html 2>/dev/null | grep -q 'Version 1.2' || bad "master's privacy page does not say Version 1.2: is the pull request merged?"
+git show origin/master:site/privacy/index.html | grep -q 'Cloudflare</strong>, for the connection' || bad "master's privacy page does not name Cloudflare for the app"
+git show origin/master:site/terms/index.html | grep -q 'Version 1.1' || bad "master's terms page does not say Version 1.1"
+OUT="$HOME/Downloads/getmekno-site-409.zip"
+rm -f "$OUT"
+git archive --format=zip -o "$OUT" origin/master:site < /dev/null || bad "could not build the upload file"
+echo "Built from master at $(git rev-parse --short origin/master):"
+unzip -l "$OUT"
+for f in _headers index.html sitemap.xml terms/index.html privacy/index.html; do
+  unzip -l "$OUT" | grep -q " $f\$" || bad "$f is missing from the upload file"
+done
+echo "The upload file is in Downloads: getmekno-site-409.zip"
+echo "ALL GOOD"
+EOF409C
