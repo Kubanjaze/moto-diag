@@ -44,7 +44,7 @@ SITE = "https://getmekno.com"
 INDIVIDUAL = dict(tier="individual", shop_name="", email="rider@home.example",
                   owner_name="Rita Rider", username="rita")
 FORM = dict(email="Owner@Shop.example ", owner_name="Olga Owner",
-            username="Olga", password="correct horse", shop_name="Olga's Moto",
+            username="olga", password="correct horse", shop_name="Olga's Moto",
             tier="shop", accept_terms="yes")
 
 
@@ -266,6 +266,9 @@ class TestTheForm:
         (dict(username="ab"), "username"),
         (dict(username="-olga"), "username"),
         (dict(username="olga owner"), "username"),
+        # Bug fix #3: capitals are refused, not lowered behind the person's back.
+        (dict(username="Olga"), "username"),
+        (dict(username="OLGA"), "username"),
         (dict(password="short"), "password"),
     ])
     def test_a_bad_field_goes_to_its_problem_page_and_stores_nothing(
@@ -279,7 +282,7 @@ class TestTheForm:
     def test_a_username_a_login_has_or_a_pending_signup_asks_for_is_taken(self, db, outbox):
         c = _client(db)
         _sign_up(c)
-        r = _sign_up(c, email="other@shop.example", username="OLGA")
+        r = _sign_up(c, email="other@shop.example", username="olga")
         assert r.headers["location"] == f"{SITE}/signup/problem/#username-taken"
         with get_connection(db) as conn:
             conn.execute("INSERT INTO users (username) VALUES ('tess')")

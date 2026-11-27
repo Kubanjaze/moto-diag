@@ -175,7 +175,10 @@ def signup_form(
         return _problem(settings, "plan")
     plan: SignupTier = tier  # type: ignore[assignment]  # checked just above
     _require(_tier_open(settings, plan))
-    email, username = email.strip().lower(), username.strip().lower()
+    # Bug fix #3: the username is kept as typed, never lowered. Sign-in
+    # matches it exactly, so a name with capitals is refused here instead
+    # of being stored in a case the person did not type.
+    email, username = email.strip().lower(), username.strip()
     owner_name, shop_name = owner_name.strip(), shop_name.strip()
     if not EMAIL_RE.match(email) or len(email) > 254:
         return _problem(settings, "email")

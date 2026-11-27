@@ -21,7 +21,7 @@ from typing import Literal, Optional
 from motodiag.auth.models import User
 from motodiag.auth.one_time_codes import CodeRecord, Purpose, hash_code
 from motodiag.auth.terms_acceptance import record_acceptance
-from motodiag.auth.users_repo import create_user, get_user_by_username
+from motodiag.auth.users_repo import create_user
 from motodiag.core.database import get_connection
 from motodiag.core.timestamps import utc_now
 
@@ -118,9 +118,19 @@ def _row(row: sqlite3.Row) -> Signup:
     )
 
 
+def _login_has(username: str, db_path: Optional[str]) -> bool:
+    """A login has this name in any case (Phase 329 bug fix #3: sign-in
+    matches a name exactly, so "olga" beside an existing "Olga" would be
+    two people who cannot tell their logins apart)."""
+    with get_connection(db_path) as conn:
+        return conn.execute("SELECT 1 FROM users WHERE lower(username) = lower(?) LIMIT 1",
+                            (username,)).fetchone() is not None
+
+
 def username_taken(username: str, db_path: Optional[str] = None) -> bool:
-    """A login has it, or a sign-up not yet completed asks for it."""
-    if get_user_by_username(username, db_path=db_path) is not None:
+    """A login has it (in any case), or a sign-up not yet completed asks
+    for it."""
+    if _login_has(username, db_path):
         return True
     with get_connection(db_path) as conn:
         row = conn.execute(
@@ -198,7 +208,7 @@ def complete_signup(
         return s
     user_id = s.user_id
     if user_id is None:
-        if get_user_by_username(s.username, db_path=db_path) is not None:
+        if _login_has(s.username, db_path):
             raise SignupError(
                 f"sign-up {signup_id}: the username {s.username!r} was taken "
                 "after the form; the operator picks another by hand")

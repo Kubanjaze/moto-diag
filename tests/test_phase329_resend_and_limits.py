@@ -501,3 +501,25 @@ class TestCodesStayOutOfTheLog:
         from motodiag.telemetry.events import redact
         out = redact("GET /v1/auth/password-reset/confirm?code=mdc_AbC-_123xyz failed")
         assert "mdc_AbC" not in out and "redacted]" in out
+
+
+# ---------------------------------------------------------------- bug fix #3: the username's case
+
+
+class TestTheUsernamesCase:
+    def test_a_login_in_another_case_takes_the_name(self, db, outbox):
+        with get_connection(db) as conn:
+            conn.execute("INSERT INTO users (username) VALUES ('Tess')")
+        r = _sign_up(_client(db), username="tess")
+        assert r.headers["location"] == f"{SITE}/signup/problem/#username-taken"
+
+    def test_the_name_signed_up_with_is_the_name_signed_in_with(self, db, outbox):
+        c = _client(db)
+        _sign_up(c, **INDIVIDUAL, password="correct horse", accept_terms="yes")
+        c.post("/v1/signup/confirm", data={"code": _code_from(outbox[0])})
+        sid = _sql(db, "SELECT id FROM signups")[0][0]
+        provider = FakeBillingProvider({"sub_signup_1": _paid_sub(sid)})
+        dispatch_event(_sub_event(), db_path=db, provider=provider, settings=stripe_settings())
+        r = c.post("/v1/auth/login", json={"username": INDIVIDUAL["username"],
+                                           "password": "correct horse"})
+        assert r.status_code == 200 and r.json()["token"].startswith("mds_")

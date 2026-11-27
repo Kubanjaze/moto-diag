@@ -180,3 +180,25 @@ hand-offs are held together, not only each step.
 its own 50-minute limit while whole-tree runs shared the machine; it showed
 failures and errors at 53% and 79% before it stopped, with no summary. It
 is run again on the fixed head, alone.
+
+## 2026-11-27 20:35 UTC — Bug fix #3: a username with capitals could not sign in
+
+- **Issue:** the form lowered the username (`signup.py`), but sign-in
+  matches a name exactly (`authenticate` → `get_user_by_username`) and the
+  app only trims, so a person who signed up as "JoeSmith" could not sign
+  in as "JoeSmith".
+- **Root cause:** the common one above; the made login was never used to
+  sign in by any test.
+- **Fix:** the form keeps the name as typed and refuses capitals (its
+  problem page and its field's pattern say "lowercase", "No capitals");
+  a name is taken when a login has it in any case, so "tess" cannot sit
+  beside an existing "Tess". Sign-in is unchanged, so no existing login
+  with capitals is touched. Existing logins are made only by the wizard
+  and the operator, who type the names.
+- **Files:** `src/motodiag/api/routes/signup.py`,
+  `src/motodiag/auth/signup_repo.py`, the sign-up pages (site and staged),
+  `tests/test_phase329_signup_flow.py` (the form's username is now
+  lowercase; capitals added to the bad-field cases),
+  `tests/test_phase329_resend_and_limits.py` (`TestTheUsernamesCase`, 2:
+  the name in another case is taken; the name signed up with signs in).
+- **Verified:** 219 passed over the two sign-up files and 408's site tests.

@@ -27,7 +27,7 @@
         <p><label>Your email<br><input type="email" name="email" required maxlength="254" autocomplete="email"></label></p>
         <p><label>Your name<br><input type="text" name="owner_name" required maxlength="120" autocomplete="name"></label></p>
         <p><label>The shop's name<br><input type="text" name="shop_name" required maxlength="120" autocomplete="organization"></label></p>
-        <p><label>A username to sign in with (3 to 32 letters, numbers, dots, dashes or underscores)<br><input type="text" name="username" required minlength="3" maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9_.\-]{2,31}" autocomplete="username" autocapitalize="none"></label></p>
+        <p><label>A username to sign in with (3 to 32 lowercase letters, numbers, dots, dashes or underscores)<br><input type="text" name="username" required minlength="3" maxlength="32" pattern="[a-z0-9][a-z0-9_.\-]{2,31}" autocomplete="username" autocapitalize="none"></label></p>
         <p><label>A password (8 characters or more)<br><input type="password" name="password" required minlength="8" autocomplete="new-password"></label></p>
         <p><label><input type="checkbox" name="accept_terms" value="yes" required> I accept the <a href="/terms/">terms</a> and have read the <a href="/privacy/">privacy policy</a>.</label></p>
         <p><button class="button" type="submit">Continue</button></p>
