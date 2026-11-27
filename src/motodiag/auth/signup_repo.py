@@ -277,19 +277,47 @@ def forget_form(signup_id: int, db_path: Optional[str] = None) -> None:
 # ---------------------------------------------------------------- limits and keeping
 
 
+#: Domains whose mailbox ignores dots in the local part (Gmail's rule).
+DOTLESS_DOMAINS = ("gmail.com", "googlemail.com")
+
+
+def mailbox_key(email: str) -> str:
+    """The mailbox an address reaches, for the per-address cap: lower case,
+    a ``+tag`` dropped, and for Gmail the dots dropped and googlemail.com
+    read as gmail.com. ``Olga.K+a@GMail.com`` and ``olgak@gmail.com`` are
+    one mailbox, so they share one cap (Phase 329 bug fix #8)."""
+    local, at, domain = email.strip().lower().rpartition("@")
+    if not at:
+        return email.strip().lower()
+    local = local.split("+", 1)[0]
+    if domain in DOTLESS_DOMAINS:
+        local = local.replace(".", "")
+        domain = "gmail.com"
+    return f"{local}@{domain}"
+
+
 def emails_sent_to(email: str, since: float, db_path: Optional[str] = None) -> int:
-    """How many sign-up and reset links this address was sent since
-    ``since`` (epoch seconds): one code per email, so the codes count them."""
+    """How many sign-up and reset links this address's mailbox was sent
+    since ``since`` (epoch seconds): one code per email, so the codes count
+    them. Every spelling of one mailbox (``mailbox_key``) counts together."""
+    key = mailbox_key(email)
     with get_connection(db_path) as conn:
-        row = conn.execute(
-            "SELECT COUNT(*) FROM one_time_codes c WHERE c.issued_at >= ? AND ("
-            " (c.purpose = 'verify_email' AND c.subject IN ("
-            "   SELECT 'signup:' || id FROM signups WHERE lower(email) = lower(?)))"
-            " OR (c.purpose = 'reset_password' AND c.subject IN ("
-            "   SELECT 'user:' || id FROM users WHERE lower(email) = lower(?))))",
-            (since, email, email),
-        ).fetchone()
-    return int(row[0])
+        rows = conn.execute(
+            "SELECT c.subject, s.email AS s_email, u.email AS u_email "
+            "FROM one_time_codes c "
+            "LEFT JOIN signups s ON c.purpose = 'verify_email' "
+            "  AND c.subject = 'signup:' || s.id "
+            "LEFT JOIN users u ON c.purpose = 'reset_password' "
+            "  AND c.subject = 'user:' || u.id "
+            "WHERE c.issued_at >= ? "
+            "AND c.purpose IN ('verify_email', 'reset_password')",
+            (since,),
+        ).fetchall()
+    return sum(
+        1 for r in rows
+        if (r["s_email"] or r["u_email"])
+        and mailbox_key(r["s_email"] or r["u_email"]) == key
+    )
 
 
 def purge_stale(now: float, db_path: Optional[str] = None) -> tuple[int, int]:

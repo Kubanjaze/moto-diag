@@ -48,6 +48,7 @@ from motodiag.auth.signup_repo import (
     CODE_KEEP_S,
     UNPAID_KEEP_S,
     get_signup,
+    mailbox_key,
     purge_stale,
 )
 from motodiag.billing.providers import FakeBillingProvider
@@ -319,6 +320,54 @@ class TestThePerAddressCap:
         r2 = c.post("/v1/auth/password-reset", data={"email": "Rider@home.example"})
         assert r1.headers["location"] == r2.headers["location"] == f"{SITE}/reset/sent/"
         assert len(outbox) == 2
+
+
+class TestOneMailboxOneCap:
+    """Bug fix #8: the cap counts a mailbox, not a spelling of it."""
+
+    @pytest.mark.parametrize("spelling", [
+        "olga.k@gmail.com", "OlgaK@Gmail.com", "o.l.g.a.k@gmail.com",
+        "olgak+mekno@gmail.com", "olga.k+a+b@googlemail.com", " olgak@gmail.com ",
+    ])
+    def test_every_gmail_spelling_is_one_mailbox(self, spelling):
+        assert mailbox_key(spelling) == "olgak@gmail.com"
+
+    @pytest.mark.parametrize("a, b", [
+        ("olga.k@shop.example", "olgak@shop.example"),
+        ("olgak@gmail.com", "olgak@gmail.co"),
+        ("olgak@gmail.com", "olgak@mail.gmail.com"),
+    ])
+    def test_dots_count_everywhere_but_gmail(self, a, b):
+        assert mailbox_key(a) != mailbox_key(b)
+
+    def test_a_tag_is_dropped_on_any_domain(self):
+        assert mailbox_key("Owner+x@Shop.Example") == "owner@shop.example"
+
+    def test_spellings_of_one_gmail_share_its_cap(self, tmp_path, monkeypatch, outbox):
+        monkeypatch.setenv("MOTODIAG_SIGNUP_EMAILS_PER_ADDRESS_PER_HOUR", "2")
+        db = _db(tmp_path, monkeypatch)
+        c = _client(db)
+        assert _sign_up(c, username="olga1", email="olga.k@gmail.com").headers[
+            "location"] == f"{SITE}/signup/check-email/"
+        assert _sign_up(c, username="olga2", email="olgak+2@gmail.com").headers[
+            "location"] == f"{SITE}/signup/check-email/"
+        r = _sign_up(c, username="olga3", email="O.L.G.A.K@googlemail.com")
+        assert r.headers["location"] == f"{SITE}/signup/problem/#too-many"
+        assert len(outbox) == 2
+        # Another mailbox at the same provider is not held.
+        assert _sign_up(c, username="olga4", email="olga.j@gmail.com").headers[
+            "location"] == f"{SITE}/signup/check-email/"
+
+    def test_a_reset_by_another_spelling_shares_the_cap(self, tmp_path, monkeypatch, outbox):
+        monkeypatch.setenv("MOTODIAG_SIGNUP_EMAILS_PER_ADDRESS_PER_HOUR", "1")
+        db = _db(tmp_path, monkeypatch)
+        with get_connection(db) as conn:
+            conn.execute("INSERT INTO users (username, email, password_hash, is_active) "
+                         "VALUES ('rider', 'ri.der@gmail.com', 'x', 1)")
+        c = _client(db)
+        c.post("/v1/auth/password-reset", data={"email": "ri.der@gmail.com"})
+        c.post("/v1/auth/password-reset", data={"email": "rider+x@gmail.com"})
+        assert len(outbox) == 1
 
 
 # ---------------------------------------------------------------- the plans on the form

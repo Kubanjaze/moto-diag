@@ -297,3 +297,24 @@ the exit code first.
   (`TestAnUnfinishedSignupsInvoice`, 3).
 - **Verified:** the three; 273's subscription tests and the ratchet, 49
   passed.
+
+## 2026-11-27 21:08 UTC — Bug fix #8: the per-address cap counted spellings, not mailboxes
+
+- **Issue:** the cap of 5 emails an hour matched addresses with
+  `lower(email) = lower(?)`. Gmail delivers `olga.k@gmail.com`,
+  `olgak+1@gmail.com` and `OLGAK@googlemail.com` to one mailbox, so one
+  person, or someone aiming the form at another person's inbox, could send
+  that mailbox any number of links by changing the spelling each time.
+- **Root cause:** the common one above in its other form: the cap was
+  tested only with the spellings the form's own tests used, never with
+  the spellings one inbox receives.
+- **Fix:** `mailbox_key` makes an address's mailbox: lower case, a `+tag`
+  dropped on any domain, and for gmail.com and googlemail.com the dots
+  dropped and both read as gmail.com. `emails_sent_to` counts the last
+  hour's codes whose address has the same key, in Python, so sign-ups and
+  resets still share one cap. Stored addresses are unchanged: the
+  normalising is for counting only.
+- **Files:** `src/motodiag/auth/signup_repo.py`,
+  `tests/test_phase329_resend_and_limits.py` (`TestOneMailboxOneCap`, 12).
+- **Verified:** `TestOneMailboxOneCap`, 12 passed; with the rest of
+  329's flow and limits tests, 132 passed.
