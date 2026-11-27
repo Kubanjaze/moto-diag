@@ -1,6 +1,8 @@
 # Phase 409 — phase log
 
-**Status:** In progress. Started 2026-11-27 by the builder session K149
+**Status:** Complete. Closed 2026-11-27 on the branch (regression of record
+at `a24b893`); the live steps are the operator's after the merge, in the
+handoff. Started 2026-11-27 by the builder session K149
 names (the home desktop's main chat), from
 `docs/prompts/409_a_public_web_address_for_the_server.txt`.
 
@@ -92,6 +94,8 @@ The guard itself is untouched.
 - **Verified:** the two new cases red on the old function (2 failed, 20
   passed), green on the fix; with the ninth condition's and 210's: 84
   passed.
+
+**Commit.** `5138fef`
 
 ## 2026-11-27 03:40 UTC — the launch check's ninth condition (Logic item 2)
 
@@ -267,6 +271,8 @@ skip lines match 210B's byte for byte. App PR 17 at `9837670`:
 The run of record is the advisor's on the new head. Whether to raise the
 coverage pin is a close-out item.
 
+**Commit.** `1456f45`
+
 ## Bug fix #3 — 2026-11-27 — the outside check failed a correct setup, after ten silent minutes
 
 - **Issue:** block 7, run on the Mac, would end SOMETHING IS OFF after a
@@ -305,6 +311,8 @@ coverage pin is a close-out item.
   Not measured here: the real Mac `nc` (the cloud's is not Apple's). The
   advisor re-tests block 7 on the Mac.
 
+**Commit.** `19d5230`
+
 ## Bug fix #4 — 2026-11-27 — the harness's block-2 stand-in failed on a Mac
 
 - **Issue:** on the Mac, `cases.py` stopped with a `FileNotFoundError`
@@ -323,6 +331,8 @@ coverage pin is a close-out item.
 Also in the blocks README: nothing else merges to master between the
 server's merge and step 2, because `server-update` refuses unless
 master is exactly the merge commit it is given (the advisor's note).
+
+**Commit.** `a24b893`
 
 ## More than two bugs in this build: the common cause
 
@@ -387,3 +397,96 @@ read-only and changed nothing. What it measured:
 
 So the plan's assumptions hold on the real machine: loopback-only, no
 Funnel, uvicorn at 0.30 or newer, and the zone at Cloudflare.
+
+## 2026-11-27 16:10 UTC — the harness types the token only once echo is off
+
+The advisor, at `a24b893`: on the Mac under load, with Apple's
+`/usr/bin/python3`, `cases3.py`'s token case failed 2 of 3 runs. `run()`
+typed the token as soon as "press Enter" printed, before `read -s` had
+turned echo off, so the pty echoed it. Measured over 8 runs each way: 3 of
+8 showed the token as `run()` stood, and 0 of 8 when it waited for echo
+off. The block is fine, because a person pastes after the prompt.
+
+`standin/run.py` now waits up to 10 s for the terminal's echo to go off,
+then types. Documents only (the harness is in the phase folder). Verified:
+- `cases3.py` passes 6 of 6, three times;
+- `cases.py` passes 30 of 30;
+- control: block 6 with `read -r` in place of `read -rs` still fails "the
+  token is not shown". The 10 s wait ends and the echoed token is caught.
+
+Not a bug fix in the register: it is the harness's timing, not a defect
+in what ships. It is recorded here because the advisor measured it.
+
+## 2026-11-27 16:15 UTC — the regression of record, and the close-out
+
+On the advisor's Mac, on a clean clone at `a24b893` with the app clone at
+`9837670` beside it. `wholetree.sh --full` first passed: 5547 passed, 8
+skipped, 1240 s, record for `a24b89318805`. Then `regression.sh`, exactly
+as printed:
+
+Regression of record: 13329 passed, 0 failed, 49 skipped, 0 errors at `a24b893` (49 min 10 s wall, `python -m pytest -n auto --dist load --cov=motodiag`, exit 0)
+Skipped in the regression of record: [1] tests/test_phase244H_test_db_isolation.py:79: no production database on this machine
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:61: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [4] tests/test_phase388_fence_boundary.py:96: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [3] tests/test_phase388_fence_boundary.py:105: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:113: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:120: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:125: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:131: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:139: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:148: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:159: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:164: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:170: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:177: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:186: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:198: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:210: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:216: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [7] tests/test_phase388_fence_boundary.py:221: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:235: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:244: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:280: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:287: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:291: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:295: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:303: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [2] tests/test_phase388_fence_boundary.py:316: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:325: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:330: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:338: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:344: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:350: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:354: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase388_fence_boundary.py:360: macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py
+Skipped in the regression of record: [1] tests/test_phase390_space.py:327: bubblewrap is the desktop's
+Line coverage of record: 88.75% at `a24b893` (the pin is 88.00%)
+
+- 13329 + 49 = 13378, the floor this phase set.
+- The advisor's other checks: `test_the_reader_names_itself_not_python_urllib`
+  ran and passed, and so did `test_phase209_packaging`, gate 11 and both
+  409 files.
+- The merge's tree is `a24b893`'s plus master's K150 line in
+  `docs/decisions.md` (`b344104`). The advisor made that merge locally, and
+  the decisions, ledger and finding tests on it passed 123.
+- Every commit after `a24b893` changes documents only: block 1's record,
+  the harness timing above, and this close-out. So this line stays of
+  record.
+- The coverage pin stays 88.00% for now. It lives in `tests/`, so raising
+  it means another regression, and that goes in a later commit with its
+  own run (the advisor's advice).
+- The K-id for the operator's yes to the privacy line is the advisor's to
+  record after the merge.
+
+No refute pass ran.
+
+Close-out:
+- `409_implementation.md` is at v1.1;
+- the documents moved to `completed/`;
+- the ROADMAP row is ✅;
+- the handoff `docs/handoffs/2026-11-27_409_closed.md` has every live step's
+  block inline.
+
+Issue 104 is closed by this session after the merge, as the brief asks;
+the live steps then follow from the handoff.
+

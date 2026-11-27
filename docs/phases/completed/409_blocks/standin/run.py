@@ -35,7 +35,16 @@ def run(block, h, tty_input=None):
         except OSError: break
         if not d: break
         out+=d
-        if not sent and b'press Enter' in out: os.write(fd,(tty_input+'\n').encode()); sent=True
+        if not sent and b'press Enter' in out:
+            # Type only once read -s has turned echo off, as a person pasting
+            # after the prompt would; typing at once raced it under load and
+            # the pty echoed the token (the advisor, 3 of 8 runs on a busy Mac).
+            # After 10 s it types anyway, so a block that never turns echo
+            # off still shows the token and fails its case.
+            import termios, time
+            t=time.monotonic()+10
+            while termios.tcgetattr(fd)[3] & termios.ECHO and time.monotonic()<t: time.sleep(0.01)
+            os.write(fd,(tty_input+'\n').encode()); sent=True
     os.waitpid(pid,0); return out.decode(errors='replace')
 def env_of(h): return (h/'.config/motodiag/server.env').read_text()
 def last(o): return [l for l in o.strip().splitlines() if l.strip()][-1]

@@ -1,8 +1,10 @@
 # Phase 409 — A public web address for the server
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-11-27
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-11-27
 
-The plan, before any code. Built by a builder session, the home desktop's
+v1.1 is the close-out: each section below now says what was built, where
+it differs from the v1.0 plan, and the Results and Deviations are filled.
+The plan was written before any code. Built by a builder session, the home desktop's
 main chat (K149, the operator's "409: B"), from its draft pull request 98
 (`prebuild-409-public-address`, head `acd36ac`) and the fleet's Step 0
 (`phase-409-a-public-web-address-for-the`, `4b31ded`). Written from
@@ -48,9 +50,11 @@ link cannot reach the server.
 
 PR 98's three commits come onto this branch by `git merge` of
 `origin/prebuild-409-public-address` (no cherry-pick, no rebase, no
-force-push; the draft branch is left as it is and its pull request is
-closed in favour of this one, pointing here). Measured in Step 0: the
+force-push; the draft branch is left as it is). Measured in Step 0: the
 merge onto `a238aa6` is clean, and its tests with 210's pass (146).
+**As built:** merged in `10fe0f3`. PR 98 was left open rather than
+closed: its head `acd36ac` is inside this branch, so GitHub marks it
+merged when pull request 111 merges.
 
 What it carries, as its plan page lists it:
 - `core/config.py`: `api_docs_enabled` (default on), `api_allowed_hosts`
@@ -80,11 +84,14 @@ The scope: "210's launch check gains a condition: the public name answers
 over https with a valid certificate, and nothing it should not reach
 answers." In `src/motodiag/launch/check.py`:
 
-- `public_condition(settings, fetch=None)`, named "the public address
-  answers over https", after the eight, in `run_conditions`.
+- `public_condition(settings)`, named "the public address answers over
+  https", after the eight, in `run_conditions` (`5fd8fa6`). As built it
+  takes no `fetch` argument; tests replace `check.public_status`.
 - **Not ready** when `public_base_url` is empty, when it is not `https`, or
   when its host is a loopback, private or link-local address
-  (`core/public_url.py`'s own rules).
+  (`core/public_url.py`'s own rules). As built those rules also refuse
+  carrier-grade NAT, `100.64.0.0/10`, where Tailscale's addresses live
+  (bug fix #1, `5138fef`): Python's `is_private` does not cover it.
 - Otherwise three GETs to that one host, never through a proxy, with
   Python's default certificate checks:
   - `/healthz` answers 200 with `"status": "ok"`;
@@ -96,15 +103,20 @@ answers." In `src/motodiag/launch/check.py`:
   a settings value (the host is not printed, only words); the one outside
   connection is to the host `public_base_url` names, and
   `loopback_json` keeps refusing any other host. A new reader,
-  `public_status(url)`, returns a status code and body and refuses any
-  host but the configured one (`NotPublicName`).
+  `public_status(settings, path)`, returns a status code and at most
+  64 KB of body, and refuses any path but the three and any host but the
+  configured one (`NotPublicName`). As built it names itself,
+  `User-Agent: motodiag-launch-check/409`: Cloudflare refuses urllib's
+  default name with 403 (bug fix #2, `1456f45`).
 - The CLI prints nine lines; `ALL GOOD` needs all nine ready. Until the
   tunnel is on, the ninth says NOT READY, which is the truth: launch to
   anyone off the tailnet needs it.
 
 "Nothing else on the desktop answers" is measured from outside, by the
-handoff's outside check (ports 22, 8000 and 8080 on the public name; the
-phone on mobile data), not by the check, which runs on the desktop itself.
+handoff's outside check (ports 22 and 8000 on the public name; the phone
+on mobile data), not by the check, which runs on the desktop itself. As
+built, 8080 is not checked: Cloudflare's own edge answers it on every
+name it carries (bug fix #3, `19d5230`).
 
 ### 3. The privacy policy, version 1.2: Cloudflare for the app
 
@@ -129,7 +141,8 @@ handoff step before the tunnel's.
 **The words are the operator's.** The line goes on the branch as drafted;
 the operator's yes to it, or their own wording, is asked once with the
 v1.0 reply. Until then the tunnel block refuses to run (it checks the live
-page for the line).
+page for the line). **As built** (`cf875f9`): the operator chose "Yes, use
+it as written" at 03:03 UTC. The advisor records its K-id after the merge.
 
 ### 4. The app's half (moto-diag-mobile)
 
@@ -147,7 +160,18 @@ session, before the server's merge:
   video of about a minute at 1080p is over. The video screen's upload
   error says, in its own words, that videos over 100 MB cannot be sent
   yet, and to record a shorter clip. Found in Step 0; it is answer 5's
-  limit, met in the app's own place (see Deviations once built).
+  limit, met in the app's own place.
+
+**As built:** `moto-diag-mobile` pull request 17, branch
+`phase-409-app-half`, at `9837670`:
+- `2d4f4de` is the API copy. Only the shop route's entry changed, and the
+  file's old key order was kept so the diff shows only that route.
+- `9837670` is the 100 MB message: a 413 that is not the server's own
+  problem answer becomes "This video is over 100 MB…", and the helpers
+  moved to `videoCaptureHelpers.ts`.
+
+On the Mac the advisor got `tsc` and `eslint` clean and Jest 1368 of 1368.
+The app's pull request merges first.
 
 ### 5. The handoff's blocks
 
@@ -157,6 +181,21 @@ window, `gh` with `-R Kubanjaze/moto-diag`, tested in the cloud against
 stand-ins (`bash -n`, `shellcheck`, and each check made to fail on
 purpose) before the advisor re-tests them. PR 98's six are the start,
 re-read and changed where Step 0 found a gap:
+
+**As built, the order changed** (Deviations): the settings come before the
+tunnel, so nothing is public until the help pages are off and the host
+list is in. The eight blocks are in `409_blocks/`, and its README gives
+the order:
+1. desktop measured (PC);
+2. backup and server update (Mac);
+3. site: 3a the zip (Mac), 3b the upload (Browser), 3c the check (Mac);
+4. settings (PC);
+5. tunnel created (Browser);
+6. tunnel installed (PC);
+7. outside check (Mac, then the phone);
+8. undo (PC).
+
+The v1.0 plan below is kept for the record.
 
 1. **The desktop measured, read-only** (PC Ubuntu): every listening port
    and its address, `tailscale serve status` and Funnel off, the server's
@@ -168,7 +207,9 @@ re-read and changed where Step 0 found a gap:
    `remote.py`): the server update moves code only (no migration, schema
    unchanged), but a copy of the live database is taken first, with
    Python's `sqlite3` backup API into `~/backups/motodiag/`, never through
-   a `motodiag` command (F292).
+   a `motodiag` command (F292). As built, the copy is `remote.py backup
+   pre409` and the update is `remote.py server-update <merge>`, the Mac's
+   existing desktop list.
 3. **The privacy page live** (Mac Terminal, then the browser): the site's
    zip from merged master, uploaded to Cloudflare Pages by hand as every
    site change is.
@@ -214,6 +255,17 @@ listener address; block 1 checks Funnel is off and the server listens on
 
 - PR 98's 22 in `tests/test_phase409_public_hardening.py`, and its changes
   to the 175 and 176 tests.
+**As built:**
+- `test_phase409_public_condition.py` has 30 tests, including the
+  User-Agent on the wire;
+- `test_f64_public_url.py` gained 2 CGNAT cases;
+- the 210 launch-check pins moved to nine;
+- the legal-text and site pins moved to 1.2;
+- mutations: `409_mutate.py`, 9 of 9 red;
+- the floor went 13321 → 13378;
+- the regression of record is under Results.
+
+The v1.0 list:
 - `tests/test_phase409_public_condition.py` (new): the ninth condition
   not ready with no address, with `http`, with a loopback or private host;
   ready on a stand-in that answers 200/404/401; each of the three answers
@@ -261,14 +313,72 @@ share links back on (answer 4); Funnel or the LAN.
 
 ## Deviations
 
-None yet (v1.0).
+1. **The settings before the tunnel.** v1.0 put the server's settings
+   (its block 6) after the tunnel install (its block 5). As built, they
+   are step 4 and the tunnel is steps 5 and 6. Then the help pages are off
+   and the host list is in before anything is public, and the tunnel
+   block refuses unless the settings are in.
+2. **The backup through `remote.py`.** v1.0 said a `sqlite3` backup by
+   hand. As built, `remote.py backup pre409` and `remote.py server-update`
+   are used, the routes the Mac already has to the desktop.
+3. **Four bug fixes.**
+   - #1, CGNAT (`5138fef`).
+   - #2, the reader's User-Agent (`1456f45`).
+   - #3, block 7's ports (`19d5230`).
+   - #4, the harness's Python (`a24b893`).
+
+   Fixes #2–#4 share a cause, recorded in the log: a stand-in agreed with
+   an unmeasured assumption. Each now has a case the old code fails.
+4. **The 100 MB limit hits videos, not manuals.** Answer 5 spoke of K119's
+   300 MB manuals, but the app uploads none; its videos are allowed
+   512 MB. The app's message is on the video screen (F310 keeps chunked
+   uploads dated before 410 and 329).
+5. **F312 is a duplicate of F287.** It was filed before F287 was found,
+   and is marked closed as its duplicate. The number is not reused.
+6. **The app's API copy kept its old key order.** A full refresh reorders
+   the whole file, so only the one changed route was patched in and
+   regenerated. The advisor confirmed `api-types.ts` regenerates
+   identical.
+7. **One edit against the guard's rule.** The first draft of the ninth
+   condition, and the one-line removal that proved #2's test red, were
+   shell writes into `src/`. The guard's hooks had not loaded, since the
+   session started outside the repository. Both are recorded in the log;
+   everything else in `src/` and `tests/` went through the editor.
+8. **PR 98 left open, not closed** (Logic item 1).
+9. **Outside check ports.** 8080 is dropped (bug fix #3).
+10. **The ninth condition's reader takes `(settings, path)`**, and
+    `public_condition` takes no `fetch` (Logic item 2).
+11. **The merge order.** The operator merges the app's pull request first,
+    then the server's. Nothing else merges to master before step 2, which
+    refuses unless master is exactly the server's merge.
 
 ## Results
 
-Not yet (v1.0).
+- **The regression of record**, on the advisor's Mac, on a clean clone at
+  `a24b893` with the app clone at `9837670` beside it: 13329 passed,
+  0 failed, 49 skipped, 0 errors, 49 min 10 s, line coverage 88.75% (the
+  pin is 88.00%). The 35 skip lines match 210B's. `wholetree.sh --full`
+  before it passed: 5547 passed, 8 skipped. The commits after `a24b893`
+  are documents only.
+- **What shipped on the branch:**
+  - PR 98's hardening;
+  - the ninth condition;
+  - privacy 1.2;
+  - the eight tested blocks, with the harness at 30 of 30 and 6 of 6 and
+    the advisor's real Mac checks of block 7;
+  - findings F309–F313.
+- **The app** (pull request 17): the API copy and the 100 MB message;
+  Jest 1368 of 1368.
+- **The desktop measured** (block 1, 15:33 UTC): loopback only, Funnel off,
+  uvicorn 0.49.0, zone at Cloudflare. As expected before the merge, the
+  help pages and a shop's details answer anonymously on loopback.
+- **Live:** none yet. Steps 2–7 are the operator's after the merge, in
+  the handoff's order. The handoff gets the live outcome once they run.
+  Issue 104 is closed after the merge.
 
 ## Version history
 
 | Version | Date | What |
 |---|---|---|
 | 1.0 | 2026-11-27 | The plan, before any code: PR 98 merged in, the launch check's ninth condition, privacy 1.2, the app's half, eight blocks. |
+| 1.1 | 2026-11-27 | Close-out: as built in every section, eleven deviations, four bug fixes, the regression of record at `a24b893` (13329 passed), live steps left to the operator. |
