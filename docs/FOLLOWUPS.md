@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F314** (this file). The
+At the time of writing the highest assigned is **F318** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -7248,3 +7248,27 @@ Found by the advisor's read-only review of Phase 409 (2026-11-27) and confirmed 
 
 Found in Phase 329's Step 0 (2026-11-27, `docs/phases/in_progress/329_step0.md` item 3). `motodiag shop onboard run` (`src/motodiag/cli/shop_onboard.py`, `do_shop`) calls `create_shop` without `owner_user_id`, whose default is 1, the system user; the owner exists only as the `shop_members` row. The sign-up (`complete_signup`, `src/motodiag/auth/signup_repo.py`) passes the new owner's id. Access is decided by `shop_members` alone (`has_shop_permission`), so nothing behaves differently today. What it affects: `UNIQUE(owner_user_id, name)` makes names unique across every hand-made shop but not across self-serve shops, and any later code that reads `shops.owner_user_id` would see two meanings. Low. What would close it: the wizard passes the owner's id once the owner's login is made (the wizard makes the shop first, so the order changes), or the column is documented as "the creator" and a test pins each path's value.
 
+
+### F315
+
+**A sign-up holds its username for 30 days before anyone proves an email address**
+
+Found in the review of Phase 329 (2026-11-27). `signup_form` (`src/motodiag/api/routes/signup.py`) creates the sign-up row at once, and `username_taken` (`src/motodiag/auth/signup_repo.py`) counts any sign-up not yet completed as holding its name. The row stays until `purge_stale` deletes it, 30 days on (`UNPAID_KEEP_S`). So a script can post the form with names it wants to keep from others, using addresses it does not own, and every name stays taken for a month; the per-address cap (5 an hour) slows one address, not many. Bug fix #6 freed the name only when the email fails to send. What it affects: names on the public form only; no login is made and nothing is charged. Low until sign-up is public and someone is hostile. What would close it: a pending sign-up whose link was never opened holds its name for a short time (an hour, the link's life) and then yields it, and a proven but unpaid one keeps it for the 30 days; with a test that a second sign-up gets the name after the first one's link expires unopened.
+
+### F316
+
+**The sign-up and reset forms can tell a stranger whether an address has an account**
+
+Found in the review of Phase 329 (2026-11-27). Both forms answer the same pages for a known and an unknown address, but two things still differ. The per-address cap is shared by sign-ups and resets (`emails_sent_to`), and only an address with a login or a sign-up has codes to count, so after five resets to an address the reset form behaves the same either way while the sign-up form for that address answers "too many" only when the address is real. And the reset form waits on Resend (up to `TIMEOUT_S`, 10 s, in `src/motodiag/auth/email_sender.py`) only for an address with a login, so its answer comes measurably later for a real account. What it affects: an outsider can learn that an address is a customer's; nothing more. Low. What would close it: the reset form sends after answering (a background task) so its timing is the same, and the cap counts attempts per address whether or not the address is known; with a test that times both answers and a test of the cap for an unknown address.
+
+### F317
+
+**The sign-up's emailed link falls back to the request's Host header, and the start check skips the address when share links are off**
+
+Found in the review of Phase 329 (2026-11-27). `_api_base` (`src/motodiag/api/routes/signup.py`) builds the link in the address-check and reset emails from `settings.public_base_url`, or, when that is empty, from `request.base_url`, which comes from the Host header the client sent. `startup_public_url_problems` (`src/motodiag/core/public_url.py`) checks `MOTODIAG_PUBLIC_BASE_URL` only while share links are on (Phase 402, K74). Live today has the address set and `ALLOWED_HOSTS` limited, so nothing is wrong on live. What it affects: a server with sign-up or the email reset on, share links off and no public address would put a Host of the sender's choosing into a real email carrying a code (a link to someone else's site). What would close it: `_api_base` refuses (no email sent) without a public address, and the start check also runs the address check when the self-serve sign-up, the Individual sign-up or the email reset is on; with a test of each.
+
+### F318
+
+**The welcome and stuck-sign-up emails are sent inside the async Stripe webhook route, holding the server's event loop**
+
+Found in the review of Phase 329 (2026-11-27). `stripe_webhook` (`src/motodiag/api/routes/billing.py`) is `async def` and calls `dispatch_event` directly; for a sign-up's paid subscription that reaches `_complete_signup` (`src/motodiag/billing/webhook_handlers.py`), which sends the welcome email (and on failure the stuck notice) through `urllib`, synchronously, with a 10 s timeout. While Resend is slow, every other request on that worker waits. Live receives Stripe's events through the payments feed's poll (`src/motodiag/payments/event_feed.py`), a separate process, so the API is not held there today; the webhook route is the path when Stripe posts to the server. What would close it: the route runs `dispatch_event` in a thread (`run_in_threadpool`), or the emails are queued and sent after the answer; with a test that a slow sender does not hold a second request.
