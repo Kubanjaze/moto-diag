@@ -8013,11 +8013,12 @@ MIGRATIONS: list[Migration] = [
         version=93,
         name="self_serve_signup",
         description=(
-            "Phase 329 prebuild (K137, K140; the operator's answers of "
-            "2026-11-25), self-serve sign-up. Adds signups (a sign-up "
-            "waiting for its email check and its payment; the shop, the "
-            "owner's login and the membership are made only when Stripe's "
-            "subscription is paid) and one_time_codes (the hash of each "
+            "Phase 329 prebuild (K137, K140, K150; the operator's answers "
+            "of 2026-11-25), self-serve sign-up. Adds signups (a sign-up "
+            "waiting for its email check and its payment; the login, and "
+            "for a shop plan the shop and the owner's membership, are made "
+            "only when Stripe's subscription is paid; an individual's "
+            "sign-up has no shop) and one_time_codes (the hash of each "
             "emailed code, its purpose, subject, expiry and use), with "
             "their indexes. Adds empty tables; changes and removes no "
             "existing row."
@@ -8029,8 +8030,8 @@ MIGRATIONS: list[Migration] = [
                 owner_name TEXT NOT NULL,
                 username TEXT NOT NULL,
                 password_hash TEXT NOT NULL,
-                shop_name TEXT NOT NULL,
-                tier TEXT NOT NULL CHECK (tier IN ('shop', 'company')),
+                shop_name TEXT,
+                tier TEXT NOT NULL CHECK (tier IN ('individual', 'shop', 'company')),
                 terms_version TEXT NOT NULL,
                 status TEXT NOT NULL DEFAULT 'pending_email'
                     CHECK (status IN ('pending_email', 'email_verified', 'completed')),
@@ -8039,7 +8040,8 @@ MIGRATIONS: list[Migration] = [
                 completed_at TEXT,
                 stripe_subscription_id TEXT,
                 user_id INTEGER REFERENCES users(id),
-                shop_id INTEGER REFERENCES shops(id)
+                shop_id INTEGER REFERENCES shops(id),
+                CHECK ((tier = 'individual') = (shop_name IS NULL))
             );
             CREATE INDEX IF NOT EXISTS idx_signups_username ON signups(username);
             CREATE TABLE IF NOT EXISTS one_time_codes (

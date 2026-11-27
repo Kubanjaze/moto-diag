@@ -40,6 +40,9 @@ from motodiag.core.database import SCHEMA_VERSION, get_connection, init_db
 from motodiag.core.migrations import get_migration_by_version, rollback_to_version
 
 SITE = "https://getmekno.com"
+#: The individual's form has no shop name (the website's /signup/individual/).
+INDIVIDUAL = dict(tier="individual", shop_name="", email="rider@home.example",
+                  owner_name="Rita Rider", username="rita")
 FORM = dict(email="Owner@Shop.example ", owner_name="Olga Owner",
             username="Olga", password="correct horse", shop_name="Olga's Moto",
             tier="shop", accept_terms="yes")
@@ -55,7 +58,7 @@ def outbox(monkeypatch):
     return sender.outbox
 
 
-def _db(tmp_path, monkeypatch, *, signup=True, reset=True) -> str:
+def _db(tmp_path, monkeypatch, *, signup=True, reset=True, individual=True) -> str:
     path = str(tmp_path / "phase329.db")
     init_db(path)
     monkeypatch.setenv("MOTODIAG_DB_PATH", path)
@@ -63,6 +66,7 @@ def _db(tmp_path, monkeypatch, *, signup=True, reset=True) -> str:
         monkeypatch.setenv(f"MOTODIAG_RATE_LIMIT_{tier.upper()}_PER_MINUTE", "9999")
     monkeypatch.setenv("MOTODIAG_SELF_SERVE_SIGNUP_ENABLED", "true" if signup else "false")
     monkeypatch.setenv("MOTODIAG_PASSWORD_RESET_EMAIL_ENABLED", "true" if reset else "false")
+    monkeypatch.setenv("MOTODIAG_INDIVIDUAL_SIGNUP_ENABLED", "true" if individual else "false")
     reset_settings()
     return path
 
@@ -126,8 +130,18 @@ class TestMigration093:
     def test_the_columns_refuse_what_the_contract_does_not_name(self, db):
         with pytest.raises(Exception):
             create_signup(email="a@b.co", owner_name="A", username="abc",
-                          password_hash="x", shop_name="S", tier="individual",  # type: ignore[arg-type]
+                          password_hash="x", shop_name="S", tier="fleet",  # type: ignore[arg-type]
                           terms_version=TERMS_VERSION, db_path=db)
+        for tier, shop in (("individual", "S"), ("shop", None)):
+            with pytest.raises(SignupError):
+                create_signup(email="a@b.co", owner_name="A", username="abc",
+                              password_hash="x", shop_name=shop, tier=tier,  # type: ignore[arg-type]
+                              terms_version=TERMS_VERSION, db_path=db)
+            with pytest.raises(Exception), get_connection(db) as conn:
+                conn.execute("INSERT INTO signups (email, owner_name, username, "
+                             "password_hash, shop_name, tier, terms_version, "
+                             "created_at) VALUES ('a@b.co','A','abc','x',?,?,'1.1','now')",
+                             (shop, tier))
         with pytest.raises(Exception), get_connection(db) as conn:
             conn.execute("INSERT INTO signups (email, owner_name, username, "
                          "password_hash, shop_name, tier, terms_version, "
@@ -147,11 +161,12 @@ class TestTheSwitches:
     def test_they_ship_off(self):
         s = Settings()
         assert s.self_serve_signup_enabled is False
+        assert s.individual_signup_enabled is False
         assert s.password_reset_email_enabled is False
         assert s.email_provider == "fake"
 
     def test_off_every_route_is_404(self, tmp_path, monkeypatch, outbox):
-        path = _db(tmp_path, monkeypatch, signup=False, reset=False)
+        path = _db(tmp_path, monkeypatch, signup=False, reset=False, individual=False)
         c = _client(path)
         for method, url in self.ROUTES:
             r = getattr(c, method)(url)
@@ -160,16 +175,42 @@ class TestTheSwitches:
         assert _sql(path, "SELECT COUNT(*) FROM signups") == [(0,)]
 
     def test_each_switch_is_its_own(self, tmp_path, monkeypatch, outbox):
-        path = _db(tmp_path, monkeypatch, signup=False, reset=True)
+        path = _db(tmp_path, monkeypatch, signup=False, reset=True, individual=False)
         c = _client(path)
         assert _sign_up(c).status_code == 404
+        assert _sign_up(c, **INDIVIDUAL).status_code == 404
         assert c.post("/v1/auth/password-reset", data={"email": "x@y.co"}).status_code == 303
+
+    def test_individuals_open_while_shops_wait_for_shop_ten(self, tmp_path, monkeypatch, outbox):
+        """K150: individuals sign up on their own; K141: shops after shop 10."""
+        path = _db(tmp_path, monkeypatch, signup=False, individual=True)
+        c = _client(path)
+        assert _sign_up(c).status_code == 404
+        assert _sign_up(c, tier="company").status_code == 404
+        assert _sign_up(c, **INDIVIDUAL).headers["location"] == f"{SITE}/signup/check-email/"
+        assert _sql(path, "SELECT tier, shop_name FROM signups") == [("individual", None)]
+
+    def test_shops_open_alone(self, tmp_path, monkeypatch, outbox):
+        path = _db(tmp_path, monkeypatch, signup=True, individual=False)
+        c = _client(path)
+        assert _sign_up(c, **INDIVIDUAL).status_code == 404
+        assert _sign_up(c).status_code == 303
+
+    def test_a_plan_switched_off_after_its_form_goes_no_further(
+            self, tmp_path, monkeypatch, outbox):
+        path = _db(tmp_path, monkeypatch, signup=True, individual=True)
+        _sign_up(_client(path), **INDIVIDUAL)
+        path = _db(tmp_path, monkeypatch, signup=True, individual=False)
+        r = _client(path).post("/v1/signup/confirm", data={"code": _code_from(outbox[0])})
+        assert r.status_code == 404
+        assert get_signup(1, path).status == "pending_email"
 
     def test_the_routes_are_not_in_the_api_schema(self, db):
         paths = _client(db).get("/openapi.json").json()["paths"]
         assert not [p for p in paths if "signup" in p or "password-reset" in p]
 
     @pytest.mark.parametrize("switch", ["self_serve_signup_enabled",
+                                        "individual_signup_enabled",
                                         "password_reset_email_enabled"])
     def test_prod_refuses_to_start_with_a_switch_on_and_no_email_service(self, switch):
         s = Settings(env=Environment.PROD, billing_provider="stripe",
@@ -217,7 +258,7 @@ class TestTheForm:
         (dict(email="not-an-address"), "email"),
         (dict(owner_name=" "), "name"),
         (dict(shop_name=""), "shop"),
-        (dict(tier="individual"), "plan"),
+        (dict(tier="fleet"), "plan"),
         (dict(tier="company "), "plan"),
         (dict(accept_terms=""), "terms"),
         (dict(username="ab"), "username"),
@@ -469,6 +510,52 @@ class TestPaying:
         assert res.error is None
         assert _sql(db, "SELECT user_id FROM subscriptions") == [(uid,)]
         assert outbox == []
+
+
+class TestTheIndividualPlan:
+    """K150: an individual's sign-up makes a login and nothing else."""
+
+    def _verified(self, db, outbox, **extra) -> int:
+        c = _client(db)
+        r = _sign_up(c, **{**INDIVIDUAL, **extra})
+        assert r.headers["location"] == f"{SITE}/signup/check-email/"
+        r = c.post("/v1/signup/confirm", data={"code": _code_from(outbox[0])})
+        assert r.headers["location"] == "https://fake-billing.local/checkout/signup/1/individual"
+        outbox.clear()
+        return 1
+
+    def test_a_shop_name_sent_with_it_is_dropped(self, db, outbox):
+        self._verified(db, outbox, shop_name="Not A Shop")
+        assert _sql(db, "SELECT shop_name FROM signups") == [(None,)]
+
+    def test_paid_makes_the_login_and_terms_and_no_shop(self, db, outbox):
+        sid = self._verified(db, outbox)
+        sub = _paid_sub(sid)
+        sub["metadata"]["tier"] = "individual"
+        sub["items"]["data"][0]["price"]["id"] = "price_test_individual"
+        res = dispatch_event(_sub_event(), db_path=db,
+                             provider=FakeBillingProvider({"sub_signup_1": sub}),
+                             settings=stripe_settings())
+        assert res.error is None, res.error
+        s = get_signup(sid, db)
+        assert s.status == "completed" and s.user_id and s.shop_id is None
+        assert _sql(db, "SELECT username, tier FROM users WHERE id = ?", (s.user_id,)) == [
+            ("rita", "individual")]
+        assert has_accepted(s.user_id, TERMS_VERSION, db_path=db)
+        assert _sql(db, "SELECT COUNT(*) FROM shops") == [(0,)]
+        assert _sql(db, "SELECT COUNT(*) FROM shop_members WHERE user_id = ?",
+                    (s.user_id,)) == [(0,)]
+        assert _sql(db, "SELECT tier, status FROM subscriptions WHERE user_id = ?",
+                    (s.user_id,)) == [("individual", "active")]
+        assert [m.subject for m in outbox] == ["Your Mekno account is ready"]
+        assert "rita" in outbox[0].text and "mechanics" not in outbox[0].text
+
+    def test_checkout_asks_for_the_individual_price(self, monkeypatch):
+        from support.stripe_fixtures import TEST_KEY, TEST_SECRET
+
+        from motodiag.billing.providers import StripeBillingProvider
+        p = StripeBillingProvider(TEST_KEY, TEST_SECRET, settings=stripe_settings())
+        assert p._price_id_for_tier("individual") == "price_test_individual"
 
 
 # ---------------------------------------------------------------- the reset

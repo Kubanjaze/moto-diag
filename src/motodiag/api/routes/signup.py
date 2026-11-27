@@ -3,8 +3,10 @@
 The operator's answers of 2026-11-25: the form is on the website
 (getmekno.com/signup); the app only signs in. Pay first. Emails go through
 Resend once its key is in the settings file; until then the stand-in
-sender. Both switches ship off (K101: the first 10 shops are set up by
-hand), and every route here is 404 while its switch is off.
+sender. Three switches, all off: shops' sign-up (K141: the first 10 shops
+are set up by hand, self-serve after them), individuals' sign-up (K150:
+on when 329 ships) and the reset by email. A route, or a plan, whose
+switch is off answers 404.
 
 The website runs no scripts, so these routes take plain form posts and
 answer with a redirect (303) to one of the website's pages, or, for an
@@ -21,7 +23,7 @@ The sign-up, in order:
 3. Stripe's subscription event, paid: the webhook makes the login, the
    shop, the membership and the terms acceptance
    (:func:`motodiag.auth.signup_repo.complete_signup`), and sends the
-   welcome email.
+   welcome email. An individual's plan makes the login only.
 
 The reset: ``POST /v1/auth/password-reset`` (an email address; the answer
 is the same whether or not a login has it), then ``GET`` and ``POST
@@ -50,7 +52,9 @@ from motodiag.auth.one_time_codes import check_code, issue_code
 from motodiag.auth.passwords import PasswordTooShort, hash_password
 from motodiag.auth.sessions_repo import revoke_user_sessions
 from motodiag.auth.signup_repo import (
+    SHOP_TIERS,
     SIGNUP_TIERS,
+    SignupTier,
     create_signup,
     find_code,
     get_signup,
@@ -110,6 +114,16 @@ def _require(on: bool) -> None:
         raise HTTPException(status_code=404, detail="Not Found")
 
 
+def _tier_open(settings: Settings, tier: SignupTier) -> bool:
+    if tier in SHOP_TIERS:
+        return settings.self_serve_signup_enabled
+    return settings.individual_signup_enabled
+
+
+def _any_signup(settings: Settings) -> bool:
+    return settings.self_serve_signup_enabled or settings.individual_signup_enabled
+
+
 # ---------------------------------------------------------------- sign-up
 
 
@@ -126,17 +140,19 @@ def signup_form(
     settings: Settings = Depends(get_settings),
     db_path: str = Depends(get_db_path),
 ) -> RedirectResponse:
-    _require(settings.self_serve_signup_enabled)
+    _require(_any_signup(settings))
+    if tier not in SIGNUP_TIERS:
+        return _problem(settings, "plan")
+    plan: SignupTier = tier  # type: ignore[assignment]  # checked just above
+    _require(_tier_open(settings, plan))
     email, username = email.strip().lower(), username.strip().lower()
     owner_name, shop_name = owner_name.strip(), shop_name.strip()
     if not EMAIL_RE.match(email) or len(email) > 254:
         return _problem(settings, "email")
     if not owner_name or len(owner_name) > 120:
         return _problem(settings, "name")
-    if not shop_name or len(shop_name) > 120:
+    if plan in SHOP_TIERS and (not shop_name or len(shop_name) > 120):
         return _problem(settings, "shop")
-    if tier not in SIGNUP_TIERS:
-        return _problem(settings, "plan")
     if accept_terms != "yes":
         return _problem(settings, "terms")
     if not USERNAME_RE.match(username):
@@ -149,8 +165,8 @@ def signup_form(
         return _problem(settings, "username-taken")
     signup_id = create_signup(
         email=email, owner_name=owner_name, username=username,
-        password_hash=password_hash, shop_name=shop_name,
-        tier=tier,  # type: ignore[arg-type]  # checked against SIGNUP_TIERS above
+        password_hash=password_hash,
+        shop_name=shop_name if plan in SHOP_TIERS else None, tier=plan,
         terms_version=TERMS_VERSION, db_path=db_path,
     )
     issued = issue_code("verify_email", f"signup:{signup_id}", now=time.time())
@@ -165,7 +181,7 @@ def signup_form(
 def signup_confirm_page(
     code: str = "", settings: Settings = Depends(get_settings),
 ) -> HTMLResponse:
-    _require(settings.self_serve_signup_enabled)
+    _require(_any_signup(settings))
     return _page("Confirm your email", "/v1/signup/confirm", code, "",
                  "Confirm and go to payment")
 
@@ -177,13 +193,15 @@ def signup_confirm(
     db_path: str = Depends(get_db_path),
     provider: BillingProvider = Depends(get_provider),
 ) -> RedirectResponse:
-    _require(settings.self_serve_signup_enabled)
+    _require(_any_signup(settings))
     record = find_code(code, db_path=db_path)
     if record is None or not record.subject.startswith("signup:"):
         return _problem(settings, "link")
     signup = get_signup(int(record.subject.split(":", 1)[1]), db_path=db_path)
     if signup is None:
         return _problem(settings, "link")
+    # A plan whose switch went off after its form was sent goes no further.
+    _require(_tier_open(settings, signup.tier))
     if signup.status == "completed":
         return _go(settings, "/signup/paid/")
     now = time.time()

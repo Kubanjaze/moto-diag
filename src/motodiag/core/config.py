@@ -285,8 +285,12 @@ class Settings(BaseSettings):
     # the website's form, pay first; Resend sends the emails once its key is
     # in the settings file (typed by the operator, never in chat). Both
     # switches ship off: the first 10 shops are set up by hand (K101).
-    #: Off, every /v1/signup route is 404.
+    #: Shops' self-serve sign-up (K141: only after shop 10). Off, a shop
+    #: plan's sign-up is 404.
     self_serve_signup_enabled: bool = False
+    #: Individuals' self-serve sign-up (K150: when 329 ships). Off, an
+    #: individual's sign-up is 404. Both off, every /v1/signup route is 404.
+    individual_signup_enabled: bool = False
     #: Off, every /v1/auth/password-reset route is 404.
     password_reset_email_enabled: bool = False
     #: "fake" (the stand-in, sends nothing) until 329 adds Resend.

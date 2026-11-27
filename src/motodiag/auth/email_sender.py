@@ -14,7 +14,7 @@ with :class:`EmailNotConfigured`, so nothing can send for real by accident.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal, Protocol, get_args
+from typing import Literal, Optional, Protocol, get_args
 
 Provider = Literal["fake"]
 PROVIDERS: tuple[Provider, ...] = get_args(Provider)
@@ -74,8 +74,16 @@ def password_reset_email(to: str, link: str) -> Email:
     ))
 
 
-def welcome_email(to: str, username: str, shop_name: str) -> Email:
-    """After the plan is paid: the shop and the login exist. A draft for 329."""
+def welcome_email(to: str, username: str, shop_name: Optional[str]) -> Email:
+    """After the plan is paid: the login exists, and for a shop plan the
+    shop (``shop_name``; None for an individual). A draft for 329."""
+    if shop_name is None:
+        return Email(to, "Your Mekno account is ready", (
+            "Your account is set up and its plan is paid.\n\n"
+            f"Sign in to the Mekno app with the username {username} and the "
+            "password you chose.\n\n"
+            "Questions: reply to this email.\n"
+        ))
     return Email(to, "Your Mekno shop is ready", (
         f"{shop_name} is set up and its plan is paid.\n\n"
         f"Sign in to the Mekno app with the username {username} and the "

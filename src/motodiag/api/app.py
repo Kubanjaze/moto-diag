@@ -80,13 +80,15 @@ def create_app(
         app_settings.env == Environment.PROD
         and app_settings.email_provider == "fake"
         and (app_settings.self_serve_signup_enabled
+             or app_settings.individual_signup_enabled
              or app_settings.password_reset_email_enabled)
     ):
         raise RuntimeError(
             "Refusing to start in env=prod with self-serve sign-up or the "
             "password reset by email on while email_provider='fake': no "
             "email would leave the server. Set the email service first, "
-            "or turn MOTODIAG_SELF_SERVE_SIGNUP_ENABLED and "
+            "or turn MOTODIAG_SELF_SERVE_SIGNUP_ENABLED, "
+            "MOTODIAG_INDIVIDUAL_SIGNUP_ENABLED and "
             "MOTODIAG_PASSWORD_RESET_EMAIL_ENABLED off."
         )
 

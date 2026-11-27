@@ -43,6 +43,14 @@ ANONYMOUS_ROUTES = {
     ("GET", "/v1/terms"),  # the current terms; a key, if sent, adds acceptance
     ("POST", "/v1/billing/webhooks/stripe"),  # Stripe's signature checks it
     ("GET", "/v1/share/{token}"),  # off on live (K74); the token is the key
+    # Phase 329: the website's forms and the email links, each 404 while its
+    # switch is off (all three ship off); the one-time code is the key.
+    ("POST", "/v1/signup"),
+    ("GET", "/v1/signup/confirm"),
+    ("POST", "/v1/signup/confirm"),
+    ("POST", "/v1/auth/password-reset"),
+    ("GET", "/v1/auth/password-reset/confirm"),
+    ("POST", "/v1/auth/password-reset/confirm"),
 }
 AUTH_DEPS = {"require_api_key", "get_current_user"}
 

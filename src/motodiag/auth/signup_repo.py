@@ -4,9 +4,10 @@
 A sign-up is written when the website's form arrives, with the owner's
 password already hashed. Its email is checked by a one-time code
 (:mod:`motodiag.auth.one_time_codes`). Only when Stripe's subscription is
-paid does :func:`complete_signup` make the owner's login, the shop, the
-owner's membership and the terms acceptance, so an unpaid sign-up leaves
-no shop and no login (the 329 scope). It is safe to run again: each piece
+paid does :func:`complete_signup` make the login and the terms acceptance,
+and for a shop plan the shop and the owner's membership, so an unpaid
+sign-up leaves no shop and no login (the 329 scope). An individual's
+sign-up (K150) has no shop. It is safe to run again: each piece
 it has made is recorded on the sign-up and not made twice.
 """
 
@@ -24,8 +25,11 @@ from motodiag.core.database import get_connection
 from motodiag.core.timestamps import utc_now
 
 SignupStatus = Literal["pending_email", "email_verified", "completed"]
-SignupTier = Literal["shop", "company"]
-SIGNUP_TIERS: tuple[SignupTier, ...] = ("shop", "company")
+SignupTier = Literal["individual", "shop", "company"]
+SIGNUP_TIERS: tuple[SignupTier, ...] = ("individual", "shop", "company")
+#: The plans that make a shop. K141 opens them only after shop 10, K150
+#: opens "individual" when 329 ships, so each has its own switch.
+SHOP_TIERS: tuple[SignupTier, ...] = ("shop", "company")
 
 
 class SignupError(Exception):
@@ -88,7 +92,7 @@ class Signup:
     owner_name: str
     username: str
     password_hash: str
-    shop_name: str
+    shop_name: Optional[str]
     tier: SignupTier
     terms_version: str
     status: SignupStatus
@@ -120,11 +124,13 @@ def username_taken(username: str, db_path: Optional[str] = None) -> bool:
 
 def create_signup(
     *, email: str, owner_name: str, username: str, password_hash: str,
-    shop_name: str, tier: SignupTier, terms_version: str,
+    shop_name: Optional[str], tier: SignupTier, terms_version: str,
     db_path: Optional[str] = None,
 ) -> int:
     if tier not in SIGNUP_TIERS:
         raise SignupError(f"tier must be one of {SIGNUP_TIERS}")
+    if (tier in SHOP_TIERS) != bool(shop_name):
+        raise SignupError("a shop plan needs a shop name, and an individual has none")
     with get_connection(db_path) as conn:
         cur = conn.execute(
             "INSERT INTO signups (email, owner_name, username, password_hash, "
@@ -162,8 +168,9 @@ def _set(signup_id: int, column: str, value, db_path: Optional[str]) -> None:
 def complete_signup(
     signup_id: int, stripe_subscription_id: str, db_path: Optional[str] = None,
 ) -> Signup:
-    """Make the owner's login, the shop, the membership and the terms
-    acceptance for a paid sign-up, and mark it completed. Returns the
+    """Make the login and the terms acceptance, and for a shop plan the
+    shop and the owner's membership, for a paid sign-up, and mark it
+    completed. Returns the
     sign-up as it now stands."""
     from motodiag.shop import create_shop, seed_first_owner
 
@@ -185,12 +192,14 @@ def complete_signup(
             password_hash=s.password_hash, tier=s.tier,
         ), db_path=db_path))
         _set(signup_id, "user_id", user_id, db_path)
-    shop_id = s.shop_id
-    if shop_id is None:
-        shop_id = int(create_shop(s.shop_name, owner_user_id=user_id,
-                                  email=s.email, db_path=db_path))
-        _set(signup_id, "shop_id", shop_id, db_path)
-    seed_first_owner(shop_id, user_id, db_path=db_path)
+    if s.tier in SHOP_TIERS:
+        assert s.shop_name  # the table's CHECK holds it
+        shop_id = s.shop_id
+        if shop_id is None:
+            shop_id = int(create_shop(s.shop_name, owner_user_id=user_id,
+                                      email=s.email, db_path=db_path))
+            _set(signup_id, "shop_id", shop_id, db_path)
+        seed_first_owner(shop_id, user_id, db_path=db_path)
     record_acceptance(user_id, s.terms_version, db_path=db_path)
     _set(signup_id, "stripe_subscription_id", stripe_subscription_id, db_path)
     with get_connection(db_path) as conn:
