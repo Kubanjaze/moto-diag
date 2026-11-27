@@ -8,8 +8,8 @@
 
 /signup/*
   ! Content-Security-Policy
-  Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action https://api.getmekno.com
+  Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action https://api.getmekno.com https://getmekno.com
 
 /reset/*
   ! Content-Security-Policy
-  Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action https://api.getmekno.com
+  Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action https://api.getmekno.com https://getmekno.com

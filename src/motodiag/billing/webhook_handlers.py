@@ -231,8 +231,19 @@ PAID_STATUSES = frozenset({"active"})
 
 def _complete_signup(sub: dict, sub_id: str, db_path: Optional[str],
                      settings: Settings) -> int:
-    from motodiag.auth.email_sender import get_email_sender, welcome_email
-    from motodiag.auth.signup_repo import SignupError, complete_signup, get_signup
+    from motodiag.auth.email_sender import (
+        EmailNotConfigured,
+        EmailSendError,
+        get_email_sender,
+        stuck_signup_email,
+        welcome_email,
+    )
+    from motodiag.auth.signup_repo import (
+        SignupError,
+        complete_signup,
+        get_signup,
+        mark_paid,
+    )
 
     try:
         signup_id = int(sub["metadata"]["signup_id"])
@@ -243,11 +254,27 @@ def _complete_signup(sub: dict, sub_id: str, db_path: Optional[str],
     try:
         done = complete_signup(signup_id, sub_id, db_path=db_path)
     except SignupError as e:
+        # Paid, and it cannot finish: keep it from the 30-day purge, and tell
+        # the operator, who settles it and refunds it by hand (Phase 329).
+        if before is not None:
+            mark_paid(signup_id, sub_id, db_path=db_path)
+        try:
+            get_email_sender(settings.email_provider, settings).send(
+                stuck_signup_email(settings.email_reply_to, signup_id, str(e)))
+        except (EmailSendError, EmailNotConfigured) as mail_error:
+            logger.error("sign-up %d: the operator's notice was not sent: %s",
+                         signup_id, mail_error)
         raise SubscriptionEventError(str(e)) from e
     assert done.user_id is not None
     if before is not None and before.status != "completed":
-        get_email_sender(settings.email_provider).send(
-            welcome_email(done.email, done.username, done.shop_name))
+        # Best-effort: the account is made either way, and an email that
+        # fails does not mark the payment's event failed.
+        try:
+            get_email_sender(settings.email_provider, settings).send(
+                welcome_email(done.email, done.username, done.shop_name))
+        except (EmailSendError, EmailNotConfigured) as mail_error:
+            logger.error("sign-up %d: the welcome email was not sent: %s",
+                         signup_id, mail_error)
     return done.user_id
 
 

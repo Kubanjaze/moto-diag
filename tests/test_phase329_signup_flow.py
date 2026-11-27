@@ -53,8 +53,9 @@ def outbox(monkeypatch):
     """One stand-in sender for the whole test, so its outbox can be read."""
     sender = FakeEmailSender()
     monkeypatch.setattr("motodiag.api.routes.signup.get_email_sender",
-                        lambda provider: sender)
-    monkeypatch.setattr(email_mod, "get_email_sender", lambda provider: sender)
+                        lambda provider, settings=None: sender)
+    monkeypatch.setattr(email_mod, "get_email_sender",
+                        lambda provider, settings=None: sender)
     return sender.outbox
 
 
@@ -186,7 +187,8 @@ class TestTheSwitches:
         path = _db(tmp_path, monkeypatch, signup=False, individual=True)
         c = _client(path)
         assert _sign_up(c).status_code == 404
-        assert _sign_up(c, tier="company").status_code == 404
+        # Company is not on the form at all (Phase 329: "talk to us").
+        assert _sign_up(c, tier="company").headers["location"] == f"{SITE}/signup/problem/#plan"
         assert _sign_up(c, **INDIVIDUAL).headers["location"] == f"{SITE}/signup/check-email/"
         assert _sql(path, "SELECT tier, shop_name FROM signups") == [("individual", None)]
 

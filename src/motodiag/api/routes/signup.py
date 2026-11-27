@@ -44,6 +44,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from motodiag.api.deps import get_db_path, get_settings
 from motodiag.api.routes.billing import get_provider
 from motodiag.auth.email_sender import (
+    EmailNotConfigured,
+    EmailSendError,
     address_check_email,
     get_email_sender,
     password_reset_email,
@@ -52,14 +54,16 @@ from motodiag.auth.one_time_codes import check_code, issue_code
 from motodiag.auth.passwords import PasswordTooShort, hash_password
 from motodiag.auth.sessions_repo import revoke_user_sessions
 from motodiag.auth.signup_repo import (
+    FORM_TIERS,
     SHOP_TIERS,
-    SIGNUP_TIERS,
     SignupTier,
     create_signup,
+    emails_sent_to,
     find_code,
     get_signup,
     mark_code_used,
     mark_verified,
+    purge_stale,
     store_code,
     username_taken,
 )
@@ -75,7 +79,25 @@ router = APIRouter(include_in_schema=False)
 
 USERNAME_RE = re.compile(r"^[a-z0-9][a-z0-9_.-]{2,31}$")
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-PAGE_CSP = "default-src 'none'; form-action 'self'; frame-ancestors 'none'"
+#: Where Stripe's hosted checkout lives. The button page's post is answered
+#: with a redirect there, and browsers hold a redirect to form-action too.
+STRIPE_CHECKOUT_ORIGIN = "https://checkout.stripe.com"
+#: The errors that mean "no email left the server".
+SEND_FAILED = (EmailSendError, EmailNotConfigured)
+
+
+def page_csp(settings: Settings) -> str:
+    """The button pages' policy. Their posts are answered with a redirect to
+    the website or to Stripe's checkout, so both are allowed form targets."""
+    site = settings.signup_site_url.rstrip("/")
+    return ("default-src 'none'; "
+            f"form-action 'self' {site} {STRIPE_CHECKOUT_ORIGIN}; "
+            "frame-ancestors 'none'")
+
+
+def _over_cap(settings: Settings, email: str, db_path: str, now: float) -> bool:
+    return emails_sent_to(email, now - 3600, db_path=db_path) >= \
+        settings.signup_emails_per_address_per_hour
 
 
 def _site(settings: Settings, page: str) -> str:
@@ -94,7 +116,8 @@ def _api_base(request: Request, settings: Settings) -> str:
     return (settings.public_base_url or str(request.base_url)).rstrip("/")
 
 
-def _page(title: str, action: str, code: str, fields: str, button: str) -> HTMLResponse:
+def _page(settings: Settings, title: str, action: str, code: str, fields: str,
+          button: str) -> HTMLResponse:
     body = (
         "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">"
         "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
@@ -105,13 +128,18 @@ def _page(title: str, action: str, code: str, fields: str, button: str) -> HTMLR
         f"{fields}<p><button type=\"submit\">{html.escape(button)}</button></p>"
         "</form></body></html>"
     )
-    return HTMLResponse(body, headers={"Content-Security-Policy": PAGE_CSP,
+    return HTMLResponse(body, headers={"Content-Security-Policy": page_csp(settings),
                                        "Cache-Control": "no-store"})
 
 
 def _require(on: bool) -> None:
     if not on:
         raise HTTPException(status_code=404, detail="Not Found")
+
+
+#: The website's form for each plan: Stripe's cancel goes back to it.
+FORM_PAGES: dict[str, str] = {"individual": "/signup/individual/",
+                              "shop": "/signup/", "company": "/signup/"}
 
 
 def _tier_open(settings: Settings, tier: SignupTier) -> bool:
@@ -141,7 +169,9 @@ def signup_form(
     db_path: str = Depends(get_db_path),
 ) -> RedirectResponse:
     _require(_any_signup(settings))
-    if tier not in SIGNUP_TIERS:
+    now = time.time()
+    purge_stale(now, db_path=db_path)
+    if tier not in FORM_TIERS:
         return _problem(settings, "plan")
     plan: SignupTier = tier  # type: ignore[assignment]  # checked just above
     _require(_tier_open(settings, plan))
@@ -163,16 +193,23 @@ def signup_form(
         return _problem(settings, "password")
     if username_taken(username, db_path=db_path):
         return _problem(settings, "username-taken")
+    if _over_cap(settings, email, db_path, now):
+        return _problem(settings, "too-many")
     signup_id = create_signup(
         email=email, owner_name=owner_name, username=username,
         password_hash=password_hash,
         shop_name=shop_name if plan in SHOP_TIERS else None, tier=plan,
         terms_version=TERMS_VERSION, db_path=db_path,
     )
-    issued = issue_code("verify_email", f"signup:{signup_id}", now=time.time())
+    issued = issue_code("verify_email", f"signup:{signup_id}", now=now)
     store_code(issued.record, db_path=db_path)
     link = f"{_api_base(request, settings)}/v1/signup/confirm?code={issued.code}"
-    get_email_sender(settings.email_provider).send(address_check_email(email, link))
+    try:
+        get_email_sender(settings.email_provider, settings).send(
+            address_check_email(email, link))
+    except SEND_FAILED as e:
+        logger.error("sign-up %d: the address check was not sent: %s", signup_id, e)
+        return _problem(settings, "later")
     logger.info("sign-up %d: address check sent", signup_id)
     return _go(settings, "/signup/check-email/")
 
@@ -182,7 +219,7 @@ def signup_confirm_page(
     code: str = "", settings: Settings = Depends(get_settings),
 ) -> HTMLResponse:
     _require(_any_signup(settings))
-    return _page("Confirm your email", "/v1/signup/confirm", code, "",
+    return _page(settings, "Confirm your email", "/v1/signup/confirm", code, "",
                  "Confirm and go to payment")
 
 
@@ -219,7 +256,7 @@ def signup_confirm(
         checkout = provider.create_signup_checkout_session(
             signup.id, signup.email, signup.tier,
             success_url=_site(settings, "/signup/paid/"),
-            cancel_url=_site(settings, "/signup/"),
+            cancel_url=_site(settings, FORM_PAGES[signup.tier]),
         )
     except BillingProviderError:
         logger.exception("sign-up %d: checkout could not be started", signup.id)
@@ -239,19 +276,29 @@ def password_reset_request(
 ) -> RedirectResponse:
     _require(settings.password_reset_email_enabled)
     email = email.strip().lower()
-    if EMAIL_RE.match(email):
+    now = time.time()
+    if EMAIL_RE.match(email) and _over_cap(settings, email, db_path, now):
+        logger.info("password reset: the address's hourly cap is reached")
+    elif EMAIL_RE.match(email):
         with get_connection(db_path) as conn:
             rows = conn.execute(
                 "SELECT id FROM users WHERE lower(email) = ? AND is_active = 1 "
                 "AND password_hash IS NOT NULL", (email,),
             ).fetchall()
-        sender = get_email_sender(settings.email_provider)
         for row in rows:
-            issued = issue_code("reset_password", f"user:{row['id']}", now=time.time())
+            issued = issue_code("reset_password", f"user:{row['id']}", now=now)
             store_code(issued.record, db_path=db_path)
             link = (f"{_api_base(request, settings)}/v1/auth/password-reset/"
                     f"confirm?code={issued.code}")
-            sender.send(password_reset_email(email, link))
+            try:
+                get_email_sender(settings.email_provider, settings).send(
+                    password_reset_email(email, link))
+            except SEND_FAILED as e:
+                # The answer stays the same: it must not say whether the
+                # address has a login.
+                logger.error("password reset for user id=%d not sent: %s",
+                             row["id"], e)
+                continue
             logger.info("password reset sent for user id=%d", row["id"])
     # The same answer whether or not a login has this address.
     return _go(settings, "/reset/sent/")
@@ -270,7 +317,7 @@ def password_reset_page(
         "<input type=\"password\" name=\"again\" minlength=\"8\" required "
         "autocomplete=\"new-password\"></label></p>"
     )
-    return _page("Set a new password", "/v1/auth/password-reset/confirm", code,
+    return _page(settings, "Set a new password", "/v1/auth/password-reset/confirm", code,
                  fields, "Set the password")
 
 

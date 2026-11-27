@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import sqlite3
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Literal, Optional
 
 from motodiag.auth.models import User
@@ -30,6 +31,13 @@ SIGNUP_TIERS: tuple[SignupTier, ...] = ("individual", "shop", "company")
 #: The plans that make a shop. K141 opens them only after shop 10, K150
 #: opens "individual" when 329 ships, so each has its own switch.
 SHOP_TIERS: tuple[SignupTier, ...] = ("shop", "company")
+#: The plans the website's form takes (Phase 329): the site says "talk to
+#: us" for Company, so the form refuses it; the table keeps it for later.
+FORM_TIERS: tuple[SignupTier, ...] = ("individual", "shop")
+#: Privacy 1.3: "A sign-up not paid within 30 days is deleted."
+UNPAID_KEEP_S = 30 * 86400
+#: A spent or expired code is kept this long past its expiry, then deleted.
+CODE_KEEP_S = 86400
 
 
 class SignupError(Exception):
@@ -165,6 +173,13 @@ def _set(signup_id: int, column: str, value, db_path: Optional[str]) -> None:
                      (value, signup_id))
 
 
+def mark_paid(signup_id: int, stripe_subscription_id: str,
+              db_path: Optional[str] = None) -> None:
+    """Record the subscription on a sign-up that could not be completed, so
+    the 30-day purge keeps it for the operator."""
+    _set(signup_id, "stripe_subscription_id", stripe_subscription_id, db_path)
+
+
 def complete_signup(
     signup_id: int, stripe_subscription_id: str, db_path: Optional[str] = None,
 ) -> Signup:
@@ -210,3 +225,45 @@ def complete_signup(
     done = get_signup(signup_id, db_path)
     assert done is not None
     return done
+
+
+# ---------------------------------------------------------------- limits and keeping
+
+
+def emails_sent_to(email: str, since: float, db_path: Optional[str] = None) -> int:
+    """How many sign-up and reset links this address was sent since
+    ``since`` (epoch seconds): one code per email, so the codes count them."""
+    with get_connection(db_path) as conn:
+        row = conn.execute(
+            "SELECT COUNT(*) FROM one_time_codes c WHERE c.issued_at >= ? AND ("
+            " (c.purpose = 'verify_email' AND c.subject IN ("
+            "   SELECT 'signup:' || id FROM signups WHERE lower(email) = lower(?)))"
+            " OR (c.purpose = 'reset_password' AND c.subject IN ("
+            "   SELECT 'user:' || id FROM users WHERE lower(email) = lower(?))))",
+            (since, email, email),
+        ).fetchone()
+    return int(row[0])
+
+
+def purge_stale(now: float, db_path: Optional[str] = None) -> tuple[int, int]:
+    """Delete unpaid sign-ups older than 30 days, and codes a day past their
+    expiry. A sign-up with a subscription or a login is never deleted: a paid
+    one that could not finish waits for the operator. Returns (sign-ups,
+    codes) deleted."""
+    cutoff = datetime.fromtimestamp(now - UNPAID_KEEP_S, timezone.utc).strftime(
+        "%Y-%m-%d %H:%M:%S")
+    with get_connection(db_path) as conn:
+        gone = conn.execute(
+            "SELECT id FROM signups WHERE status != 'completed' "
+            "AND stripe_subscription_id IS NULL AND user_id IS NULL "
+            "AND datetime(created_at) < ?", (cutoff,),
+        ).fetchall()
+        subjects = [f"signup:{r['id']}" for r in gone]
+        conn.executemany("DELETE FROM one_time_codes WHERE subject = ?",
+                         [(x,) for x in subjects])
+        conn.executemany("DELETE FROM signups WHERE id = ?",
+                         [(r["id"],) for r in gone])
+        codes = conn.execute("DELETE FROM one_time_codes WHERE expires_at < ?",
+                             (now - CODE_KEEP_S,)).rowcount
+    return len(gone), int(codes)
+

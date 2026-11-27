@@ -702,7 +702,17 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: 63 (the sign-up, K150's individual plan, the switches, the reset).
 #: test_phase409_public_hardening.py keeps its count: its list of open
 #: routes gains the six sign-up and reset routes. Floor: 13378 + 79.
-COLLECTED_TEST_FLOOR = 13457
+#:
+#: Phase 329 (the build on PR 99): +81 -0 more, a diff of collected ids
+#: against master at 135bde2 (13378 -> 13538, +160 in all with the
+#: prebuild's 79): test_phase329_resend_and_limits.py 38 (the Resend sender,
+#: email failures, the per-address cap, the 30-day purge, the cancel address,
+#: form-action through every redirect), test_phase408_site.py 42 (its
+#: per-page tests over the nine published sign-up and reset files, and two
+#: new: the shops' form unpublished, every sign-up link resolving) and
+#: test_phase272_gate15.py 1 (migration 093 gives 092 a successor to peel).
+#: Floor: 13538.
+COLLECTED_TEST_FLOOR = 13538
 
 
 def _collected_count() -> int:

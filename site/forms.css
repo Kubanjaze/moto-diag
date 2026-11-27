@@ -1,0 +1,9 @@
+/* Phase 329: the sign-up and reset forms. No scripts (the site runs none). */
+.form label { display: block; font-weight: 600; }
+.form input[type=text], .form input[type=email], .form input[type=password] {
+  width: 100%; max-width: 28rem; padding: .6rem .7rem; font: inherit;
+  border: 1px solid var(--line); border-radius: 8px; background: transparent; color: inherit;
+}
+.form input[type=checkbox] { margin-right: .4rem; }
+.problem { display: none; }
+.problem:target { display: block; font-weight: 600; }

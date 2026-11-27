@@ -1,6 +1,6 @@
 # Mekno Privacy Policy
 
-Version 1.2 — 2026-11-27
+Version 1.3 — 2026-11-27
 
 This policy says what Mekno keeps, why, which services it goes to, how long
 it is kept, and how a shop takes it out or has it deleted. It is part of
@@ -30,6 +30,9 @@ an account belongs to.
 - **Subscriptions:** which plan, its status and its renewal date. Card
   details stay with Stripe; we never see a full card number.
 - **An activity log:** who made each change in the shop, when, and to what.
+- **Sign-ups:** what the sign-up form asks for (name, email address,
+  username, a scrambled form of the password, and a shop's name), until the
+  plan is paid. A sign-up not paid within 30 days is deleted.
 
 ## Why we keep it
 
@@ -71,11 +74,15 @@ Mekno sends data to these services, and only for the reason given:
 - **Cloudflare**, for the connection between the app and Mekno's server:
   every request the app sends passes through Cloudflare, which opens it to
   deliver it and keeps standard request logs.
+- **Resend**, for email: the address an email goes to and the email itself,
+  when Mekno sends a sign-up's address check, a password reset link or a
+  welcome note.
 
 ## The website
 
-The website sets no cookies and runs no scripts. Cloudflare, which serves
-it, keeps standard request logs.
+The website sets no cookies and runs no scripts. Its sign-up and
+password-reset forms send what is typed into them to Mekno's server.
+Cloudflare, which serves it, keeps standard request logs.
 
 ## How long it is kept
 

@@ -110,8 +110,9 @@ class TestSender:
         s.send(address_check_email("owner@shop.example", "https://x/v?c=1"))
         assert [e.to for e in s.outbox] == ["owner@shop.example"]
 
-    def test_no_real_service_exists(self):
-        for name in ("smtp", "postmark", "resend", "", "Fake"):
+    def test_no_other_service_exists(self):
+        # Phase 329: "resend" exists, and needs its key (the resend tests).
+        for name in ("smtp", "postmark", "", "Fake"):
             with pytest.raises(EmailNotConfigured):
                 get_email_sender(name)
 

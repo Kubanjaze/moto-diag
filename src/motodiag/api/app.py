@@ -91,6 +91,17 @@ def create_app(
             "MOTODIAG_INDIVIDUAL_SIGNUP_ENABLED and "
             "MOTODIAG_PASSWORD_RESET_EMAIL_ENABLED off."
         )
+    # Phase 329: Resend chosen, and its key never typed in.
+    if (
+        app_settings.env == Environment.PROD
+        and app_settings.email_provider == "resend"
+        and not app_settings.resend_api_key
+    ):
+        raise RuntimeError(
+            "Refusing to start in env=prod with email_provider='resend' and "
+            "no MOTODIAG_RESEND_API_KEY: type the key into the settings "
+            "file, or set MOTODIAG_EMAIL_PROVIDER=fake."
+        )
 
     app = FastAPI(
         title="MotoDiag API",
