@@ -1,0 +1,183 @@
+Phase 210C: no developer panels in the shop's build, and Apple's location
+note on build 1.
+
+You are working in the mobile repository, moto-diag-mobile, on a new
+branch from main, phase-210C-no-developer-panels-and-apples-location-note.
+Phase 210B (backend repository Kubanjaze/moto-diag; this app's pull
+request 15, merged as 3fa252b) gave the app its icon, the name Mekno and
+the bundle ID com.getmekno.app, and build 1 is on TestFlight. Two things
+keep it from being the shop's build: its home screen shows developer
+panels, and Apple flagged build 1 for a missing location purpose string.
+Your job is those two, the Android side of the second, and the build
+number for build 2. Build what the plan says and nothing more.
+
+(Written 2026-11-26 by the advisor against moto-diag's master 47ea328 and
+the app's main 3fa252b, at the operator's K148.)
+
+WHAT IS ON THE APP'S MAIN NOW (read each before you change it)
+
+- src/screens/HomeScreen.tsx renders, in this order: the title "Mekno";
+  the subtitle `v{appVersion} · Phase 191` (line 279; appVersion is
+  package.json's version, 0.5.0); then the sections "Backend" (the
+  server's package and schema versions, line 281), "Auth" (sign in, who is
+  signed in, sign out; line 289), "Authed smoke (/v1/vehicles)" (line 301),
+  "Settings" (line 313), "DTC lookup" (line 327) and "BLE scan (Phase 186)"
+  (line 339); and "OBD-II adapter (Phase 196)", which already renders only
+  when OBD_SUPPORT is on (line 354).
+- src/config/features.ts is the app's flag file. Its one flag, OBD_SUPPORT,
+  is `__DEV__`: true under Metro and in Debug builds, false in Release
+  bundles. TestFlight and App Store builds are Release builds, and so are
+  the advisor's cable installs.
+- Apple's email about build 1 (2026-11-26) says: "ITMS-90683: Missing
+  purpose string in Info.plist", "The Info.plist file for the "MotoDiag.app"
+  bundle should contain a NSLocationWhenInUseUsageDescription key", and
+  "If you're using external libraries or SDKs, they may reference APIs that
+  require a purpose string." The delivery itself succeeded.
+- The app's own code never asks for a location on iOS:
+  `git grep -n -E 'geolocation|CLLocation|requestWhenInUse|NSLocation' -- src App.tsx ios/MotoDiag`
+  finds nothing, and no screen passes `enableLocation` to the camera
+  (`git grep -n enableLocation -- src` finds nothing). Info.plist has no
+  NSLocation key.
+- The location code comes from react-native-vision-camera 4.7.3:
+  node_modules/react-native-vision-camera/VisionCamera.podspec, lines 8 to
+  14, sets `enableLocation = true` unless the Podfile defines
+  `$VCEnableLocation`, and with it true the pod builds
+  ios/Core/LocationProvider.swift, which uses CLLocationManager. ios/Podfile
+  does not define it. No other library in package.json has iOS code naming
+  CLLocationManager or CoreLocation.
+- Measured by the advisor on the Mac with CocoaPods 1.16.2: with
+  `$VCEnableLocation = false` in ios/Podfile, `pod install` prints
+  "[VisionCamera] $VCEnableLocation is set to false!", drops
+  VISION_CAMERA_ENABLE_LOCATION from the pod's build settings, and changes
+  exactly two lines of ios/Podfile.lock: VisionCamera's checksum becomes
+  b51af005669c6642dd1b4fca434eda4c1778de87, and PODFILE CHECKSUM becomes
+  the SHA-1 of the new ios/Podfile's bytes. That second rule holds on main
+  today: `shasum -a 1 ios/Podfile` prints
+  1169a8abfdeab6189afb66ad97f52e71da16ab2a, which is the lock's PODFILE
+  CHECKSUM.
+- Android: android/app/src/main/AndroidManifest.xml declares
+  ACCESS_FINE_LOCATION with android:maxSdkVersion="30" (lines 23 and 24),
+  for Bluetooth scans on Android 11 and older; BLUETOOTH_SCAN carries
+  neverForLocation. But two libraries' own manifests declare location with
+  no limit: react-native-ble-plx (ACCESS_COARSE_LOCATION and
+  ACCESS_FINE_LOCATION) and react-native-bluetooth-classic
+  (ACCESS_FINE_LOCATION). The app's manifest has no xmlns:tools.
+  react-native-vision-camera's Android manifest asks for no location.
+- The build number: ios/MotoDiag.xcodeproj/project.pbxproj sets
+  CURRENT_PROJECT_VERSION = 1 in two places (lines 299 and 331) and
+  MARKETING_VERSION = 1.0 in two (lines 307 and 339). Build 1 is the one on
+  TestFlight.
+
+WHAT TO BUILD (the plan's Logic, items 1 to 4)
+
+1. No developer panels in the shop's build. Add a flag DEV_PANELS to
+   src/config/features.ts, `__DEV__` like OBD_SUPPORT, with a short comment
+   saying what it hides and why. On the home screen, render the subtitle
+   line and the Backend, Authed smoke and BLE scan sections only when it
+   is on. Auth, Settings and DTC lookup stay in every build, and the OBD-II
+   section stays behind OBD_SUPPORT as it is. Nothing else on the screen
+   changes.
+2. Apple's location note. In ios/Podfile, define `$VCEnableLocation = false`
+   above the line that resolves react_native_pods.rb, with a comment saying
+   why: the app never asks the camera for a location, and Apple's
+   ITMS-90683 on build 1. In ios/Podfile.lock change exactly the two lines
+   above: VisionCamera's checksum to
+   b51af005669c6642dd1b4fca434eda4c1778de87, and PODFILE CHECKSUM to the
+   SHA-1 of your final ios/Podfile. Do not add an NSLocation key to
+   Info.plist: the app does not use location. If your session runs on a
+   Mac with CocoaPods, you may run `pod install` to confirm the two lines,
+   but commit only ios/Podfile and those two lines; pod install also
+   reorders project.pbxproj's build phases, and that reordering is not
+   part of this phase.
+3. Android matches. In android/app/src/main/AndroidManifest.xml, add
+   xmlns:tools to the manifest element, and make the app's declarations the
+   only ones for both location permissions: ACCESS_FINE_LOCATION and
+   ACCESS_COARSE_LOCATION, each with android:maxSdkVersion="30" and
+   tools:node="replace", so the libraries' unlimited declarations do not
+   reach Android 12 and up. Keep BLUETOOTH_SCAN's neverForLocation, and the
+   comment above the Bluetooth permissions true. Change nothing else there.
+4. Build 2. CURRENT_PROJECT_VERSION becomes 2 in both places in
+   project.pbxproj; MARKETING_VERSION stays 1.0. Nothing else in that file
+   changes.
+
+The tests are the plan's Tests section, in the app's own style (screens
+have *.smoke.test.tsx files; a flag is set with jest.mock of
+src/config/features), each seen red on today's main before its code: say
+in the pull request how. They include: the home screen with DEV_PANELS off
+shows no subtitle, no Backend, no Authed smoke and no BLE scan, and still
+shows Auth, Settings and DTC lookup; with it on, all of them; ios/Podfile
+defines `$VCEnableLocation = false`; Podfile.lock's PODFILE CHECKSUM is the
+SHA-1 of ios/Podfile and VisionCamera's checksum is the value above;
+Info.plist has no NSLocation key; the Android manifest declares both
+location permissions with maxSdkVersion 30 and tools:node="replace";
+project.pbxproj says CURRENT_PROJECT_VERSION = 2 in both places and
+MARKETING_VERSION = 1.0 in both.
+
+NOT IN THIS PHASE
+
+A new home screen or any other change to what Auth, Settings or DTC lookup
+show. Android's launcher name and applicationId (an Android phase). An
+Android build: no machine here builds Android, so the merged manifest is
+checked by its source and its tests, and the plan names that limit. The
+App Store listing (Phase 410). The TestFlight upload: the advisor hands the
+operator that block after the merge. Any server change.
+
+AFTER THE MERGE (the advisor's and the operator's, not yours)
+
+On the Mac: pod install, a check that the built app no longer holds the
+location request Apple's note is about (requestWhenInUseAuthorization; the
+library's unused LocationProvider class stays compiled), then build 2's
+upload to TestFlight. The operator's
+phone, in TestFlight's "First look" group, gets build 2 by itself; its home
+screen shows Auth, Settings and DTC lookup, and no developer panel. Apple's
+email for build 2 should not name ITMS-90683.
+
+THE RECORD
+
+Row 210C and its documents belong to the backend repository
+(ROADMAP_AUTHORITY.md: 205 and up; every phase's own files live in the
+backend's docs/phases/). The advisor has written 210C's Step 0 and plan
+and marked the row in progress. They stay on the backend's branch of this
+one's name until the close-out, so read them from GitHub, not from
+../moto-diag, whose checkout may be on any branch:
+
+  gh api -H 'Accept: application/vnd.github.raw' 'repos/Kubanjaze/moto-diag/contents/docs/phases/in_progress/210C_implementation.md?ref=phase-210C-no-developer-panels-and-apples-location-note'
+
+and the same for 210C_step0.md. Without gh, read
+https://raw.githubusercontent.com/Kubanjaze/moto-diag/phase-210C-no-developer-panels-and-apples-location-note/docs/phases/in_progress/210C_implementation.md
+and the same path for 210C_step0.md. Build what the plan says. If it is
+not there, stop and say so. Do not write anything in ../moto-diag; the
+advisor keeps the log and closes the row from your pull request. The app's
+phase_log.md covers Phases 185 to 204 only; leave it alone.
+
+HOW TO WORK HERE
+
+The app's repository has no CLAUDE.md of its own, so these come with the
+prompt:
+- Read a file before you change it, change only what the plan names, and
+  say in the pull request anything you did that it does not.
+- Small commits, each with its tests. Before each, run `npx tsc --noEmit`,
+  `npx eslint .` and `npx jest`, and commit only when all three are clean.
+  The pre-commit hook lints what you stage; never skip it.
+- Write commit messages through a file or a quoted heredoc, never with a
+  backtick inside `-m "..."`.
+- Never force-push, never rebase a pushed branch, never merge.
+- Touch nothing outside this repository's branch: not the live server or
+  any other server, not any database, not the backend repository, and not
+  App Store Connect or Apple's developer site. Nothing here needs them.
+- Run `npm ci` first if node_modules is missing, so the checks and the
+  pre-commit hook can run.
+- Never put a real password, token, card number or key in a test, a log
+  line or a commit: the tests use made-up values.
+- When something blocks you, stop and say what, in plain English; do not
+  work around it.
+
+FINISHING
+
+- `npx tsc --noEmit` and `npx eslint .` with no errors; `npx jest` green.
+- Open the pull request in Kubanjaze/moto-diag-mobile from this branch to
+  main, with the Jest count before and after and the tsc and eslint
+  results in its description. Do not merge it: the operator merges it by
+  hand, after the advisor's review.
+- Tell the operator, in plain English, the branch's last commit hash, so
+  the backend's close-out can name it.
