@@ -681,7 +681,17 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: (one per step of the day, every step and no network, and the rebuild);
 #: the other 19 are test_phase210_launch_check.py's breaks given ids without
 #: spaces, so the mutations can name them (the same 20 cases). Measured: 13321.
-COLLECTED_TEST_FLOOR = 13321
+#:
+#: Phase 409, the public address, by a diff of collected ids against master
+#: a238aa6 (13321): +58 -2. New: test_phase409_public_hardening.py 22 (PR
+#: 98's), test_phase409_public_condition.py 29 (the ninth condition),
+#: test_phase210_launch_check.py 2 (the passing test renamed for nine, one
+#: more break), test_f64_public_url.py 2 (bug fix #1), test_phase175 2 (the
+#: closed shop route's member and 401 cases), test_phase334_legal_texts.py 1
+#: (the Cloudflare line). Gone: 210's "eight" passing test (renamed) and
+#: 175's anonymous not-found case (the route now needs a member). Measured:
+#: 13377.
+COLLECTED_TEST_FLOOR = 13377
 
 
 def _collected_count() -> int:

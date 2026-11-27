@@ -1,0 +1,28 @@
+PASS 1 good desktop: ALL GOOD, measures, changes nothing
+PASS 1 server on every address: OFF
+PASS 1 Funnel on: OFF
+PASS 1 feed down: OFF
+PASS 1 old code, old page, a LAN listener: notes, still ALL GOOD
+PASS 4 good: ALL GOOD, five settings, old kept
+PASS 4 run twice: same file, first copy kept
+PASS 4 old code: refuses, nothing changed
+PASS 4 server fails on new settings: put back
+PASS 4 tailnet stops on new settings: put back
+PASS 4 tailnet unreachable from here before and after: note, ALL GOOD
+PASS 4 old values replaced, not doubled
+PASS 6 good: installs, token taken, public checks, ALL GOOD
+PASS 6 run again: already running, ALL GOOD, no token asked
+PASS 6 privacy page not live: refuses, nothing installed
+PASS 6 settings not in: refuses
+PASS 6 running server still old: refuses
+PASS 6 short token: refuses
+PASS 6 help pages open on public name: OFF, says undo
+PASS 7 good: ALL GOOD
+PASS 7 shop details open: OFF
+PASS 7 no tunnel: OFF
+PASS 8 undo: tunnel gone, settings back, ALL GOOD
+PASS 8 undo with nothing done: ALL GOOD, untouched
+PASS 2 not merged: OFF, nothing run
+PASS 2 merged: backup then update, ALL GOOD
+PASS 2 backup fails: no update
+27/27 cases pass

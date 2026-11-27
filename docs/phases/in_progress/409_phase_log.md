@@ -131,3 +131,52 @@ Pins moved, each because the privacy policy's own number moved:
 2026-11-27`; the built page says 1.2, the terms page 1.1) and
 `tests/test_phase334_legal_texts.py` (the services census names the
 Cloudflare line). With `tests/test_phase408_site.py`: 114 passed.
+
+## 2026-11-27 04:05 UTC — the app's half (Logic item 4), on `moto-diag-mobile`
+
+Branch `phase-409-app-half` from the app's `main` at `56eb617`, two
+commits, pushed (`9837670`):
+- **Item 1, the API copy** (`2d4f4de`): `api-schema/openapi.json` read
+  from this branch's server (FastAPI 0.136.3), `src/api-types.ts`
+  regenerated. A sorted comparison of the old and new snapshots shows one
+  change, `GET /v1/shops/{shop_id}` (summary, description, credential
+  headers). A fresh dump reorders 1942 lines and writes `999` as `999.0`,
+  both noise of the cloud's libraries, so the file keeps the old snapshot's
+  order and only that route changes.
+- **Item 2, the 100 MB message** (`9837670`): the upload hook turns a 413
+  that is not the server's ProblemDetail into `video-too-large-for-connection`;
+  the video screen says the video is over 100 MB, to record a shorter clip,
+  and that the video is still on the phone. The server's own 413 keeps its
+  size message. Two helpers moved to `videoCaptureHelpers.ts` so their tests
+  import them without the camera library. 8 new tests: 6 red on the old
+  code, 2 controls green. `tsc` clean; Jest **1368 passed**, 123 suites
+  (210C's 1360, +8).
+
+## 2026-11-27 04:20 UTC — the operator's blocks (Logic item 5)
+
+`409_blocks/`: eight blocks and a README with the order. Changed from PR
+98's six, each for a reason found here:
+- **The order:** the settings (help pages off, the host list) go in before
+  the tunnel, not after, so nothing is public before it is locked; the
+  tunnel block refuses until the settings are in.
+- **Step 1 measures** what Step 0 owed: every listener, Tailscale serve and
+  Funnel, uvicorn's version, each anonymous route's answer on loopback.
+- **Step 2 takes the backup** through the deploy skill's own
+  `remote.py backup pre409` before `server-update`, never a `motodiag`
+  command on live (F292).
+- **The settings block puts the old settings back** when the tailnet name
+  stops answering (if it answered before), the help pages still answer, or
+  a stranger's host name is still served, not only when loopback fails. A
+  wrong host list answers 400 on every name but loopback.
+- **The tunnel block** checks the running server refuses a shop's details
+  (401) before it installs, checks the download is the `cloudflared`
+  package, strips spaces from the pasted token, and checks the help pages
+  and the shop route on the public name after.
+- **The site check** hashes the page as `curl` writes it: a command
+  substitution would drop the page's last newline and never match.
+
+Tested: `bash -n` and `shellcheck -s bash -S warning`, clean on all eight;
+the stand-in harness in `409_blocks/standin/`: 27 of 27 and 6 of 6.
+
+`COLLECTED_TEST_FLOOR` 13321 → 13377, by a diff of collected ids against
+master `a238aa6`: +58 −2 (named in the floor's comment).

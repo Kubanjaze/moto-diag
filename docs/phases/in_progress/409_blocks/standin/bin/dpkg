@@ -1,0 +1,2 @@
+#!/bin/bash
+cp "$STPKG/cloudflared" "$STBIN/cloudflared"; exit 0

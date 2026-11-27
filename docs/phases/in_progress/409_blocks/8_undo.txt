@@ -1,0 +1,29 @@
+bash <<'EOF409H'
+set -u
+bad() { echo; echo "SOMETHING IS OFF: $1"; exit 1; }
+if command -v cloudflared >/dev/null 2>&1 && systemctl list-unit-files cloudflared.service < /dev/null 2>/dev/null | grep -q cloudflared; then
+  echo "Removing the tunnel service (it may ask for your Ubuntu password):"
+  sudo cloudflared service uninstall < /dev/null > /dev/null 2>&1 || true
+fi
+[ "$(systemctl is-active cloudflared 2>/dev/null)" != active ] || bad "the tunnel service is still running"
+echo "The tunnel is stopped and removed: the public name no longer reaches this machine."
+BK=~/.config/motodiag/server.env.pre409
+if [ -f "$BK" ]; then
+  install -m 600 "$BK" ~/.config/motodiag/server.env || bad "could not put the old settings back"
+  sudo /usr/bin/systemctl restart motodiag-api.service < /dev/null || bad "the server would not restart"
+  sleep 5
+  echo "The settings from before the public address are back (from $BK, which is kept)."
+else
+  echo "The settings step never ran, so the settings were not touched."
+fi
+ok=""
+for _ in $(seq 1 10); do
+  curl -fsS -m 5 http://127.0.0.1:8000/healthz < /dev/null 2>/dev/null | grep -q '"status":"ok"' && { ok=1; break; }
+  sleep 2
+done
+[ -n "$ok" ] || bad "the server does not answer healthy on this machine"
+echo "The server answers healthy on this machine. The tailnet way in was never touched."
+echo "Last, in Cloudflare: Networks, Tunnels, mekno-api, Delete."
+echo
+echo "ALL GOOD"
+EOF409H

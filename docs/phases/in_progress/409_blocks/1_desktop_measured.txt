@@ -1,0 +1,67 @@
+bash <<'EOF409A'
+set -u
+bad() { echo; echo "SOMETHING IS OFF: $1"; exit 1; }
+SRV=~/motodiag/server
+echo "1. The two services"
+for u in motodiag-api motodiag-payments; do
+  [ "$(systemctl is-active "$u")" = active ] || bad "$u is not running; nothing was changed"
+done
+echo "   the app server and the payments feed are running"
+curl -fsS -m 10 http://127.0.0.1:8000/healthz < /dev/null | grep -q '"status":"ok"' || bad "the server does not answer healthy on this machine; nothing was changed"
+echo "   the server answers healthy on this machine"
+echo "2. Everything listening on this machine, and on which address"
+ss -Hltn < /dev/null | awk '{print "   " $4}' | sort -u
+LISTEN=$(ss -Hltn 'sport = :8000' < /dev/null | awk '{print $4}' | sort -u | tr '\n' ' ')
+[ "$LISTEN" = "127.0.0.1:8000 " ] || bad "the server listens on '$LISTEN', not only on 127.0.0.1:8000"
+echo "   the app server listens only on 127.0.0.1:8000"
+OPEN=$(ss -Hltn < /dev/null | awk '{print $4}' | grep -Ev '^(127\.|\[::1\]|::1|100\.|\[fd7a:)' | grep -Ev '^(\*|0\.0\.0\.0|\[::\]):(22)$' || true)
+if [ -n "$OPEN" ]; then
+  echo "   NOTE, listening on an address other than this machine or the tailnet:"
+  printf '%s\n' "$OPEN" | sed 's/^/     /'
+fi
+echo "3. Tailscale's serve and Funnel"
+if command -v tailscale >/dev/null 2>&1; then
+  SERVE=$(tailscale serve status 2>&1 < /dev/null) || true
+  printf '%s\n' "$SERVE" | sed 's/^/   /'
+  FUN=$(tailscale funnel status 2>&1 < /dev/null) || true
+  if printf '%s\n' "$FUN" | grep -qi 'Funnel on'; then bad "Tailscale Funnel is on; it must stay off"; fi
+  echo "   Funnel is off"
+else
+  echo "   NOTE: the tailscale command is not on this Ubuntu"
+fi
+echo "4. The server's web libraries"
+"$SRV/.venv/bin/python" - <<'PY' || bad "the server's Python could not be read"
+import fastapi, uvicorn, starlette
+print(f"   uvicorn {uvicorn.__version__}, fastapi {fastapi.__version__}, starlette {starlette.__version__}")
+major, minor = (int(x) for x in uvicorn.__version__.split(".")[:2])
+if (major, minor) < (0, 30):
+    print("   NOTE: uvicorn is older than 0.30; it reads the caller's address differently")
+PY
+echo "5. What a caller with no login gets on this machine today"
+for p in /healthz /v1/version /v1/terms /docs /openapi.json /v1/shops/1; do
+  c=$(curl -s -o /dev/null -m 10 -w '%{http_code}' "http://127.0.0.1:8000$p" < /dev/null)
+  echo "   $p -> $c"
+done
+echo "6. Ready for the tunnel?"
+if [ -f "$SRV/src/motodiag/auth/login_throttle.py" ]; then
+  echo "   the server's code has the new protections"
+else
+  echo "   the server's code does not have the new protections yet (a later step brings them)"
+fi
+if command -v cloudflared >/dev/null 2>&1; then
+  echo "   NOTE: the tunnel program is already installed: $(cloudflared --version 2>&1 < /dev/null | head -1)"
+else
+  echo "   no tunnel program is installed yet"
+fi
+NS=$(curl -fsS -m 15 -H 'accept: application/dns-json' 'https://cloudflare-dns.com/dns-query?name=getmekno.com&type=NS' < /dev/null) || bad "could not look up getmekno.com's name servers"
+printf '%s' "$NS" | grep -qi 'ns.cloudflare.com' || bad "getmekno.com's names are not kept by Cloudflare"
+echo "   getmekno.com's names are kept by Cloudflare"
+if curl -fsS -m 15 https://getmekno.com/privacy/ < /dev/null | grep -qi 'Cloudflare</strong>, for the connection'; then
+  echo "   the privacy page names Cloudflare for the app"
+else
+  echo "   the privacy page does not name Cloudflare for the app yet (a later step puts it live)"
+fi
+echo
+echo "Nothing was changed. Paste everything above into the project thread."
+echo "ALL GOOD"
+EOF409A

@@ -1,0 +1,50 @@
+bash <<'EOF409E'
+set -u
+bad() { echo; echo "SOMETHING IS OFF: $1"; exit 1; }
+SRV=~/motodiag/server
+curl -fsS -m 15 https://getmekno.com/privacy/ < /dev/null | grep -q 'Cloudflare</strong>, for the connection' || bad "the live privacy page does not name Cloudflare for the app yet; nothing was changed"
+echo "The privacy page names Cloudflare for the app."
+[ -f "$SRV/src/motodiag/auth/login_throttle.py" ] || bad "the server's code does not have the new protections yet; nothing was changed"
+c=$(curl -s -o /dev/null -m 10 -w '%{http_code}' http://127.0.0.1:8000/v1/shops/1 < /dev/null)
+[ "$c" = 401 ] || bad "the running server still answers a shop's details without a login ($c): restart it on the new code first; nothing was changed"
+echo "The running server has the new protections."
+grep -q '^MOTODIAG_API_ALLOWED_HOSTS=.*api\.getmekno\.com' ~/.config/motodiag/server.env || bad "the server's public settings are not in yet: do the settings step first; nothing was changed"
+echo "The server's public settings are in."
+if ! command -v cloudflared >/dev/null 2>&1; then
+  TMP=$(mktemp -d)
+  curl -fsSL -m 180 -o "$TMP/cloudflared.deb" https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb < /dev/null || bad "could not download the tunnel program; nothing was changed"
+  dpkg-deb -f "$TMP/cloudflared.deb" Package 2>/dev/null | grep -qx cloudflared || bad "the download is not Cloudflare's tunnel program; nothing was installed"
+  echo "Installing Cloudflare's tunnel program (it asks for your Ubuntu password):"
+  sudo dpkg -i "$TMP/cloudflared.deb" < /dev/null > /dev/null || bad "could not install the tunnel program"
+  rm -rf "$TMP"
+fi
+echo "Tunnel program: $(cloudflared --version 2>&1 < /dev/null | head -1)"
+if [ "$(systemctl is-active cloudflared 2>/dev/null)" = active ]; then
+  echo "The tunnel service is already installed and running."
+else
+  printf "Paste the tunnel token from Cloudflare (it will not show), then press Enter: "
+  IFS= read -rs TOKEN < /dev/tty; echo
+  TOKEN=$(printf '%s' "$TOKEN" | tr -d '[:space:]')
+  [ "${#TOKEN}" -gt 100 ] || bad "that does not look like the token (it is very long); nothing was installed"
+  sudo cloudflared service install "$TOKEN" < /dev/null > /dev/null 2>&1 || { unset TOKEN; bad "Cloudflare did not take the token; copy it again from the tunnel's page"; }
+  unset TOKEN
+fi
+sleep 5
+[ "$(systemctl is-active cloudflared)" = active ] || bad "the tunnel service is not running"
+systemctl is-enabled cloudflared > /dev/null 2>&1 || bad "the tunnel will not start with the desktop"
+echo "The tunnel is running and starts with the desktop."
+ok=""
+for _ in $(seq 1 30); do
+  curl -fsS -m 10 https://api.getmekno.com/healthz < /dev/null 2>/dev/null | grep -q '"status":"ok"' && { ok=1; break; }
+  sleep 4
+done
+[ -n "$ok" ] || bad "api.getmekno.com does not answer healthy yet (check the tunnel's public hostname in Cloudflare, then paste this again)"
+echo "https://api.getmekno.com/healthz answers healthy, with a valid certificate."
+c=$(curl -s -o /dev/null -m 20 -w '%{http_code}' https://api.getmekno.com/docs < /dev/null)
+[ "$c" = 404 ] || bad "the API's help pages answer on the public name ($c); run the undo block now"
+c=$(curl -s -o /dev/null -m 20 -w '%{http_code}' https://api.getmekno.com/v1/shops/1 < /dev/null)
+[ "$c" = 401 ] || bad "a shop's details answer on the public name without a login ($c); run the undo block now"
+echo "On the public name: the help pages are off, and a shop's details need a login."
+echo
+echo "ALL GOOD"
+EOF409E

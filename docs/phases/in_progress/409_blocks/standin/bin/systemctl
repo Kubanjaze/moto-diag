@@ -1,0 +1,8 @@
+#!/bin/bash
+ST=${ST:?}
+case "$1" in
+  is-active) u=${2%.service}; if [ "$u" = cloudflared ]; then [ -f "$ST/cf_active" ] && echo active || echo inactive; else cat "$ST/active_$u" 2>/dev/null || echo active; fi ;;
+  is-enabled) [ -f "$ST/cf_active" ] ;;
+  restart) echo "restart $2" >> "$ST/log"; cp "$HOME/.config/motodiag/server.env" "$ST/running.env"; if [ -f "$ST/break_new" ] && grep -q ALLOWED_HOSTS "$ST/running.env"; then echo BROKEN >> "$ST/running.env"; fi ;;
+  list-unit-files) [ -f "$ST/cf_active" ] && echo "cloudflared.service enabled" ;;
+esac
