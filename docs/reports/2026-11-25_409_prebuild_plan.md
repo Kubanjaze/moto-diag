@@ -84,7 +84,7 @@ All of it is in files Phase 210's plan does not touch (210 writes `src/motodiag/
 
 ## Rule-1 stops: the operator's decisions (answered 2026-11-25)
 
-Kerwyn agreed all six on 2026-11-25, after his advisor read this branch's code. They are recorded here for 409's Step 0, which writes them as a K-decision on master; this page does not.
+The operator agreed all six on 2026-11-25, after the advisor read this branch's code. They are recorded here for 409's Step 0, which writes them as a K-decision on master; this page does not.
 
 1. **The way in:** Cloudflare Tunnel.
 2. **The name:** `api.getmekno.com`.
@@ -117,4 +117,4 @@ Self-serve sign-up (329), the App Store (410), moving the server off the desktop
 | Version | Date | What |
 |---|---|---|
 | 1.0 (prebuild draft) | 2026-11-25 | Written while 210 builds; the code on branch `prebuild-409-public-address`. Waits for 210's merge and the operator's go. |
-| 1.1 (prebuild draft) | 2026-11-25 | The six decisions answered (Kerwyn, after his advisor's read of the code), with their conditions: chunked uploads dated before 410 and 329, the app explains the 100 MB limit, the privacy page names Cloudflare, the app's API copy refreshed before the merge; the findings to file. |
+| 1.1 (prebuild draft) | 2026-11-25 | The six decisions answered (the operator, after the advisor's read of the code), with their conditions: chunked uploads dated before 410 and 329, the app explains the 100 MB limit, the privacy page names Cloudflare, the app's API copy refreshed before the merge; the findings to file. |

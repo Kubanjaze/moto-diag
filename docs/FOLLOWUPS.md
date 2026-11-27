@@ -7222,7 +7222,7 @@ Found by the 409 prebuild's audit (2026-11-25, `docs/reports/2026-11-25_409_preb
 
 Found in Phase 409 (2026-11-25 for manuals, 2026-11-27 for videos). Cloudflare Free refuses any request body over 100 MB at its edge with its own 413 page, before the server sees it. The server allows a manual up to 300 MB (`MANUAL_FILE_BYTES_CAP`, `src/motodiag/manuals/storage.py`) and a video up to 512 MB (`PER_FILE_BYTES_CAP`, `src/motodiag/api/routes/videos.py`); photos are 25 MB. In the app it is videos: about a minute of 1080p is over 100 MB; the app uploads no manuals. Over the tailnet nothing changes. The operator's answer 5 (2026-11-25): the 300 MB stays, and chunked uploads are dated, not open: they land before 410 (the App Store) and before 329's first self-serve shop, and each of those phases' Step 0 checks it. Meanwhile the app explains the limit in its own words (409's app half). What closes it: uploads sent in parts each under 100 MB, joined and checked on the server, for manuals and videos, with a test of a body over 100 MB in parts.
 
-### F311
+### F311 — CLOSED by privacy 1.2, live on getmekno.com since 2026-11-27 (Cloudflare deployment c87a6835, before the tunnel)
 
 **The privacy policy names Cloudflare only for the website, but behind the tunnel every app request passes through Cloudflare decrypted**
 

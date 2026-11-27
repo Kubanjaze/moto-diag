@@ -67,3 +67,17 @@ it shows `"status":"ok"`. Then `https://api.getmekno.com/docs`: it says
 - Not run anywhere real: they read the desktop's services, Tailscale,
   GitHub and Cloudflare, which the cloud cannot reach. The first real run
   is step 1, which changes nothing.
+
+## After the merge (2026-11-27, the advisor)
+
+Every step ran and ended ALL GOOD; the handoff
+(`docs/handoffs/2026-11-27_409_closed.md`) has the outcomes.
+- Cloudflare's tunnel screens had changed, so step 5 ran differently from
+  the text above, and the handoff's step 5 now gives the screens as they
+  were. The route was added before the connector. Its copy icon copies the
+  whole `sudo cloudflared service install <key>` line, with the key hidden
+  on screen.
+- `6_tunnel_installed.txt` was changed before it ran: it takes the last
+  word of what is pasted. The file here is the version that ran.
+- `cases3.py`'s "3a before the merge" assumes master's privacy page is 1.1.
+  Since the merge it fails on any clone.
