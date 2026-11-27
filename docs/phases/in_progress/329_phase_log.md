@@ -106,3 +106,27 @@ fault. The migration's scope file passes `deploy.py dryrun 329` against a
 scratch database at master's schema 92 (scope problems none, census 0);
 that scratch diff was deleted, the record is the advisor's dry run on
 live.
+
+## 2026-11-27 20:20 UTC — the advisor's review at 9566783: SOMETHING IS OFF
+
+The advisor's read-only review on the Mac (the operator pasted it into the
+project thread, 2026-11-27 20:13 UTC): `wholetree.sh --full` failed one
+test, five things to fix before merge, six to fix or file, and the
+stand-in harness does not run on macOS. Block 2a ran from the Mac and
+ended ALL GOOD (scope problems none; the two tables, three indexes and
+schema 93; backup `motodiag_pre329_20261127_145012.db`). The coordinator
+picked which of the six to fix now and which to file.
+
+## 2026-11-27 20:20 UTC — Bug fix #1: the sitemap's date for the home page
+
+- **Issue:** `tests/test_phase408_site.py::test_each_lastmod_is_the_date_its_page_last_changed`
+  failed in `--full`: `site/sitemap.xml` gave `index.html` 2026-11-21, but
+  `9fca798` changed `site/index.html` (the Individual plan's link) and
+  `site/support/index.html` on 2026-11-27.
+- **Root cause:** the sitemap is built from each page's last commit date
+  (`scripts/site_build.py sitemap`), and the build commit changed two
+  pages without rebuilding it. The test is in `--full` only, so the fast
+  whole-tree run before the commit did not see it.
+- **Fix:** `python scripts/site_build.py sitemap`.
+- **Files:** `site/sitemap.xml`.
+- **Verified:** `tests/test_phase408_site.py` 111 passed.
