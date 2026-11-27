@@ -6,7 +6,7 @@ Written 2026-10-12 by the advisor session that verified Phases 373–381. This c
 
 The fleet reads this table exactly (`.claude/skills/fleet/plan_order.py`): the first row whose ROADMAP row is not ✅ is the next mission. A row built by a builder session is waited for. A row that needs the operator is asked first, in plain English. Otherwise the fleet opens the mission's issue and a one-row pull request that marks its row 🚧, and the operator merges it by hand (K49). The list changes only by a dated entry under "Changes to the order" with a K-id, written on the operator's word (K48).
 
-As of 2026-11-26, K149.
+As of 2026-11-27, K153.
 
 | # | phase | kind | built by | needs the operator | entry |
 |---|---|---|---|---|---|
@@ -35,7 +35,7 @@ As of 2026-11-26, K149.
 | 23 | 372B | shop | builder | nothing | 2026-11-20, evening · K98 |
 | 24 | 210 | shop | fleet | nothing | Wave 1, item 6 · K48 |
 | 25 | 409 | shop | builder | a fork: how the internet reaches the server (a tunnel, a rented server in front, or another way; the record's rule is never the LAN and never Funnel, unless the operator asks) and its name; and an outside account for the way in and for the name's DNS | 2026-11-25 · K140, K137; 2026-11-26 · K149 |
-| 26 | 329 | shop | fleet | a fork: K101 keeps the support email for the first 10 shops and sign-ups off the Mekno server, where self-serve sign-up has to make the account; and where the sign-up form lives; and an outside account: the email service that sends the address check and the password reset | 2026-11-25 · K140, K137, K101 |
+| 26 | 329 | shop | builder | a fork: K101 keeps the support email for the first 10 shops and sign-ups off the Mekno server, where self-serve sign-up has to make the account; and where the sign-up form lives; and an outside account: the email service that sends the address check and the password reset | 2026-11-25 · K140, K137, K101; 2026-11-27 · K152, K153 |
 | 27 | 410 | shop | builder | an outside account: Apple's developer account and App Store Connect, the operator's own (K136); and a fork: the review account, and how Mekno answers Apple's rules on deleting an account in the app and on plans bought outside it | 2026-11-25 · K140, K137, K136 |
 | 28 | 344 | shop | fleet | nothing | Wave 1, item 5 · K48, K128 |
 
@@ -230,6 +230,14 @@ The operator's words:
   - **The operator's words:** "409: B".
   - **Row 25's builder is now `builder`.** The home desktop's main chat builds 409 from its draft pull request 98, with the operator's six answers of 2026-11-25, which stand; the advisor reviews it, and the operator merges. The fleet waits for it, and issue 104 keeps needs-hands until the session's close-out closes it.
   - **The order does not change:** 409, then 329, then 410, then 344.
+- **2026-11-27: 329 is built by a builder session, not the fleet (K153), and the operator's answers of 2026-11-25 are on master (K152).** After 409's merge the fleet opened issue 112 for 329 and asked what the plan says it needs.
+  - **The operator's words:**
+    - "go with your picks" (K153);
+    - the answers of 2026-11-25 to Step 0's questions 1, 3 and 4 (K152): the form on getmekno.com/signup, Resend as the email service, and pay first with a 14-day refund by hand.
+
+    K141 and K150 had already settled K101's part.
+  - **Row 26's builder is now `builder`.** The home desktop's main chat builds 329 from its draft pull request 99, the advisor reviews it, and the operator merges. The fleet waits for it, and issue 112 keeps needs-hands until the session's close-out closes it.
+  - **The order does not change:** 329, then 410, then 344.
 
 ## Where the ledger stands
 
