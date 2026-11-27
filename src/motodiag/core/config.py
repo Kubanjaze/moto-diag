@@ -4,9 +4,9 @@ import os
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
-from pydantic import field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Four levels up from src/motodiag/core/config.py is the repo root — in a
@@ -88,6 +88,11 @@ STRIPE_RETURN_URL_FIELDS = (
     "connect_return_url",
     "connect_refresh_url",
 )
+
+
+#: Phase 329: the email services the server can send through. The one
+#: definition; ``motodiag.auth.email_sender`` imports it.
+EmailProvider = Literal["fake", "resend"]
 
 
 class Settings(BaseSettings):
@@ -280,6 +285,32 @@ class Settings(BaseSettings):
     privacy_url: str = "https://getmekno.com/privacy/"
     terms_required: bool = False
     checkout_terms_consent: bool = False
+
+    # Phase 329 prebuild (the operator, 2026-11-25): self-serve sign-up from
+    # the website's form, pay first; Resend sends the emails once its key is
+    # in the settings file (typed by the operator, never in chat). Both
+    # switches ship off: the first 10 shops are set up by hand (K101).
+    #: Shops' self-serve sign-up (K141: only after shop 10). Off, a shop
+    #: plan's sign-up is 404.
+    self_serve_signup_enabled: bool = False
+    #: Individuals' self-serve sign-up (K150: when 329 ships). Off, an
+    #: individual's sign-up is 404. Both off, every /v1/signup route is 404.
+    individual_signup_enabled: bool = False
+    #: Off, every /v1/auth/password-reset route is 404.
+    password_reset_email_enabled: bool = False
+    #: "fake" (the stand-in, sends nothing) or "resend" (Phase 329, K152).
+    email_provider: EmailProvider = "fake"
+    email_from: str = "Mekno <support@getmekno.com>"
+    #: Replies to every email, and the stuck paid sign-up's notice, go here.
+    email_reply_to: str = "support@getmekno.com"
+    #: Resend's key, typed into the settings file by the operator himself,
+    #: never in chat (K152). Kept out of the settings' repr.
+    resend_api_key: str = Field(default="", repr=False)
+    #: Sign-up and reset emails one address may be sent in an hour (329).
+    signup_emails_per_address_per_hour: int = 5
+    #: The website the sign-up and reset pages live on; the routes send the
+    #: browser back to its pages.
+    signup_site_url: str = "https://getmekno.com"
 
     # Rate limiting (Phase 176+)
     rate_limit_anonymous_per_minute: int = 30

@@ -1,0 +1,73 @@
+bash <<'EOF329G'
+set -u
+bad() { echo; echo "SOMETHING IS OFF: $1"; exit 1; }
+ENVF=~/.config/motodiag/server.env
+DB=~/motodiag/live/motodiag.db
+CODE=~/motodiag/server
+API=http://127.0.0.1:8000
+healthy() { curl -fsS -m 10 "$API/healthz" < /dev/null 2>/dev/null | grep -q '"status":"ok"'; }
+setting() { grep -E "^$1=" "$ENVF" | tail -n 1 | cut -d= -f2-; }
+[ -f "$ENVF" ] || bad "the server's settings file is missing; nothing was changed"
+[ -f "$CODE/src/motodiag/api/routes/signup.py" ] || bad "the server's code has no sign-up yet: do the server step first; nothing was changed"
+v=$(python3 -c "import sqlite3,sys; c=sqlite3.connect('file:'+sys.argv[1]+'?mode=ro',uri=True); print(c.execute('SELECT MAX(version) FROM schema_version').fetchone()[0])" "$DB" < /dev/null 2>/dev/null)
+[ "${v:-0}" -ge 93 ] || bad "the live database does not have the sign-up's tables yet (it is at ${v:-unknown}): do the database step first; nothing was changed"
+case "$(setting MOTODIAG_STRIPE_PRICE_INDIVIDUAL)" in price_*) ;; *) bad "the settings have no Stripe price for the Individual plan; nothing was changed";; esac
+healthy || bad "the server does not answer healthy on this machine; nothing was changed"
+echo "Ready: the new code, the new tables, the Individual price, the server healthy."
+BK="$ENVF.pre329"
+if [ -f "$BK" ]; then
+  echo "The settings from before the first run are already kept at $BK (kept as they are)."
+else
+  cp -p "$ENVF" "$BK" || bad "could not copy the settings; nothing was changed"
+  echo "Old settings kept at $BK"
+fi
+echo
+echo "Paste Resend's key (it starts with re_), then press Enter. It is not shown as you paste."
+read -r -s LINE < /dev/tty
+echo
+KEY=${LINE##* }
+case "$KEY" in re_?*) ;; *) KEY=""; bad "that does not look like a Resend key (it should start with re_); nothing was changed";; esac
+case "$KEY" in *[!A-Za-z0-9_]*) KEY=""; bad "the key has characters a Resend key does not have; nothing was changed";; esac
+RUNBK=$(mktemp)
+cp -p "$ENVF" "$RUNBK" || bad "could not copy the settings; nothing was changed"
+NEW=$(mktemp)
+grep -vE '^(MOTODIAG_EMAIL_PROVIDER|MOTODIAG_RESEND_API_KEY|MOTODIAG_INDIVIDUAL_SIGNUP_ENABLED|MOTODIAG_SELF_SERVE_SIGNUP_ENABLED|MOTODIAG_PASSWORD_RESET_EMAIL_ENABLED)=' "$ENVF" > "$NEW"
+{
+  echo "MOTODIAG_EMAIL_PROVIDER=resend"
+  echo "MOTODIAG_RESEND_API_KEY=$KEY"
+  echo "MOTODIAG_INDIVIDUAL_SIGNUP_ENABLED=true"
+  echo "MOTODIAG_PASSWORD_RESET_EMAIL_ENABLED=true"
+  echo "MOTODIAG_SELF_SERVE_SIGNUP_ENABLED=false"
+} >> "$NEW"
+KEY=""; LINE=""
+put_back() {
+  install -m 600 "$RUNBK" "$ENVF"
+  sudo /usr/bin/systemctl restart motodiag-api.service motodiag-payments.service < /dev/null
+  rm -f "$RUNBK"
+  bad "$1; the old settings are back and both services were restarted on them"
+}
+install -m 600 "$NEW" "$ENVF"; rm -f "$NEW"
+echo "Restarting the app server and the payments feed on the new settings (it may ask for your Ubuntu password):"
+sudo /usr/bin/systemctl restart motodiag-api.service motodiag-payments.service < /dev/null || put_back "the services would not restart"
+ok=""
+for _ in $(seq 1 20); do
+  sleep 2
+  healthy && { ok=1; break; }
+done
+[ -n "$ok" ] || put_back "the server did not come back healthy on the new settings"
+systemctl is-active --quiet motodiag-payments.service || put_back "the payments feed did not come back"
+echo "The server and the payments feed are running on the new settings."
+loc=$(curl -s -o /dev/null -D - -m 10 -X POST -d tier=nope "$API/v1/signup" < /dev/null | tr -d '\r' | awk 'tolower($1)=="location:"{print $2}')
+[ "$loc" = "https://getmekno.com/signup/problem/#plan" ] || put_back "the Individual sign-up did not turn on (it answered: $loc)"
+echo "The Individual plan's sign-up is on."
+c=$(curl -s -o /dev/null -m 10 -w '%{http_code}' -X POST -d tier=shop "$API/v1/signup" < /dev/null)
+[ "$c" = 404 ] || put_back "the shops' sign-up answered $c: it must stay off until after shop 10"
+echo "The shops' sign-up stays off (shops keep coming through the support email)."
+c=$(curl -s -o /dev/null -m 10 -w '%{http_code}' "$API/v1/auth/password-reset/confirm?code=x" < /dev/null)
+[ "$c" = 200 ] || put_back "the password reset by email did not turn on ($c)"
+echo "The password reset by email is on."
+rm -f "$RUNBK"
+echo
+echo "Emails go through Resend now. Next: the website upload, which puts the forms up."
+echo "ALL GOOD"
+EOF329G

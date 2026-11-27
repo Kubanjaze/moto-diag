@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F313** (this file). The
+At the time of writing the highest assigned is **F321** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -7241,3 +7241,59 @@ Found in Phase 409's Step 0 (2026-11-27), in a fresh cloud install. `pip install
 **The sign-in throttle keeps two entries for every name ever tried, and never drops them**
 
 Found by the advisor's read-only review of Phase 409 (2026-11-27) and confirmed in the code. `LoginThrottle._prune` (`src/motodiag/auth/login_throttle.py`) calls `self._fails.setdefault(key, deque())`, and `check()` prunes both the pair key and the name key before any failure is recorded, so every new name tried at the sign-in adds two dictionary entries, even with the right password. `record_success` removes only the pair entry; nothing removes the name entry, and an emptied deque is never deleted. What it affects: memory in the server process grows by two small entries per distinct name tried, without bound, until the server restarts. Once the public address is on (409), anyone on the internet can choose the names. Not measured: how many names it would take to matter. The deques stay empty, so the throttle's answers are unaffected. Low. What closes it: `_prune` reads with `get` and creates nothing, `record_failure` creates; empty deques are dropped (on prune, or by a size-capped sweep); a test that a thousand distinct names tried leave the dictionary empty.
+
+### F314
+
+**330's wizard makes a shop owned by user 1 in `shops.owner_user_id`; the self-serve sign-up makes it owned by its real owner**
+
+Found in Phase 329's Step 0 (2026-11-27, `docs/phases/in_progress/329_step0.md` item 3). `motodiag shop onboard run` (`src/motodiag/cli/shop_onboard.py`, `do_shop`) calls `create_shop` without `owner_user_id`, whose default is 1, the system user; the owner exists only as the `shop_members` row. The sign-up (`complete_signup`, `src/motodiag/auth/signup_repo.py`) passes the new owner's id. Access is decided by `shop_members` alone (`has_shop_permission`), so nothing behaves differently today. What it affects: `UNIQUE(owner_user_id, name)` makes names unique across every hand-made shop but not across self-serve shops, and any later code that reads `shops.owner_user_id` would see two meanings. Low. What would close it: the wizard passes the owner's id once the owner's login is made (the wizard makes the shop first, so the order changes), or the column is documented as "the creator" and a test pins each path's value.
+
+
+### F315
+
+**A sign-up holds its username for 30 days before anyone proves an email address**
+
+Found in the review of Phase 329 (2026-11-27). `signup_form` (`src/motodiag/api/routes/signup.py`) creates the sign-up row at once, and `username_taken` (`src/motodiag/auth/signup_repo.py`) counts any sign-up not yet completed as holding its name. The row stays until `purge_stale` deletes it, 30 days on (`UNPAID_KEEP_S`). So a script can post the form with names it wants to keep from others, using addresses it does not own, and every name stays taken for a month; the per-address cap (5 an hour) slows one address, not many. Bug fix #6 freed the name only when the email fails to send. What it affects: names on the public form only; no login is made and nothing is charged. Low until sign-up is public and someone is hostile. What would close it: a pending sign-up whose link was never opened holds its name for a short time (an hour, the link's life) and then yields it, and a proven but unpaid one keeps it for the 30 days; with a test that a second sign-up gets the name after the first one's link expires unopened.
+
+### F316
+
+**The sign-up and reset forms can tell a stranger whether an address has an account**
+
+Found in the review of Phase 329 (2026-11-27). Both forms answer the same pages for a known and an unknown address, but two things still differ. The per-address cap is shared by sign-ups and resets (`emails_sent_to`), and only an address with a login or a sign-up has codes to count, so after five resets to an address the reset form behaves the same either way while the sign-up form for that address answers "too many" only when the address is real. And the reset form waits on Resend (up to `TIMEOUT_S`, 10 s, in `src/motodiag/auth/email_sender.py`) only for an address with a login, so its answer comes measurably later for a real account. What it affects: an outsider can learn that an address is a customer's; nothing more. Low. What would close it: the reset form sends after answering (a background task) so its timing is the same, and the cap counts attempts per address whether or not the address is known; with a test that times both answers and a test of the cap for an unknown address.
+
+### F317
+
+**The sign-up's emailed link falls back to the request's Host header, and the start check skips the address when share links are off**
+
+Found in the review of Phase 329 (2026-11-27). `_api_base` (`src/motodiag/api/routes/signup.py`) builds the link in the address-check and reset emails from `settings.public_base_url`, or, when that is empty, from `request.base_url`, which comes from the Host header the client sent. `startup_public_url_problems` (`src/motodiag/core/public_url.py`) checks `MOTODIAG_PUBLIC_BASE_URL` only while share links are on (Phase 402, K74). Live today has the address set and `ALLOWED_HOSTS` limited, so nothing is wrong on live. What it affects: a server with sign-up or the email reset on, share links off and no public address would put a Host of the sender's choosing into a real email carrying a code (a link to someone else's site). What would close it: `_api_base` refuses (no email sent) without a public address, and the start check also runs the address check when the self-serve sign-up, the Individual sign-up or the email reset is on; with a test of each.
+
+### F318
+
+**The welcome and stuck-sign-up emails are sent inside the async Stripe webhook route, holding the server's event loop**
+
+Found in the review of Phase 329 (2026-11-27). `stripe_webhook` (`src/motodiag/api/routes/billing.py`) is `async def` and calls `dispatch_event` directly; for a sign-up's paid subscription that reaches `_complete_signup` (`src/motodiag/billing/webhook_handlers.py`), which sends the welcome email (and on failure the stuck notice) through `urllib`, synchronously, with a 10 s timeout. While Resend is slow, every other request on that worker waits. Live receives Stripe's events through the payments feed's poll (`src/motodiag/payments/event_feed.py`), a separate process, so the API is not held there today; the webhook route is the path when Stripe posts to the server. What would close it: the route runs `dispatch_event` in a thread (`run_in_threadpool`), or the emails are queued and sent after the answer; with a test that a slow sender does not hold a second request.
+
+### F319
+
+**Two presses of the sign-up's payment button at once open two payable Stripe checkouts, and a second subscription on a completed sign-up passes silently**
+
+Found in the advisor's re-check of Phase 329 at 42b4c3d (2026-11-27); filed by K155, to be fixed in a follow-up (ROADMAP 329B) before sign-up is announced. In `signup_confirm` (`src/motodiag/api/routes/signup.py`, the checkout block after bug fix #4), two `POST /v1/signup/confirm` at the same moment (a double-click, two tabs) both read no `stripe_checkout_session_id`, each create a checkout, and the last `set_checkout_session` wins; both pages can be paid. Nothing catches the second payment: `complete_signup` (`src/motodiag/auth/signup_repo.py`) returns early for a sign-up already completed, so a second active subscription for one sign-up is stored with no notice to anyone. What it affects: a person can be charged twice, and only Stripe's dashboard shows it. Low at launch scale; real once sign-up is public. What would close it: claim the sign-up's checkout atomically (`UPDATE signups SET stripe_checkout_session_id = 'pending' WHERE id = ? AND stripe_checkout_session_id IS NULL`, and only the claimant creates the checkout; the other waits for or reads the one made), and a second subscription for a completed sign-up emails support (`stuck_signup_email`) rather than passing; with a test of two presses at once and of a second subscription.
+
+### F320
+
+**The email cap's count query scans every sign-up and login for each recent code, and a percent-encoded code would slip past the log mask**
+
+Found in the advisor's re-check of Phase 329 at 42b4c3d (2026-11-27); filed by K155, to be fixed in a follow-up (ROADMAP 329B) before sign-up is announced. `emails_sent_to` (`src/motodiag/auth/signup_repo.py`, bug fix #8) joins `c.subject = 'signup:' || s.id` and `c.subject = 'user:' || u.id`; an expression on the joined column cannot use `signups`' or `users`' primary key, so every sign-up or reset post scans both tables once per code issued in the last hour. What it affects: time per form post grows with signups x users x the hour's codes; nothing at today's size. What would close it: join on `s.id = CAST(substr(c.subject, 8) AS INTEGER)` and `u.id = CAST(substr(c.subject, 6) AS INTEGER)`, checked with `EXPLAIN QUERY PLAN` in a test that it reads by key.
+
+Nit under it (K155): `SESSION_TOKEN_RE` (`src/motodiag/cli/serve.py`) matches `md[sc]_` literally, so a code requested percent-encoded (`mdc%5F...`) would be written to the access log unmasked. Our emails never encode it; a hand-made request could. Close by also matching `md[sc]%5[Ff]`, with a test.
+
+### F321
+
+**A failed address-check email sends the person to a page that says the payment page could not be reached**
+
+Found in the advisor's re-check of Phase 329 at 42b4c3d (2026-11-27); filed by K155, to be fixed in a follow-up (ROADMAP 329B) before sign-up is announced. Since bug fix #6, `signup_form` (`src/motodiag/api/routes/signup.py`) discards the sign-up when the email fails and answers `_problem(settings, "later")`; the site's `#later` message (`site/signup/problem/index.html`) reads "We couldn't reach the payment page just now. Please open the link in your email again in a few minutes." No email went out and the sign-up is gone, so the advice is wrong. What it affects: a person whose email failed waits for an email that never comes. What would close it: its own anchor, for example `#not-sent`, "We couldn't send the email just now. Please fill in the form again in a few minutes.", on the site and in the staged copy, with the site tests' anchor list.
+
+Nits under it (K155):
+- `forget_form` keeps `shop_name` on a completed sign-up while its docstring says it keeps only the username, plan and ids. The shop's name is also the shop row's, so keeping it is harmless; the docstring, or the blanking, should say the same as the other.
+- An `invoice.paid` that arrives before its subscription is active is dropped without a retry (`_handle_subscription_invoice`, `src/motodiag/billing/webhook_handlers.py`, after bug fix #7). The subscription's own event still completes the sign-up, so nothing is lost today; a retry or a test that the later event always comes would settle it.
+

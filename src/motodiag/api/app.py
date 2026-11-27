@@ -74,6 +74,34 @@ def create_app(
             "MOTODIAG_STRIPE_WEBHOOK_SECRET), or run with "
             "MOTODIAG_ENV=dev if this is a local session."
         )
+    # Phase 329 prebuild: a sign-up or a reset by email that would only
+    # reach the stand-in sender's memory is a switch turned on too soon.
+    if (
+        app_settings.env == Environment.PROD
+        and app_settings.email_provider == "fake"
+        and (app_settings.self_serve_signup_enabled
+             or app_settings.individual_signup_enabled
+             or app_settings.password_reset_email_enabled)
+    ):
+        raise RuntimeError(
+            "Refusing to start in env=prod with self-serve sign-up or the "
+            "password reset by email on while email_provider='fake': no "
+            "email would leave the server. Set the email service first, "
+            "or turn MOTODIAG_SELF_SERVE_SIGNUP_ENABLED, "
+            "MOTODIAG_INDIVIDUAL_SIGNUP_ENABLED and "
+            "MOTODIAG_PASSWORD_RESET_EMAIL_ENABLED off."
+        )
+    # Phase 329: Resend chosen, and its key never typed in.
+    if (
+        app_settings.env == Environment.PROD
+        and app_settings.email_provider == "resend"
+        and not app_settings.resend_api_key
+    ):
+        raise RuntimeError(
+            "Refusing to start in env=prod with email_provider='resend' and "
+            "no MOTODIAG_RESEND_API_KEY: type the key into the settings "
+            "file, or set MOTODIAG_EMAIL_PROVIDER=fake."
+        )
 
     app = FastAPI(
         title="MotoDiag API",
@@ -157,6 +185,7 @@ def create_app(
     from motodiag.api.routes.share import router as share_router
     from motodiag.api.routes.shop_mgmt import router as shop_mgmt_router
     from motodiag.api.routes.shops import router as shops_router
+    from motodiag.api.routes.signup import router as signup_router
     from motodiag.api.routes.terms import router as terms_router
     from motodiag.api.routes.time_tracking import router as time_tracking_router
     from motodiag.api.routes.transcripts import router as transcripts_router
@@ -182,6 +211,7 @@ def create_app(
     app.include_router(transcripts_router, prefix="/v1")  # Phase 195 — voice transcripts
     app.include_router(push_router, prefix="/v1")  # Phase 199 — push tokens
     app.include_router(share_router, prefix="/v1")  # Phase 200 — share links
+    app.include_router(signup_router, prefix="/v1")  # Phase 329 — sign-up, off by default
     app.include_router(diagnostics_router, prefix="/v1")  # field telemetry
     app.include_router(parts_router, prefix="/v1")  # Phase 201 — parts ordering
     app.include_router(time_tracking_router, prefix="/v1")  # Phase 202 — labor timer

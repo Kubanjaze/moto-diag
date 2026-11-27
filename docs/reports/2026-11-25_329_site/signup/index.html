@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Start your shop's account · Mekno</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/forms.css">
+</head>
+<body>
+  <header class="site">
+    <div class="wrap">
+      <a class="brand" href="/" aria-label="Mekno home">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#e8590c"/><path d="M14 46V20l9 0 9 13 9-13 9 0v26h-8V31l-10 14-10-14v15z" fill="#fff"/></svg>
+        mekno
+      </a>
+    </div>
+  </header>
+  <main class="page">
+    <div class="wrap prose">
+      <h1>Start your shop's account</h1>
+      <p>The Shop plan is $99 a month, for up to 10 people at one shop. You pay first, by card, through Stripe. Within 14 days of paying you can ask for your money back by emailing <a href="mailto:support@getmekno.com">support@getmekno.com</a>.</p>
+      <form class="form" method="post" action="https://api.getmekno.com/v1/signup">
+        <input type="hidden" name="tier" value="shop">
+        <p><label>Your email<br><input type="email" name="email" required maxlength="254" autocomplete="email"></label></p>
+        <p><label>Your name<br><input type="text" name="owner_name" required maxlength="120" autocomplete="name"></label></p>
+        <p><label>The shop's name<br><input type="text" name="shop_name" required maxlength="120" autocomplete="organization"></label></p>
+        <p><label>A username to sign in with (3 to 32 lowercase letters, numbers, dots, dashes or underscores)<br><input type="text" name="username" required minlength="3" maxlength="32" pattern="[a-z0-9][a-z0-9_.\-]{2,31}" autocomplete="username" autocapitalize="none"></label></p>
+        <p><label>A password (8 characters or more)<br><input type="password" name="password" required minlength="8" autocomplete="new-password"></label></p>
+        <p><label><input type="checkbox" name="accept_terms" value="yes" required> I accept the <a href="/terms/">terms</a> and have read the <a href="/privacy/">privacy policy</a>.</label></p>
+        <p><button class="button" type="submit">Continue</button></p>
+      </form>
+      <p>We send you an email with a link. The link confirms your address and takes you to payment. Your account and your shop are made once the payment goes through.</p>
+      <p>Just your own bikes? <a href="/signup/individual/">Start an individual account</a>. More than one shop? Email <a href="mailto:support@getmekno.com">support@getmekno.com</a> and we will work out a plan with you.</p>
+    </div>
+  </main>
+  <footer class="site">
+    <div class="wrap">
+      <span>© 2026 Mekno</span>
+      <span><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="/support/">Support</a></span>
+    </div>
+  </footer>
+</body>
+</html>

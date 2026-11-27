@@ -39,7 +39,12 @@ BUILT = set(site_build.LEGAL_PAGES)
 #: Written by hand in this phase, and by the two scripts.
 CHANGED = {"_headers", "index.html", "robots.txt", "styles.css", "support/index.html",
            "sitemap.xml", "og.png", "logo.png"}
-SERVED = set(PINNED) | BUILT | CHANGED
+#: Phase 329 (K152, K150): the Individual plan's sign-up and the password
+#: reset by email. The shops' form stays staged outside site/ (K141).
+SIGNUP = {"forms.css", "signup/individual/index.html", "signup/check-email/index.html",
+          "signup/paid/index.html", "signup/problem/index.html", "reset/index.html",
+          "reset/sent/index.html", "reset/done/index.html", "reset/problem/index.html"}
+SERVED = set(PINNED) | BUILT | CHANGED | SIGNUP
 #: The founder's photo, once the operator gives it (K103, K110).
 OPTIONAL = {"founder.jpg"}
 #: 408_step0.md S0-2: the five headers the site sent on 2026-11-21, byte for byte.
@@ -55,6 +60,13 @@ HEADERS = (
     # Item 2 and K114: a year, no includeSubDomains, no preload.
     "  Strict-Transport-Security: max-age=31536000\n"
 )
+#: Phase 329: only the sign-up's and the reset's pages may post, and only to
+#: the API, whose answer is a redirect back to the site.
+FORM_CSP = CSP.replace("form-action 'none'",
+                       "form-action https://api.getmekno.com https://getmekno.com")
+HEADERS_329 = HEADERS + "".join(
+    f"\n{path}\n  ! Content-Security-Policy\n  Content-Security-Policy: {FORM_CSP}\n"
+    for path in ("/signup/*", "/reset/*"))
 ATTRIBUTION = ("Adapted from Basecamp's policies (https://github.com/basecamp/policies), "
                "used under the Creative Commons Attribution 4.0 International licence (CC BY 4.0).")
 
@@ -136,7 +148,23 @@ def test_the_legal_readmes_publishing_names_site():
 
 # ------------------------------------------------------------- item 2: HSTS
 def test_headers_are_the_five_of_today_and_hsts_alone():
-    assert _read("_headers") == HEADERS
+    assert _read("_headers") == HEADERS_329
+
+
+def test_the_shops_form_is_not_published():
+    """K141: shops sign up through the support email until after shop 10."""
+    assert not (SITE / "signup" / "index.html").exists()
+    for name in sorted(SIGNUP):
+        assert 'href="/signup/"' not in _read(name), name
+
+
+def test_every_link_on_a_signup_page_reaches_a_published_page():
+    pages = _served()
+    for name in sorted(SIGNUP - {"forms.css"}):
+        for href in __import__("re").findall(r'href="(/[^"#]*)"', _read(name)):
+            target = href.lstrip("/")
+            assert (target in pages or f"{target}index.html" in pages
+                    or target == ""), (name, href)
 
 
 # ----------------------------------------------------------- reading the pages
@@ -214,7 +242,15 @@ def test_no_script_runs_and_nothing_is_collected(page):
         assert attrs.get("type") == "application/ld+json", f"{page}: a script that runs"
         assert "src" not in attrs, page
     names = [tag for tag, _a in t.tags]
-    assert "form" not in names and "iframe" not in names, page
+    assert "iframe" not in names, page
+    # Phase 329 (K152): only the two sign-up and reset forms, each a plain
+    # post to the API's address, which its path rule alone allows.
+    forms = [a for tag, a in t.tags if tag == "form"]
+    if page in {"signup/individual/index.html", "reset/index.html"}:
+        assert len(forms) == 1 and forms[0].get("method") == "post", page
+        assert forms[0].get("action", "").startswith("https://api.getmekno.com/v1/"), page
+    else:
+        assert forms == [], page
     for tag, a in t.tags:
         assert not [k for k in a if k.lower().startswith("on")], f"{page}: <{tag}> has an on* attribute"
     assert not re.search(r"javascript\s*:", _read(page), re.I), page

@@ -20,6 +20,15 @@ through the tunnel, in the line the operator approved word for word on
 one accepts again; the policy's line goes live on getmekno.com before the
 tunnel does.
 
+The privacy policy is at **version 1.3, of 2026-11-27** (Phase 329, K152):
+Resend named in "The services it goes to", for the sign-up's and the
+password reset's emails; sign-ups in "What we keep", deleted when not paid
+within 30 days; and "The website" says its forms send what is typed to
+Mekno's server. Three lines the operator approved word for word on
+2026-11-27. The terms stay at 1.1 (the refund line waits for the next terms
+version, K152), so `TERMS_VERSION` is unchanged and no one accepts again.
+It goes live on getmekno.com before sign-up opens.
+
 ## The template
 
 - **Name:** Basecamp's policies (the Terms of Service and the Privacy

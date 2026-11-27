@@ -35,12 +35,15 @@ import click
 # string, but the line is written before the route runs, so the filter
 # below is attached to both loggers. It is passed in `log_config` so that
 # every worker, where uvicorn runs its own `dictConfig`, installs it.
-SESSION_TOKEN_RE = re.compile(r"mds_[A-Za-z0-9_\-]*")
+#: Phase 329 bug fix #2: an emailed one-time code (``mdc_``, in a sign-up's
+#: or a reset's link, so in the access line's query string) is masked too.
+SESSION_TOKEN_RE = re.compile(r"md[sc]_[A-Za-z0-9_\-]*")
 REDACTED = "[session token redacted]"
 
 
 class RedactSessionTokens(logging.Filter):
-    """Replace any ``mds_`` token in a record's message and arguments."""
+    """Replace any ``mds_`` token or ``mdc_`` code in a record's message
+    and arguments."""
 
     def filter(self, record: logging.LogRecord) -> bool:
         if isinstance(record.msg, str):

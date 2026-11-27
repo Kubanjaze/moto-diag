@@ -695,7 +695,33 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: Phase 409 bug fix #2 (the reader's User-Agent): +1 -0, one new test in
 #: test_phase409_public_condition.py (29 -> 30), that the reader sends its
 #: own name on the wire and never Python-urllib. Measured: 13378.
-COLLECTED_TEST_FLOOR = 13378
+#:
+#: Phase 329 prebuild (draft PR 99, rebased on 409): +79 -0, a diff of
+#: collected ids against master: test_phase329_email_codes.py 16 (the
+#: one-time codes and the stand-in sender) and test_phase329_signup_flow.py
+#: 63 (the sign-up, K150's individual plan, the switches, the reset).
+#: test_phase409_public_hardening.py keeps its count: its list of open
+#: routes gains the six sign-up and reset routes. Floor: 13378 + 79.
+#:
+#: Phase 329 (the build on PR 99): +81 -0 more, a diff of collected ids
+#: against master at 135bde2 (13378 -> 13538, +160 in all with the
+#: prebuild's 79): test_phase329_resend_and_limits.py 38 (the Resend sender,
+#: email failures, the per-address cap, the 30-day purge, the cancel address,
+#: form-action through every redirect), test_phase408_site.py 42 (its
+#: per-page tests over the nine published sign-up and reset files, and two
+#: new: the shops' form unpublished, every sign-up link resolving) and
+#: test_phase272_gate15.py 1 (migration 093 gives 092 a successor to peel).
+#: Floor: 13538.
+#:
+#: Phase 329, the advisor's review (bug fixes #1-#8 and the end-to-end
+#: test): +34 -2, a diff of collected ids against 9566783 (13538 -> 13570):
+#: test_phase329_resend_and_limits.py +31 -1 (codes kept out of the log,
+#: the username's case, one payment, privacy kept, an unfinished sign-up's
+#: invoice, one mailbox one cap, one sign-up end to end; the failed-send
+#: test renamed for what it now checks) and test_phase329_signup_flow.py
+#: +3 -1 (two capitals cases in the bad-field list; the third new id and
+#: the one gone are its password case, renumbered). Floor: 13570.
+COLLECTED_TEST_FLOOR = 13570
 
 
 def _collected_count() -> int:

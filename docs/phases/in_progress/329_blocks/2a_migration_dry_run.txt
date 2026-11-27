@@ -1,0 +1,29 @@
+bash <<'EOF329B'
+set -u
+bad() { echo; echo "SOMETHING IS OFF: $1"; exit 1; }
+BRANCH=phase-329-self-serve-signup
+REPO=~/Projects/moto-diag
+PY="$REPO/.venv/bin/python"
+RM="$REPO/.claude/skills/deploy/remote.py"
+{ [ -x "$PY" ] && [ -f "$RM" ]; } || bad "this is not the Mac with the project (run it on the Mac, in Terminal); nothing was changed"
+cd "$REPO" || bad "no project folder"
+[ -z "$(git status --porcelain)" ] || bad "the project folder on this Mac has changes that are not committed; nothing was changed"
+git fetch -q origin "$BRANCH" < /dev/null || bad "could not reach GitHub; nothing was changed"
+git checkout -q "$BRANCH" < /dev/null && git merge -q --ff-only "origin/$BRANCH" < /dev/null || bad "could not put this Mac on the sign-up branch; nothing was changed"
+[ "$(git rev-parse HEAD)" = "$(git rev-parse "origin/$BRANCH")" ] || bad "this Mac's branch is not the pushed one"
+echo "1 of 2: the dry run on a copy of live, on the home desktop (live is only read)"
+"$PY" "$RM" dryrun 329 < /dev/null || bad "the dry run did not finish (the lines above say why); live was not changed"
+echo "2 of 2: the dry run's list, fetched to this Mac"
+"$PY" "$RM" fetch 329 dryrun < /dev/null || bad "the list could not be fetched; live was not changed"
+F=docs/phases/in_progress/329_dryrun_diff.md
+[ -f "$F" ] || bad "the list is not in the project folder"
+grep -q '^- \*\*Scope problems:\*\* `none`' "$F" || bad "the dry run found changes outside what the phase said it would change: do not apply; paste this output in the project thread"
+for t in "table signups" "table one_time_codes"; do
+  grep -q "schema added: $t" "$F" || bad "the list does not add $t"
+done
+grep -q 'schema changed\|schema removed' "$F" && bad "the list changes or removes something that exists: do not apply"
+echo
+echo "The dry run adds two empty tables (sign-ups and their email codes) and changes nothing that exists."
+echo "The list is $F, for the advisor to commit and push on the branch."
+echo "ALL GOOD"
+EOF329B

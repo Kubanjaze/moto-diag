@@ -1,0 +1,23 @@
+bash <<'EOF329H'
+set -u
+bad() { echo; echo "SOMETHING IS OFF: $1"; exit 1; }
+cd ~/Projects/moto-diag || bad "there is no moto-diag folder in Projects on this Mac"
+git fetch -q origin master < /dev/null || bad "could not reach GitHub"
+m() { git show "origin/master:site/$1" 2>/dev/null; }
+m privacy/index.html | grep -q 'Version 1.3' || bad "master's privacy page does not say Version 1.3: is the sign-up's pull request merged?"
+m privacy/index.html | grep -q '<strong>Resend</strong>, for email' || bad "master's privacy page does not name Resend"
+m terms/index.html | grep -q 'Version 1.1' || bad "master's terms page does not say Version 1.1"
+m signup/individual/index.html | grep -q 'action="https://api.getmekno.com/v1/signup"' || bad "master has no Individual sign-up form"
+m signup/index.html > /dev/null && bad "master publishes the shops' form, which stays off until after shop 10"
+m _headers | grep -q '^/signup/\*' || bad "master's site headers have no rule for the sign-up pages"
+OUT="$HOME/Downloads/getmekno-site-329.zip"
+rm -f "$OUT"
+git archive --format=zip -o "$OUT" origin/master:site < /dev/null || bad "could not build the upload file"
+echo "Built from master at $(git rev-parse --short origin/master):"
+unzip -l "$OUT"
+for f in _headers index.html forms.css privacy/index.html signup/individual/index.html signup/check-email/index.html signup/paid/index.html signup/problem/index.html reset/index.html reset/sent/index.html reset/done/index.html reset/problem/index.html; do
+  unzip -l "$OUT" | grep -q " $f\$" || bad "$f is missing from the upload file"
+done
+echo "The upload file is in Downloads: getmekno-site-329.zip"
+echo "ALL GOOD"
+EOF329H

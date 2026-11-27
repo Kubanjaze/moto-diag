@@ -1,0 +1,24 @@
+bash <<'EOF329K'
+set -u
+bad() { echo; echo "SOMETHING IS OFF: $1"; exit 1; }
+DB=~/motodiag/live/motodiag.db
+[ -f "$DB" ] || bad "this is not the home desktop with live on it (run it in the Ubuntu window there); nothing was read"
+command -v python3 > /dev/null || bad "this computer has no python3"
+echo "Reading the logins on live, read-only (nothing is written, nothing is started)."
+OUT=$(python3 - "$DB" <<'PYK'
+import sqlite3, sys
+conn = sqlite3.connect(f"file:{sys.argv[1]}?mode=ro", uri=True)
+total = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+caps = conn.execute("SELECT COUNT(*) FROM users WHERE username != lower(username)").fetchone()[0]
+clash = conn.execute(
+    "SELECT COUNT(*) FROM (SELECT lower(username) FROM users "
+    "GROUP BY lower(username) HAVING COUNT(*) > 1)").fetchone()[0]
+print(total, caps, clash)
+PYK
+) || bad "live could not be read (the lines above say why); nothing was changed"
+set -- $OUT
+echo "Logins on live: $1. With a capital letter: $2. Names that differ only in capitals: $3."
+[ "$3" = 0 ] || bad "two logins share a name apart from capitals: sign-in by that name would be ambiguous; paste this output in the project thread"
+echo "No two logins differ only in capitals, so the sign-up's case rule matches what is on live."
+echo "ALL GOOD"
+EOF329K

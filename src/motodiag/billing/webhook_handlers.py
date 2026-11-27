@@ -204,6 +204,14 @@ def _store_from_stripe(
         raise BillingProviderError("no billing provider to re-read the subscription")
     sub = provider.retrieve_subscription(sub_id)
     user_id = _resolve_user_id(sub, db_path)
+    if user_id is None and "signup_id" in (sub.get("metadata") or {}):
+        # Phase 329 prebuild: a self-serve sign-up's subscription. The
+        # login and the shop are made only once Stripe says it is paid.
+        if sub.get("status") not in PAID_STATUSES:
+            logger.info("sign-up subscription %s is %s: not completed yet",
+                        sub_id, sub.get("status"))
+            return
+        user_id = _complete_signup(sub, sub_id, db_path, settings)
     if user_id is None:
         raise SubscriptionEventError(
             f"subscription {sub_id}: no user_id in its metadata and no "
@@ -215,6 +223,59 @@ def _store_from_stripe(
         data=subscription_data_from_stripe(sub, settings),
         db_path=db_path,
     )
+
+
+# Pay first (the operator, 2026-11-25): no trial, so only "active" is paid.
+PAID_STATUSES = frozenset({"active"})
+
+
+def _complete_signup(sub: dict, sub_id: str, db_path: Optional[str],
+                     settings: Settings) -> int:
+    from motodiag.auth.email_sender import (
+        EmailNotConfigured,
+        EmailSendError,
+        get_email_sender,
+        stuck_signup_email,
+        welcome_email,
+    )
+    from motodiag.auth.signup_repo import (
+        SignupError,
+        complete_signup,
+        get_signup,
+        mark_paid,
+    )
+
+    try:
+        signup_id = int(sub["metadata"]["signup_id"])
+    except (KeyError, ValueError, TypeError):
+        raise SubscriptionEventError(
+            f"subscription {sub_id}: its signup_id is not a number") from None
+    before = get_signup(signup_id, db_path)
+    try:
+        done = complete_signup(signup_id, sub_id, db_path=db_path)
+    except SignupError as e:
+        # Paid, and it cannot finish: keep it from the 30-day purge, and tell
+        # the operator, who settles it and refunds it by hand (Phase 329).
+        if before is not None:
+            mark_paid(signup_id, sub_id, db_path=db_path)
+        try:
+            get_email_sender(settings.email_provider, settings).send(
+                stuck_signup_email(settings.email_reply_to, signup_id, str(e)))
+        except (EmailSendError, EmailNotConfigured) as mail_error:
+            logger.error("sign-up %d: the operator's notice was not sent: %s",
+                         signup_id, mail_error)
+        raise SubscriptionEventError(str(e)) from e
+    assert done.user_id is not None
+    if before is not None and before.status != "completed":
+        # Best-effort: the account is made either way, and an email that
+        # fails does not mark the payment's event failed.
+        try:
+            get_email_sender(settings.email_provider, settings).send(
+                welcome_email(done.email, done.username, done.shop_name))
+        except (EmailSendError, EmailNotConfigured) as mail_error:
+            logger.error("sign-up %d: the welcome email was not sent: %s",
+                         signup_id, mail_error)
+    return done.user_id
 
 
 def _handle_subscription_invoice(
@@ -238,6 +299,15 @@ def _handle_subscription_invoice(
         # event is retried.
         _store_from_stripe(sub_id, db_path, provider, settings)
         existing = get_subscription_by_stripe_id(sub_id, db_path=db_path)
+    if existing is None:
+        # Phase 329 bug fix #7: a sign-up's subscription that Stripe does
+        # not call paid yet (an invoice.payment_failed on its first try),
+        # or one stuck for the operator, has no login and so no row; there
+        # is nothing to record the invoice against. Stripe's own record of
+        # it stays, and the operator's notice covers the stuck one.
+        logger.info("invoice %s: its subscription %s has no login yet; not recorded",
+                    inv.get("id"), sub_id)
+        return
     paid = event.get("type") == "invoice.paid"
     lines = ((inv.get("lines") or {}).get("data")) or [{}]
     period = lines[0].get("period") or {}
