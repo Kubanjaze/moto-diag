@@ -347,3 +347,43 @@ only be as true as what was measured somewhere real. What changed:
 
 Fix #1 (CGNAT) was a different kind: a missing range in a classifier,
 which a test found.
+
+## 2026-11-27 15:33 UTC — Step 0's owed measurement: block 1 on the home desktop, ALL GOOD
+
+The operator ran block 1 in the home desktop's Ubuntu window. It is
+read-only and changed nothing. What it measured:
+- **Services:** `motodiag-api` and `motodiag-payments` are running, and
+  the server answers healthy on loopback.
+- **Listeners:**
+  - `127.0.0.1:8000`, the app server, only on loopback;
+  - `100.117.187.83:22` and two tailnet-interface ports, Tailscale's own;
+  - `127.0.0.53`, `127.0.0.54:53` and `10.255.255.254:53`, DNS
+    resolvers. The last is WSL's own resolver on its internal virtual
+    address, not the LAN and not the app.
+- **Nothing on the LAN.**
+- **Tailscale:** no serve config, and Funnel is off.
+- **Libraries:** uvicorn 0.49.0 (0.30 or newer, so it reads the
+  right-most `X-Forwarded-For` as Step 0 assumed), fastapi 0.136.3,
+  starlette 1.3.1.
+- **No login, on loopback today:**
+
+  | path | answer |
+  |---|---|
+  | `/healthz` | 200 |
+  | `/v1/version` | 200 |
+  | `/v1/terms` | 200 |
+  | `/docs` | 200 |
+  | `/openapi.json` | 200 |
+  | `/v1/shops/1` | 200 |
+
+  `/docs`, `/openapi.json` and `/v1/shops/1` are what blocks 2 and 4 close
+  (the new code, and the help pages off) before block 6 installs the
+  tunnel. Block 6 refuses while `/v1/shops/1` is not 401.
+- **Not yet in place, as expected before the merge:**
+  - the new protections are not in the server's code;
+  - no `cloudflared` is installed;
+  - the privacy page does not yet name Cloudflare for the app.
+- **DNS:** `getmekno.com`'s name servers are Cloudflare's.
+
+So the plan's assumptions hold on the real machine: loopback-only, no
+Funnel, uvicorn at 0.30 or newer, and the zone at Cloudflare.
