@@ -7228,8 +7228,10 @@ Found in Phase 409 (2026-11-25 for manuals, 2026-11-27 for videos). Cloudflare F
 
 Found by the 409 prebuild (2026-11-25). `docs/legal/privacy.md` 1.1 says "Cloudflare, which serves it, keeps standard request logs" of the website only. A Cloudflare Tunnel ends TLS at Cloudflare's edge, so it reads each request it carries. Agreed with the operator on 2026-11-25: the policy names it before the tunnel goes on. What closes it: version 1.2 with Cloudflare in "The services it goes to", live on getmekno.com before the tunnel; Phase 409 writes it and its tunnel block refuses to run until the live page carries the line.
 
-### F312
+### F312 — CLOSED as a duplicate of F287 (2026-11-27)
 
 **`fastapi>=0.110` is unpinned, and FastAPI 0.165 breaks the tests that walk the app's routes**
+
+Filed by Phase 409 before it found F287 (Phase 408, 2026-11-21), which is the same defect: the unbounded `fastapi>=0.110`. Kept, never reused, as the sequence requires; F287 carries it. What this entry adds to F287 is the measurement below: two more tests that fail on 0.165, both of them 409's anonymous-surface pins.
 
 Found in Phase 409's Step 0 (2026-11-27), in a fresh cloud install. `pip install -e ".[all]"` took FastAPI 0.165.0; three tests failed with `AttributeError: '_IncludedRouter' object has no attribute 'path'`: `tests/test_phase175_api_foundation.py::TestAppFactory::test_expected_routes_registered` and two of `tests/test_phase409_public_hardening.py::TestAnonymousSurface`. On FastAPI 0.136.3 (live's line, ROADMAP row 175) all pass. The route walks read `app.routes` and expect every entry to carry `.path`. Not measured: whether the server itself runs on 0.165. What it affects: a new install of the server or of a test machine takes the newest FastAPI, and the anonymous-surface pin, the guard that says what the internet reaches, stops running green. What closes it: an upper bound on FastAPI in `pyproject.toml` until the walks handle included routers, or the walks made to, with a test on both.

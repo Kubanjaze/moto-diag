@@ -180,3 +180,28 @@ the stand-in harness in `409_blocks/standin/`: 27 of 27 and 6 of 6.
 
 `COLLECTED_TEST_FLOOR` 13321 → 13377, by a diff of collected ids against
 master `a238aa6`: +58 −2 (named in the floor's comment).
+
+## 2026-11-27 04:55 UTC — the full whole-tree, and a cloud regression run (not of record)
+
+- `wholetree.sh --full` at `1c8c037`: **PASSED — 5518 passed, 37 skipped**
+  (1105 s), its record written.
+- `regression.sh` at `1c8c037`, in the cloud: `Regression run FAILED (not
+  of record): 13284 passed, 4 failed, 51 skipped, 38 errors at 1c8c0371
+  (59 min 6 s wall, python -m pytest -n auto --dist load --cov=motodiag,
+  exit 1)`. Every failure and error is in the two files a cloud checkout
+  cannot run, as Phase 408 found: `tests/test_phase388_fence_boundary.py`
+  (bubblewrap is the desktop's) and `tests/test_phase257_orchestrator_guards.py`
+  (macOS's `osacompile` and the Subconscious login). Nothing else failed.
+  Line coverage 88.72% (the pin 88.00%).
+- So **the regression of record is the Mac's**, run by the advisor at the
+  branch's head before the close-out commit.
+
+**Long runs (the operator's card, 03:48 UTC): "On GitHub, from a branch I
+push".** Recorded in project memory for later threads. This run had
+already started in the cloud and was let finish. The repository's GitHub
+checks run the quality ratchet and the ROADMAP check, not the suite, so
+the Mac's run stays the record.
+
+**F312 is F287.** Phase 408 filed the unbounded `fastapi>=0.110` as F287;
+F312 was filed before it was found. F312 is marked closed as its
+duplicate, with its added measurement, and the number is not reused.
