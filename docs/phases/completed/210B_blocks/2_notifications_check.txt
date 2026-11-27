@@ -1,0 +1,99 @@
+bash <<'EOF_PUSHES'
+set -u
+bad() { echo; echo "SOMETHING IS OFF: $1"; echo "Nothing was changed."; exit 1; }
+UNIT=motodiag-api.service
+SETTINGS="$HOME/.config/motodiag/server.env"
+PROC=/proc
+echo "Checking whether the live server sends notifications to phones, and under which app ID. Reading only."
+[ "$(id -un)" = lilcu ] || bad "this window is not the home desktop's Ubuntu (it is signed in as $(id -un))"
+command -v systemctl >/dev/null 2>&1 || bad "this window has no systemctl, so it is not the home desktop's Ubuntu"
+[ "$(systemctl is-active "$UNIT" 2>/dev/null)" = active ] || bad "the live server is not running"
+PID=$(systemctl show -p MainPID --value "$UNIT" 2>/dev/null)
+case "$PID" in ''|0|*[!0-9]*) bad "the live server's process cannot be found" ;; esac
+[ -r "$PROC/$PID/environ" ] || bad "the running server's settings cannot be read"
+[ -r "$SETTINGS" ] || bad "the server's settings file cannot be read"
+UNITTEXT=$(systemctl cat "$UNIT" 2>/dev/null) || bad "the server's service file cannot be read"
+case "$UNITTEXT" in *APNS*) bad "the server's service file sets notification settings itself; send this to the advisor" ;; esac
+python3 -I - "$PROC/$PID/environ" "$SETTINGS" <<'PY'
+import sys
+
+OLD, NEW = "com.bandithero.motodiag", "com.getmekno.app"
+P = "MOTODIAG_APNS_"
+
+
+def running(path):
+    found = {}
+    with open(path, "rb") as f:
+        for item in f.read().split(b"\0"):
+            if item.startswith(P.encode()) and b"=" in item:
+                key, value = item.decode("utf-8", "replace").split("=", 1)
+                found[key] = value
+    return found
+
+
+def settings_file(path):
+    found = {}
+    with open(path, encoding="utf-8") as f:
+        for raw in f.read().splitlines():
+            line = raw.strip()
+            if not line or line[0] in "#;" or "=" not in line:
+                continue
+            key, value = (part.strip() for part in line.split("=", 1))
+            if len(value) > 1 and value[0] == value[-1] and value[0] in "\"'":
+                value = value[1:-1]
+            if key.startswith(P):
+                found[key] = value
+    return found
+
+
+def report(where, env):
+    on = env.get(P + "DRY_RUN", "1") == "0" and all(
+        env.get(P + name) for name in ("KEY_PATH", "KEY_ID", "TEAM_ID", "TOPIC"))
+    topic = env.get(P + "TOPIC", "")
+    test_gateway = env.get(P + "SANDBOX", "1") != "0"
+    print(where)
+    print("  notification settings present:",
+          ", ".join(sorted(key[len(P):].lower() for key in env)) or "none")
+    if on:
+        print("  notifications to phones: ON, through",
+              "Apple's test gateway" if test_gateway else "Apple's main gateway")
+    else:
+        print("  notifications to phones: off (the server only writes them in its log)")
+    print("  app ID it names:", {OLD: "the OLD one, " + OLD, NEW: "the new one, " + NEW,
+                                 "": "none"}.get(topic, "neither of the app's two IDs"))
+    return on, topic, test_gateway
+
+
+now, saved = running(sys.argv[1]), settings_file(sys.argv[2])
+problems = set()
+any_on = False
+for where, env in (("The running server:", now),
+                   ("Its settings file, which it reads at every start:", saved)):
+    on, topic, test_gateway = report(where, env)
+    any_on = any_on or on
+    if topic == OLD:
+        problems.add("name the old app ID")
+    elif on and topic != NEW:
+        problems.add("name an ID that is not the app's")
+    if on and test_gateway:
+        problems.add("use Apple's test gateway, which phones with the TestFlight app do not use")
+if now != saved:
+    print("Note: the running server's settings differ from its file's; a restart would load the file's.")
+print()
+if problems:
+    for problem in sorted(problems):
+        print("The notification settings " + problem + ".")
+    sys.exit(3)
+if any_on:
+    print("Notifications go to the new app ID, through Apple's main gateway.")
+else:
+    print("The server sends no notifications to phones, so the new app ID needs nothing on it today.")
+PY
+rc=$?
+echo
+case $rc in
+  0) echo "ALL GOOD" ;;
+  3) echo "SOMETHING IS OFF: the server's notification settings need changing for the new app (the lines above say what). Nothing was changed." ;;
+  *) echo "SOMETHING IS OFF: the check itself stopped (exit $rc). Nothing was changed." ;;
+esac
+EOF_PUSHES
