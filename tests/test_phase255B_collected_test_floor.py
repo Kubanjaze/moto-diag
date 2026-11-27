@@ -695,7 +695,14 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: Phase 409 bug fix #2 (the reader's User-Agent): +1 -0, one new test in
 #: test_phase409_public_condition.py (29 -> 30), that the reader sends its
 #: own name on the wire and never Python-urllib. Measured: 13378.
-COLLECTED_TEST_FLOOR = 13378
+#:
+#: Phase 329 prebuild (draft PR 99, rebased on 409): +79 -0, a diff of
+#: collected ids against master: test_phase329_email_codes.py 16 (the
+#: one-time codes and the stand-in sender) and test_phase329_signup_flow.py
+#: 63 (the sign-up, K150's individual plan, the switches, the reset).
+#: test_phase409_public_hardening.py keeps its count: its list of open
+#: routes gains the six sign-up and reset routes. Floor: 13378 + 79.
+COLLECTED_TEST_FLOOR = 13457
 
 
 def _collected_count() -> int:
