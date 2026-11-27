@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F318** (this file). The
+At the time of writing the highest assigned is **F321** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -7272,3 +7272,28 @@ Found in the review of Phase 329 (2026-11-27). `_api_base` (`src/motodiag/api/ro
 **The welcome and stuck-sign-up emails are sent inside the async Stripe webhook route, holding the server's event loop**
 
 Found in the review of Phase 329 (2026-11-27). `stripe_webhook` (`src/motodiag/api/routes/billing.py`) is `async def` and calls `dispatch_event` directly; for a sign-up's paid subscription that reaches `_complete_signup` (`src/motodiag/billing/webhook_handlers.py`), which sends the welcome email (and on failure the stuck notice) through `urllib`, synchronously, with a 10 s timeout. While Resend is slow, every other request on that worker waits. Live receives Stripe's events through the payments feed's poll (`src/motodiag/payments/event_feed.py`), a separate process, so the API is not held there today; the webhook route is the path when Stripe posts to the server. What would close it: the route runs `dispatch_event` in a thread (`run_in_threadpool`), or the emails are queued and sent after the answer; with a test that a slow sender does not hold a second request.
+
+### F319
+
+**Two presses of the sign-up's payment button at once open two payable Stripe checkouts, and a second subscription on a completed sign-up passes silently**
+
+Found in the advisor's re-check of Phase 329 at 42b4c3d (2026-11-27); filed by K155, to be fixed in a follow-up (ROADMAP 329B) before sign-up is announced. In `signup_confirm` (`src/motodiag/api/routes/signup.py`, the checkout block after bug fix #4), two `POST /v1/signup/confirm` at the same moment (a double-click, two tabs) both read no `stripe_checkout_session_id`, each create a checkout, and the last `set_checkout_session` wins; both pages can be paid. Nothing catches the second payment: `complete_signup` (`src/motodiag/auth/signup_repo.py`) returns early for a sign-up already completed, so a second active subscription for one sign-up is stored with no notice to anyone. What it affects: a person can be charged twice, and only Stripe's dashboard shows it. Low at launch scale; real once sign-up is public. What would close it: claim the sign-up's checkout atomically (`UPDATE signups SET stripe_checkout_session_id = 'pending' WHERE id = ? AND stripe_checkout_session_id IS NULL`, and only the claimant creates the checkout; the other waits for or reads the one made), and a second subscription for a completed sign-up emails support (`stuck_signup_email`) rather than passing; with a test of two presses at once and of a second subscription.
+
+### F320
+
+**The email cap's count query scans every sign-up and login for each recent code, and a percent-encoded code would slip past the log mask**
+
+Found in the advisor's re-check of Phase 329 at 42b4c3d (2026-11-27); filed by K155, to be fixed in a follow-up (ROADMAP 329B) before sign-up is announced. `emails_sent_to` (`src/motodiag/auth/signup_repo.py`, bug fix #8) joins `c.subject = 'signup:' || s.id` and `c.subject = 'user:' || u.id`; an expression on the joined column cannot use `signups`' or `users`' primary key, so every sign-up or reset post scans both tables once per code issued in the last hour. What it affects: time per form post grows with signups x users x the hour's codes; nothing at today's size. What would close it: join on `s.id = CAST(substr(c.subject, 8) AS INTEGER)` and `u.id = CAST(substr(c.subject, 6) AS INTEGER)`, checked with `EXPLAIN QUERY PLAN` in a test that it reads by key.
+
+Nit under it (K155): `SESSION_TOKEN_RE` (`src/motodiag/cli/serve.py`) matches `md[sc]_` literally, so a code requested percent-encoded (`mdc%5F...`) would be written to the access log unmasked. Our emails never encode it; a hand-made request could. Close by also matching `md[sc]%5[Ff]`, with a test.
+
+### F321
+
+**A failed address-check email sends the person to a page that says the payment page could not be reached**
+
+Found in the advisor's re-check of Phase 329 at 42b4c3d (2026-11-27); filed by K155, to be fixed in a follow-up (ROADMAP 329B) before sign-up is announced. Since bug fix #6, `signup_form` (`src/motodiag/api/routes/signup.py`) discards the sign-up when the email fails and answers `_problem(settings, "later")`; the site's `#later` message (`site/signup/problem/index.html`) reads "We couldn't reach the payment page just now. Please open the link in your email again in a few minutes." No email went out and the sign-up is gone, so the advice is wrong. What it affects: a person whose email failed waits for an email that never comes. What would close it: its own anchor, for example `#not-sent`, "We couldn't send the email just now. Please fill in the form again in a few minutes.", on the site and in the staged copy, with the site tests' anchor list.
+
+Nits under it (K155):
+- `forget_form` keeps `shop_name` on a completed sign-up while its docstring says it keeps only the username, plan and ids. The shop's name is also the shop row's, so keeping it is harmless; the docstring, or the blanking, should say the same as the other.
+- An `invoice.paid` that arrives before its subscription is active is dropped without a retry (`_handle_subscription_invoice`, `src/motodiag/billing/webhook_handlers.py`, after bug fix #7). The subscription's own event still completes the sign-up, so nothing is lost today; a retry or a test that the later event always comes would settle it.
+

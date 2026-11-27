@@ -100,7 +100,10 @@ The account stays, with its plan cancelled.
   from the repository root, on Linux or macOS: the stand-in starts its
   server in a new session with Python's `os.setsid` (macOS has no
   `setsid` program), and runs each block under `script -qec` on Linux or
-  `script -q /dev/null bash FILE` on macOS. Run here on Linux only.
+  `script -q /dev/null bash FILE` on macOS. Run here on Linux; the advisor ran it on
+  the Mac, 15 of 15, with the typed key given after the block's `read -s`
+  had turned echo off. Given at the start, the four typed-key cases lose
+  their input on macOS (the same race as 409's token case).
 - `2c_username_case_check.txt` against three scratch homes: a database
   whose logins differ by more than capitals (ALL GOOD), one with `cuban`
   and `Cuban` (SOMETHING IS OFF), and a home with no live database
