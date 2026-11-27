@@ -81,7 +81,10 @@ def db(tmp_path, monkeypatch):
 
 def _client(db_path: str, provider=None) -> TestClient:
     app = create_app(db_path_override=db_path)
-    app.dependency_overrides[get_provider] = lambda: provider or FakeBillingProvider()
+    # One provider per client, as one Stripe account: bug fix #4 reads a
+    # sign-up's checkout back from the provider that opened it.
+    provider = provider or FakeBillingProvider()
+    app.dependency_overrides[get_provider] = lambda: provider
     return TestClient(app, raise_server_exceptions=False, follow_redirects=False)
 
 

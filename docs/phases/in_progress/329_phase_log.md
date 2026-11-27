@@ -202,3 +202,29 @@ is run again on the fixed head, alone.
   `tests/test_phase329_resend_and_limits.py` (`TestTheUsernamesCase`, 2:
   the name in another case is taken; the name signed up with signs in).
 - **Verified:** 219 passed over the two sign-up files and 408's site tests.
+
+## 2026-11-27 20:45 UTC — Bug fix #4: one sign-up could be charged twice
+
+- **Issue:** the confirm route opened a new Stripe checkout for any
+  `email_verified` sign-up whose code was used, within 24 hours, and never
+  looked at the payment. Between Stripe's payment and the feed's event
+  (about 20 seconds), and for a paid sign-up stuck for the operator (which
+  stays `email_verified`), the link took a second payment.
+- **Root cause:** the common one above; no test opened the link again
+  around the payment.
+- **Fix:** **migration 093 changes**: `signups` gains
+  `stripe_checkout_session_id` (093 is not on live; the advisor runs the
+  dry run again on the new head). The route stores each checkout it opens;
+  on a reopen, a sign-up with a subscription goes to the paid page, a
+  checkout Stripe says is `complete` goes to the paid page, an `open` one
+  is sent back to the same checkout, and only an `expired` one makes way
+  for a new one. Stripe unreachable on the reopen says "later" and opens
+  nothing. `BillingProvider.retrieve_checkout_session` (Stripe:
+  `checkout.sessions.retrieve`; the fake keeps what it opened).
+- **Files:** `src/motodiag/core/migrations.py`,
+  `src/motodiag/auth/signup_repo.py`, `src/motodiag/billing/providers.py`,
+  `src/motodiag/api/routes/signup.py`, `tests/test_phase329_signup_flow.py`
+  (its client keeps one fake provider, as one Stripe account),
+  `tests/test_phase329_resend_and_limits.py` (`TestOnePayment`, 6).
+- **Verified:** 166 passed over the two sign-up files and gate 15's
+  migration tests, then the one test the client change touched.

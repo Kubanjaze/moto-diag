@@ -8039,6 +8039,7 @@ MIGRATIONS: list[Migration] = [
                 verified_at TEXT,
                 completed_at TEXT,
                 stripe_subscription_id TEXT,
+                stripe_checkout_session_id TEXT,
                 user_id INTEGER REFERENCES users(id),
                 shop_id INTEGER REFERENCES shops(id),
                 CHECK ((tier = 'individual') = (shop_name IS NULL))

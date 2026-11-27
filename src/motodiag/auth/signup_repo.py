@@ -106,6 +106,10 @@ class Signup:
     status: SignupStatus
     user_id: Optional[int]
     shop_id: Optional[int]
+    #: Bug fix #4: the paid or unpaid state of a sign-up's payment is
+    #: Stripe's; these two say a payment was started or made.
+    stripe_subscription_id: Optional[str] = None
+    stripe_checkout_session_id: Optional[str] = None
 
 
 def _row(row: sqlite3.Row) -> Signup:
@@ -115,6 +119,8 @@ def _row(row: sqlite3.Row) -> Signup:
         shop_name=row["shop_name"], tier=row["tier"],
         terms_version=row["terms_version"], status=row["status"],
         user_id=row["user_id"], shop_id=row["shop_id"],
+        stripe_subscription_id=row["stripe_subscription_id"],
+        stripe_checkout_session_id=row["stripe_checkout_session_id"],
     )
 
 
@@ -177,10 +183,17 @@ def mark_verified(signup_id: int, db_path: Optional[str] = None) -> None:
 
 
 def _set(signup_id: int, column: str, value, db_path: Optional[str]) -> None:
-    assert column in {"user_id", "shop_id", "stripe_subscription_id"}
+    assert column in {"user_id", "shop_id", "stripe_subscription_id",
+                      "stripe_checkout_session_id"}
     with get_connection(db_path) as conn:
         conn.execute(f"UPDATE signups SET {column} = ? WHERE id = ?",
                      (value, signup_id))
+
+
+def set_checkout_session(signup_id: int, session_id: str,
+                         db_path: Optional[str] = None) -> None:
+    """The newest Stripe checkout opened for this sign-up (bug fix #4)."""
+    _set(signup_id, "stripe_checkout_session_id", session_id, db_path)
 
 
 def mark_paid(signup_id: int, stripe_subscription_id: str,

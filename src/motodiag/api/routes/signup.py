@@ -64,6 +64,7 @@ from motodiag.auth.signup_repo import (
     mark_code_used,
     mark_verified,
     purge_stale,
+    set_checkout_session,
     store_code,
     username_taken,
 )
@@ -255,7 +256,18 @@ def signup_confirm(
         # A used link may open the payment again (the payment was left
         # unfinished), within its lifetime; it changes nothing else.
         return _problem(settings, "link")
+    # Bug fix #4: one sign-up, one payment. Paid already (or paid and stuck
+    # for the operator): the paid page. A checkout already open: that same
+    # checkout. Only one that expired unpaid makes way for a new one.
+    if signup.stripe_subscription_id:
+        return _go(settings, "/signup/paid/")
     try:
+        if signup.stripe_checkout_session_id:
+            prior = provider.retrieve_checkout_session(signup.stripe_checkout_session_id)
+            if prior.get("status") == "complete":
+                return _go(settings, "/signup/paid/")
+            if prior.get("status") == "open" and prior.get("url"):
+                return RedirectResponse(str(prior["url"]), status_code=303)
         checkout = provider.create_signup_checkout_session(
             signup.id, signup.email, signup.tier,
             success_url=_site(settings, "/signup/paid/"),
@@ -264,6 +276,7 @@ def signup_confirm(
     except BillingProviderError:
         logger.exception("sign-up %d: checkout could not be started", signup.id)
         return _problem(settings, "later")
+    set_checkout_session(signup.id, checkout.session_id, db_path=db_path)
     return RedirectResponse(checkout.checkout_url, status_code=303)
 
 

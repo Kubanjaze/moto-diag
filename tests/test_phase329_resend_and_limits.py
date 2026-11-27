@@ -523,3 +523,66 @@ class TestTheUsernamesCase:
         r = c.post("/v1/auth/login", json={"username": INDIVIDUAL["username"],
                                            "password": "correct horse"})
         assert r.status_code == 200 and r.json()["token"].startswith("mds_")
+
+
+# ---------------------------------------------------------------- bug fix #4: one sign-up, one payment
+
+
+class TestOnePayment:
+    def _open(self, db, outbox, provider):
+        c = _client(db, provider=provider)
+        _sign_up(c, **INDIVIDUAL, password="correct horse", accept_terms="yes")
+        code = _code_from(outbox[0])
+        first = c.post("/v1/signup/confirm", data={"code": code})
+        return c, code, first
+
+    def test_reopening_the_link_returns_to_the_same_checkout(self, db, outbox):
+        p = FakeBillingProvider()
+        c, code, first = self._open(db, outbox, p)
+        again = c.post("/v1/signup/confirm", data={"code": code})
+        assert again.headers["location"] == first.headers["location"]
+        assert len(p.checkout_sessions) == 1
+        assert _sql(db, "SELECT stripe_checkout_session_id FROM signups") == [
+            ("cs_fake_signup_1_individual",)]
+
+    def test_a_paid_checkout_sends_the_link_to_the_paid_page(self, db, outbox):
+        p = FakeBillingProvider()
+        c, code, _ = self._open(db, outbox, p)
+        p.checkout_sessions["cs_fake_signup_1_individual"]["status"] = "complete"
+        again = c.post("/v1/signup/confirm", data={"code": code})
+        assert again.headers["location"] == f"{SITE}/signup/paid/"
+        assert len(p.checkout_sessions) == 1
+
+    def test_a_subscription_on_the_signup_sends_the_link_to_the_paid_page(self, db, outbox):
+        p = FakeBillingProvider()
+        c, code, _ = self._open(db, outbox, p)
+        with get_connection(db) as conn:
+            conn.execute("UPDATE signups SET stripe_subscription_id = 'sub_x'")
+        again = c.post("/v1/signup/confirm", data={"code": code})
+        assert again.headers["location"] == f"{SITE}/signup/paid/"
+        assert len(p.checkout_sessions) == 1
+
+    def test_only_an_expired_checkout_makes_way_for_a_new_one(self, db, outbox):
+        p = FakeBillingProvider()
+        c, code, _ = self._open(db, outbox, p)
+        p.checkout_sessions["cs_fake_signup_1_individual"]["status"] = "expired"
+        c.post("/v1/signup/confirm", data={"code": code})
+        assert len(p.checkout_sessions) == 2
+        assert _sql(db, "SELECT stripe_checkout_session_id FROM signups") == [
+            ("cs_fake_signup_1_individual_2",)]
+
+    def test_stripe_unreachable_on_the_reopen_says_later(self, db, outbox):
+        from motodiag.billing.providers import BillingProviderError
+
+        class Down(FakeBillingProvider):
+            def retrieve_checkout_session(self, session_id):
+                raise BillingProviderError("down")
+        p = Down()
+        c, code, _ = self._open(db, outbox, p)
+        again = c.post("/v1/signup/confirm", data={"code": code})
+        assert again.headers["location"] == f"{SITE}/signup/problem/#later"
+        assert len(p.checkout_sessions) == 1
+
+    def test_the_stripe_provider_reads_the_checkout_back(self):
+        from motodiag.billing.providers import StripeBillingProvider
+        assert "retrieve_checkout_session" in StripeBillingProvider.__dict__

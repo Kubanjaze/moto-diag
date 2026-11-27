@@ -87,6 +87,12 @@ class BillingProvider(ABC):
         the webhook makes the login and the shop once it is paid."""
         raise NotImplementedError
 
+    def retrieve_checkout_session(self, session_id: str) -> dict:
+        """Phase 329 bug fix #4: a checkout's ``status`` (``open``,
+        ``complete`` or ``expired``) and its ``url``, so a reopened sign-up
+        link never starts a second payment."""
+        raise NotImplementedError
+
     @abstractmethod
     def create_portal_session(
         self, stripe_customer_id: str, return_url: str,
@@ -139,6 +145,8 @@ class FakeBillingProvider(BillingProvider):
     def __init__(self, subscriptions: Optional[dict[str, dict]] = None) -> None:
         self._sub_counter = 0
         self.subscriptions: dict[str, dict] = dict(subscriptions or {})
+        #: Phase 329: each sign-up checkout opened, by its id.
+        self.checkout_sessions: dict[str, dict] = {}
 
     def create_checkout_session(
         self, user_id, email, tier, success_url, cancel_url,
@@ -156,10 +164,18 @@ class FakeBillingProvider(BillingProvider):
     def create_signup_checkout_session(
         self, signup_id, email, tier, success_url, cancel_url,
     ) -> CheckoutSessionResult:
-        return CheckoutSessionResult(
-            checkout_url=f"https://fake-billing.local/checkout/signup/{signup_id}/{tier}",
-            session_id=f"cs_fake_signup_{signup_id}_{tier}",
-        )
+        n = len(self.checkout_sessions) + 1
+        url = f"https://fake-billing.local/checkout/signup/{signup_id}/{tier}"
+        sid = f"cs_fake_signup_{signup_id}_{tier}" + ("" if n == 1 else f"_{n}")
+        self.checkout_sessions[sid] = {"id": sid, "status": "open", "url": url}
+        return CheckoutSessionResult(checkout_url=url, session_id=sid)
+
+    def retrieve_checkout_session(self, session_id: str) -> dict:
+        try:
+            return self.checkout_sessions[session_id]
+        except KeyError:
+            raise BillingProviderError(
+                f"fake provider: no such checkout: {session_id}") from None
 
     def create_portal_session(
         self, stripe_customer_id, return_url,
@@ -384,6 +400,11 @@ class StripeBillingProvider(BillingProvider):
                 f"{stripe_api.scrub(str(e))}"
             ) from e
         return stripe_api.as_dict(event)
+
+    def retrieve_checkout_session(self, session_id: str) -> dict:
+        sc = self._stripe()
+        return self._call("read the checkout",
+                          lambda: sc.v1.checkout.sessions.retrieve(session_id))
 
     def retrieve_subscription(self, stripe_sub_id: str) -> dict:
         sc = self._stripe()
