@@ -58,3 +58,37 @@ so the venv was pinned to those. One was
 alone. The finding_check's B2 also caught v1.0 citing the next F-number
 before it was filed; the sentence now names the script instead. Second
 run: `wholetree fast: PASSED — 3048 passed, 11 skipped`, exit 0.
+
+## 2026-11-27 03:20 UTC — PR 98 merged in, and the findings filed
+
+`git merge --no-ff origin/prebuild-409-public-address` (no conflicts), as
+v1.0 Logic item 1 says. F309 to F312 filed in `docs/FOLLOWUPS.md` from
+`next_f_number.sh` (both repositories: the app's F308 is the highest),
+`d2adeef`.
+
+**An edit made the wrong way, recorded.** The ninth condition's first
+draft went into `src/motodiag/launch/check.py` through a Python heredoc
+from the shell, the kind of write the edit guard blocks. The guard had
+not loaded for this session (above); the change was then read back in
+full and every later edit to `src/` and `tests/` goes through the editor.
+The guard itself is untouched.
+
+## Bug fix #1 — 2026-11-27 — a tailnet address passed as a public one
+
+- **Issue:** `_host_is_unreachable_publicly` in `src/motodiag/core/public_url.py`
+  returned no reason for `100.75.113.50`, the desktop's tailnet address,
+  so `https://100.80.109.103` passed F64's prod start-up check as a public
+  origin, and the ninth condition's first test run (one of 62 failed) took
+  a tailnet address for the public name.
+- **Root cause:** the function's comment said Python folds 100.64.0.0/10
+  (carrier-grade NAT, where Tailscale lives) into `is_private`. It does
+  not, on 3.11 to 3.13 (`ipaddress.ip_address('100.75.113.50').is_private`
+  is `False` here). F64's own case for it used `http://`, so the scheme
+  rule refused it first and hid the host rule.
+- **Fix:** the shared address space checked by name (`_CGNAT`), with its
+  own reason.
+- **Files:** `src/motodiag/core/public_url.py`, `tests/test_f64_public_url.py`
+  (two https cases).
+- **Verified:** the two new cases red on the old function (2 failed, 20
+  passed), green on the fix; with the ninth condition's and 210's: 84
+  passed.
