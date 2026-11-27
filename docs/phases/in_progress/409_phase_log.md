@@ -92,3 +92,24 @@ The guard itself is untouched.
 - **Verified:** the two new cases red on the old function (2 failed, 20
   passed), green on the fix; with the ninth condition's and 210's: 84
   passed.
+
+## 2026-11-27 03:40 UTC — the launch check's ninth condition (Logic item 2)
+
+`public_condition` and its reader `public_status` in
+`src/motodiag/launch/check.py`, after 210's eight in `run_conditions`, as
+v1.0 says. The reader builds its address from `public_base_url` alone
+(scheme and host, nothing else), reads only the three probe paths, never
+through a proxy, with `ssl.create_default_context()`; an HTTP error status
+is an answer. The host rule is F64's own `_host_is_unreachable_publicly`
+(bug fix #1's), so a tailnet, private or loopback address is not ready.
+
+Tests: `tests/test_phase409_public_condition.py` (29), and 210's file moved
+from eight to nine: `NAMES` gains the ninth, the stand-in sets
+`MOTODIAG_PUBLIC_BASE_URL` and replaces `check.public_status` with three
+right answers, the passing test reads nine lines, the broken-alone test
+holds the other eight, and one more broken case (no public address).
+`tests/test_phase409_public_condition.py` and 210's: 62 passed, after bug
+fix #1. The certificate case runs a real TLS server on loopback with a
+self-signed certificate (`openssl` makes it; skipped if `openssl` cannot).
+
+Mutations: `409_mutate.py`, 9/9 red (`409_mutate.out`).
