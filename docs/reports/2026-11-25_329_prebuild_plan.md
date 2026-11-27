@@ -1,6 +1,6 @@
 # Phase 329 — Self-serve sign-up: the prebuild plan
 
-**Version:** 1.1 (prebuild draft) | **Date:** 2026-11-25
+**Version:** 1.2 (prebuild draft) | **Date:** 2026-11-25
 
 Written while Phase 210 builds, beside 409's prebuild (PR 98). It is **not** 329's Step 0 or its v1.0 of record: row 329 is still 🔲, and its Step 0 is the fleet's after 210 and 409 merge and the operator says go (K140). The code beside it on this branch (`src/motodiag/auth/one_time_codes.py`, `src/motodiag/auth/email_sender.py`) is the piece every answer needs. Scope: `docs/prompts/329_self_serve_sign_up.txt`, not changed.
 
@@ -26,20 +26,29 @@ To be recorded as a K-decision on master (the advisor's), citing these words; th
 | Resend, the stand-in until the key is in the settings file | `MOTODIAG_EMAIL_PROVIDER` is `fake` (the stand-in, which sends nothing), and the server **refuses to start in production** with either switch on while it is `fake`. No Resend code, account or key is on this branch | 329 adds the Resend sender behind the same `get_email_sender`; the operator types the key into the server's settings file himself. Resend's sending records go in Cloudflare's DNS for getmekno.com. The privacy page names Resend as the email provider before sign-up opens |
 | Pay first; the 14-day refund by hand | Stripe's checkout has no trial. Only a subscription Stripe says is `active` makes the login and the shop; anything else (`incomplete`, `trialing`, `past_due`, `unpaid`) leaves no login and no shop. The form's page says the 14 days | The refund is done by hand in Stripe's dashboard. Its line goes into the next terms version, bundled with any other terms change |
 
+## K150: individuals on their own, shops after shop 10 (2026-11-26)
+
+Kerwyn, 2026-11-26 (K150 on master): **"Shops stay as K141 says: the first 10 through the support email with me in the loop. Individuals can sign up on their own when 329 ships. Record it."** So the sign-up has two plans with a switch each:
+
+- `MOTODIAG_INDIVIDUAL_SIGNUP_ENABLED`, for the Individual plan ($19). It can go on when 329 ships. A paid individual sign-up makes the login and the terms acceptance, and no shop.
+- `MOTODIAG_SELF_SERVE_SIGNUP_ENABLED`, for the Shop and Company plans. It goes on only after shop 10 (K141).
+
+A plan whose switch is off answers 404, at the form and at its email link. A form sent while its switch was on goes no further once the switch is off. The website has a form for each plan: `/signup/individual/` and `/signup/`. While the shops' switch is off, only the individual form is copied into `site/`, and the site keeps sending shops to the support email.
+
 ## What this branch builds (the self-serve path, switched off)
 
-- **Migration 093:** the `signups` table (the form's fields, the password already hashed, the terms version accepted, a status of `pending_email`, `email_verified` or `completed`) and the `one_time_codes` table (only each code's hash). Its rollback drops both. It reaches the live database only at 329 through the deploy skill; it adds tables and changes no row.
-- **Two switches, both off:** `MOTODIAG_SELF_SERVE_SIGNUP_ENABLED` and `MOTODIAG_PASSWORD_RESET_EMAIL_ENABLED`. Off, each of their routes is 404, and none is in the API's published schema.
+- **Migration 093:** the `signups` table (the form's fields, a shop name only for a shop plan, the password already hashed, the terms version accepted, a status of `pending_email`, `email_verified` or `completed`) and the `one_time_codes` table (only each code's hash). Its rollback drops both. It reaches the live database only at 329 through the deploy skill; it adds tables and changes no row.
+- **Three switches, all off:** `MOTODIAG_INDIVIDUAL_SIGNUP_ENABLED`, `MOTODIAG_SELF_SERVE_SIGNUP_ENABLED` (shops) and `MOTODIAG_PASSWORD_RESET_EMAIL_ENABLED`. Off, each of their routes or plans is 404, and none is in the API's published schema.
 - **The sign-up, in order:**
   1. `POST /v1/signup`, the website's form: a sign-up row and an email with a link (24 hours, once). No login, no shop.
   2. `GET /v1/signup/confirm` shows one button; its `POST` spends the code and sends the browser to Stripe's checkout. A mail scanner that opens links does not use it up. A used link can reopen an unfinished payment, within its 24 hours, and changes nothing else.
-  3. Stripe's subscription event, paid: the webhook makes the owner's login, the shop, the owner's membership and the terms acceptance, then one welcome email. It is safe to run twice, and picks up where a stopped run left off. A username taken between the form and the payment stops it with a clear error for the operator to settle by hand.
+  3. Stripe's subscription event, paid: the webhook makes the login and the terms acceptance, and for a shop plan the shop and the owner's membership, then one welcome email. It is safe to run twice, and picks up where a stopped run left off. A username taken between the form and the payment stops it with a clear error for the operator to settle by hand.
 - **The password reset by email:** `POST /v1/auth/password-reset` gives the same answer whether or not a login has the address. The link (1 hour, once) sets the new password and ends every session of that login. Only the newest link works. It helps the hand-made shops too, so it has its own switch.
-- **Tests:** `tests/test_phase329_signup_flow.py`, 56, against a scratch database, the fake billing provider and the stand-in sender.
+- **Tests:** `tests/test_phase329_signup_flow.py`, 63, against a scratch database, the fake billing provider and the stand-in sender.
 
-**Still open for Step 0:** a per-address limit on reset and sign-up emails (today only the server's per-address rate limit of 30 a minute applies); whether the Company plan is offered on the form (the site says "talk to us", so the staged form offers the Shop plan only, though the route accepts both); the final wording of the three emails and the pages.
+**Still open for Step 0:** a per-address limit on reset and sign-up emails (today only the server's per-address rate limit of 30 a minute applies); whether the Company plan is offered on the form (the site says "talk to us", so the staged shop form offers the Shop plan only, though the route accepts both); the final wording of the three emails and the pages.
 
-**At rebase after 210 and PR 98:** PR 98's list of routes open without signing in must add these six; the collected-test floor rises with both branches' tests; migration 093 keeps its number only if 210 adds none.
+**Rebased on master after 210 and 409 (2026-11-27):** 409's list of routes open without signing in now names these six; the collected-test floor is 13457 (+79); 210 and 409 added no migration, so 093 keeps its number.
 
 ## The hand path, for the first 10 shops
 
@@ -69,7 +78,7 @@ Each step names what already exists, and what is missing.
 
 ## What this branch has, and what it leaves
 
-- **Has:** the one-time code and the stand-in email sender (16 tests), and since 1.1 the whole self-serve path above, switched off (56 tests). No real email service, account or key.
+- **Has:** the one-time code and the stand-in email sender (16 tests), and since 1.1 the whole self-serve path above, switched off (63 tests). No real email service, account or key.
 - **Leaves to 329:** the Resend sender; the per-address email limit; the app's line; copying the staged pages into `site/` and the site's link; the privacy page's Resend line; the refund line in the next terms version.
 - **The integration-gap check** (`tests/test_phase209B_integration_gaps.py`) is now green: the routes import both modules. Nothing was allowlisted.
 
@@ -79,3 +88,4 @@ Each step names what already exists, and what is missing.
 |---|---|---|
 | 1.0 (prebuild draft) | 2026-11-25 | Written after the operator kept K101; the hand path for the first 10 shops and the switch after. |
 | 1.1 (prebuild draft) | 2026-11-25 | The operator's answers to questions 1, 3 and 4; the self-serve path built behind its switches; the site pages staged outside `site/`. |
+| 1.2 (prebuild draft) | 2026-11-27 | K150: the Individual plan with its own switch; rebased on master after 210 and 409. |
