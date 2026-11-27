@@ -13,6 +13,13 @@ Both are at version 1.1, of 2026-11-23 (Phase 293; K119, K122): the terms'
 "Manuals and files you upload" and the privacy policy's manuals line and
 review sentence. Version 1.0 was 2026-11-19 (Phase 334).
 
+The privacy policy is at **version 1.2, of 2026-11-27** (Phase 409, F311):
+Cloudflare named in "The services it goes to", for the app's connection
+through the tunnel, in the line the operator approved word for word on
+2026-11-27. The terms stay at 1.1, so `TERMS_VERSION` is unchanged and no
+one accepts again; the policy's line goes live on getmekno.com before the
+tunnel does.
+
 ## The template
 
 - **Name:** Basecamp's policies (the Terms of Service and the Privacy

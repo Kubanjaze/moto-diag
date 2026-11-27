@@ -113,3 +113,21 @@ fix #1. The certificate case runs a real TLS server on loopback with a
 self-signed certificate (`openssl` makes it; skipped if `openssl` cannot).
 
 Mutations: `409_mutate.py`, 9/9 red (`409_mutate.out`).
+
+## 2026-11-27 03:50 UTC — the privacy policy, version 1.2 (Logic item 3)
+
+**The operator's words.** Asked once on a card at 03:00 UTC with the
+drafted line; the operator chose "Yes, use it as written" at 03:03 UTC.
+
+`docs/legal/privacy.md`: the Cloudflare item at the end of "The services it
+goes to", word for word, and `Version 1.2 — 2026-11-27`.
+`scripts/site_build.py legal` and `sitemap` rebuilt
+`site/privacy/index.html` and `site/sitemap.xml` (the privacy page's
+lastmod). The terms are untouched: `TERMS_VERSION` stays 1.1, so nobody
+accepts again. `docs/legal/README.md` says so.
+
+Pins moved, each because the privacy policy's own number moved:
+`tests/test_phase293_terms.py` (the privacy header is `Version 1.2 —
+2026-11-27`; the built page says 1.2, the terms page 1.1) and
+`tests/test_phase334_legal_texts.py` (the services census names the
+Cloudflare line). With `tests/test_phase408_site.py`: 114 passed.
