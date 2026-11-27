@@ -432,6 +432,7 @@ class _Job:
             limit_check(self.settings, self.db_path, self.day, self.sender,
                         self.clock)
             prune_checkins(self.db_path, self.clock())
+            purge_signups(self.db_path, self.clock())
             self.day = DayStats(today)
         try:
             results = poll_once(self.settings, self.db_path, self.clock)
@@ -469,6 +470,21 @@ class _Job:
         record_checkin(self.db_path, now, sent, slug)
 
 
+def purge_signups(db_path: Optional[str], now: float) -> None:
+    """Phase 329 bug fix #5: privacy 1.3's "a sign-up not paid within 30
+    days is deleted", at start and once a UTC day, whether or not anyone
+    signs up and whatever the switches say. The feed runs always."""
+    from motodiag.auth.signup_repo import purge_stale
+    try:
+        signups, codes = purge_stale(now, db_path=db_path)
+    except Exception:
+        logger.exception("payments feed: the sign-up purge failed")
+        return
+    if signups or codes:
+        logger.info("payments feed: deleted %d unpaid sign-ups and %d old codes",
+                    signups, codes)
+
+
 def alarm_dsn(settings: Settings):
     """The DSN the alarm checks in to, or None (the alarm is off)."""
     text = (settings.sentry_dsn or "").strip()
@@ -489,6 +505,7 @@ def run_forever(settings: Settings, db_path: Optional[str], *,
     """A round, a check-in when due, then the wait; until ``stop()``."""
     job = _Job(settings, db_path, clock, sender, transport)
     limit_check(settings, db_path, job.day, sender, clock)
+    purge_signups(db_path, clock())
     while not stop():
         results = job.round()
         job.checkin()

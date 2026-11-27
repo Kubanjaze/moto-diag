@@ -228,3 +228,26 @@ is run again on the fixed head, alone.
   `tests/test_phase329_resend_and_limits.py` (`TestOnePayment`, 6).
 - **Verified:** 166 passed over the two sign-up files and gate 15's
   migration tests, then the one test the client change touched.
+
+## 2026-11-27 20:47 UTC — Bug fix #5: privacy 1.3's words made true
+
+- **Issue:** (a) "A sign-up not paid within 30 days is deleted": the purge
+  ran only inside the form's post, after its switch check, so with no new
+  sign-ups, or with the switches off, nothing was ever deleted. (b) "until
+  the plan is paid": a completed sign-up kept the email, the name and the
+  original password hash for good, and that hash outlived a later reset.
+- **Root cause:** the common one above; no test followed a row past its
+  payment or through 30 quiet days.
+- **Fix:** (a) the payments feed, which always runs, purges at start and
+  once each UTC day (`purge_signups`, beside the check-ins' prune); a
+  failure is logged and never stops the feed. The form's own purge stays.
+  (b) `complete_signup` ends by clearing the row's email, name and password
+  hash (`forget_form`); the row keeps its username, plan, status and the
+  ids it made. The welcome email still takes the address once, from the
+  completed sign-up the call returns. A paid sign-up that could not finish
+  keeps its fields for the operator, as before.
+- **Files:** `src/motodiag/auth/signup_repo.py`,
+  `src/motodiag/payments/event_feed.py`,
+  `tests/test_phase329_resend_and_limits.py` (`TestPrivacyKept`, 3).
+- **Verified:** the three; 371's feed and limits tests and the sign-up
+  flow, 103 passed.

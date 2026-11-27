@@ -247,7 +247,22 @@ def complete_signup(
         )
     done = get_signup(signup_id, db_path)
     assert done is not None
+    forget_form(signup_id, db_path=db_path)
+    # The caller gets what the form said once more (the welcome email); the
+    # row itself keeps it no longer.
     return done
+
+
+def forget_form(signup_id: int, db_path: Optional[str] = None) -> None:
+    """Privacy 1.3: what the form asked for is kept "until the plan is
+    paid". Once the login exists (it holds its own copy, and a later reset
+    changes only the login's), the sign-up keeps only its username, plan
+    and the ids it made (bug fix #5)."""
+    with get_connection(db_path) as conn:
+        conn.execute(
+            "UPDATE signups SET email = '', owner_name = '', password_hash = '' "
+            "WHERE id = ? AND status = 'completed'", (signup_id,),
+        )
 
 
 # ---------------------------------------------------------------- limits and keeping

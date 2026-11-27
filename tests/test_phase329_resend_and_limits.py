@@ -586,3 +586,49 @@ class TestOnePayment:
     def test_the_stripe_provider_reads_the_checkout_back(self):
         from motodiag.billing.providers import StripeBillingProvider
         assert "retrieve_checkout_session" in StripeBillingProvider.__dict__
+
+
+# ---------------------------------------------------------------- bug fix #5: privacy 1.3, kept
+
+
+class TestPrivacyKept:
+    def test_a_paid_signup_keeps_only_its_username_plan_and_ids(self, db, outbox):
+        c = _client(db)
+        _sign_up(c)
+        c.post("/v1/signup/confirm", data={"code": _code_from(outbox[0])})
+        provider = FakeBillingProvider({"sub_signup_1": _paid_sub(1)})
+        dispatch_event(_sub_event(), db_path=db, provider=provider, settings=stripe_settings())
+        assert _sql(db, "SELECT email, owner_name, password_hash, username, tier, status, "
+                        "user_id IS NOT NULL, shop_id IS NOT NULL FROM signups") == [
+            ("", "", "", "olga", "shop", "completed", 1, 1)]
+        # The welcome still went to the address the form gave.
+        assert outbox[-1].to == "owner@shop.example"
+        # The login keeps its own copy, and signs in.
+        r = c.post("/v1/auth/login", json={"username": "olga", "password": FORM["password"]})
+        assert r.status_code == 200
+
+    def test_the_feed_purges_at_start_and_once_a_day_with_the_switches_off(
+            self, tmp_path, monkeypatch, outbox):
+        from motodiag.payments import event_feed as feed
+        db = _db(tmp_path, monkeypatch, signup=False, reset=False, individual=False)
+        seen = []
+        monkeypatch.setattr(feed, "purge_signups", lambda d, now: seen.append(now))
+        monkeypatch.setattr(feed, "poll_once", lambda *a, **k: [])
+        monkeypatch.setattr(feed, "limit_check", lambda *a, **k: None)
+        now = [1_800_000_000.0]
+        rounds = iter(range(3))
+
+        def tick(_wait):
+            now[0] += 86400
+
+        feed.run_forever(stripe_settings(), db, clock=lambda: now[0], sleep=tick,
+                         stop=lambda: next(rounds, None) is None, sender=None)
+        assert len(seen) == 1 + 2  # at start, then each new UTC day after the first round
+
+    def test_the_purge_never_stops_the_feed(self, db, caplog):
+        from motodiag.payments import event_feed as feed
+        with get_connection(db) as conn:
+            conn.execute("DROP TABLE one_time_codes")
+        with caplog.at_level(logging.ERROR):
+            feed.purge_signups(db, time.time())
+        assert "the sign-up purge failed" in caplog.text
