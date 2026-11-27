@@ -7,7 +7,7 @@ runs it. The handoff carries them inline, in this order.
 | step | where | file | changes |
 |---|---|---|---|
 | 1 | the home desktop, Ubuntu | `1_desktop_measured.txt` | nothing: Step 0's owed measurement; its output goes in the phase log |
-| — | the operator merges the server's pull request (after the app's) | — | master |
+| — | the operator merges the server's pull request (after the app's); nothing else merges to master until step 2 has run, because `server-update` refuses unless master is exactly that merge | — | master |
 | 2 | the Mac, Terminal | `2_backup_and_server_update.txt` | a copy of live (`remote.py backup pre409`), then the server and the feed onto the merge (`remote.py server-update`) |
 | 3a | the Mac, Terminal | `3a_site_upload_file.txt` | writes `~/Downloads/getmekno-site-409.zip` from master |
 | 3b | a browser, Cloudflare | below | the site: privacy policy 1.2 live |

@@ -304,3 +304,46 @@ coverage pin is a close-out item.
 
   Not measured here: the real Mac `nc` (the cloud's is not Apple's). The
   advisor re-tests block 7 on the Mac.
+
+## Bug fix #4 — 2026-11-27 — the harness's block-2 stand-in failed on a Mac
+
+- **Issue:** on the Mac, `cases.py` stopped with a `FileNotFoundError`
+  after "2 merged" failed with "Failed to locate 'python'" (the advisor).
+- **Root cause:** the scratch home's `.venv/bin/python` was a link to
+  `/usr/bin/python3`. On a Mac that is Apple's `xcode-select` shim, and it
+  refuses to run under the name `python`. On the cloud's Linux it is a
+  real interpreter, so the harness passed here.
+- **Fix:** the link points at `sys.executable`, the interpreter running
+  the harness.
+- **Files:** `409_blocks/standin/cases.py`.
+- **Verified:** 30 of 30 here. The advisor found all 3 block-2 cases pass
+  on the Mac once linked to a real interpreter. Block 2 itself is
+  unchanged: the Mac's `.venv/bin/python` is Homebrew's.
+
+Also in the blocks README: nothing else merges to master between the
+server's merge and step 2, because `server-update` refuses unless
+master is exactly the merge commit it is given (the advisor's note).
+
+## More than two bugs in this build: the common cause
+
+Four bug fixes in this phase, three of them from one review. Fixes #2–#4
+have one cause: **each test stood in for a world it had never measured,
+and the stand-in agreed with the assumption it was meant to test.**
+
+| fix | the assumption | the stand-in that agreed |
+|---|---|---|
+| #2 | any client reaches Cloudflare | a replaced `public_status`, a loopback server |
+| #3 | 8080 is closed; `-w` bounds a connect | an `nc` that always exits 1 |
+| #4 | `/usr/bin/python3` is a Python | Linux's `/usr/bin/python3` |
+
+This cloud cannot reach Cloudflare or run macOS, so a stand-in here can
+only be as true as what was measured somewhere real. What changed:
+- each stand-in now models the measured behaviour: a reader test on the
+  wire, an `nc` that answers where the world opens a port, and the running
+  interpreter;
+- each fix has a case the old code fails;
+- what is still unmeasured is said in its entry (the Mac's `nc`), and the
+  advisor tests it on the real machine before the operator runs it.
+
+Fix #1 (CGNAT) was a different kind: a missing range in a classifier,
+which a test found.
