@@ -1,2 +1,6 @@
 #!/bin/bash
-exit 1
+# Records its arguments; "answers" only on a port the world opened
+# (st/nc_open_<port>), the way Cloudflare's edge answers 8080.
+echo "$*" >> "$ST/nc"
+port="${!#}"
+[ -e "$ST/nc_open_$port" ]

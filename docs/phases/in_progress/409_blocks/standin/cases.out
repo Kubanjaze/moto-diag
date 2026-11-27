@@ -20,9 +20,12 @@ PASS 6 help pages open on public name: OFF, says undo
 PASS 7 good: ALL GOOD
 PASS 7 shop details open: OFF
 PASS 7 no tunnel: OFF
+PASS 7 Cloudflare answers 8080: not checked, ALL GOOD; each nc bounded by -G 5
+PASS 7 port 22 answers: OFF
+PASS 7 port 8000 answers: OFF
 PASS 8 undo: tunnel gone, settings back, ALL GOOD
 PASS 8 undo with nothing done: ALL GOOD, untouched
 PASS 2 not merged: OFF, nothing run
 PASS 2 merged: backup then update, ALL GOOD
 PASS 2 backup fails: no update
-27/27 cases pass
+30/30 cases pass

@@ -24,10 +24,12 @@ echo "The app's start-up call answers."
 A=$(curl -s -m 20 -D - -o /dev/null -H 'Origin: https://evil.example' "$B/v1/version" < /dev/null | grep -i '^access-control-allow-origin:' || true)
 [ -z "$A" ] || bad "a web page on another site is allowed to call the server ($A)"
 echo "Other websites: not allowed to call it."
-for port in 22 8000 8080; do
-  if nc -z -w 5 api.getmekno.com "$port" < /dev/null 2>/dev/null; then bad "port $port answers on the public name"; fi
+# -G 5 limits how long the Mac's nc waits to connect; -w 5 alone does not.
+for port in 22 8000; do
+  if nc -z -G 5 -w 5 api.getmekno.com "$port" < /dev/null 2>/dev/null; then bad "port $port answers on the public name"; fi
 done
-echo "Ports 22, 8000, 8080 on the public name: nothing answers."
+echo "Ports 22 and 8000 on the public name: nothing answers."
+echo "(Port 8080 is not checked: Cloudflare's own servers answer it for every name they carry.)"
 echo
 echo "ALL GOOD"
 EOF409G

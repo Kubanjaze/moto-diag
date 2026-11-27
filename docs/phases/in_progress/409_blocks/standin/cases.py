@@ -49,6 +49,11 @@ case('7 good: ALL GOOD', last(o)=='ALL GOOD', o)
 case('7 shop details open: OFF', "a shop's details answer without a login" in o, o)
 h=world(); o=run('7_outside_check.txt',h)
 case('7 no tunnel: OFF', 'does not answer healthy' in o, o)
+h=world(); run('4_server_settings.txt',h); run('6_tunnel_installed.txt',h,tty_input='x'*180); (h/'st/nc_open_8080').write_text(''); o=run('7_outside_check.txt',h); nc=(h/'st/nc').read_text().splitlines()
+case("7 Cloudflare answers 8080: not checked, ALL GOOD; each nc bounded by -G 5", last(o)=='ALL GOOD' and nc==['-z -G 5 -w 5 api.getmekno.com 22','-z -G 5 -w 5 api.getmekno.com 8000'], o+repr(nc))
+for port in ('22','8000'):
+    h=world(); run('4_server_settings.txt',h); run('6_tunnel_installed.txt',h,tty_input='x'*180); (h/f'st/nc_open_{port}').write_text(''); o=run('7_outside_check.txt',h)
+    case(f'7 port {port} answers: OFF', f'port {port} answers on the public name' in o, o)
 # ---- block 8
 h=world(); before=env_of(h); run('4_server_settings.txt',h); run('6_tunnel_installed.txt',h,tty_input='x'*180); o=run('8_undo.txt',h)
 case('8 undo: tunnel gone, settings back, ALL GOOD', last(o)=='ALL GOOD' and not (h/'st/cf_active').exists() and env_of(h)==before, o)

@@ -59,8 +59,8 @@ it shows `"status":"ok"`. Then `https://api.getmekno.com/docs`: it says
 - `standin/`: each block run in a scratch home with stand-in commands
   (`systemctl`, `ss`, `tailscale`, `curl` as a small simulated server that
   honours the settings file, `sudo`, `cloudflared`, `gh`, `nc`, and the
-  Mac's `remote.py`), each condition broken on purpose. `cases.py`: 27 of
-  27; `cases3.py` (the site blocks against a local copy of this branch as
+  Mac's `remote.py`), each condition broken on purpose. `cases.py`: 30 of
+  30; `cases3.py` (the site blocks against a local copy of this branch as
   master, and the token never echoed): 6 of 6. Run with
   `python3 standin/cases.py` and `python3 standin/cases3.py` from this
   folder, with the repository's `.venv` built.

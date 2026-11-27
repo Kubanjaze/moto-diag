@@ -266,3 +266,41 @@ skip lines match 210B's byte for byte. App PR 17 at `9837670`:
 
 The run of record is the advisor's on the new head. Whether to raise the
 coverage pin is a close-out item.
+
+## Bug fix #3 — 2026-11-27 — the outside check failed a correct setup, after ten silent minutes
+
+- **Issue:** block 7, run on the Mac, would end SOMETHING IS OFF after a
+  correct setup. The advisor measured two causes against `getmekno.com`:
+  - Cloudflare's edge answers port 8080 for every name it proxies:
+    `nc -z getmekno.com 8080` succeeded at once, and
+    `curl http://getmekno.com:8080/` got a 301 from `Server: cloudflare`;
+  - Apple's `nc -w 5` does not limit the connect: ports 22 and 8000 took
+    300 s each (4 addresses at about 75 s), while `nc -z -G 5 -w 5` took
+    20 s.
+- **Root cause:** the block assumed nothing answers 8080 on a proxied name,
+  and that `-w` bounds a connect on macOS. The stand-in `nc` always exited
+  1, so it agreed with both assumptions.
+- **Fix:**
+  - the block checks ports 22 and 8000 with `nc -z -G 5 -w 5`;
+  - it says 8080 is not checked because Cloudflare's own servers answer
+    it;
+  - the stand-in `nc` records its arguments and answers only on a port the
+    world opens;
+  - three new cases, run with the 8080 world set the way Cloudflare
+    answers:
+    - ALL GOOD with each `nc` call carrying `-G 5` and 8080 never called;
+    - port 22 open is OFF;
+    - port 8000 open is OFF.
+- **Files:** `409_blocks/7_outside_check.txt`, `standin/bin/nc`,
+  `standin/cases.py`, `standin/cases.out`, `409_blocks/README.md` (the
+  count).
+- **Verified:**
+  - `cases.py` passes 30 of 30;
+  - the block from `1456f45`, before this fix, fails the new 8080 case
+    (29 of 30);
+  - `bash -n` and `shellcheck -s bash -S warning` are clean on all eight
+    bodies;
+  - `cases3.py` passes 6 of 6.
+
+  Not measured here: the real Mac `nc` (the cloud's is not Apple's). The
+  advisor re-tests block 7 on the Mac.
