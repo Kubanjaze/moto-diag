@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F313** (this file). The
+At the time of writing the highest assigned is **F314** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -7241,3 +7241,10 @@ Found in Phase 409's Step 0 (2026-11-27), in a fresh cloud install. `pip install
 **The sign-in throttle keeps two entries for every name ever tried, and never drops them**
 
 Found by the advisor's read-only review of Phase 409 (2026-11-27) and confirmed in the code. `LoginThrottle._prune` (`src/motodiag/auth/login_throttle.py`) calls `self._fails.setdefault(key, deque())`, and `check()` prunes both the pair key and the name key before any failure is recorded, so every new name tried at the sign-in adds two dictionary entries, even with the right password. `record_success` removes only the pair entry; nothing removes the name entry, and an emptied deque is never deleted. What it affects: memory in the server process grows by two small entries per distinct name tried, without bound, until the server restarts. Once the public address is on (409), anyone on the internet can choose the names. Not measured: how many names it would take to matter. The deques stay empty, so the throttle's answers are unaffected. Low. What closes it: `_prune` reads with `get` and creates nothing, `record_failure` creates; empty deques are dropped (on prune, or by a size-capped sweep); a test that a thousand distinct names tried leave the dictionary empty.
+
+### F314
+
+**330's wizard makes a shop owned by user 1 in `shops.owner_user_id`; the self-serve sign-up makes it owned by its real owner**
+
+Found in Phase 329's Step 0 (2026-11-27, `docs/phases/in_progress/329_step0.md` item 3). `motodiag shop onboard run` (`src/motodiag/cli/shop_onboard.py`, `do_shop`) calls `create_shop` without `owner_user_id`, whose default is 1, the system user; the owner exists only as the `shop_members` row. The sign-up (`complete_signup`, `src/motodiag/auth/signup_repo.py`) passes the new owner's id. Access is decided by `shop_members` alone (`has_shop_permission`), so nothing behaves differently today. What it affects: `UNIQUE(owner_user_id, name)` makes names unique across every hand-made shop but not across self-serve shops, and any later code that reads `shops.owner_user_id` would see two meanings. Low. What would close it: the wizard passes the owner's id once the owner's login is made (the wizard makes the shop first, so the order changes), or the column is documented as "the creator" and a test pins each path's value.
+
