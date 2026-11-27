@@ -46,7 +46,7 @@ class TestTheRealRecord:
                                                       "371", "372", "403", "404", "334", "405",
                                                       "330", "293", "303B", "334B", "372B",
                                                       "210", "409", "329", "410", "344"]
-        assert order.as_of == ("2026-11-25", "K140")
+        assert order.as_of == ("2026-11-26", "K149")
 
     def test_392_is_a_builders_and_303_348_need_nothing(self):
         e = {x.phase: x for x in P.parse_order((ROOT / P.PLAN).read_text()).entries}
@@ -69,10 +69,11 @@ class TestTheRealRecord:
         assert "Stripe's live account" in e["371"].needs
         assert e["330"].need == "a rule change" and "F210" in e["330"].needs
         assert P.NEEDS[e["330"].need] == "needs-admiral"
-        # K140: the public address and sign-up are the fleet's, each asked first as a fork;
-        # the App Store is a builder's on the app's repository, with Apple's account.
-        for phase in ("409", "329"):
-            assert (e[phase].kind, e[phase].built_by, e[phase].need) == ("shop", "fleet", "a fork")
+        # K140: the public address and sign-up are each asked first as a fork; sign-up is the
+        # fleet's. K149: the public address is a builder session's ("409: B"). The App Store
+        # is a builder's on the app's repository, with Apple's account.
+        assert (e["409"].kind, e["409"].built_by, e["409"].need) == ("shop", "builder", "a fork")
+        assert (e["329"].kind, e["329"].built_by, e["329"].need) == ("shop", "fleet", "a fork")
         assert "never Funnel" in e["409"].needs and "K101" in e["329"].needs
         assert (e["410"].kind, e["410"].built_by) == ("shop", "builder")
         assert e["410"].need == "an outside account" and "Apple" in e["410"].needs
@@ -90,11 +91,11 @@ class TestTheRealRecord:
 class TestCheckRefuses:
     @pytest.mark.parametrize("rel,old,new,why", [
         (P.PLAN, "## Next, in order\n", "## The order\n", "has no '## Next, in order'"),
-        (P.PLAN, "As of 2026-11-25, K140.", "As of now.", "no 'As of"),
+        (P.PLAN, "As of 2026-11-26, K149.", "As of now.", "no 'As of"),
         # A date no entry can carry: 2026-11-25 has an entry of its own since K140.
-        (P.PLAN, "As of 2026-11-25, K140.", "As of 2001-01-01, K140.", "no entry under"),
-        (P.PLAN, "As of 2026-11-25, K140.", "As of 2026-11-25, K999.", "K999, which does not"),
-        (P.PLAN, "As of 2026-11-25, K140.", "As of 2026-11-25, K47.", "does not cite K47"),
+        (P.PLAN, "As of 2026-11-26, K149.", "As of 2001-01-01, K140.", "no entry under"),
+        (P.PLAN, "As of 2026-11-26, K149.", "As of 2026-11-25, K999.", "K999, which does not"),
+        (P.PLAN, "As of 2026-11-26, K149.", "As of 2026-11-25, K47.", "does not cite K47"),
         (P.PLAN, "| 2 | 303 | shop | fleet | nothing |", "| 2 | 303 | shop | robots | nothing |",
          "its builder 'robots'"),
         (P.PLAN, "| 6 | 348 | shop | fleet | nothing |", "| 6 | 348 | store | fleet | nothing |",
@@ -198,10 +199,11 @@ class TestNext:
             assert (e.phase, e.built_by) == (app, "builder")
             done = {**done, app: ("✅", "")}
         assert P.next_entry(order, done).phase == "210"
-        # K140: after 210, the public address, then sign-up, then the App Store (a
-        # builder's, on the app's repository); 344 after all three.
+        # K140: after 210, the public address (a builder session's since K149), then
+        # sign-up, then the App Store (a builder's, on the app's repository); 344 after all
+        # three.
         done = {**done, "210": ("✅", "")}
-        for phase, by in (("409", "fleet"), ("329", "fleet"), ("410", "builder")):
+        for phase, by in (("409", "builder"), ("329", "fleet"), ("410", "builder")):
             e = P.next_entry(order, done)
             assert (e.phase, e.built_by) == (phase, by)
             done = {**done, phase: ("✅", "")}
